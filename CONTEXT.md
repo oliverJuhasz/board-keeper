@@ -14,6 +14,10 @@ _Avoid_: Title, board game. Don't use "game" for one occasion of playing; that i
 One occasion on which a group of Players played a Game.
 _Avoid_: Session, match, game, game night
 
+**Game Module**:
+The package that adds support for one Game to Board Keeper: how its Plays are recorded and scored.
+_Avoid_: Plugin, extension, score sheet
+
 ### People
 
 **Player**:
@@ -21,9 +25,13 @@ A person who takes part in plays. A Player exists whether or not anyone has regi
 _Avoid_: User, participant, member
 
 **Account**:
-A registered login to Board Keeper, belonging to one real person.
+A registered login to Board Keeper, belonging to one real person. Every Account claims exactly one Player.
 _Avoid_: User, profile, login
 
 **Claim**:
 The link from an Account to the Player who is its owner. Once claimed, that Player's history is the Account owner's history.
 _Avoid_: Link, bind
+
+**Invite**:
+An offer from an admin to the person behind a Player to register an Account that claims that Player. Registering is only possible through an Invite.
+_Avoid_: Invitation code, sign-up link
