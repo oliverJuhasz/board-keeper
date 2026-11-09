@@ -18,13 +18,14 @@ Board Keeper is a learning project first ([ADR 0001](docs/adr/0001-learning-proj
 | Navigation | React Router |
 | Server data | TanStack Query |
 | API types and client | openapi-typescript, openapi-fetch, openapi-react-query |
-| Browser-only state | Redux Toolkit |
+| Browser-only state | React's built-in hooks (Zustand if needed) |
+| Translations | react-i18next: English (default), Dutch, Hungarian |
 | Forms and validation | React Hook Form, Zod |
 | Styling and components | Tailwind CSS v4, shadcn/ui |
 | PWA | vite-plugin-pwa |
 | Tests | Vitest, React Testing Library, Playwright |
 | Lint and format | ESLint, Prettier |
 
-**Deployment:** one app container (Spring Boot serves both the API and the built frontend) plus one PostgreSQL container. How users reach it (reverse proxy, VPN, DNS) is outside this repository's scope. The app expects to sit behind a reverse proxy that handles HTTPS.
+**Deployment:** GitHub Actions builds and tests every push and publishes the container image to GitHub Container Registry. It runs as one app container (Spring Boot serves both the API and the built frontend) plus one PostgreSQL container, with a compose file in this repository. How users reach it (reverse proxy, VPN, DNS) is outside this repository's scope. The app expects to sit behind a reverse proxy that handles HTTPS.
 
 **Building needs Docker**, because jOOQ code is generated from a throwaway PostgreSQL ([ADR 0007](docs/adr/0007-flyway-and-jooq-codegen-from-real-postgres.md)).
