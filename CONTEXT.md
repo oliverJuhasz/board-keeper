@@ -26,6 +26,10 @@ _Avoid_: Team game
 How much of a Play's outcome is recorded. **Points** records scores: one per Player, or one group score in a Cooperative Play. **Winner only** records just who won. A Game Module sets the default, and the recorder can switch it for each Play.
 _Avoid_: Scoring type, outcome type
 
+**Solo Play**:
+A Play with a single Player. Whether a Game supports it, and how it is recorded, is up to its Game Module.
+_Avoid_: Single-player game
+
 ### Scoring
 
 **Game Module**:
@@ -41,7 +45,7 @@ One named value recorded or calculated for each Player in a Play, such as "Eggs"
 _Avoid_: Score line, field
 
 **Tie-breaker**:
-How Players with equal totals are put in order. It is either a Score Category that doesn't count toward the total (leftover food in Wingspan) or, where the Game allows it, the recorder's own choice. Players still tied share a Placing.
+How Players with equal totals are put in order. It is either a Score Category, whether or not it counts toward the total (civilian points in 7 Wonders Duel count, leftover food in Wingspan doesn't), or, where the Game allows it, the recorder's own choice. Players still tied share a Placing.
 _Avoid_: Tiebreak rule
 
 **Result**:

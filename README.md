@@ -26,6 +26,6 @@ Board Keeper is a learning project first ([ADR 0001](docs/adr/0001-learning-proj
 | Tests | Vitest, React Testing Library, Playwright |
 | Lint and format | ESLint, Prettier |
 
-**Deployment:** GitHub Actions builds and tests every push and publishes the container image to GitHub Container Registry. It runs as one app container (Spring Boot serves both the API and the built frontend) plus one PostgreSQL container, with a compose file in this repository. How users reach it (reverse proxy, VPN, DNS) is outside this repository's scope. The app expects to sit behind a reverse proxy that handles HTTPS.
+**Deployment:** GitHub Actions builds and tests every push and publishes the container image to GitHub Container Registry. It runs as one app container (Spring Boot serves both the API and the built frontend) plus one PostgreSQL container. The repository provides the image, an example compose file and a self-hosting guide. Anything specific to one installation is out of scope: network access, reverse proxy, automatic updates and backup scheduling. On first start, with no accounts yet, the app writes a one-time link to its log for creating the first Admin.
 
 **Building needs Docker**, because jOOQ code is generated from a throwaway PostgreSQL ([ADR 0007](docs/adr/0007-flyway-and-jooq-codegen-from-real-postgres.md)).
