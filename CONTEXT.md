@@ -4,6 +4,16 @@ Board Keeper records the board games a group of friends play and how each one en
 
 ## Language
 
+### Games and plays
+
+**Game**:
+A board game as a product, such as Wingspan or Catan.
+_Avoid_: Title, board game. Don't use "game" for one occasion of playing; that is a Play.
+
+**Play**:
+One occasion on which a group of Players played a Game.
+_Avoid_: Session, match, game, game night
+
 ### People
 
 **Player**:
