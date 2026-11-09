@@ -11,11 +11,19 @@ A board game as a product, such as Wingspan or Catan. Each Game is scored by one
 _Avoid_: Title, board game. Don't use "game" for one occasion of playing; that is a Play.
 
 **Expansion**:
-An add-on to a Game that can change how it is played and scored, for example its player count or its Score Categories.
+An add-on product for a Game, such as Oceania for Wingspan. It can change how the Game is played and scored, for example its player count or its Score Categories.
 _Avoid_: Add-on, extension, DLC
 
+**Variant**:
+A setup option of a Game, chosen for each Play, that can change how it is scored. It is either a choice between options (Harmonies' board side A or B) or an on/off switch (Calico's family variant).
+_Avoid_: Mode, house rule, option
+
+**Setup**:
+The Expansions and Variants chosen for a Play.
+_Avoid_: Configuration
+
 **Play**:
-One occasion on which a group of Players played a Game to the end, together with the Expansions they used. A game that was abandoned part-way is not a Play.
+One occasion on which a group of Players played a Game to the end, with a particular Setup. A game that was abandoned part-way is not a Play.
 _Avoid_: Session, match, game, game night
 
 **Cooperative**:
@@ -27,8 +35,12 @@ How much of a Play's outcome is recorded. **Points** records scores: one per Pla
 _Avoid_: Scoring type, outcome type
 
 **Solo Play**:
-A Play with a single Player. Whether a Game supports it, and how it is recorded, is up to its Game Module.
+A Play with a single Player. Whether a Game supports it, and how it is recorded (against an automated opponent, against a target, or for score only), is up to its Game Module.
 _Avoid_: Single-player game
+
+**Victory Type**:
+How a Play was won, for Games that can be won in more than one way, such as on points or by scientific supremacy in 7 Wonders Duel.
+_Avoid_: Win condition, ending
 
 ### Scoring
 
