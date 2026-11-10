@@ -1,0 +1,3 @@
+# The image is made from the built jar and nothing else.
+*
+!backend/app/target/board-keeper.jar
