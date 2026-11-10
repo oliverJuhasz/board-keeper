@@ -1,0 +1,26 @@
+{
+  "language": {
+    "label": "Language"
+  },
+  "common": {
+    "reloadToRetry": "Reload the page to try again."
+  },
+  "games": {
+    "title": "Games",
+    "description": "The games you can record plays of.",
+    "empty": "No games yet.",
+    "loading": "Loading games",
+    "loadFailed": "Couldn't load the games"
+  },
+  "gameModules": {
+    "title": "Game modules",
+    "description": "The scoring support built into this installation.",
+    "loading": "Loading game modules",
+    "loadFailed": "Couldn't load the game modules"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "text": "There is nothing at this address.",
+    "goToStart": "Go to the start page"
+  }
+}
