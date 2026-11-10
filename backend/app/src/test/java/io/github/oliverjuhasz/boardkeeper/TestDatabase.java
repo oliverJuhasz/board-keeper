@@ -2,6 +2,7 @@ package io.github.oliverjuhasz.boardkeeper;
 
 import static io.github.oliverjuhasz.boardkeeper.jooq.Tables.ACCOUNT;
 import static io.github.oliverjuhasz.boardkeeper.jooq.Tables.GAME;
+import static io.github.oliverjuhasz.boardkeeper.jooq.Tables.INVITE;
 import static io.github.oliverjuhasz.boardkeeper.jooq.Tables.PLAYER;
 import static io.github.oliverjuhasz.boardkeeper.jooq.Tables.ROLE;
 
@@ -24,6 +25,7 @@ public class TestDatabase {
 
     public void empty() {
         dsl.deleteFrom(DSL.table("spring_session")).execute();
+        dsl.deleteFrom(INVITE).execute();
         dsl.deleteFrom(ACCOUNT).execute();
         dsl.deleteFrom(PLAYER).execute();
         dsl.deleteFrom(ROLE).where(ROLE.BUILT_IN.isNull()).execute();

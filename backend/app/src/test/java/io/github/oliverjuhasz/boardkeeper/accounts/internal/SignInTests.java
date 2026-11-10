@@ -53,7 +53,10 @@ class SignInTests {
 
     @Test
     void theApiIsClosedToAnyoneNotSignedIn() {
-        assertThat(browser.get("/api/games")).hasStatus(401);
+        assertThat(browser.get("/api/games"))
+                .hasStatus(401)
+                .bodyJson()
+                .isLenientlyEqualTo("{\"code\": \"access.notSignedIn\"}");
     }
 
     @Test

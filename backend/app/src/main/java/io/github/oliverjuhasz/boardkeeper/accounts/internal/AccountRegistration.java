@@ -26,13 +26,18 @@ class AccountRegistration {
 
     @Transactional
     UUID register(String username, String password, UUID playerId, Language language, BuiltInRole role) {
+        return register(username, password, playerId, language, roles.idOf(role));
+    }
+
+    @Transactional
+    UUID register(String username, String password, UUID playerId, Language language, UUID roleId) {
         if (accounts.existsByUsername(username)) {
             throw Problem.conflict(USERNAME_TAKEN);
         }
         try {
             // Only a hash of the password is stored, never the password itself.
             UUID accountId = accounts.insert(username, passwordEncoder.encode(password), playerId, language);
-            accounts.addRole(accountId, roles.idOf(role));
+            accounts.addRole(accountId, roleId);
             return accountId;
         } catch (DuplicateKeyException e) {
             throw Problem.conflict(USERNAME_TAKEN);

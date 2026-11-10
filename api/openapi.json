@@ -1,6 +1,20 @@
 {
   "components" : {
     "schemas" : {
+      "Claims" : {
+        "properties" : {
+          "playerIds" : {
+            "description" : "The Players that an Account has claimed",
+            "items" : {
+              "format" : "uuid",
+              "type" : "string"
+            },
+            "type" : "array"
+          }
+        },
+        "required" : [ "playerIds" ],
+        "type" : "object"
+      },
       "CurrentAccount" : {
         "properties" : {
           "id" : {
@@ -76,6 +90,46 @@
         "required" : [ "id", "key" ],
         "type" : "object"
       },
+      "Invite" : {
+        "properties" : {
+          "expired" : {
+            "type" : "boolean"
+          },
+          "expiresAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "playerId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "roleId" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        },
+        "required" : [ "expired", "expiresAt", "id", "playerId", "roleId" ],
+        "type" : "object"
+      },
+      "InviteRequest" : {
+        "properties" : {
+          "playerId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "roleId" : {
+            "description" : "The Role the new Account starts with. Member if left out.",
+            "format" : "uuid",
+            "type" : "string"
+          }
+        },
+        "required" : [ "playerId" ],
+        "type" : "object"
+      },
       "LanguageRequest" : {
         "properties" : {
           "language" : {
@@ -84,6 +138,43 @@
           }
         },
         "required" : [ "language" ],
+        "type" : "object"
+      },
+      "NewInvite" : {
+        "properties" : {
+          "invite" : {
+            "$ref" : "#/components/schemas/Invite"
+          },
+          "token" : {
+            "description" : "The secret part of the link: the person registers at /register/{token}",
+            "type" : "string"
+          }
+        },
+        "required" : [ "invite", "token" ],
+        "type" : "object"
+      },
+      "Player" : {
+        "properties" : {
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "id", "name" ],
+        "type" : "object"
+      },
+      "PlayerRequest" : {
+        "properties" : {
+          "name" : {
+            "maxLength" : 50,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [ "name" ],
         "type" : "object"
       },
       "Problem" : {
@@ -112,6 +203,65 @@
           }
         },
         "required" : [ "status" ]
+      },
+      "Registration" : {
+        "properties" : {
+          "expiresAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "playerName" : {
+            "description" : "The Player the new Account will claim",
+            "type" : "string"
+          }
+        },
+        "required" : [ "expiresAt", "playerName" ],
+        "type" : "object"
+      },
+      "RegistrationRequest" : {
+        "properties" : {
+          "language" : {
+            "enum" : [ "en", "nl", "hu" ],
+            "type" : "string"
+          },
+          "password" : {
+            "maxLength" : 200,
+            "minLength" : 16,
+            "type" : "string"
+          },
+          "username" : {
+            "pattern" : "[\\p{L}\\p{N}._-]{3,30}",
+            "type" : "string"
+          }
+        },
+        "required" : [ "language", "password", "username" ],
+        "type" : "object"
+      },
+      "Role" : {
+        "properties" : {
+          "builtIn" : {
+            "description" : "ADMIN or MEMBER for the two built-in Roles; absent for any other",
+            "enum" : [ "ADMIN", "MEMBER" ],
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "permissions" : {
+            "items" : {
+              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_PLAYS", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES" ],
+              "type" : "string"
+            },
+            "type" : "array",
+            "uniqueItems" : true
+          }
+        },
+        "required" : [ "id", "name", "permissions" ],
+        "type" : "object"
       },
       "Session" : {
         "properties" : {
@@ -177,7 +327,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "password", "username" ],
+        "required" : [ "password", "staySignedIn", "username" ],
         "type" : "object"
       }
     }
@@ -218,6 +368,35 @@
         },
         "summary" : "Choose the language of the interface",
         "tags" : [ "Own Account" ]
+      }
+    },
+    "/api/claims" : {
+      "get" : {
+        "operationId" : "listClaims",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Claims"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Which Players have an Account",
+        "tags" : [ "Claims" ]
       }
     },
     "/api/game-modules" : {
@@ -324,6 +503,369 @@
         },
         "summary" : "List the Games in the catalogue",
         "tags" : [ "Games" ]
+      }
+    },
+    "/api/invites" : {
+      "get" : {
+        "operationId" : "listInvites",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/Invite"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "List the open Invites",
+        "tags" : [ "Invites" ]
+      },
+      "post" : {
+        "description" : "Replaces any earlier Invite for the same Player. The answer holds the link's token, which cannot be asked for again.",
+        "operationId" : "createInvite",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/InviteRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/NewInvite"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Invite a Player to register an Account",
+        "tags" : [ "Invites" ]
+      }
+    },
+    "/api/invites/{id}" : {
+      "delete" : {
+        "operationId" : "cancelInvite",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Cancel an Invite",
+        "tags" : [ "Invites" ]
+      }
+    },
+    "/api/players" : {
+      "get" : {
+        "operationId" : "listPlayers",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/Player"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "List the Players by name",
+        "tags" : [ "Players" ]
+      },
+      "post" : {
+        "operationId" : "createPlayer",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PlayerRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Player"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Create a Player",
+        "tags" : [ "Players" ]
+      }
+    },
+    "/api/players/{id}" : {
+      "delete" : {
+        "description" : "Only a Player without an Account and without Plays can be removed.",
+        "operationId" : "removePlayer",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Remove a Player",
+        "tags" : [ "Players" ]
+      },
+      "put" : {
+        "operationId" : "renamePlayer",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PlayerRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Player"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Rename a Player",
+        "tags" : [ "Players" ]
+      }
+    },
+    "/api/registration/{token}" : {
+      "get" : {
+        "operationId" : "getRegistration",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "token",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Registration"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Who an Invite's link is for",
+        "tags" : [ "Registration" ]
+      },
+      "post" : {
+        "operationId" : "register",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "token",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RegistrationRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Session"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Register the Account an Invite offers, and sign in as it",
+        "tags" : [ "Registration" ]
+      }
+    },
+    "/api/roles" : {
+      "get" : {
+        "description" : "The built-in Roles come first, then the others by name.",
+        "operationId" : "listRoles",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/Role"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "List the Roles with their Permissions",
+        "tags" : [ "Roles" ]
       }
     },
     "/api/session" : {

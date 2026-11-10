@@ -95,7 +95,7 @@ The one-time link, written to the server's log while no Account exists, that cre
 _Avoid_: Install link, bootstrap token
 
 **Invite**:
-An offer from an Admin to the person behind a Player to register an Account that claims that Player. Registering is only possible through an Invite.
+An offer to the person behind a Player to register an Account that claims that Player: a link that works once and for a limited time. Registering is only possible through an Invite.
 _Avoid_: Invitation code, sign-up link
 
 ### Access

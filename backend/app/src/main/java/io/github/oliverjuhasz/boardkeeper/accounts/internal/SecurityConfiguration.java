@@ -1,5 +1,6 @@
 package io.github.oliverjuhasz.boardkeeper.accounts.internal;
 
+import io.github.oliverjuhasz.boardkeeper.problems.ProblemResponses;
 import java.util.Map;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,7 +20,6 @@ import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.AuthorizationFilter;
-import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.context.DelegatingSecurityContextRepository;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
@@ -42,8 +42,9 @@ class SecurityConfiguration {
             SignInSessions sessions)
             throws Exception {
         http.authorizeHttpRequests(requests -> requests
-                        // Open to everyone: asking who is signed in, signing in, and the first-time setup.
-                        .requestMatchers("/api/session", "/api/setup")
+                        // Open to everyone: asking who is signed in, signing in, the first-time setup,
+                        // and registering with an Invite's link.
+                        .requestMatchers("/api/session", "/api/setup", "/api/registration/*")
                         .permitAll()
                         // The pages shown before signing in need the Game Modules' texts too.
                         .requestMatchers(HttpMethod.GET, "/api/game-modules/texts/*")
@@ -65,9 +66,14 @@ class SecurityConfiguration {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .logout(AbstractHttpConfigurer::disable)
-                // An API call without a sign-in gets "401 Unauthorized", not a redirect to a sign-in page.
-                .exceptionHandling(
-                        exceptions -> exceptions.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+                // An API call without a sign-in gets "401 Unauthorized", not a redirect to a sign-in
+                // page, and one without the needed Permission gets "403 Forbidden". Both carry a code,
+                // like every other error.
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint((request, response, exception) ->
+                                ProblemResponses.write(response, HttpStatus.UNAUTHORIZED, "access.notSignedIn"))
+                        .accessDeniedHandler((request, response, exception) ->
+                                ProblemResponses.write(response, HttpStatus.FORBIDDEN, "access.denied")))
                 .addFilterBefore(new AccountRefreshFilter(currentAccounts, sessions), AuthorizationFilter.class);
         return http.build();
     }

@@ -3,7 +3,8 @@
     "label": "Taal"
   },
   "common": {
-    "reloadToRetry": "Laad de pagina opnieuw om het nog eens te proberen."
+    "reloadToRetry": "Laad de pagina opnieuw om het nog eens te proberen.",
+    "cancel": "Annuleren"
   },
   "games": {
     "title": "Spellen",
@@ -91,10 +92,89 @@
       "usernameTaken": "Deze gebruikersnaam is al in gebruik."
     },
     "players": {
-      "nameTaken": "Er is al een speler met deze naam."
+      "nameTaken": "Er is al een speler met deze naam.",
+      "notFound": "Deze speler bestaat niet meer.",
+      "inUse": "Deze speler kan niet worden verwijderd: hij of zij heeft een account of heeft aan partijen meegedaan."
     },
     "request": {
       "invalid": "Controleer wat je hebt ingevuld en probeer het opnieuw."
+    },
+    "invites": {
+      "notValid": "Deze uitnodigingslink werkt niet meer. Vraag een nieuwe aan.",
+      "playerHasAccount": "Deze speler heeft al een account.",
+      "roleNotAllowed": "Je kunt niemand met deze rol uitnodigen.",
+      "notFound": "Deze uitnodiging bestaat niet meer."
+    },
+    "roles": {
+      "notFound": "Deze rol bestaat niet meer."
+    },
+    "access": {
+      "notSignedIn": "Je bent niet meer ingelogd.",
+      "denied": "Je mag dit niet doen."
+    }
+  },
+  "nav": {
+    "games": "Spellen",
+    "players": "Spelers"
+  },
+  "roles": {
+    "builtIn": {
+      "ADMIN": "Beheerder",
+      "MEMBER": "Lid"
+    }
+  },
+  "players": {
+    "title": "Spelers",
+    "description": "Iedereen die aan partijen meedoet, met of zonder account.",
+    "add": "Speler toevoegen",
+    "loading": "Spelers laden",
+    "loadFailed": "De spelers konden niet worden geladen",
+    "name": "Naam",
+    "status": "Account",
+    "hasAccount": "Heeft een account",
+    "invited": "Uitgenodigd",
+    "inviteExpired": "Uitnodiging verlopen",
+    "you": "Jij",
+    "actions": "Acties voor {{name}}",
+    "rename": "Naam wijzigen",
+    "invite": "Uitnodigen",
+    "inviteAgain": "Opnieuw uitnodigen",
+    "cancelInvite": "Uitnodiging intrekken",
+    "remove": "Verwijderen",
+    "addDialog": {
+      "title": "Speler toevoegen",
+      "description": "Voor iemand die aan partijen meedoet. Een account is niet nodig.",
+      "submit": "Speler toevoegen"
+    },
+    "renameDialog": {
+      "title": "Naam van {{name}} wijzigen",
+      "submit": "Wijzigen"
+    },
+    "removeDialog": {
+      "title": "{{name}} verwijderen?",
+      "description": "Dit kan niet ongedaan worden gemaakt.",
+      "confirm": "Speler verwijderen"
+    },
+    "inviteDialog": {
+      "title": "{{name}} uitnodigen",
+      "description": "Maakt een link waarmee {{name}} een account kan aanmaken. De link werkt één keer en is 7 dagen geldig.",
+      "role": "Rol",
+      "submit": "Uitnodigingslink maken",
+      "readyTitle": "Uitnodigingslink voor {{name}}",
+      "readyDescription": "Stuur deze link zelf naar {{name}}. Hij wordt alleen nu getoond, werkt één keer en is geldig tot {{date}}.",
+      "link": "Uitnodigingslink",
+      "copy": "Link kopiëren",
+      "copied": "Gekopieerd",
+      "done": "Klaar"
+    }
+  },
+  "register": {
+    "title": "Meedoen met Board Keeper",
+    "intro": "Je bent uitgenodigd als {{name}}. Kies een gebruikersnaam en een wachtwoord om je account aan te maken.",
+    "submit": "Account aanmaken",
+    "notValid": {
+      "title": "Deze uitnodigingslink werkt niet",
+      "text": "Hij is misschien al gebruikt, ingetrokken of verlopen. Vraag een nieuwe aan."
     }
   }
 }

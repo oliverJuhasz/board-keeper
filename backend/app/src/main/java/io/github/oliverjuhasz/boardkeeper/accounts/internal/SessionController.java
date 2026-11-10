@@ -92,7 +92,10 @@ class SessionController {
     record SignInRequest(
             @NotBlank @Size(max = 30) String username,
             @NotBlank @Size(max = AccountRules.MAX_PASSWORD_LENGTH) String password,
-            @Schema(description = "Stay signed in on this device for 90 days after the last visit") boolean staySignedIn) {}
+            @Schema(
+                            description = "Stay signed in on this device for 90 days after the last visit",
+                            requiredMode = Schema.RequiredMode.REQUIRED)
+                    boolean staySignedIn) {}
 
     @Schema(name = "Session")
     record SessionResponse(@Schema(description = "The signed-in Account. Absent when nobody is signed in.") AccountResponse account) {

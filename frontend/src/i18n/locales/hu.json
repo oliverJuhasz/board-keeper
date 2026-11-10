@@ -3,7 +3,8 @@
     "label": "Nyelv"
   },
   "common": {
-    "reloadToRetry": "Töltsd újra az oldalt, és próbáld meg még egyszer."
+    "reloadToRetry": "Töltsd újra az oldalt, és próbáld meg még egyszer.",
+    "cancel": "Mégse"
   },
   "games": {
     "title": "Játékok",
@@ -91,10 +92,89 @@
       "usernameTaken": "Ez a felhasználónév már foglalt."
     },
     "players": {
-      "nameTaken": "Már van ilyen nevű játékos."
+      "nameTaken": "Már van ilyen nevű játékos.",
+      "notFound": "Ez a játékos már nem létezik.",
+      "inUse": "Ezt a játékost nem lehet eltávolítani: van fiókja, vagy részt vett partikban."
     },
     "request": {
       "invalid": "Ellenőrizd a megadott adatokat, és próbáld újra."
+    },
+    "invites": {
+      "notValid": "Ez a meghívó hivatkozás már nem működik. Kérj egy újat.",
+      "playerHasAccount": "Ennek a játékosnak már van fiókja.",
+      "roleNotAllowed": "Ezzel a szerepkörrel nem hívhatsz meg senkit.",
+      "notFound": "Ez a meghívó már nem létezik."
+    },
+    "roles": {
+      "notFound": "Ez a szerepkör már nem létezik."
+    },
+    "access": {
+      "notSignedIn": "Már nem vagy bejelentkezve.",
+      "denied": "Ehhez nincs jogosultságod."
+    }
+  },
+  "nav": {
+    "games": "Játékok",
+    "players": "Játékosok"
+  },
+  "roles": {
+    "builtIn": {
+      "ADMIN": "Adminisztrátor",
+      "MEMBER": "Tag"
+    }
+  },
+  "players": {
+    "title": "Játékosok",
+    "description": "Mindenki, aki részt vesz a partikban, akár van fiókja, akár nincs.",
+    "add": "Játékos hozzáadása",
+    "loading": "Játékosok betöltése",
+    "loadFailed": "Nem sikerült betölteni a játékosokat",
+    "name": "Név",
+    "status": "Fiók",
+    "hasAccount": "Van fiókja",
+    "invited": "Meghívva",
+    "inviteExpired": "A meghívó lejárt",
+    "you": "Te",
+    "actions": "Műveletek: {{name}}",
+    "rename": "Átnevezés",
+    "invite": "Meghívás",
+    "inviteAgain": "Újbóli meghívás",
+    "cancelInvite": "Meghívó visszavonása",
+    "remove": "Eltávolítás",
+    "addDialog": {
+      "title": "Játékos hozzáadása",
+      "description": "Olyasvalakinek, aki részt vesz a partikban. Fiókra nincs szüksége.",
+      "submit": "Játékos hozzáadása"
+    },
+    "renameDialog": {
+      "title": "{{name}} átnevezése",
+      "submit": "Átnevezés"
+    },
+    "removeDialog": {
+      "title": "Eltávolítod: {{name}}?",
+      "description": "Ezt nem lehet visszavonni.",
+      "confirm": "Játékos eltávolítása"
+    },
+    "inviteDialog": {
+      "title": "{{name}} meghívása",
+      "description": "Létrehoz egy hivatkozást, amellyel {{name}} fiókot regisztrálhat. A hivatkozás egyszer használható, és 7 napig érvényes.",
+      "role": "Szerepkör",
+      "submit": "Meghívó hivatkozás létrehozása",
+      "readyTitle": "Meghívó hivatkozás: {{name}}",
+      "readyDescription": "Ezt a hivatkozást neked kell elküldened neki ({{name}}). Csak most látható, egyszer használható, és eddig érvényes: {{date}}.",
+      "link": "Meghívó hivatkozás",
+      "copy": "Hivatkozás másolása",
+      "copied": "Kimásolva",
+      "done": "Kész"
+    }
+  },
+  "register": {
+    "title": "Csatlakozás a Board Keeperhez",
+    "intro": "Meghívtak a következő játékosként: {{name}}. Válassz felhasználónevet és jelszót a fiókod létrehozásához.",
+    "submit": "Fiók létrehozása",
+    "notValid": {
+      "title": "Ez a meghívó hivatkozás nem működik",
+      "text": "Lehet, hogy már felhasználták, visszavonták, vagy lejárt. Kérj egy újat."
     }
   }
 }

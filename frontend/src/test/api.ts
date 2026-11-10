@@ -1,5 +1,5 @@
 import { http, HttpResponse } from "msw"
-import type { CurrentAccount, Game, GameModule } from "@/api/client"
+import type { CurrentAccount, Game, GameModule, Invite, Player, Role } from "@/api/client"
 import { server } from "./server"
 
 // Ready-made answers of the pretend backend, for tests to combine.
@@ -68,4 +68,38 @@ export function gamesAre(games: Game[], gameModules: GameModule[] = [genericModu
 /** An error answer in the backend's format. */
 export function problem(status: number, code: string) {
   return HttpResponse.json({ status, code }, { status })
+}
+
+export const adminRole: Role = {
+  id: "0193a000-0000-7000-8000-0000000000c1",
+  name: "Admin",
+  builtIn: "ADMIN",
+  permissions: anna.permissions,
+}
+
+export const memberRole: Role = {
+  id: "0193a000-0000-7000-8000-0000000000c2",
+  name: "Member",
+  builtIn: "MEMBER",
+  permissions: bence.permissions,
+}
+
+export const annaPlayer: Player = { id: anna.playerId, name: "Anna" }
+export const bencePlayer: Player = { id: bence.playerId, name: "Bence" }
+/** A Player without an Account. */
+export const doraPlayer: Player = { id: "0193a000-0000-7000-8000-0000000000b3", name: "Dora" }
+
+/**
+ * What the Players page loads. The lists are kept here, so a test's own handlers can change
+ * them and the page sees the change when it loads them again.
+ */
+export function playersAre(players: Player[], claimedPlayerIds: string[], invites: Invite[] = []) {
+  const state = { players: [...players], claimedPlayerIds, invites: [...invites] }
+  server.use(
+    http.get("*/api/players", () => HttpResponse.json(state.players)),
+    http.get("*/api/claims", () => HttpResponse.json({ playerIds: state.claimedPlayerIds })),
+    http.get("*/api/invites", () => HttpResponse.json(state.invites)),
+    http.get("*/api/roles", () => HttpResponse.json([adminRole, memberRole])),
+  )
+  return state
 }

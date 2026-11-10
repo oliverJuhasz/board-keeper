@@ -5,6 +5,7 @@ import static io.github.oliverjuhasz.boardkeeper.jooq.Tables.ACCOUNT_ROLE;
 import static org.jooq.impl.DSL.lower;
 
 import io.github.oliverjuhasz.boardkeeper.language.Language;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.jooq.DSLContext;
@@ -25,6 +26,15 @@ class AccountRepository {
 
     boolean existsByUsername(String username) {
         return dsl.fetchExists(ACCOUNT, lower(ACCOUNT.USERNAME).eq(username.toLowerCase()));
+    }
+
+    boolean existsByPlayer(UUID playerId) {
+        return dsl.fetchExists(ACCOUNT, ACCOUNT.PLAYER_ID.eq(playerId));
+    }
+
+    /** The Players that have an Account. */
+    List<UUID> findClaimedPlayerIds() {
+        return dsl.select(ACCOUNT.PLAYER_ID).from(ACCOUNT).orderBy(ACCOUNT.PLAYER_ID).fetch(row -> row.value1());
     }
 
     /** What signing in needs to know, found by username whatever its capitals. */
