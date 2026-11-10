@@ -4,6 +4,7 @@ A self-hosted app for recording board game plays and scores, for personal use an
 
 - Domain language: [`CONTEXT.md`](CONTEXT.md)
 - Architecture decisions: [`docs/adr/`](docs/adr/)
+- Scope and milestones: [`docs/roadmap.md`](docs/roadmap.md)
 
 ## Stack
 

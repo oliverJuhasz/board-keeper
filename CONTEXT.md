@@ -15,7 +15,7 @@ An add-on product for a Game, such as Oceania for Wingspan. It can change how th
 _Avoid_: Add-on, extension, DLC
 
 **Variant**:
-A setup option of a Game, chosen for each Play, that can change how it is scored. It is either a choice between options (Harmonies' board side A or B) or an on/off switch (Calico's family variant).
+A setup option of a Game, chosen for each Play, that can change how it is scored. It is a choice between options (Harmonies' board side A or B), an on/off switch (Calico's family variant), or a number in a range (the adversary level in Spirit Island).
 _Avoid_: Mode, house rule, option
 
 **Setup**:
