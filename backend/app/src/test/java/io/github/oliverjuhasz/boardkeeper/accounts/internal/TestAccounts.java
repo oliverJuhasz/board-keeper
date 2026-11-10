@@ -58,14 +58,23 @@ public class TestAccounts {
         return accountId;
     }
 
-    /** A browser in which the Account with this username has signed in. */
-    public TestBrowser signedIn(MockMvcTester mvc, String username) {
+    /** A browser in which the Account has signed in with a password other than the usual one. */
+    public TestBrowser signedIn(MockMvcTester mvc, String username, String password) {
         TestBrowser browser = TestBrowser.open(mvc);
-        var result = browser.post("/api/session", "{\"username\": \"%s\", \"password\": \"%s\", \"staySignedIn\": false}".formatted(username, PASSWORD));
+        var result = browser.post("/api/session", signInRequest(username, password));
         if (result.getResponse().getStatus() != 200) {
             throw new IllegalStateException("Could not sign in as " + username);
         }
         return browser;
+    }
+
+    public static String signInRequest(String username, String password) {
+        return "{\"username\": \"%s\", \"password\": \"%s\", \"staySignedIn\": false}".formatted(username, password);
+    }
+
+    /** A browser in which the Account with this username has signed in. */
+    public TestBrowser signedIn(MockMvcTester mvc, String username) {
+        return signedIn(mvc, username, PASSWORD);
     }
 
     public UUID playerOf(UUID accountId) {

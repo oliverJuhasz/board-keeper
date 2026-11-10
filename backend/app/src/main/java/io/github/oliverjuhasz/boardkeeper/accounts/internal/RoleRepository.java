@@ -10,6 +10,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.jooq.DSLContext;
@@ -58,6 +59,40 @@ class RoleRepository {
                 });
     }
 
+    Optional<RoleRow> find(UUID roleId) {
+        return findAll().stream().filter(role -> role.id().equals(roleId)).findFirst();
+    }
+
+    /** The Role with this name, whatever its capitals. */
+    Optional<UUID> findIdByName(String name) {
+        return dsl.select(ROLE.ID)
+                .from(ROLE)
+                .where(lower(ROLE.NAME).eq(name.toLowerCase()))
+                .fetchOptional(row -> row.value1());
+    }
+
+    UUID insert(String name) {
+        return dsl.insertInto(ROLE, ROLE.NAME).values(name).returningResult(ROLE.ID).fetchSingle().value1();
+    }
+
+    void rename(UUID roleId, String name) {
+        dsl.update(ROLE).set(ROLE.NAME, name).where(ROLE.ID.eq(roleId)).execute();
+    }
+
+    void setPermissions(UUID roleId, Set<Permission> permissions) {
+        dsl.deleteFrom(ROLE_PERMISSION).where(ROLE_PERMISSION.ROLE_ID.eq(roleId)).execute();
+        for (Permission permission : permissions) {
+            dsl.insertInto(ROLE_PERMISSION, ROLE_PERMISSION.ROLE_ID, ROLE_PERMISSION.PERMISSION)
+                    .values(roleId, permission.name())
+                    .execute();
+        }
+    }
+
+    /** Deleting a Role also takes it away from every Account that held it. */
+    void delete(UUID roleId) {
+        dsl.deleteFrom(ROLE).where(ROLE.ID.eq(roleId)).execute();
+    }
+
     /** Everything the Account may do: the Permissions of all its Roles together. */
     Set<Permission> permissionsOf(UUID accountId) {
         var rows = dsl.select(ROLE.BUILT_IN, ROLE_PERMISSION.PERMISSION)
@@ -83,14 +118,14 @@ class RoleRepository {
     record RoleRow(UUID id, String name, BuiltInRole builtIn, Set<Permission> permissions) {}
 
     /** A name in the database that the code no longer knows is skipped, not an error. */
-    private static java.util.Optional<Permission> parse(String name) {
+    private static Optional<Permission> parse(String name) {
         if (name == null) {
-            return java.util.Optional.empty();
+            return Optional.empty();
         }
         try {
-            return java.util.Optional.of(Permission.valueOf(name));
+            return Optional.of(Permission.valueOf(name));
         } catch (IllegalArgumentException e) {
-            return java.util.Optional.empty();
+            return Optional.empty();
         }
     }
 }

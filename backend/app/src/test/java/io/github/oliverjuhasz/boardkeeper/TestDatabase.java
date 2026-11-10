@@ -5,6 +5,7 @@ import static io.github.oliverjuhasz.boardkeeper.jooq.Tables.GAME;
 import static io.github.oliverjuhasz.boardkeeper.jooq.Tables.INVITE;
 import static io.github.oliverjuhasz.boardkeeper.jooq.Tables.PLAYER;
 import static io.github.oliverjuhasz.boardkeeper.jooq.Tables.ROLE;
+import static io.github.oliverjuhasz.boardkeeper.jooq.Tables.ROLE_PERMISSION;
 
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
@@ -29,6 +30,14 @@ public class TestDatabase {
         dsl.deleteFrom(ACCOUNT).execute();
         dsl.deleteFrom(PLAYER).execute();
         dsl.deleteFrom(ROLE).where(ROLE.BUILT_IN.isNull()).execute();
+        // Put the Member Role back to the Permissions it starts with, in case a test changed them.
+        var member = dsl.select(ROLE.ID).from(ROLE).where(ROLE.BUILT_IN.eq("MEMBER")).fetchSingle().value1();
+        dsl.deleteFrom(ROLE_PERMISSION).where(ROLE_PERMISSION.ROLE_ID.eq(member)).execute();
+        for (String permission : new String[] {"CREATE_PLAYERS", "CREATE_PLAYS"}) {
+            dsl.insertInto(ROLE_PERMISSION, ROLE_PERMISSION.ROLE_ID, ROLE_PERMISSION.PERMISSION)
+                    .values(member, permission)
+                    .execute();
+        }
         dsl.deleteFrom(GAME).execute();
     }
 }
