@@ -25,7 +25,7 @@ Board Keeper is a learning project first ([ADR 0001](docs/adr/0001-learning-proj
 | Forms and validation | React Hook Form, Zod |
 | Styling and components | Tailwind CSS v4, shadcn/ui (on Base UI) |
 | PWA | vite-plugin-pwa |
-| Tests | Vitest, React Testing Library, Mock Service Worker; Playwright for end-to-end tests |
+| Tests | Vitest, React Testing Library, Mock Service Worker; Playwright end-to-end tests once the frontend is complete |
 | Lint and format | ESLint, Prettier |
 
 **Deployment:** GitHub Actions builds and tests every push and publishes the container image to GitHub Container Registry. It runs as one app container (Spring Boot serves both the API and the built frontend) plus one PostgreSQL container. The repository provides the image, an example compose file and a self-hosting guide. Anything specific to one installation is out of scope: network access, reverse proxy, automatic updates and backup scheduling. On first start, with no accounts yet, the app writes a one-time link to its log for creating the first Admin.
@@ -34,4 +34,4 @@ Board Keeper is a learning project first ([ADR 0001](docs/adr/0001-learning-proj
 
 ## Status
 
-Milestone M0, the skeleton, is in place: the backend, the frontend, the container image and CI all build and run, and one page shows data from the API. Accounts, translations, the PWA and end-to-end tests come in later milestones. Until milestone M1 adds sign-in, the app has no access control.
+Milestone M0, the skeleton, is in place: the backend, the frontend, the container image and CI all build and run, and one page shows data from the API. Milestone M1 is under way: the interface is available in English, Dutch and Hungarian. Until M1 adds sign-in, the app has no access control.

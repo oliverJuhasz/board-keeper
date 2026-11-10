@@ -110,6 +110,28 @@ Game Modules are plain Java, with no Spring. The core finds them with Java's `Se
 3. Commit the file along with your change.
 4. In `frontend/`, `npm run generate:api` regenerates `src/api/schema.d.ts`. It also runs by itself before `npm run dev` and `npm run build`. TypeScript then reports every place in the frontend that has to follow the change.
 
+### Texts and translations
+
+Every text the user sees comes from a translation file, in English, Dutch and Hungarian. There are two kinds.
+
+**The frontend's own texts** are in `frontend/src/i18n/locales/en.json`, `nl.json` and `hu.json`. To add one:
+
+1. Add it to all three files under the same name, such as `games.empty`. A test fails when the files don't have the same names.
+2. Use it in a component:
+
+```tsx
+const { t } = useTranslation()
+return <p>{t("games.empty")}</p>
+```
+
+TypeScript knows the names from `en.json`, so a misspelt name does not compile.
+
+**A Game Module's texts** are in the module itself, in `i18n/<key>_en.properties`, `_nl` and `_hu`, saved as UTF-8. Every name starts with the module's key, such as `calico.name`. English is required; a text missing in Dutch or Hungarian is shown in English, and the backend logs a warning at startup. The frontend loads these texts from `/api/game-modules/texts/{language}` through the `useGameModuleTexts` hook.
+
+**Which language is shown:** the one chosen with the switcher, which the browser remembers; otherwise the browser's own language; otherwise English. `frontend/src/i18n/index.ts` sets this up. The backend's list of languages is the `Language` enum.
+
+Names that people type in, such as a Player's or a Game's, are never translated.
+
 ### Adding a user-interface component
 
 shadcn/ui components are not a library you import. Their source is copied into the project, where you can read and change it:
@@ -127,7 +149,7 @@ The contract is only identity for now; milestone M3 adds scoring.
 1. Copy `backend/games/generic` to `backend/games/<key>` and rename the artifact to `game-<key>`.
 2. Give the module a newly generated UUID. It is stored with every Play, so it never changes afterwards ([ADR 0012](adr/0012-game-module-uuid-and-key.md)).
 3. Name the module's class in its `META-INF/services` file.
-4. Add `i18n/<key>_en.properties`, and the same for `nl` and `hu`.
+4. Add `i18n/<key>_en.properties`, and the same for `nl` and `hu`, with at least `<key>.name`.
 5. Register it in three places: as a `<module>` and under `<dependencyManagement>` in `backend/pom.xml`, and as a `runtime` dependency in `backend/app/pom.xml`.
 
 ## Continuous integration

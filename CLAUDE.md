@@ -29,6 +29,7 @@ Read these before working on anything:
 - **Nothing about a particular installation goes into the repository** (ADR 0009): no hostnames, IP addresses, user or group IDs, tokens or passwords. Read such values from environment variables or an untracked `.env` file, and commit a `.env.example` containing only placeholders. Network access, reverse proxies, automatic updates and backup scheduling for a specific installation are out of scope.
 - **Database:** never edit a Flyway migration once it has been applied; add a new one instead. Don't use jOOQ's generated classes inside Java migrations, because they describe the latest schema, not the schema at that migration.
 - **Game Modules** depend only on `game-api` and have no database tables of their own. Each has a UUID that never changes plus a readable key (ADR 0012). Each ships one translation file per language under a name of its own, such as `i18n/calico_en.properties`, for English, Dutch and Hungarian. English is required; the others fall back to English.
+- **Texts:** nothing the user reads is written into a component. Add every text to all three files in `frontend/src/i18n/locales/` (or, for a Game Module, to its `i18n` files) and write the Dutch and Hungarian yourself, informally, for the author to correct.
 - **Scoring rules** come from the game's official rulebook. Online summaries often disagree, so when a rule is unclear, ask instead of guessing.
 
 ## Build and test
