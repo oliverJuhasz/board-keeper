@@ -1,9 +1,7 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { QueryClientProvider } from "@tanstack/react-query"
 import { RouterProvider } from "react-router/dom"
+import { queryClient } from "./api/queryClient"
 import { router } from "./router"
-
-// TanStack Query's cache of data loaded from the server, shared by the whole app.
-const queryClient = new QueryClient()
 
 export function App() {
   return (

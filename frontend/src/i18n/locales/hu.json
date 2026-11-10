@@ -22,5 +22,79 @@
     "title": "Az oldal nem található",
     "text": "Ezen a címen nincs semmi.",
     "goToStart": "Ugrás a kezdőlapra"
+  },
+  "app": {
+    "loading": "Betöltés…",
+    "unreachable": "A Board Keeper nem érhető el",
+    "tryAgain": "Újra"
+  },
+  "signIn": {
+    "title": "Bejelentkezés",
+    "username": "Felhasználónév",
+    "password": "Jelszó",
+    "staySignedIn": "Maradjak bejelentkezve",
+    "staySignedInHint": "90 napig ezen az eszközön.",
+    "submit": "Bejelentkezés",
+    "setupNeeded": {
+      "title": "A Board Keeper még nincs beállítva",
+      "text": "Az első adminisztrátor létrehozásához nyisd meg a szerver naplójában található beállítási hivatkozást."
+    }
+  },
+  "setup": {
+    "title": "A Board Keeper beállítása",
+    "intro": "Hozd létre az első adminisztrátori fiókot.",
+    "playerName": "A neved",
+    "playerNameHint": "Ezen a néven szerepelsz a partikban.",
+    "username": "Felhasználónév",
+    "usernameHint": "3–30 betű, számjegy, pont, kötőjel vagy aláhúzásjel.",
+    "password": "Jelszó",
+    "passwordHint": "Legalább 16 karakter. Néhány egymás utáni szó jól működik.",
+    "submit": "Fiók létrehozása",
+    "noToken": {
+      "title": "Ez a hivatkozás hiányos",
+      "text": "Nyisd meg a teljes beállítási hivatkozást a szerver naplójából."
+    },
+    "done": {
+      "title": "A Board Keeper már be van állítva",
+      "text": "Bejelentkezhetsz a fiókoddal.",
+      "signIn": "Tovább a bejelentkezéshez"
+    }
+  },
+  "account": {
+    "menu": "Fiók",
+    "signedInAs": "Bejelentkezve: {{username}}",
+    "signOut": "Kijelentkezés"
+  },
+  "password": {
+    "show": "Jelszó megjelenítése",
+    "hide": "Jelszó elrejtése"
+  },
+  "validation": {
+    "required": "Töltsd ki ezt a mezőt.",
+    "usernameInvalid": "3–30 betűt, számjegyet, pontot, kötőjelet vagy aláhúzásjelet használj.",
+    "passwordTooShort": "Legalább 16 karaktert használj.",
+    "passwordTooLong": "Legfeljebb 200 karaktert használj.",
+    "nameTooLong": "Legfeljebb 50 karaktert használj."
+  },
+  "problems": {
+    "unknown": "Valami hiba történt. Próbáld újra.",
+    "network": "A szerver nem érhető el. Ellenőrizd a kapcsolatot, és próbáld újra.",
+    "session": {
+      "badCredentials": "Hibás felhasználónév vagy jelszó.",
+      "accountDisabled": "Ezt a fiókot letiltották."
+    },
+    "setup": {
+      "wrongLink": "Ez a beállítási hivatkozás nem érvényes. Használd a szerver naplójában található legújabb hivatkozást.",
+      "alreadyDone": "A Board Keeper már be van állítva."
+    },
+    "accounts": {
+      "usernameTaken": "Ez a felhasználónév már foglalt."
+    },
+    "players": {
+      "nameTaken": "Már van ilyen nevű játékos."
+    },
+    "request": {
+      "invalid": "Ellenőrizd a megadott adatokat, és próbáld újra."
+    }
   }
 }

@@ -22,5 +22,79 @@
     "title": "Pagina niet gevonden",
     "text": "Op dit adres is niets te vinden.",
     "goToStart": "Ga naar de startpagina"
+  },
+  "app": {
+    "loading": "Laden…",
+    "unreachable": "Board Keeper is niet bereikbaar",
+    "tryAgain": "Opnieuw proberen"
+  },
+  "signIn": {
+    "title": "Inloggen",
+    "username": "Gebruikersnaam",
+    "password": "Wachtwoord",
+    "staySignedIn": "Ingelogd blijven",
+    "staySignedInHint": "90 dagen op dit apparaat.",
+    "submit": "Inloggen",
+    "setupNeeded": {
+      "title": "Board Keeper is nog niet ingesteld",
+      "text": "Open de installatielink uit het serverlog om de eerste beheerder aan te maken."
+    }
+  },
+  "setup": {
+    "title": "Board Keeper instellen",
+    "intro": "Maak het eerste beheerdersaccount aan.",
+    "playerName": "Je naam",
+    "playerNameHint": "De naam waaronder je in partijen staat.",
+    "username": "Gebruikersnaam",
+    "usernameHint": "3 tot 30 letters, cijfers, punten, streepjes of underscores.",
+    "password": "Wachtwoord",
+    "passwordHint": "Minstens 16 tekens. Een paar woorden achter elkaar werkt goed.",
+    "submit": "Account aanmaken",
+    "noToken": {
+      "title": "Deze link is onvolledig",
+      "text": "Open de volledige installatielink uit het serverlog."
+    },
+    "done": {
+      "title": "Board Keeper is al ingesteld",
+      "text": "Je kunt inloggen met je account.",
+      "signIn": "Naar inloggen"
+    }
+  },
+  "account": {
+    "menu": "Account",
+    "signedInAs": "Ingelogd als {{username}}",
+    "signOut": "Uitloggen"
+  },
+  "password": {
+    "show": "Wachtwoord tonen",
+    "hide": "Wachtwoord verbergen"
+  },
+  "validation": {
+    "required": "Vul dit in.",
+    "usernameInvalid": "Gebruik 3 tot 30 letters, cijfers, punten, streepjes of underscores.",
+    "passwordTooShort": "Gebruik minstens 16 tekens.",
+    "passwordTooLong": "Gebruik hoogstens 200 tekens.",
+    "nameTooLong": "Gebruik hoogstens 50 tekens."
+  },
+  "problems": {
+    "unknown": "Er ging iets mis. Probeer het opnieuw.",
+    "network": "De server is niet bereikbaar. Controleer je verbinding en probeer het opnieuw.",
+    "session": {
+      "badCredentials": "Verkeerde gebruikersnaam of verkeerd wachtwoord.",
+      "accountDisabled": "Dit account is uitgeschakeld."
+    },
+    "setup": {
+      "wrongLink": "Deze installatielink is niet geldig. Gebruik de nieuwste link uit het serverlog.",
+      "alreadyDone": "Board Keeper is al ingesteld."
+    },
+    "accounts": {
+      "usernameTaken": "Deze gebruikersnaam is al in gebruik."
+    },
+    "players": {
+      "nameTaken": "Er is al een speler met deze naam."
+    },
+    "request": {
+      "invalid": "Controleer wat je hebt ingevuld en probeer het opnieuw."
+    }
   }
 }
