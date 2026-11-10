@@ -133,6 +133,8 @@ PlayerResponse create(@Valid @RequestBody CreatePlayerRequest body) { ... }
 
 To add a Permission, add it to the `Permission` enum, regenerate `api/openapi.json`, and add its name to the three translation files. The Admin Role gets it automatically. In the frontend, `useCan()` tells whether the signed-in Account holds a Permission, for showing or hiding what needs it.
 
+**One-time links.** An Invite is a link with a random token in it. The token is shown once, when the Invite is created; the database keeps only a hash of it (`LinkTokens`), so reading the database does not give anyone a usable link. `Invites` and `RegistrationController` show the pattern.
+
 **Reporting an error.** Throw a `Problem` with a code. The backend never writes the message; the frontend has a text for every code, under `problems` in the translation files:
 
 ```java
