@@ -61,6 +61,38 @@
         "tags" : [ "Game Modules" ]
       }
     },
+    "/api/game-modules/texts/{language}" : {
+      "get" : {
+        "description" : "A text that has no translation in the language asked for is given in English.",
+        "operationId" : "getGameModuleTexts",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "language",
+          "required" : true,
+          "schema" : {
+            "enum" : [ "en", "nl", "hu" ],
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "additionalProperties" : {
+                    "type" : "string"
+                  },
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "The texts of every installed Game Module in one language, by name",
+        "tags" : [ "Game Modules" ]
+      }
+    },
     "/api/games" : {
       "get" : {
         "operationId" : "listGames",

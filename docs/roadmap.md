@@ -28,6 +28,7 @@ Terms are defined in [`CONTEXT.md`](../CONTEXT.md). The reasons behind the bigge
 - The interface in English (default), Dutch and Hungarian.
 - An installable PWA that works online only.
 - A container image built by CI, an example compose file and a self-hosting guide.
+- The API's description and Swagger UI, open to everyone who can reach a running installation.
 
 ### Deliberately not in v1
 
@@ -37,6 +38,7 @@ Recording without a connection, teams, unfinished plays, game nights, importing 
 
 - Merging duplicate Players. The model must not rule it out.
 - Head-to-head records, streaks and charts.
+- Playwright end-to-end tests, once the frontend is functionally complete and settled.
 - Signing in through an outside provider.
 - Before publishing the repository: a licence and ARM images.
 
@@ -56,6 +58,5 @@ Recording without a connection, teams, unfinished plays, game nights, importing 
 
 - **M2:** which fields a Play has besides its Game, date and Players, for example an optional location and notes.
 - **M2:** how to keep each Spring Modulith module to its own tables. The generated jOOQ classes are currently one package that every module may use, so nothing yet stops `stats` from reading the `plays` tables, which ADR 0011 rules out.
-- **M1:** who may see Swagger UI and the API description, which are open to everyone for now. Also when to add Playwright end-to-end tests; signing in is the first flow worth one.
 - **M3 and M6:** each game's exact scoring and tie-break rules, taken from its official rulebook. Online summaries disagree, for example on the order of Calico's tie-breakers and on Spirit Island's score formula.
 - **M6:** which edition of 7 Wonders the module covers, because the first and second editions differ. Any team rules in Cities stay unsupported while teams are out of scope.

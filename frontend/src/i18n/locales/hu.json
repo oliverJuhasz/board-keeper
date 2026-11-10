@@ -1,0 +1,26 @@
+{
+  "language": {
+    "label": "Nyelv"
+  },
+  "common": {
+    "reloadToRetry": "Töltsd újra az oldalt, és próbáld meg még egyszer."
+  },
+  "games": {
+    "title": "Játékok",
+    "description": "A játékok, amelyek partijait rögzítheted.",
+    "empty": "Még nincsenek játékok.",
+    "loading": "Játékok betöltése",
+    "loadFailed": "Nem sikerült betölteni a játékokat"
+  },
+  "gameModules": {
+    "title": "Játékmodulok",
+    "description": "A telepítésbe beépített pontozási támogatás.",
+    "loading": "Játékmodulok betöltése",
+    "loadFailed": "Nem sikerült betölteni a játékmodulokat"
+  },
+  "notFound": {
+    "title": "Az oldal nem található",
+    "text": "Ezen a címen nincs semmi.",
+    "goToStart": "Ugrás a kezdőlapra"
+  }
+}

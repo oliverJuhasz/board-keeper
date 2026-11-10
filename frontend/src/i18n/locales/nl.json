@@ -1,0 +1,26 @@
+{
+  "language": {
+    "label": "Taal"
+  },
+  "common": {
+    "reloadToRetry": "Laad de pagina opnieuw om het nog eens te proberen."
+  },
+  "games": {
+    "title": "Spellen",
+    "description": "De spellen waarvan je partijen kunt vastleggen.",
+    "empty": "Nog geen spellen.",
+    "loading": "Spellen laden",
+    "loadFailed": "De spellen konden niet worden geladen"
+  },
+  "gameModules": {
+    "title": "Spelmodules",
+    "description": "De puntentelling die in deze installatie is ingebouwd.",
+    "loading": "Spelmodules laden",
+    "loadFailed": "De spelmodules konden niet worden geladen"
+  },
+  "notFound": {
+    "title": "Pagina niet gevonden",
+    "text": "Op dit adres is niets te vinden.",
+    "goToStart": "Ga naar de startpagina"
+  }
+}
