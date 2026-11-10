@@ -55,5 +55,7 @@ Recording without a connection, teams, unfinished plays, game nights, importing 
 ## Details to settle when a milestone starts
 
 - **M2:** which fields a Play has besides its Game, date and Players, for example an optional location and notes.
+- **M2:** how to keep each Spring Modulith module to its own tables. The generated jOOQ classes are currently one package that every module may use, so nothing yet stops `stats` from reading the `plays` tables, which ADR 0011 rules out.
+- **M1:** who may see Swagger UI and the API description, which are open to everyone for now. Also when to add Playwright end-to-end tests; signing in is the first flow worth one.
 - **M3 and M6:** each game's exact scoring and tie-break rules, taken from its official rulebook. Online summaries disagree, for example on the order of Calico's tie-breakers and on Spirit Island's score formula.
 - **M6:** which edition of 7 Wonders the module covers, because the first and second editions differ. Any team rules in Cities stay unsupported while teams are out of scope.

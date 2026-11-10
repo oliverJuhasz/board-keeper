@@ -33,4 +33,12 @@ Read these before working on anything:
 
 ## Build and test
 
-There is no code yet. Milestone M0 creates the skeleton; add the build, test and run commands here when it does.
+`docs/development.md` has the full guide. In short:
+
+- Building needs JDK 25, Node.js 22.12 or later, and a running Docker daemon.
+- Backend, in `backend/`: `./mvnw verify` generates the jOOQ code and runs every test. `./mvnw spring-boot:test-run` runs the app on port 8080 with a throwaway PostgreSQL.
+- Frontend, in `frontend/`: `npm ci`, then `npm test`, `npm run lint`, `npm run typecheck`, `npm run format:check`, `npm run build`. `npm run dev` serves it on port 5173 and passes `/api` on to the backend.
+- The jar includes the frontend only if `frontend/dist` exists, so run `npm run build` before `./mvnw verify` when building the whole application or the image.
+- After changing the API, run `./mvnw verify -Dboardkeeper.openapi.update=true` and commit `api/openapi.json`. A test fails while that file doesn't match the API.
+- Add shadcn/ui components with `npx shadcn@latest add <name>`, then `npm run format`.
+- Before calling a change done, run the backend and frontend checks above, and for anything visible, look at it in a browser.
