@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Inheriting from Spring Boot's parent gives every module tested, matching versions
+         of the libraries and Maven plugins Boot knows about (jOOQ, Flyway, Testcontainers, ...). -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.1.2</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>io.github.oliverjuhasz.boardkeeper</groupId>
+    <artifactId>board-keeper</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>Board Keeper</name>
+
+    <modules>
+        <module>game-api</module>
+        <module>games/generic</module>
+        <module>app</module>
+    </modules>
+
+    <properties>
+        <java.version>25</java.version>
+        <!-- Not managed by Spring Boot, so versioned here. -->
+        <spring-modulith.version>2.1.2</spring-modulith.version>
+        <springdoc.version>3.2.0</springdoc.version>
+        <gmavenplus-plugin.version>5.1.0</gmavenplus-plugin.version>
+        <groovy.version>5.1.3</groovy.version>
+        <!-- The PostgreSQL used for jOOQ code generation and tests. Keep it in step with deploy/compose.yaml. -->
+        <postgres.image>postgres:18-alpine</postgres.image>
+    </properties>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <!-- Lets "./mvnw spring-boot:test-run" be started from this folder: the goal is
+                     skipped in every module except app, which switches it back on. -->
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <configuration>
+                        <skip>true</skip>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.modulith</groupId>
+                <artifactId>spring-modulith-bom</artifactId>
+                <version>${spring-modulith.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.github.oliverjuhasz.boardkeeper</groupId>
+                <artifactId>game-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.oliverjuhasz.boardkeeper</groupId>
+                <artifactId>game-generic</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+</project>

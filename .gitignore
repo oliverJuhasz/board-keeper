@@ -1,0 +1,20 @@
+# Build output
+target/
+dist/
+node_modules/
+coverage/
+
+# Generated from api/openapi.json by "npm run generate:api"
+frontend/src/api/schema.d.ts
+
+# Local settings: never commit real values (ADR 0009)
+.env
+.env.*
+!.env.example
+
+# Editors and operating systems
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db

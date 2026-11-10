@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.github.oliverjuhasz.boardkeeper</groupId>
+        <artifactId>board-keeper</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>app</artifactId>
+    <name>Board Keeper: Application</name>
+    <description>The Spring Boot application: the core, plus every Game Module on its classpath.</description>
+
+    <properties>
+        <!-- Where the built frontend is picked up from, to be served by Spring Boot. -->
+        <frontend.dist>${project.basedir}/../../frontend/dist</frontend.dist>
+        <!-- The committed description of the API, which the frontend's types are generated from. -->
+        <boardkeeper.openapi.file>${project.basedir}/../../api/openapi.json</boardkeeper.openapi.file>
+    </properties>
+
+    <dependencies>
+        <!-- The contract with Game Modules. The core compiles against this only. -->
+        <dependency>
+            <groupId>io.github.oliverjuhasz.boardkeeper</groupId>
+            <artifactId>game-api</artifactId>
+        </dependency>
+
+        <!-- Game Modules. "runtime" scope puts them in the application but hides them from the
+             compiler, so core code cannot reach into a Game Module. -->
+        <dependency>
+            <groupId>io.github.oliverjuhasz.boardkeeper</groupId>
+            <artifactId>game-generic</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jooq</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-flyway</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.modulith</groupId>
+            <artifactId>spring-modulith-starter-core</artifactId>
+        </dependency>
+        <!-- Publishes the OpenAPI description at /v3/api-docs and Swagger UI at /swagger-ui.html. -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>${springdoc.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.modulith</groupId>
+            <artifactId>spring-modulith-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <!-- The application is built as target/board-keeper.jar. -->
+        <finalName>board-keeper</finalName>
+        <plugins>
+            <!--
+              jOOQ code generation from a real PostgreSQL (ADR 0007). Three steps run in the
+              generate-sources phase, in the order they are declared here:
+
+                1. gmavenplus: start a throwaway PostgreSQL with Testcontainers and publish its
+                   connection details as Maven properties.
+                2. flyway: apply the migrations to it.
+                3. jooq-codegen: generate Java code from the resulting schema.
+
+              The container is stopped again in the following phase.
+            -->
+            <plugin>
+                <groupId>org.codehaus.gmavenplus</groupId>
+                <artifactId>gmavenplus-plugin</artifactId>
+                <version>${gmavenplus-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>start-codegen-database</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>execute</goal>
+                        </goals>
+                        <configuration>
+                            <scripts>
+                                <script><![CDATA[
+                                    def database = new org.testcontainers.postgresql.PostgreSQLContainer('${postgres.image}')
+                                    database.start()
+                                    project.properties.setProperty('codegen.db.url', database.jdbcUrl)
+                                    project.properties.setProperty('codegen.db.username', database.username)
+                                    project.properties.setProperty('codegen.db.password', database.password)
+                                    project.setContextValue('codegen.db', database)
+                                ]]></script>
+                            </scripts>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>stop-codegen-database</id>
+                        <phase>process-sources</phase>
+                        <goals>
+                            <goal>execute</goal>
+                        </goals>
+                        <configuration>
+                            <scripts>
+                                <script><![CDATA[
+                                    project.getContextValue('codegen.db')?.stop()
+                                ]]></script>
+                            </scripts>
+                        </configuration>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.groovy</groupId>
+                        <artifactId>groovy</artifactId>
+                        <version>${groovy.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.testcontainers</groupId>
+                        <artifactId>testcontainers-postgresql</artifactId>
+                        <version>${testcontainers.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.postgresql</groupId>
+                        <artifactId>postgresql</artifactId>
+                        <version>${postgresql.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>migrate-codegen-database</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>migrate</goal>
+                        </goals>
+                        <configuration>
+                            <url>${codegen.db.url}</url>
+                            <user>${codegen.db.username}</user>
+                            <password>${codegen.db.password}</password>
+                            <locations>
+                                <location>filesystem:${project.basedir}/src/main/resources/db/migration</location>
+                            </locations>
+                        </configuration>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.flywaydb</groupId>
+                        <artifactId>flyway-database-postgresql</artifactId>
+                        <version>${flyway.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.postgresql</groupId>
+                        <artifactId>postgresql</artifactId>
+                        <version>${postgresql.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>org.jooq</groupId>
+                <artifactId>jooq-codegen-maven</artifactId>
+                <executions>
+                    <execution>
+                        <id>generate-jooq</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <jdbc>
+                                <url>${codegen.db.url}</url>
+                                <user>${codegen.db.username}</user>
+                                <password>${codegen.db.password}</password>
+                            </jdbc>
+                            <generator>
+                                <database>
+                                    <name>org.jooq.meta.postgres.PostgresDatabase</name>
+                                    <inputSchema>public</inputSchema>
+                                    <!-- Don't write the schema name into generated SQL. -->
+                                    <outputSchemaToDefault>true</outputSchemaToDefault>
+                                    <!-- Flyway's own bookkeeping table is not part of the model. -->
+                                    <excludes>flyway_schema_history</excludes>
+                                </database>
+                                <target>
+                                    <packageName>io.github.oliverjuhasz.boardkeeper.jooq</packageName>
+                                    <directory>${project.build.directory}/generated-sources/jooq</directory>
+                                </target>
+                            </generator>
+                        </configuration>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.postgresql</groupId>
+                        <artifactId>postgresql</artifactId>
+                        <version>${postgresql.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+
+            <!-- Puts the built frontend into the application, where Spring Boot serves it from
+                 "static/". Build the frontend first (npm run build in frontend/); if its dist/
+                 folder does not exist, the application is built without a user interface. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-frontend</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.outputDirectory}/static</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${frontend.dist}</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!-- Mockito attaches itself to the running JVM. Newer JDKs warn about that unless told it is expected. -->
+                    <argLine>-XX:+EnableDynamicAgentLoading</argLine>
+                    <!-- Anything passed to Maven with -D, such as -Dboardkeeper.openapi.update=true, reaches the tests as well. -->
+                    <systemPropertyVariables>
+                        <boardkeeper.openapi.file>${boardkeeper.openapi.file}</boardkeeper.openapi.file>
+                        <boardkeeper.postgres.image>${postgres.image}</boardkeeper.postgres.image>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <skip>false</skip>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

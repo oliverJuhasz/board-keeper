@@ -1,0 +1,90 @@
+{
+  "components" : {
+    "schemas" : {
+      "Game" : {
+        "properties" : {
+          "gameModuleId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "gameModuleId", "id", "name" ],
+        "type" : "object"
+      },
+      "GameModule" : {
+        "properties" : {
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "key" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "id", "key" ],
+        "type" : "object"
+      }
+    }
+  },
+  "info" : {
+    "title" : "Board Keeper API",
+    "version" : "1"
+  },
+  "openapi" : "3.1.0",
+  "paths" : {
+    "/api/game-modules" : {
+      "get" : {
+        "operationId" : "listGameModules",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/GameModule"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "List the installed Game Modules",
+        "tags" : [ "Game Modules" ]
+      }
+    },
+    "/api/games" : {
+      "get" : {
+        "operationId" : "listGames",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/Game"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "List the Games in the catalogue",
+        "tags" : [ "Games" ]
+      }
+    }
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ]
+}
