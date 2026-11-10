@@ -133,7 +133,9 @@ PlayerResponse create(@Valid @RequestBody CreatePlayerRequest body) { ... }
 
 To add a Permission, add it to the `Permission` enum, regenerate `api/openapi.json`, and add its name to the three translation files. The Admin Role gets it automatically. In the frontend, `useCan()` tells whether the signed-in Account holds a Permission, for showing or hiding what needs it.
 
-**One-time links.** An Invite is a link with a random token in it. The token is shown once, when the Invite is created; the database keeps only a hash of it (`LinkTokens`), so reading the database does not give anyone a usable link. `Invites` and `RegistrationController` show the pattern.
+**Nobody hands out more than they hold.** Giving a Role, changing a Role, disabling an Account and creating a Reset Link all check that the Permissions involved are ones the acting Account holds itself ([ADR 0014](adr/0014-nobody-hands-out-more-than-they-hold.md)). The check is `RoleAdministration.requireWithinOwn`. Use it for anything new that lets one Account affect another's access.
+
+**One-time links.** An Invite or a Reset Link is a link with a random token in it. The token is shown once, when the Invite is created; the database keeps only a hash of it (`LinkTokens`), so reading the database does not give anyone a usable link. `Invites` and `RegistrationController` show the pattern.
 
 **Reporting an error.** Throw a `Problem` with a code. The backend never writes the message; the frontend has a text for every code, under `problems` in the translation files:
 
@@ -148,6 +150,23 @@ Rules on a request's fields are annotations such as `@Size(min = 16)` on the req
 ### Forms in the frontend
 
 A form is described once with Zod, which gives both the checks and the TypeScript type, and run by React Hook Form. `frontend/src/features/session/SignInPage.tsx` is the example to copy. `TextField` draws a labelled input with its hint and error; `FormProblem` shows why the server refused a submission.
+
+### Building blocks for pages
+
+New pages are put together from these, in `frontend/src/components/`. `frontend/src/features/roles/RolesPage.tsx` uses most of them and is a good page to copy.
+
+| Component | What it is for |
+|---|---|
+| `PageHeader` | A page's title, a line about it, and an optional button |
+| `QueryState` | Placeholder rows while data loads, a message if loading failed |
+| `ActionsMenu` | The "…" menu at the end of a table row |
+| `ConfirmDialog` | "Are you sure?" before something that can't be undone |
+| `LinkDialog` | Creating a one-time link and showing it to copy |
+| `TextField`, `CheckboxField` | A labelled input or checkbox with hint and error |
+| `FormProblem` | Why the server refused a submission |
+| `PageMessage` | A page that only has something to say |
+
+The components in `components/ui/` are shadcn/ui's, added with its command line tool. Leave those as generated where possible, and build on top of them.
 
 ### Texts and translations
 

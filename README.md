@@ -34,4 +34,12 @@ Board Keeper is a learning project first ([ADR 0001](docs/adr/0001-learning-proj
 
 ## Status
 
-Milestone M0, the skeleton, is in place: the backend, the frontend, the container image and CI all build and run, and one page shows data from the API. Milestone M1 is under way: the interface is available in English, Dutch and Hungarian. Until M1 adds sign-in, the app has no access control.
+Milestones M0 and M1 are done. Board Keeper builds, runs as a container image, and has:
+
+- the interface in English, Dutch and Hungarian
+- Accounts with sign-in, created through a first-time Setup Link and through Invites
+- Players, who exist with or without an Account
+- Roles made of fine-grained Permissions, with pages for managing Roles and Accounts
+- password changes and Reset Links
+
+Recording Plays comes next, in milestone M2.

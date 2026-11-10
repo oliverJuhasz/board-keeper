@@ -40,6 +40,7 @@ Recording without a connection, teams, unfinished plays, game nights, importing 
 - Head-to-head records, streaks and charts.
 - Playwright end-to-end tests, once the frontend is functionally complete and settled.
 - Signing in through an outside provider.
+- Limits on the number of sign-in attempts. Left out while the app sits on a private network.
 - Before publishing the repository: a licence and ARM images.
 
 ## Milestones
@@ -58,5 +59,7 @@ Recording without a connection, teams, unfinished plays, game nights, importing 
 
 - **M2:** which fields a Play has besides its Game, date and Players, for example an optional location and notes.
 - **M2:** how to keep each Spring Modulith module to its own tables. The generated jOOQ classes are currently one package that every module may use, so nothing yet stops `stats` from reading the `plays` tables, which ADR 0011 rules out.
+- **M5:** how a sole Admin who has forgotten their password gets back in. Today that needs another Account that may create a Reset Link for an Admin. The self-hosting guide needs an answer for when there is none.
+- **M5:** splitting the frontend's JavaScript by page. It has grown to about 250 kB compressed, all loaded up front.
 - **M3 and M6:** each game's exact scoring and tie-break rules, taken from its official rulebook. Online summaries disagree, for example on the order of Calico's tie-breakers and on Spirit Island's score formula.
 - **M6:** which edition of 7 Wonders the module covers, because the first and second editions differ. Any team rules in Cities stay unsupported while teams are out of scope.

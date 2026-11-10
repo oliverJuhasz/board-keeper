@@ -98,6 +98,14 @@ _Avoid_: Install link, bootstrap token
 An offer to the person behind a Player to register an Account that claims that Player: a link that works once and for a limited time. Registering is only possible through an Invite.
 _Avoid_: Invitation code, sign-up link
 
+**Reset Link**:
+A one-time link that lets the owner of an Account choose a new password, created for them by someone who may manage Invites. Board Keeper sends no email, so this is how a forgotten password is solved.
+_Avoid_: Recovery link, forgot-password link
+
+**Disabled Account**:
+An Account that can no longer sign in. Its Player and its history stay, and it can be enabled again.
+_Avoid_: Deleted account, banned, locked
+
 ### Access
 
 **Permission**:
