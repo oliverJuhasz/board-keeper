@@ -1,4 +1,6 @@
 import { createBrowserRouter, type RouteObject } from "react-router"
+import { PlayersPage } from "./features/players/PlayersPage"
+import { RegisterPage } from "./features/session/RegisterPage"
 import { RedirectIfSignedIn, RequireSignedIn } from "./features/session/RequireSignedIn"
 import { SetupPage } from "./features/session/SetupPage"
 import { SignInPage } from "./features/session/SignInPage"
@@ -22,6 +24,7 @@ export const routes: RouteObject[] = [
         ),
       },
       { path: "/setup", element: <SetupPage /> },
+      { path: "/register/:token", element: <RegisterPage /> },
     ],
   },
   {
@@ -34,6 +37,7 @@ export const routes: RouteObject[] = [
     ),
     children: [
       { index: true, element: <HomePage /> },
+      { path: "players", element: <PlayersPage /> },
       { path: "*", element: <NotFoundPage /> },
     ],
   },

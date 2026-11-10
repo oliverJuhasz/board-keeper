@@ -3,7 +3,8 @@
     "label": "Language"
   },
   "common": {
-    "reloadToRetry": "Reload the page to try again."
+    "reloadToRetry": "Reload the page to try again.",
+    "cancel": "Cancel"
   },
   "games": {
     "title": "Games",
@@ -91,10 +92,89 @@
       "usernameTaken": "This username is taken."
     },
     "players": {
-      "nameTaken": "There is already a player with this name."
+      "nameTaken": "There is already a player with this name.",
+      "notFound": "This player no longer exists.",
+      "inUse": "This player can't be removed: they have an account or have taken part in plays."
     },
     "request": {
       "invalid": "Check what you entered and try again."
+    },
+    "invites": {
+      "notValid": "This invite link doesn't work any more. Ask for a new one.",
+      "playerHasAccount": "This player already has an account.",
+      "roleNotAllowed": "You can't invite someone with this role.",
+      "notFound": "This invite no longer exists."
+    },
+    "roles": {
+      "notFound": "This role no longer exists."
+    },
+    "access": {
+      "notSignedIn": "You are no longer signed in.",
+      "denied": "You aren't allowed to do this."
+    }
+  },
+  "nav": {
+    "games": "Games",
+    "players": "Players"
+  },
+  "roles": {
+    "builtIn": {
+      "ADMIN": "Admin",
+      "MEMBER": "Member"
+    }
+  },
+  "players": {
+    "title": "Players",
+    "description": "Everyone who takes part in plays, with or without an account.",
+    "add": "Add player",
+    "loading": "Loading players",
+    "loadFailed": "Couldn't load the players",
+    "name": "Name",
+    "status": "Account",
+    "hasAccount": "Has an account",
+    "invited": "Invited",
+    "inviteExpired": "Invite expired",
+    "you": "You",
+    "actions": "Actions for {{name}}",
+    "rename": "Rename",
+    "invite": "Invite",
+    "inviteAgain": "Invite again",
+    "cancelInvite": "Cancel invite",
+    "remove": "Remove",
+    "addDialog": {
+      "title": "Add a player",
+      "description": "For someone who takes part in plays. They don't need an account.",
+      "submit": "Add player"
+    },
+    "renameDialog": {
+      "title": "Rename {{name}}",
+      "submit": "Rename"
+    },
+    "removeDialog": {
+      "title": "Remove {{name}}?",
+      "description": "This can't be undone.",
+      "confirm": "Remove player"
+    },
+    "inviteDialog": {
+      "title": "Invite {{name}}",
+      "description": "Creates a link that lets {{name}} register an account. The link works once and for 7 days.",
+      "role": "Role",
+      "submit": "Create invite link",
+      "readyTitle": "Invite link for {{name}}",
+      "readyDescription": "Send this link to {{name}} yourself. It is shown only now, works once, and is valid until {{date}}.",
+      "link": "Invite link",
+      "copy": "Copy link",
+      "copied": "Copied",
+      "done": "Done"
+    }
+  },
+  "register": {
+    "title": "Join Board Keeper",
+    "intro": "You've been invited as {{name}}. Choose a username and a password to create your account.",
+    "submit": "Create account",
+    "notValid": {
+      "title": "This invite link doesn't work",
+      "text": "It may have been used already, cancelled, or expired. Ask for a new one."
     }
   }
 }
