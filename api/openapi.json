@@ -1,6 +1,51 @@
 {
   "components" : {
     "schemas" : {
+      "CurrentAccount" : {
+        "properties" : {
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "language" : {
+            "enum" : [ "en", "nl", "hu" ],
+            "type" : "string"
+          },
+          "permissions" : {
+            "items" : {
+              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_PLAYS", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES" ],
+              "type" : "string"
+            },
+            "type" : "array",
+            "uniqueItems" : true
+          },
+          "playerId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "playerName" : {
+            "type" : "string"
+          },
+          "username" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "id", "language", "permissions", "playerId", "playerName", "username" ],
+        "type" : "object"
+      },
+      "FieldProblem" : {
+        "description" : "For the code request.invalid: the fields that broke a rule",
+        "properties" : {
+          "code" : {
+            "description" : "The rule that was broken, such as size or notblank",
+            "type" : "string"
+          },
+          "field" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "code", "field" ]
+      },
       "Game" : {
         "properties" : {
           "gameModuleId" : {
@@ -30,6 +75,110 @@
         },
         "required" : [ "id", "key" ],
         "type" : "object"
+      },
+      "LanguageRequest" : {
+        "properties" : {
+          "language" : {
+            "enum" : [ "en", "nl", "hu" ],
+            "type" : "string"
+          }
+        },
+        "required" : [ "language" ],
+        "type" : "object"
+      },
+      "Problem" : {
+        "properties" : {
+          "code" : {
+            "description" : "What went wrong, as a code for the frontend to translate, such as players.nameTaken",
+            "type" : "string"
+          },
+          "detail" : {
+            "type" : "string"
+          },
+          "errors" : {
+            "description" : "For the code request.invalid: the fields that broke a rule",
+            "items" : {
+              "$ref" : "#/components/schemas/FieldProblem"
+            },
+            "type" : "array"
+          },
+          "status" : {
+            "description" : "The HTTP status",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "title" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "status" ]
+      },
+      "Session" : {
+        "properties" : {
+          "account" : {
+            "$ref" : "#/components/schemas/CurrentAccount",
+            "description" : "The signed-in Account. Absent when nobody is signed in."
+          }
+        },
+        "type" : "object"
+      },
+      "SetupRequest" : {
+        "properties" : {
+          "language" : {
+            "enum" : [ "en", "nl", "hu" ],
+            "type" : "string"
+          },
+          "password" : {
+            "maxLength" : 200,
+            "minLength" : 16,
+            "type" : "string"
+          },
+          "playerName" : {
+            "description" : "The name of the Player that the new Account claims",
+            "maxLength" : 50,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "token" : {
+            "minLength" : 1,
+            "type" : "string"
+          },
+          "username" : {
+            "pattern" : "[\\p{L}\\p{N}._-]{3,30}",
+            "type" : "string"
+          }
+        },
+        "required" : [ "language", "password", "playerName", "token", "username" ],
+        "type" : "object"
+      },
+      "SetupStatus" : {
+        "properties" : {
+          "required" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "required" ],
+        "type" : "object"
+      },
+      "SignInRequest" : {
+        "properties" : {
+          "password" : {
+            "maxLength" : 200,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "staySignedIn" : {
+            "description" : "Stay signed in on this device for 90 days after the last visit",
+            "type" : "boolean"
+          },
+          "username" : {
+            "maxLength" : 30,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [ "password", "username" ],
+        "type" : "object"
       }
     }
   },
@@ -39,6 +188,38 @@
   },
   "openapi" : "3.1.0",
   "paths" : {
+    "/api/account/language" : {
+      "put" : {
+        "operationId" : "setOwnLanguage",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/LanguageRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Choose the language of the interface",
+        "tags" : [ "Own Account" ]
+      }
+    },
     "/api/game-modules" : {
       "get" : {
         "operationId" : "listGameModules",
@@ -55,6 +236,16 @@
               }
             },
             "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
           }
         },
         "summary" : "List the installed Game Modules",
@@ -87,6 +278,16 @@
               }
             },
             "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
           }
         },
         "summary" : "The texts of every installed Game Module in one language, by name",
@@ -109,10 +310,174 @@
               }
             },
             "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
           }
         },
         "summary" : "List the Games in the catalogue",
         "tags" : [ "Games" ]
+      }
+    },
+    "/api/session" : {
+      "delete" : {
+        "operationId" : "signOut",
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Sign out",
+        "tags" : [ "Session" ]
+      },
+      "get" : {
+        "description" : "Open to everyone. Without a sign-in the answer has no account. The frontend calls this first: the answer also sets the XSRF-TOKEN cookie.",
+        "operationId" : "getSession",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Session"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Who is signed in",
+        "tags" : [ "Session" ]
+      },
+      "post" : {
+        "operationId" : "signIn",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SignInRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Session"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Sign in",
+        "tags" : [ "Session" ]
+      }
+    },
+    "/api/setup" : {
+      "get" : {
+        "operationId" : "getSetupStatus",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SetupStatus"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Whether this installation still needs its first Admin",
+        "tags" : [ "Setup" ]
+      },
+      "post" : {
+        "description" : "Works once, with the token from the link in the server's log.",
+        "operationId" : "setUp",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SetupRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Session"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Create the first Admin and sign in as it",
+        "tags" : [ "Setup" ]
       }
     }
   },

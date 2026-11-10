@@ -11,17 +11,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Starts the whole application against a real PostgreSQL and calls the API as a client would.
- * {@code @Transactional} rolls each test's database changes back when the test ends.
+ * {@code @Transactional} rolls each test's database changes back when the test ends, and
+ * {@code @WithMockUser} makes every request count as signed in.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)
 @Transactional
+@WithMockUser
 class GamesApiTests {
 
     private static final UUID GENERIC_MODULE_ID = UUID.fromString("38b119d2-8f9f-4e20-8068-cba305c06cdd");
