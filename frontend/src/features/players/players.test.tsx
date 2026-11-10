@@ -218,3 +218,26 @@ test("cancels an invite", async () => {
 
   await expect.poll(() => within(rowOf("Dora")).queryByText("Invited")).not.toBeInTheDocument()
 })
+
+test("creates a password reset link for a player with an account", async () => {
+  signedInAs(anna)
+  playersAre(everyone, withAccounts)
+  let sent: unknown
+  server.use(
+    http.post("*/api/reset-links", async ({ request }) => {
+      sent = await request.json()
+      return HttpResponse.json({ token: "the-reset-token", expiresAt: "2026-11-11T14:30:00Z" })
+    }),
+  )
+  renderApp("/players")
+
+  await openActionsFor("Bence")
+  await userEvent.click(await screen.findByRole("menuitem", { name: "Create password reset link" }))
+  await userEvent.click(await screen.findByRole("button", { name: "Create reset link" }))
+
+  expect(await screen.findByLabelText("Reset link")).toHaveValue(
+    `${window.location.origin}/reset-password/the-reset-token`,
+  )
+  expect(screen.getByText(/valid until 11 November 2026/)).toBeInTheDocument()
+  expect(sent).toEqual({ playerId: bencePlayer.id })
+})

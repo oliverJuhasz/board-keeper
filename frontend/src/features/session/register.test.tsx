@@ -78,3 +78,38 @@ test("explains when an invite link no longer works", async () => {
 
   expect(await screen.findByText("This invite link doesn't work")).toBeInTheDocument()
 })
+
+test("a reset link lets someone choose a new password and signs them in", async () => {
+  server.use(
+    http.get("*/api/session", () => HttpResponse.json({})),
+    http.get("*/api/password-reset/:token", () => HttpResponse.json({ username: "bence" })),
+  )
+  gamesAre([])
+  let sent: { token: unknown; body: unknown } | undefined
+  server.use(
+    http.post("*/api/password-reset/:token", async ({ request, params }) => {
+      sent = { token: params.token, body: await request.json() }
+      signedInAs(bence)
+      return HttpResponse.json({ account: bence })
+    }),
+  )
+  renderApp("/reset-password/the-reset-token")
+
+  expect(await screen.findByText("For the account bence.")).toBeInTheDocument()
+  await userEvent.type(screen.getByLabelText("New password"), PASSWORD)
+  await userEvent.click(screen.getByRole("button", { name: "Save password" }))
+
+  expect(await screen.findByText("No games yet.")).toBeInTheDocument()
+  expect(sent).toEqual({ token: "the-reset-token", body: { password: PASSWORD } })
+})
+
+test("explains when a reset link no longer works", async () => {
+  server.use(
+    http.get("*/api/session", () => HttpResponse.json({})),
+    http.get("*/api/password-reset/:token", () => problem(404, "resetLinks.notValid")),
+  )
+
+  renderApp("/reset-password/used-up-token")
+
+  expect(await screen.findByText("This reset link doesn't work")).toBeInTheDocument()
+})

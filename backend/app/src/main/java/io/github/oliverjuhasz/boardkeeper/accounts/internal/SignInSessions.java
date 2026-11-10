@@ -14,6 +14,8 @@ import org.springframework.security.web.authentication.logout.SecurityContextLog
 import org.springframework.security.web.authentication.session.ChangeSessionIdAuthenticationStrategy;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
 import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.session.FindByIndexNameSessionRepository;
+import org.springframework.session.Session;
 import org.springframework.stereotype.Component;
 
 /** Starts and ends the session that keeps an Account signed in. */
@@ -27,11 +29,15 @@ class SignInSessions {
     static final String STAY_SIGNED_IN_ATTRIBUTE = SignInSessions.class.getName() + ".STAY_SIGNED_IN";
 
     private final SecurityContextRepository contextRepository;
+    private final FindByIndexNameSessionRepository<? extends Session> sessionRepository;
     private final SessionAuthenticationStrategy newSessionId = new ChangeSessionIdAuthenticationStrategy();
     private final SecurityContextLogoutHandler signOut = new SecurityContextLogoutHandler();
 
-    SignInSessions(SecurityContextRepository contextRepository) {
+    SignInSessions(
+            SecurityContextRepository contextRepository,
+            FindByIndexNameSessionRepository<? extends Session> sessionRepository) {
         this.contextRepository = contextRepository;
+        this.sessionRepository = sessionRepository;
     }
 
     void start(UUID accountId, boolean staySignedIn, HttpServletRequest request, HttpServletResponse response) {
@@ -52,6 +58,18 @@ class SignInSessions {
         SecurityContextHolder.setContext(context);
         // Since Spring Security 6 nothing is saved to the session unless we ask for it.
         contextRepository.saveContext(context, request, response);
+    }
+
+    /**
+     * Signs an Account out everywhere, except in the session making this request, if there is
+     * one. Used when a password changes or an Account is disabled. Spring Session files every
+     * session under its Account's id ({@link SignedIn#getName()}), which is how we find them.
+     */
+    void endAllOf(UUID accountId, HttpServletRequest request) {
+        HttpSession current = request.getSession(false);
+        sessionRepository.findByPrincipalName(accountId.toString()).keySet().stream()
+                .filter(sessionId -> current == null || !sessionId.equals(current.getId()))
+                .forEach(sessionRepository::deleteById);
     }
 
     void end(HttpServletRequest request, HttpServletResponse response) {

@@ -2,7 +2,6 @@ import { useTranslation } from "react-i18next"
 import { Link, NavLink, Outlet } from "react-router"
 import { AccountMenu } from "@/features/session/AccountMenu"
 import { useAccountLanguage } from "@/features/session/useChangeLanguage"
-import { LanguageSelect } from "@/i18n/LanguageSelect"
 
 /** The frame around every signed-in page. `<Outlet />` is where the current page is drawn. */
 export function AppLayout() {
@@ -30,10 +29,7 @@ export function AppLayout() {
               </NavLink>
             </nav>
           </div>
-          <div className="flex items-center gap-1">
-            <LanguageSelect />
-            <AccountMenu />
-          </div>
+          <AccountMenu />
         </div>
       </header>
       <main className="mx-auto max-w-3xl px-4 py-8">

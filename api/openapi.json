@@ -1,6 +1,33 @@
 {
   "components" : {
     "schemas" : {
+      "Account" : {
+        "properties" : {
+          "disabled" : {
+            "type" : "boolean"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "playerId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "roleIds" : {
+            "items" : {
+              "format" : "uuid",
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "username" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "disabled", "id", "playerId", "roleIds", "username" ],
+        "type" : "object"
+      },
       "Claims" : {
         "properties" : {
           "playerIds" : {
@@ -45,6 +72,15 @@
           }
         },
         "required" : [ "id", "language", "permissions", "playerId", "playerName", "username" ],
+        "type" : "object"
+      },
+      "DisabledRequest" : {
+        "properties" : {
+          "disabled" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "disabled" ],
         "type" : "object"
       },
       "FieldProblem" : {
@@ -153,6 +189,56 @@
         "required" : [ "invite", "token" ],
         "type" : "object"
       },
+      "NewPasswordRequest" : {
+        "properties" : {
+          "password" : {
+            "maxLength" : 200,
+            "minLength" : 16,
+            "type" : "string"
+          }
+        },
+        "required" : [ "password" ],
+        "type" : "object"
+      },
+      "NewResetLink" : {
+        "properties" : {
+          "expiresAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "token" : {
+            "description" : "The secret part of the link: the person opens /reset-password/{token}",
+            "type" : "string"
+          }
+        },
+        "required" : [ "expiresAt", "token" ],
+        "type" : "object"
+      },
+      "PasswordChangeRequest" : {
+        "properties" : {
+          "currentPassword" : {
+            "maxLength" : 200,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "newPassword" : {
+            "maxLength" : 200,
+            "minLength" : 16,
+            "type" : "string"
+          }
+        },
+        "required" : [ "currentPassword", "newPassword" ],
+        "type" : "object"
+      },
+      "PasswordReset" : {
+        "properties" : {
+          "username" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "username" ],
+        "type" : "object"
+      },
       "Player" : {
         "properties" : {
           "id" : {
@@ -237,6 +323,16 @@
         "required" : [ "language", "password", "username" ],
         "type" : "object"
       },
+      "ResetLinkRequest" : {
+        "properties" : {
+          "playerId" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        },
+        "required" : [ "playerId" ],
+        "type" : "object"
+      },
       "Role" : {
         "properties" : {
           "builtIn" : {
@@ -261,6 +357,39 @@
           }
         },
         "required" : [ "id", "name", "permissions" ],
+        "type" : "object"
+      },
+      "RoleRequest" : {
+        "properties" : {
+          "name" : {
+            "maxLength" : 50,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "permissions" : {
+            "items" : {
+              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_PLAYS", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES" ],
+              "type" : "string"
+            },
+            "type" : "array",
+            "uniqueItems" : true
+          }
+        },
+        "required" : [ "name", "permissions" ],
+        "type" : "object"
+      },
+      "RolesRequest" : {
+        "properties" : {
+          "roleIds" : {
+            "items" : {
+              "format" : "uuid",
+              "type" : "string"
+            },
+            "type" : "array",
+            "uniqueItems" : true
+          }
+        },
+        "required" : [ "roleIds" ],
         "type" : "object"
       },
       "Session" : {
@@ -368,6 +497,155 @@
         },
         "summary" : "Choose the language of the interface",
         "tags" : [ "Own Account" ]
+      }
+    },
+    "/api/account/password" : {
+      "put" : {
+        "description" : "Needs the current password. Signs the Account out on every other device.",
+        "operationId" : "changeOwnPassword",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PasswordChangeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Change your own password",
+        "tags" : [ "Own Account" ]
+      }
+    },
+    "/api/accounts" : {
+      "get" : {
+        "operationId" : "listAccounts",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/Account"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "List the Accounts by username",
+        "tags" : [ "Accounts" ]
+      }
+    },
+    "/api/accounts/{id}/disabled" : {
+      "put" : {
+        "description" : "A disabled Account cannot sign in and is signed out everywhere. Its Player and history stay.",
+        "operationId" : "setAccountDisabled",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/DisabledRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Disable or enable an Account",
+        "tags" : [ "Accounts" ]
+      }
+    },
+    "/api/accounts/{id}/roles" : {
+      "put" : {
+        "description" : "Only Roles within the caller's own Permissions can be given or taken away, and the last Admin keeps the Admin Role.",
+        "operationId" : "setAccountRoles",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RolesRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Set which Roles an Account holds",
+        "tags" : [ "Accounts" ]
       }
     },
     "/api/claims" : {
@@ -606,6 +884,90 @@
         "tags" : [ "Invites" ]
       }
     },
+    "/api/password-reset/{token}" : {
+      "get" : {
+        "description" : "Open to everyone.",
+        "operationId" : "getPasswordReset",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "token",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PasswordReset"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Whose password a Reset Link is for",
+        "tags" : [ "Reset Links" ]
+      },
+      "post" : {
+        "description" : "Open to everyone. Uses the link up and signs the Account out everywhere else.",
+        "operationId" : "resetPassword",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "token",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/NewPasswordRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Session"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Choose a new password with a Reset Link, and sign in",
+        "tags" : [ "Reset Links" ]
+      }
+    },
     "/api/players" : {
       "get" : {
         "operationId" : "listPlayers",
@@ -835,6 +1197,46 @@
         "tags" : [ "Registration" ]
       }
     },
+    "/api/reset-links" : {
+      "post" : {
+        "description" : "Replaces any earlier Reset Link for the same Account. The answer holds the link's token, which cannot be asked for again. Only possible for an Account that holds no Permission its creator lacks.",
+        "operationId" : "createResetLink",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ResetLinkRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/NewResetLink"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Create a Reset Link for the Account of a Player",
+        "tags" : [ "Reset Links" ]
+      }
+    },
     "/api/roles" : {
       "get" : {
         "description" : "The built-in Roles come first, then the others by name.",
@@ -865,6 +1267,123 @@
           }
         },
         "summary" : "List the Roles with their Permissions",
+        "tags" : [ "Roles" ]
+      },
+      "post" : {
+        "description" : "It can hold only Permissions that its creator holds.",
+        "operationId" : "createRole",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RoleRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Role"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Create a Role",
+        "tags" : [ "Roles" ]
+      }
+    },
+    "/api/roles/{id}" : {
+      "delete" : {
+        "description" : "Accounts that held it lose it. The two built-in Roles cannot be deleted.",
+        "operationId" : "deleteRole",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Delete a Role",
+        "tags" : [ "Roles" ]
+      },
+      "put" : {
+        "description" : "The Admin Role cannot be changed. The Member Role keeps its name.",
+        "operationId" : "updateRole",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RoleRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Role"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Change a Role's name and Permissions",
         "tags" : [ "Roles" ]
       }
     },

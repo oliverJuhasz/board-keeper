@@ -42,6 +42,11 @@ class InviteRepository {
         return new InviteRow(id, playerId, roleId, expiresAt);
     }
 
+    /** Points every Invite that would give one Role at another one instead. */
+    void replaceRole(UUID roleId, UUID replacementRoleId) {
+        dsl.update(INVITE).set(INVITE.ROLE_ID, replacementRoleId).where(INVITE.ROLE_ID.eq(roleId)).execute();
+    }
+
     void deleteByPlayer(UUID playerId) {
         dsl.deleteFrom(INVITE).where(INVITE.PLAYER_ID.eq(playerId)).execute();
     }

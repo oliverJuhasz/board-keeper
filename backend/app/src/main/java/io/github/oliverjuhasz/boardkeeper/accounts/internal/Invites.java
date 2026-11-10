@@ -3,6 +3,7 @@ package io.github.oliverjuhasz.boardkeeper.accounts.internal;
 import io.github.oliverjuhasz.boardkeeper.access.CurrentAccount;
 import io.github.oliverjuhasz.boardkeeper.access.Permission;
 import io.github.oliverjuhasz.boardkeeper.accounts.internal.InviteRepository.InviteRow;
+import io.github.oliverjuhasz.boardkeeper.accounts.internal.RoleRepository.RoleRow;
 import io.github.oliverjuhasz.boardkeeper.language.Language;
 import io.github.oliverjuhasz.boardkeeper.players.Player;
 import io.github.oliverjuhasz.boardkeeper.players.Players;
@@ -52,7 +53,8 @@ class Invites {
     /**
      * Invites a Player, replacing any earlier Invite for the same Player. Without a Role, the
      * new Account will be a Member. Any other Role needs the Permission to manage Accounts as
-     * well: otherwise inviting would be a way around it.
+     * well, and has to be within what the creator holds: otherwise inviting would be a way
+     * around both rules.
      */
     @Transactional
     NewInvite create(UUID playerId, UUID roleId, CurrentAccount creator) {
@@ -68,9 +70,8 @@ class Invites {
             if (!creator.has(Permission.MANAGE_ACCOUNTS)) {
                 throw new Problem(HttpStatus.FORBIDDEN, "invites.roleNotAllowed");
             }
-            if (!roles.exists(role)) {
-                throw Problem.notFound("roles.notFound");
-            }
+            RoleRow chosen = roles.find(role).orElseThrow(() -> Problem.notFound("roles.notFound"));
+            RoleAdministration.requireWithinOwn(creator, chosen.permissions());
         }
 
         String token = LinkTokens.newToken();

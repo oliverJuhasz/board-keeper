@@ -2,7 +2,7 @@ import { screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { http, HttpResponse } from "msw"
 import { expect, test } from "vitest"
-import { anna, gamesAre, problem, signedInAs, signedOut } from "@/test/api"
+import { anna, bence, gamesAre, problem, signedInAs, signedOut } from "@/test/api"
 import { renderApp } from "@/test/renderApp"
 import { server } from "@/test/server"
 
@@ -172,4 +172,31 @@ test("goes to the sign-in page when the server says the session has ended", asyn
   await queryClient.invalidateQueries({ queryKey: ["get", "/api/games"] })
 
   await waitFor(() => expect(screen.getByRole("heading", { name: "Sign in" })).toBeInTheDocument())
+})
+
+test("the account menu leads an admin to settings, accounts and roles", async () => {
+  signedInAs(anna)
+  gamesAre([])
+  renderApp("/")
+
+  await userEvent.click(await screen.findByRole("button", { name: "Account" }))
+
+  expect(await screen.findByRole("menuitem", { name: "Settings" })).toHaveAttribute(
+    "href",
+    "/settings",
+  )
+  expect(screen.getByRole("menuitem", { name: "Accounts" })).toHaveAttribute("href", "/accounts")
+  expect(screen.getByRole("menuitem", { name: "Roles" })).toHaveAttribute("href", "/roles")
+})
+
+test("the account menu shows a member only what a member can use", async () => {
+  signedInAs(bence)
+  gamesAre([])
+  renderApp("/")
+
+  await userEvent.click(await screen.findByRole("button", { name: "Account" }))
+
+  expect(await screen.findByRole("menuitem", { name: "Settings" })).toBeInTheDocument()
+  expect(screen.queryByRole("menuitem", { name: "Accounts" })).not.toBeInTheDocument()
+  expect(screen.queryByRole("menuitem", { name: "Roles" })).not.toBeInTheDocument()
 })

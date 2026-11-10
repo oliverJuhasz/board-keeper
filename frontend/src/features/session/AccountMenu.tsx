@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query"
 import { CircleUserRoundIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
+import { Link } from "react-router"
 import { api, sessionKey } from "@/api/client"
 import { Button } from "@/components/ui/button"
 import {
@@ -12,12 +13,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useSession } from "./useSession"
+import { useCan, useSession } from "./useSession"
 
 export function AccountMenu() {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const account = useSession().data?.account
+  const can = useCan()
 
   const signOut = api.useMutation("delete", "/api/session", {
     onSuccess: () => {
@@ -47,6 +49,19 @@ export function AccountMenu() {
             <div>{t("account.signedInAs", { username: account.username })}</div>
           </DropdownMenuLabel>
         </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        {/* `render` makes the menu item a link, so it works like any other link in the app. */}
+        <DropdownMenuItem render={<Link to="/settings" />}>
+          {t("account.settings")}
+        </DropdownMenuItem>
+        {can("MANAGE_ACCOUNTS") && (
+          <DropdownMenuItem render={<Link to="/accounts" />}>
+            {t("account.accounts")}
+          </DropdownMenuItem>
+        )}
+        {can("MANAGE_ROLES") && (
+          <DropdownMenuItem render={<Link to="/roles" />}>{t("account.roles")}</DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => signOut.mutate({})}>
           {t("account.signOut")}
