@@ -35,7 +35,7 @@ cd backend
 ./mvnw spring-boot:test-run
 ```
 
-This starts the backend on http://localhost:8080 with a throwaway PostgreSQL in Docker, so there is nothing to configure. The database is empty on every start.
+This starts the backend on http://localhost:8080 with a throwaway PostgreSQL in Docker, so there is nothing to configure. The database is empty on every start, apart from one Admin to sign in with: username `admin`, password `correct horse battery staple`. That Account exists only in development; `DevelopmentAccount`, in the test sources, creates it. To try the real first-time setup, add `-Dboardkeeper.development.account=false` and open the Setup Link that the backend then writes to its log.
 
 Then the frontend:
 
@@ -109,6 +109,43 @@ Game Modules are plain Java, with no Spring. The core finds them with Java's `Se
 2. In `backend/`, run `./mvnw verify -Dboardkeeper.openapi.update=true` to rewrite `api/openapi.json`.
 3. Commit the file along with your change.
 4. In `frontend/`, `npm run generate:api` regenerates `src/api/schema.d.ts`. It also runs by itself before `npm run dev` and `npm run build`. TypeScript then reports every place in the frontend that has to follow the change.
+
+### Signing in, Permissions and errors
+
+**Sessions.** Signing in creates a session, stored in PostgreSQL by Spring Session ([ADR 0013](adr/0013-sessions-in-postgresql.md)), and the browser gets a `SESSION` cookie. The session holds only the Account's id. On every API request, `AccountRefreshFilter` loads the Account and its Permissions afresh, so a change of Roles or a disabled Account takes effect at once. `SecurityConfiguration` in the `accounts` module holds the rules: which addresses are open, and that everything else under `/api` needs a signed-in Account.
+
+**Forged requests (CSRF).** The server hands out a token in the `XSRF-TOKEN` cookie, and the frontend sends it back in the `X-XSRF-TOKEN` header on every request that changes something; `frontend/src/api/client.ts` does this for all API calls. Another website can make a browser send Board Keeper's cookies, but cannot read them to fill in the header.
+
+**Who is acting.** A controller method gets the signed-in Account by declaring a parameter:
+
+```java
+@PutMapping("/language")
+void setLanguage(@AuthenticationPrincipal CurrentAccount account, @RequestBody LanguageRequest body) { ... }
+```
+
+**Guarding a method with a Permission.** Put `@RequiresPermission` on it. Anyone without the Permission gets "403 Forbidden":
+
+```java
+@PostMapping
+@RequiresPermission(Permission.CREATE_PLAYERS)
+PlayerResponse create(@Valid @RequestBody CreatePlayerRequest body) { ... }
+```
+
+To add a Permission, add it to the `Permission` enum, regenerate `api/openapi.json`, and add its name to the three translation files. The Admin Role gets it automatically. In the frontend, `useCan()` tells whether the signed-in Account holds a Permission, for showing or hiding what needs it.
+
+**Reporting an error.** Throw a `Problem` with a code. The backend never writes the message; the frontend has a text for every code, under `problems` in the translation files:
+
+```java
+throw Problem.conflict("players.nameTaken");
+```
+
+Rules on a request's fields are annotations such as `@Size(min = 16)` on the request record, checked because the parameter is marked `@Valid`. The frontend's forms check the same rules first, with Zod, so the person sees the message next to the field without a round trip.
+
+**Tests.** `TestBrowser` calls the API as a browser would: it keeps cookies between requests and sends the CSRF token. `TestAccounts` creates Accounts, and `TestDatabase.empty()` clears the database between tests that make several requests. A test that only needs "someone is signed in" can use `@WithMockUser` instead.
+
+### Forms in the frontend
+
+A form is described once with Zod, which gives both the checks and the TypeScript type, and run by React Hook Form. `frontend/src/features/session/SignInPage.tsx` is the example to copy. `TextField` draws a labelled input with its hint and error; `FormProblem` shows why the server refused a submission.
 
 ### Texts and translations
 

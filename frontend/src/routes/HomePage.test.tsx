@@ -1,31 +1,15 @@
 import { screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { http, HttpResponse } from "msw"
-import { expect, test } from "vitest"
-import type { Game, GameModule } from "@/api/client"
+import { beforeEach, expect, test } from "vitest"
+import { anna, gamesAre, genericModule, problem, signedInAs } from "@/test/api"
 import { renderApp } from "@/test/renderApp"
 import { server } from "@/test/server"
 
-const generic: GameModule = { id: "38b119d2-8f9f-4e20-8068-cba305c06cdd", key: "generic" }
-
-const gameModuleTexts: Record<string, Record<string, string>> = {
-  en: { "generic.name": "Generic" },
-  nl: { "generic.name": "Algemeen" },
-  hu: { "generic.name": "Általános" },
-}
-
-function apiReturns({ games, gameModules }: { games: Game[]; gameModules: GameModule[] }) {
-  server.use(
-    http.get("*/api/games", () => HttpResponse.json(games)),
-    http.get("*/api/game-modules", () => HttpResponse.json(gameModules)),
-    http.get("*/api/game-modules/texts/:language", ({ params }) =>
-      HttpResponse.json(gameModuleTexts[params.language as string]),
-    ),
-  )
-}
+beforeEach(() => signedInAs(anna))
 
 test("shows the installed game modules by name, and that there are no games yet", async () => {
-  apiReturns({ games: [], gameModules: [generic] })
+  gamesAre([])
 
   renderApp("/")
 
@@ -34,13 +18,14 @@ test("shows the installed game modules by name, and that there are no games yet"
 })
 
 test("lists the games in the order the API returns them", async () => {
-  apiReturns({
-    games: [
-      { id: "0193a000-0000-7000-8000-000000000001", name: "Calico", gameModuleId: generic.id },
-      { id: "0193a000-0000-7000-8000-000000000002", name: "Wyrmspan", gameModuleId: generic.id },
-    ],
-    gameModules: [generic],
-  })
+  gamesAre([
+    { id: "0193a000-0000-7000-8000-000000000001", name: "Calico", gameModuleId: genericModule.id },
+    {
+      id: "0193a000-0000-7000-8000-000000000002",
+      name: "Wyrmspan",
+      gameModuleId: genericModule.id,
+    },
+  ])
 
   renderApp("/")
 
@@ -54,12 +39,8 @@ test("lists the games in the order the API returns them", async () => {
 })
 
 test("says so when the games can't be loaded", async () => {
-  apiReturns({ games: [], gameModules: [generic] })
-  server.use(
-    http.get("*/api/games", () =>
-      HttpResponse.json({ title: "Internal Server Error" }, { status: 500 }),
-    ),
-  )
+  gamesAre([])
+  server.use(http.get("*/api/games", () => problem(500, "unexpected")))
 
   renderApp("/")
 
@@ -68,18 +49,23 @@ test("says so when the games can't be loaded", async () => {
 })
 
 test("shows a game module's key while its texts can't be loaded", async () => {
-  apiReturns({ games: [], gameModules: [generic] })
-  server.use(
-    http.get("*/api/game-modules/texts/:language", () => HttpResponse.json({}, { status: 500 })),
-  )
+  gamesAre([])
+  server.use(http.get("*/api/game-modules/texts/:language", () => problem(500, "unexpected")))
 
   renderApp("/")
 
   expect(await screen.findByText("generic")).toBeInTheDocument()
 })
 
-test("switches everything to the chosen language and remembers it", async () => {
-  apiReturns({ games: [], gameModules: [generic] })
+test("switches everything to the chosen language, and saves the choice on the account", async () => {
+  gamesAre([])
+  let saved: unknown
+  server.use(
+    http.put("*/api/account/language", async ({ request }) => {
+      saved = await request.json()
+      return new HttpResponse(null, { status: 204 })
+    }),
+  )
   renderApp("/")
   await screen.findByText("Generic")
 
@@ -91,6 +77,16 @@ test("switches everything to the chosen language and remembers it", async () => 
   expect(screen.getByRole("combobox", { name: "Nyelv" })).toHaveValue("hu")
   expect(document.documentElement).toHaveAttribute("lang", "hu")
   expect(localStorage.getItem("boardkeeper.language")).toBe("hu")
+  expect(saved).toEqual({ language: "hu" })
+})
+
+test("uses the language saved on the account", async () => {
+  signedInAs({ ...anna, language: "nl" })
+  gamesAre([])
+
+  renderApp("/")
+
+  expect(await screen.findByText("Nog geen spellen.")).toBeInTheDocument()
 })
 
 test("shows a not-found page for an unknown address", async () => {

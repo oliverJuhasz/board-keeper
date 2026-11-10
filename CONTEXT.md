@@ -90,6 +90,10 @@ _Avoid_: User, profile, login
 The link from an Account to the Player who is its owner. Once claimed, that Player's history is the Account owner's history.
 _Avoid_: Link, bind
 
+**Setup Link**:
+The one-time link, written to the server's log while no Account exists, that creates the first Admin.
+_Avoid_: Install link, bootstrap token
+
 **Invite**:
 An offer from an Admin to the person behind a Player to register an Account that claims that Player. Registering is only possible through an Invite.
 _Avoid_: Invitation code, sign-up link
@@ -109,3 +113,13 @@ The built-in Role that holds every Permission; also any Account holding it. At l
 
 **Member**:
 The built-in Role an Invite gives unless the Admin picks another.
+
+## The main terms in the interface's other languages
+
+| English | Dutch | Hungarian |
+|---|---|---|
+| Game | spel | játék |
+| Play | partij | parti |
+| Player | speler | játékos |
+
+The interface addresses people informally in both: "je" in Dutch, tegezés in Hungarian.

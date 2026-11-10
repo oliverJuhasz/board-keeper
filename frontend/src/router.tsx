@@ -1,13 +1,37 @@
 import { createBrowserRouter, type RouteObject } from "react-router"
+import { RedirectIfSignedIn, RequireSignedIn } from "./features/session/RequireSignedIn"
+import { SetupPage } from "./features/session/SetupPage"
+import { SignInPage } from "./features/session/SignInPage"
 import { AppLayout } from "./routes/AppLayout"
 import { HomePage } from "./routes/HomePage"
 import { NotFoundPage } from "./routes/NotFoundPage"
+import { PublicLayout } from "./routes/PublicLayout"
 
-// Which page is shown for which address. Every page is drawn inside AppLayout.
+// Which page is shown for which address.
 export const routes: RouteObject[] = [
   {
+    // Pages for people who aren't signed in.
+    element: <PublicLayout />,
+    children: [
+      {
+        path: "/sign-in",
+        element: (
+          <RedirectIfSignedIn>
+            <SignInPage />
+          </RedirectIfSignedIn>
+        ),
+      },
+      { path: "/setup", element: <SetupPage /> },
+    ],
+  },
+  {
+    // Everything else needs a signed-in Account and is drawn inside AppLayout.
     path: "/",
-    element: <AppLayout />,
+    element: (
+      <RequireSignedIn>
+        <AppLayout />
+      </RequireSignedIn>
+    ),
     children: [
       { index: true, element: <HomePage /> },
       { path: "*", element: <NotFoundPage /> },

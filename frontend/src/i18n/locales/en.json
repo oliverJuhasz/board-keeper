@@ -22,5 +22,79 @@
     "title": "Page not found",
     "text": "There is nothing at this address.",
     "goToStart": "Go to the start page"
+  },
+  "app": {
+    "loading": "Loading…",
+    "unreachable": "Couldn't reach Board Keeper",
+    "tryAgain": "Try again"
+  },
+  "signIn": {
+    "title": "Sign in",
+    "username": "Username",
+    "password": "Password",
+    "staySignedIn": "Stay signed in",
+    "staySignedInHint": "For 90 days on this device.",
+    "submit": "Sign in",
+    "setupNeeded": {
+      "title": "Board Keeper isn't set up yet",
+      "text": "To create the first admin, open the setup link from the server's log."
+    }
+  },
+  "setup": {
+    "title": "Set up Board Keeper",
+    "intro": "Create the first admin account.",
+    "playerName": "Your name",
+    "playerNameHint": "The name you appear under in plays.",
+    "username": "Username",
+    "usernameHint": "3 to 30 letters, digits, dots, hyphens or underscores.",
+    "password": "Password",
+    "passwordHint": "At least 16 characters. A few words in a row work well.",
+    "submit": "Create account",
+    "noToken": {
+      "title": "This link is incomplete",
+      "text": "Open the full setup link from the server's log."
+    },
+    "done": {
+      "title": "Board Keeper is already set up",
+      "text": "You can sign in with your account.",
+      "signIn": "Go to sign in"
+    }
+  },
+  "account": {
+    "menu": "Account",
+    "signedInAs": "Signed in as {{username}}",
+    "signOut": "Sign out"
+  },
+  "password": {
+    "show": "Show password",
+    "hide": "Hide password"
+  },
+  "validation": {
+    "required": "Fill this in.",
+    "usernameInvalid": "Use 3 to 30 letters, digits, dots, hyphens or underscores.",
+    "passwordTooShort": "Use at least 16 characters.",
+    "passwordTooLong": "Use at most 200 characters.",
+    "nameTooLong": "Use at most 50 characters."
+  },
+  "problems": {
+    "unknown": "Something went wrong. Try again.",
+    "network": "Couldn't reach the server. Check your connection and try again.",
+    "session": {
+      "badCredentials": "Wrong username or password.",
+      "accountDisabled": "This account has been disabled."
+    },
+    "setup": {
+      "wrongLink": "This setup link is not valid. Use the newest link from the server's log.",
+      "alreadyDone": "Board Keeper is already set up."
+    },
+    "accounts": {
+      "usernameTaken": "This username is taken."
+    },
+    "players": {
+      "nameTaken": "There is already a player with this name."
+    },
+    "request": {
+      "invalid": "Check what you entered and try again."
+    }
   }
 }

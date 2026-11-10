@@ -5,6 +5,11 @@
 #
 # Board Keeper then answers on http://localhost:8080 (or the port you chose). It expects to
 # sit behind a reverse proxy that handles HTTPS; setting one up is specific to your installation.
+# The proxy should pass the X-Forwarded-Proto header, so that Board Keeper knows the visitor
+# came in over HTTPS.
+#
+# On its first start, Board Keeper writes a one-time link to its log for creating the first
+# Admin: docker compose logs app
 
 name: board-keeper
 
