@@ -19,8 +19,12 @@ A setup option of a Game, chosen for each Play, that can change how it is scored
 _Avoid_: Mode, house rule, option
 
 **Setup**:
-The Expansions and Variants chosen for a Play.
+The Expansions and Variants chosen for a Play as a whole. Choices for individual Players are their Player Setup.
 _Avoid_: Configuration
+
+**Player Setup**:
+The choices made for one Player in a Play, such as their Spirit and its aspect in Spirit Island, or their Wonder and its side in 7 Wonders. The Game Module declares which choices exist, and may allow a Player more than one, such as two Spirits in a Solo Play.
+_Avoid_: Character, faction, identity
 
 **Play**:
 One occasion on which a group of Players played a Game to the end, with a particular Setup. A game that was abandoned part-way is not a Play.

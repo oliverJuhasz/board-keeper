@@ -13,7 +13,7 @@ Terms are defined in [`CONTEXT.md`](../CONTEXT.md). The reasons behind the bigge
 - A catalogue of Games, added by hand. Each Game is scored by its own Game Module or by the Generic Module.
 - Recording finished Plays:
   - the Setup (Expansions and Variants)
-  - each Player's own choices, such as their Spirit or Wonder
+  - each Player's Player Setup, such as their Spirit or Wonder
   - Recording Mode (Points or Winner only), switchable per Play
   - Solo Plays as each module defines them
   - Cooperative Plays, with an optional group score
@@ -50,9 +50,10 @@ Recording without a connection, teams, unfinished plays, game nights, importing 
 | **M3** | The module contract with real games | `StandardGameModule`, Setup, Tie-breakers, solo styles; Calico, then Wyrmspan, then Harmonies | Designing a plug-in interface |
 | **M4** | Statistics | Events from `plays`, statistics' own tables, the per-Game and per-Player pages | Spring Modulith events |
 | **M5** | Passkeys, PWA, self-hosting guide | Passkey registration and sign-in, installing and updating the app, the guide | Spring Security passkeys; service workers |
-| **M6** | More games | 7 Wonders Duel with Pantheon and Agora (Victory Types); Spirit Island with its expansions (per-player choices, number Variants); screens for Recalculation | Stretching the module contract |
+| **M6** | More games | 7 Wonders Duel with Pantheon and Agora (Victory Types); Spirit Island with its expansions (Player Setup, number Variants); 7 Wonders with Leaders and Cities (Player Setup, negative Score Categories); screens for Recalculation | Stretching the module contract |
 
 ## Details to settle when a milestone starts
 
 - **M2:** which fields a Play has besides its Game, date and Players, for example an optional location and notes.
 - **M3 and M6:** each game's exact scoring and tie-break rules, taken from its official rulebook. Online summaries disagree, for example on the order of Calico's tie-breakers and on Spirit Island's score formula.
+- **M6:** which edition of 7 Wonders the module covers, because the first and second editions differ. Any team rules in Cities stay unsupported while teams are out of scope.
