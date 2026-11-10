@@ -58,6 +58,20 @@ class GamesApiTests {
     }
 
     @Test
+    void givesTheGameModuleTextsInTheLanguageAskedFor() {
+        assertThat(mvc.get().uri("/api/game-modules/texts/hu"))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$['generic.name']")
+                .isEqualTo("Általános");
+    }
+
+    @Test
+    void anUnknownLanguageIsABadRequest() {
+        assertThat(mvc.get().uri("/api/game-modules/texts/xx")).hasStatus(400);
+    }
+
+    @Test
     void anUnknownApiAddressIsNotFound() {
         assertThat(mvc.get().uri("/api/no-such-thing")).hasStatus(404);
     }
