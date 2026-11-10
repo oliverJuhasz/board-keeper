@@ -64,7 +64,10 @@
   "account": {
     "menu": "Account",
     "signedInAs": "Signed in as {{username}}",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "settings": "Settings",
+    "accounts": "Accounts",
+    "roles": "Roles"
   },
   "password": {
     "show": "Show password",
@@ -89,7 +92,11 @@
       "alreadyDone": "Board Keeper is already set up."
     },
     "accounts": {
-      "usernameTaken": "This username is taken."
+      "usernameTaken": "This username is taken.",
+      "notFound": "This account no longer exists.",
+      "lastAdmin": "There has to be at least one admin who can sign in.",
+      "cannotDisableSelf": "You can't disable your own account.",
+      "wrongCurrentPassword": "The current password is wrong."
     },
     "players": {
       "nameTaken": "There is already a player with this name.",
@@ -106,11 +113,18 @@
       "notFound": "This invite no longer exists."
     },
     "roles": {
-      "notFound": "This role no longer exists."
+      "notFound": "This role no longer exists.",
+      "nameTaken": "There is already a role with this name.",
+      "adminCannotChange": "The Admin role can't be changed.",
+      "builtInCannotDelete": "The built-in roles can't be deleted."
     },
     "access": {
       "notSignedIn": "You are no longer signed in.",
-      "denied": "You aren't allowed to do this."
+      "denied": "You aren't allowed to do this.",
+      "beyondOwnPermissions": "You can't give, take away or overrule permissions you don't have yourself."
+    },
+    "resetLinks": {
+      "notValid": "This reset link doesn't work any more. Ask for a new one."
     }
   },
   "nav": {
@@ -121,6 +135,30 @@
     "builtIn": {
       "ADMIN": "Admin",
       "MEMBER": "Member"
+    },
+    "title": "Roles",
+    "description": "A role is a set of permissions. Give roles to accounts on the Accounts page.",
+    "add": "Add role",
+    "loading": "Loading roles",
+    "loadFailed": "Couldn't load the roles",
+    "name": "Name",
+    "permissions": "Permissions",
+    "allPermissions": "Every permission",
+    "noPermissions": "No permissions",
+    "actions": "Actions for {{name}}",
+    "edit": "Edit",
+    "delete": "Delete",
+    "dialog": {
+      "addTitle": "Add a role",
+      "editTitle": "Edit {{name}}",
+      "submitAdd": "Add role",
+      "submitEdit": "Save role",
+      "notYours": "You can't give a permission you don't have yourself."
+    },
+    "deleteDialog": {
+      "title": "Delete {{name}}?",
+      "description": "Accounts that have this role lose it. This can't be undone.",
+      "confirm": "Delete role"
     }
   },
   "players": {
@@ -162,10 +200,16 @@
       "submit": "Create invite link",
       "readyTitle": "Invite link for {{name}}",
       "readyDescription": "Send this link to {{name}} yourself. It is shown only now, works once, and is valid until {{date}}.",
-      "link": "Invite link",
-      "copy": "Copy link",
-      "copied": "Copied",
-      "done": "Done"
+      "link": "Invite link"
+    },
+    "resetPassword": "Create password reset link",
+    "resetDialog": {
+      "title": "Reset the password of {{name}}",
+      "description": "Creates a link that lets {{name}} choose a new password. The link works once and for 24 hours.",
+      "submit": "Create reset link",
+      "readyTitle": "Reset link for {{name}}",
+      "readyDescription": "Send this link to {{name}} yourself. It is shown only now, works once, and is valid until {{date}}.",
+      "link": "Reset link"
     }
   },
   "register": {
@@ -175,6 +219,90 @@
     "notValid": {
       "title": "This invite link doesn't work",
       "text": "It may have been used already, cancelled, or expired. Ask for a new one."
+    }
+  },
+  "link": {
+    "copy": "Copy link",
+    "copied": "Copied",
+    "done": "Done"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "languageHint": "Saved on your account, so it follows you to other devices.",
+    "password": {
+      "title": "Change password",
+      "current": "Current password",
+      "new": "New password",
+      "submit": "Change password",
+      "changed": "Your password has been changed. Other devices have been signed out."
+    }
+  },
+  "accounts": {
+    "title": "Accounts",
+    "description": "Everyone who can sign in.",
+    "loading": "Loading accounts",
+    "loadFailed": "Couldn't load the accounts",
+    "username": "Username",
+    "player": "Player",
+    "roles": "Roles",
+    "noRoles": "No roles",
+    "disabled": "Disabled",
+    "you": "You",
+    "actions": "Actions for {{username}}",
+    "changeRoles": "Change roles",
+    "disable": "Disable",
+    "enable": "Enable",
+    "rolesDialog": {
+      "title": "Roles of {{username}}",
+      "description": "An account can do everything any of its roles allows.",
+      "submit": "Save roles",
+      "beyondOwn": "Holds permissions you don't have."
+    },
+    "disableDialog": {
+      "title": "Disable {{username}}?",
+      "description": "{{username}} is signed out and can no longer sign in. Their player and history stay. You can enable the account again later.",
+      "confirm": "Disable account"
+    }
+  },
+  "permissions": {
+    "CREATE_PLAYERS": {
+      "name": "Create players",
+      "hint": "Add new players to the list."
+    },
+    "EDIT_PLAYERS": {
+      "name": "Rename players",
+      "hint": "Change a player's name."
+    },
+    "REMOVE_PLAYERS": {
+      "name": "Remove players",
+      "hint": "Only players without an account or plays."
+    },
+    "CREATE_PLAYS": {
+      "name": "Create plays",
+      "hint": "Record plays."
+    },
+    "MANAGE_INVITES": {
+      "name": "Manage invites",
+      "hint": "Create and cancel invites and password reset links."
+    },
+    "MANAGE_ACCOUNTS": {
+      "name": "Manage accounts",
+      "hint": "See accounts, change their roles, and disable them."
+    },
+    "MANAGE_ROLES": {
+      "name": "Manage roles",
+      "hint": "Create, change and delete roles."
+    }
+  },
+  "resetPassword": {
+    "title": "Choose a new password",
+    "intro": "For the account {{username}}.",
+    "password": "New password",
+    "submit": "Save password",
+    "notValid": {
+      "title": "This reset link doesn't work",
+      "text": "It may have been used already or have expired. Ask for a new one."
     }
   }
 }

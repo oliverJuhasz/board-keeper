@@ -64,7 +64,10 @@
   "account": {
     "menu": "Account",
     "signedInAs": "Ingelogd als {{username}}",
-    "signOut": "Uitloggen"
+    "signOut": "Uitloggen",
+    "settings": "Instellingen",
+    "accounts": "Accounts",
+    "roles": "Rollen"
   },
   "password": {
     "show": "Wachtwoord tonen",
@@ -89,7 +92,11 @@
       "alreadyDone": "Board Keeper is al ingesteld."
     },
     "accounts": {
-      "usernameTaken": "Deze gebruikersnaam is al in gebruik."
+      "usernameTaken": "Deze gebruikersnaam is al in gebruik.",
+      "notFound": "Dit account bestaat niet meer.",
+      "lastAdmin": "Er moet altijd minstens één beheerder zijn die kan inloggen.",
+      "cannotDisableSelf": "Je kunt je eigen account niet uitschakelen.",
+      "wrongCurrentPassword": "Het huidige wachtwoord klopt niet."
     },
     "players": {
       "nameTaken": "Er is al een speler met deze naam.",
@@ -106,11 +113,18 @@
       "notFound": "Deze uitnodiging bestaat niet meer."
     },
     "roles": {
-      "notFound": "Deze rol bestaat niet meer."
+      "notFound": "Deze rol bestaat niet meer.",
+      "nameTaken": "Er is al een rol met deze naam.",
+      "adminCannotChange": "De rol Beheerder kan niet worden gewijzigd.",
+      "builtInCannotDelete": "De ingebouwde rollen kunnen niet worden verwijderd."
     },
     "access": {
       "notSignedIn": "Je bent niet meer ingelogd.",
-      "denied": "Je mag dit niet doen."
+      "denied": "Je mag dit niet doen.",
+      "beyondOwnPermissions": "Je kunt geen rechten geven, afnemen of overrulen die je zelf niet hebt."
+    },
+    "resetLinks": {
+      "notValid": "Deze link werkt niet meer. Vraag een nieuwe aan."
     }
   },
   "nav": {
@@ -121,6 +135,30 @@
     "builtIn": {
       "ADMIN": "Beheerder",
       "MEMBER": "Lid"
+    },
+    "title": "Rollen",
+    "description": "Een rol is een verzameling rechten. Rollen geef je aan accounts op de pagina Accounts.",
+    "add": "Rol toevoegen",
+    "loading": "Rollen laden",
+    "loadFailed": "De rollen konden niet worden geladen",
+    "name": "Naam",
+    "permissions": "Rechten",
+    "allPermissions": "Alle rechten",
+    "noPermissions": "Geen rechten",
+    "actions": "Acties voor {{name}}",
+    "edit": "Bewerken",
+    "delete": "Verwijderen",
+    "dialog": {
+      "addTitle": "Rol toevoegen",
+      "editTitle": "{{name}} bewerken",
+      "submitAdd": "Rol toevoegen",
+      "submitEdit": "Rol opslaan",
+      "notYours": "Je kunt geen recht geven dat je zelf niet hebt."
+    },
+    "deleteDialog": {
+      "title": "{{name}} verwijderen?",
+      "description": "Accounts met deze rol raken hem kwijt. Dit kan niet ongedaan worden gemaakt.",
+      "confirm": "Rol verwijderen"
     }
   },
   "players": {
@@ -162,10 +200,16 @@
       "submit": "Uitnodigingslink maken",
       "readyTitle": "Uitnodigingslink voor {{name}}",
       "readyDescription": "Stuur deze link zelf naar {{name}}. Hij wordt alleen nu getoond, werkt één keer en is geldig tot {{date}}.",
-      "link": "Uitnodigingslink",
-      "copy": "Link kopiëren",
-      "copied": "Gekopieerd",
-      "done": "Klaar"
+      "link": "Uitnodigingslink"
+    },
+    "resetPassword": "Link voor nieuw wachtwoord maken",
+    "resetDialog": {
+      "title": "Wachtwoord van {{name}} opnieuw instellen",
+      "description": "Maakt een link waarmee {{name}} een nieuw wachtwoord kan kiezen. De link werkt één keer en is 24 uur geldig.",
+      "submit": "Link maken",
+      "readyTitle": "Link voor {{name}}",
+      "readyDescription": "Stuur deze link zelf naar {{name}}. Hij wordt alleen nu getoond, werkt één keer en is geldig tot {{date}}.",
+      "link": "Link voor nieuw wachtwoord"
     }
   },
   "register": {
@@ -175,6 +219,90 @@
     "notValid": {
       "title": "Deze uitnodigingslink werkt niet",
       "text": "Hij is misschien al gebruikt, ingetrokken of verlopen. Vraag een nieuwe aan."
+    }
+  },
+  "link": {
+    "copy": "Link kopiëren",
+    "copied": "Gekopieerd",
+    "done": "Klaar"
+  },
+  "settings": {
+    "title": "Instellingen",
+    "language": "Taal",
+    "languageHint": "Wordt bij je account opgeslagen en geldt dus ook op je andere apparaten.",
+    "password": {
+      "title": "Wachtwoord wijzigen",
+      "current": "Huidig wachtwoord",
+      "new": "Nieuw wachtwoord",
+      "submit": "Wachtwoord wijzigen",
+      "changed": "Je wachtwoord is gewijzigd. Andere apparaten zijn uitgelogd."
+    }
+  },
+  "accounts": {
+    "title": "Accounts",
+    "description": "Iedereen die kan inloggen.",
+    "loading": "Accounts laden",
+    "loadFailed": "De accounts konden niet worden geladen",
+    "username": "Gebruikersnaam",
+    "player": "Speler",
+    "roles": "Rollen",
+    "noRoles": "Geen rollen",
+    "disabled": "Uitgeschakeld",
+    "you": "Jij",
+    "actions": "Acties voor {{username}}",
+    "changeRoles": "Rollen wijzigen",
+    "disable": "Uitschakelen",
+    "enable": "Inschakelen",
+    "rolesDialog": {
+      "title": "Rollen van {{username}}",
+      "description": "Een account mag alles wat een van zijn rollen toestaat.",
+      "submit": "Rollen opslaan",
+      "beyondOwn": "Bevat rechten die jij niet hebt."
+    },
+    "disableDialog": {
+      "title": "{{username}} uitschakelen?",
+      "description": "{{username}} wordt uitgelogd en kan niet meer inloggen. De speler en de geschiedenis blijven bestaan. Je kunt het account later weer inschakelen.",
+      "confirm": "Account uitschakelen"
+    }
+  },
+  "permissions": {
+    "CREATE_PLAYERS": {
+      "name": "Spelers aanmaken",
+      "hint": "Nieuwe spelers aan de lijst toevoegen."
+    },
+    "EDIT_PLAYERS": {
+      "name": "Spelers hernoemen",
+      "hint": "De naam van een speler wijzigen."
+    },
+    "REMOVE_PLAYERS": {
+      "name": "Spelers verwijderen",
+      "hint": "Alleen spelers zonder account en zonder partijen."
+    },
+    "CREATE_PLAYS": {
+      "name": "Partijen vastleggen",
+      "hint": "Gespeelde partijen vastleggen."
+    },
+    "MANAGE_INVITES": {
+      "name": "Uitnodigingen beheren",
+      "hint": "Uitnodigingen en links voor een nieuw wachtwoord maken en intrekken."
+    },
+    "MANAGE_ACCOUNTS": {
+      "name": "Accounts beheren",
+      "hint": "Accounts bekijken, hun rollen wijzigen en ze uitschakelen."
+    },
+    "MANAGE_ROLES": {
+      "name": "Rollen beheren",
+      "hint": "Rollen maken, wijzigen en verwijderen."
+    }
+  },
+  "resetPassword": {
+    "title": "Kies een nieuw wachtwoord",
+    "intro": "Voor het account {{username}}.",
+    "password": "Nieuw wachtwoord",
+    "submit": "Wachtwoord opslaan",
+    "notValid": {
+      "title": "Deze link werkt niet",
+      "text": "Hij is misschien al gebruikt of verlopen. Vraag een nieuwe aan."
     }
   }
 }

@@ -25,10 +25,13 @@ import { useCan, useCurrentAccount } from "@/features/session/useSession"
 import { InviteDialog } from "./InviteDialog"
 import { PlayerNameDialog } from "./PlayerNameDialog"
 import { RemovePlayerDialog } from "./RemovePlayerDialog"
+import { ResetLinkDialog } from "./ResetLinkDialog"
 
 /** Which dialog is open, and for which Player. */
 type OpenDialog =
-  { kind: "add" } | { kind: "rename" | "invite" | "remove"; player: Player } | undefined
+  | { kind: "add" }
+  | { kind: "rename" | "invite" | "resetPassword" | "remove"; player: Player }
+  | undefined
 
 export function PlayersPage() {
   const { t } = useTranslation()
@@ -117,6 +120,9 @@ export function PlayersPage() {
       {dialog?.kind === "add" && <PlayerNameDialog onClose={close} />}
       {dialog?.kind === "rename" && <PlayerNameDialog player={dialog.player} onClose={close} />}
       {dialog?.kind === "invite" && <InviteDialog player={dialog.player} onClose={close} />}
+      {dialog?.kind === "resetPassword" && (
+        <ResetLinkDialog player={dialog.player} onClose={close} />
+      )}
       {dialog?.kind === "remove" && <RemovePlayerDialog player={dialog.player} onClose={close} />}
     </div>
   )
@@ -155,8 +161,9 @@ function PlayerActions({
   const can = useCan()
 
   const mayInvite = can("MANAGE_INVITES") && !hasAccount
+  const mayResetPassword = can("MANAGE_INVITES") && hasAccount
   const mayRemove = can("REMOVE_PLAYERS") && !hasAccount
-  if (!can("EDIT_PLAYERS") && !mayInvite && !mayRemove) {
+  if (!can("EDIT_PLAYERS") && !mayInvite && !mayResetPassword && !mayRemove) {
     return null
   }
 
@@ -187,6 +194,11 @@ function PlayerActions({
         {mayInvite && invite && (
           <DropdownMenuItem onClick={() => onCancelInvite(invite.id)}>
             {t("players.cancelInvite")}
+          </DropdownMenuItem>
+        )}
+        {mayResetPassword && (
+          <DropdownMenuItem onClick={() => onOpen({ kind: "resetPassword", player })}>
+            {t("players.resetPassword")}
           </DropdownMenuItem>
         )}
         {mayRemove && (

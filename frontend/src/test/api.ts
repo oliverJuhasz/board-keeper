@@ -1,5 +1,5 @@
 import { http, HttpResponse } from "msw"
-import type { CurrentAccount, Game, GameModule, Invite, Player, Role } from "@/api/client"
+import type { Account, CurrentAccount, Game, GameModule, Invite, Player, Role } from "@/api/client"
 import { server } from "./server"
 
 // Ready-made answers of the pretend backend, for tests to combine.
@@ -100,6 +100,40 @@ export function playersAre(players: Player[], claimedPlayerIds: string[], invite
     http.get("*/api/claims", () => HttpResponse.json({ playerIds: state.claimedPlayerIds })),
     http.get("*/api/invites", () => HttpResponse.json(state.invites)),
     http.get("*/api/roles", () => HttpResponse.json([adminRole, memberRole])),
+  )
+  return state
+}
+
+/** A Role an Admin created. */
+export const scorekeeperRole: Role = {
+  id: "0193a000-0000-7000-8000-0000000000c3",
+  name: "Scorekeeper",
+  permissions: ["CREATE_PLAYS", "EDIT_PLAYERS"],
+}
+
+export const annaAccount: Account = {
+  id: anna.id,
+  username: "anna",
+  playerId: anna.playerId,
+  roleIds: [adminRole.id],
+  disabled: false,
+}
+
+export const benceAccount: Account = {
+  id: bence.id,
+  username: "bence",
+  playerId: bence.playerId,
+  roleIds: [memberRole.id],
+  disabled: false,
+}
+
+/** What the Accounts and Roles pages load. As with playersAre, tests can change the lists. */
+export function accountsAre(accounts: Account[], roles: Role[] = [adminRole, memberRole]) {
+  const state = { accounts: [...accounts], roles: [...roles] }
+  server.use(
+    http.get("*/api/accounts", () => HttpResponse.json(state.accounts)),
+    http.get("*/api/roles", () => HttpResponse.json(state.roles)),
+    http.get("*/api/players", () => HttpResponse.json([annaPlayer, bencePlayer, doraPlayer])),
   )
   return state
 }

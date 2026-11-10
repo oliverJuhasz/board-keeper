@@ -10,3 +10,11 @@ export function formatDate(isoDate: string) {
     new Date(isoDate),
   )
 }
+
+/** A date with its time, such as "17 November 2026 at 14:30". */
+export function formatDateTime(isoDate: string) {
+  return new Intl.DateTimeFormat(locales[currentLanguage()], {
+    dateStyle: "long",
+    timeStyle: "short",
+  }).format(new Date(isoDate))
+}

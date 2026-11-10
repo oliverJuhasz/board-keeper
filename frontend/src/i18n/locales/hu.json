@@ -64,7 +64,10 @@
   "account": {
     "menu": "Fiók",
     "signedInAs": "Bejelentkezve: {{username}}",
-    "signOut": "Kijelentkezés"
+    "signOut": "Kijelentkezés",
+    "settings": "Beállítások",
+    "accounts": "Fiókok",
+    "roles": "Szerepkörök"
   },
   "password": {
     "show": "Jelszó megjelenítése",
@@ -89,7 +92,11 @@
       "alreadyDone": "A Board Keeper már be van állítva."
     },
     "accounts": {
-      "usernameTaken": "Ez a felhasználónév már foglalt."
+      "usernameTaken": "Ez a felhasználónév már foglalt.",
+      "notFound": "Ez a fiók már nem létezik.",
+      "lastAdmin": "Mindig lennie kell legalább egy adminisztrátornak, aki be tud jelentkezni.",
+      "cannotDisableSelf": "A saját fiókodat nem tilthatod le.",
+      "wrongCurrentPassword": "A jelenlegi jelszó hibás."
     },
     "players": {
       "nameTaken": "Már van ilyen nevű játékos.",
@@ -106,11 +113,18 @@
       "notFound": "Ez a meghívó már nem létezik."
     },
     "roles": {
-      "notFound": "Ez a szerepkör már nem létezik."
+      "notFound": "Ez a szerepkör már nem létezik.",
+      "nameTaken": "Már van ilyen nevű szerepkör.",
+      "adminCannotChange": "Az Adminisztrátor szerepkör nem módosítható.",
+      "builtInCannotDelete": "A beépített szerepkörök nem törölhetők."
     },
     "access": {
       "notSignedIn": "Már nem vagy bejelentkezve.",
-      "denied": "Ehhez nincs jogosultságod."
+      "denied": "Ehhez nincs jogosultságod.",
+      "beyondOwnPermissions": "Nem adhatsz, vehetsz el vagy bírálhatsz felül olyan jogosultságot, amellyel te sem rendelkezel."
+    },
+    "resetLinks": {
+      "notValid": "Ez a visszaállító hivatkozás már nem működik. Kérj egy újat."
     }
   },
   "nav": {
@@ -121,6 +135,30 @@
     "builtIn": {
       "ADMIN": "Adminisztrátor",
       "MEMBER": "Tag"
+    },
+    "title": "Szerepkörök",
+    "description": "A szerepkör jogosultságok csoportja. Szerepkört a Fiókok oldalon adhatsz egy fióknak.",
+    "add": "Szerepkör hozzáadása",
+    "loading": "Szerepkörök betöltése",
+    "loadFailed": "Nem sikerült betölteni a szerepköröket",
+    "name": "Név",
+    "permissions": "Jogosultságok",
+    "allPermissions": "Minden jogosultság",
+    "noPermissions": "Nincs jogosultsága",
+    "actions": "Műveletek: {{name}}",
+    "edit": "Szerkesztés",
+    "delete": "Törlés",
+    "dialog": {
+      "addTitle": "Szerepkör hozzáadása",
+      "editTitle": "{{name}} szerkesztése",
+      "submitAdd": "Szerepkör hozzáadása",
+      "submitEdit": "Szerepkör mentése",
+      "notYours": "Nem adhatsz olyan jogosultságot, amellyel te sem rendelkezel."
+    },
+    "deleteDialog": {
+      "title": "Törlöd: {{name}}?",
+      "description": "Az ilyen szerepkörű fiókok elveszítik ezt a szerepkört. Ezt nem lehet visszavonni.",
+      "confirm": "Szerepkör törlése"
     }
   },
   "players": {
@@ -162,10 +200,16 @@
       "submit": "Meghívó hivatkozás létrehozása",
       "readyTitle": "Meghívó hivatkozás: {{name}}",
       "readyDescription": "Ezt a hivatkozást neked kell elküldened neki ({{name}}). Csak most látható, egyszer használható, és eddig érvényes: {{date}}.",
-      "link": "Meghívó hivatkozás",
-      "copy": "Hivatkozás másolása",
-      "copied": "Kimásolva",
-      "done": "Kész"
+      "link": "Meghívó hivatkozás"
+    },
+    "resetPassword": "Jelszó-visszaállító hivatkozás létrehozása",
+    "resetDialog": {
+      "title": "{{name}} jelszavának visszaállítása",
+      "description": "Létrehoz egy hivatkozást, amellyel {{name}} új jelszót választhat. A hivatkozás egyszer használható, és 24 óráig érvényes.",
+      "submit": "Hivatkozás létrehozása",
+      "readyTitle": "Visszaállító hivatkozás: {{name}}",
+      "readyDescription": "Ezt a hivatkozást neked kell elküldened neki ({{name}}). Csak most látható, egyszer használható, és eddig érvényes: {{date}}.",
+      "link": "Visszaállító hivatkozás"
     }
   },
   "register": {
@@ -175,6 +219,90 @@
     "notValid": {
       "title": "Ez a meghívó hivatkozás nem működik",
       "text": "Lehet, hogy már felhasználták, visszavonták, vagy lejárt. Kérj egy újat."
+    }
+  },
+  "link": {
+    "copy": "Hivatkozás másolása",
+    "copied": "Kimásolva",
+    "done": "Kész"
+  },
+  "settings": {
+    "title": "Beállítások",
+    "language": "Nyelv",
+    "languageHint": "A fiókodhoz mentjük, így a többi eszközödön is érvényes.",
+    "password": {
+      "title": "Jelszó módosítása",
+      "current": "Jelenlegi jelszó",
+      "new": "Új jelszó",
+      "submit": "Jelszó módosítása",
+      "changed": "A jelszavad megváltozott. A többi eszközön kijelentkeztettünk."
+    }
+  },
+  "accounts": {
+    "title": "Fiókok",
+    "description": "Mindenki, aki be tud jelentkezni.",
+    "loading": "Fiókok betöltése",
+    "loadFailed": "Nem sikerült betölteni a fiókokat",
+    "username": "Felhasználónév",
+    "player": "Játékos",
+    "roles": "Szerepkörök",
+    "noRoles": "Nincs szerepköre",
+    "disabled": "Letiltva",
+    "you": "Te",
+    "actions": "Műveletek: {{username}}",
+    "changeRoles": "Szerepkörök módosítása",
+    "disable": "Letiltás",
+    "enable": "Engedélyezés",
+    "rolesDialog": {
+      "title": "{{username}} szerepkörei",
+      "description": "Egy fiók mindent megtehet, amit bármelyik szerepköre megenged.",
+      "submit": "Szerepkörök mentése",
+      "beyondOwn": "Olyan jogosultságot tartalmaz, amellyel te nem rendelkezel."
+    },
+    "disableDialog": {
+      "title": "Letiltod: {{username}}?",
+      "description": "{{username}} kijelentkezik, és többé nem tud bejelentkezni. A játékosa és az előzményei megmaradnak. A fiókot később újra engedélyezheted.",
+      "confirm": "Fiók letiltása"
+    }
+  },
+  "permissions": {
+    "CREATE_PLAYERS": {
+      "name": "Játékosok létrehozása",
+      "hint": "Új játékosok felvétele a listára."
+    },
+    "EDIT_PLAYERS": {
+      "name": "Játékosok átnevezése",
+      "hint": "Egy játékos nevének módosítása."
+    },
+    "REMOVE_PLAYERS": {
+      "name": "Játékosok eltávolítása",
+      "hint": "Csak olyan játékosoké, akiknek nincs fiókjuk és nincsenek partijaik."
+    },
+    "CREATE_PLAYS": {
+      "name": "Partik rögzítése",
+      "hint": "Lejátszott partik rögzítése."
+    },
+    "MANAGE_INVITES": {
+      "name": "Meghívók kezelése",
+      "hint": "Meghívók és jelszó-visszaállító hivatkozások létrehozása és visszavonása."
+    },
+    "MANAGE_ACCOUNTS": {
+      "name": "Fiókok kezelése",
+      "hint": "Fiókok megtekintése, szerepköreik módosítása és letiltásuk."
+    },
+    "MANAGE_ROLES": {
+      "name": "Szerepkörök kezelése",
+      "hint": "Szerepkörök létrehozása, módosítása és törlése."
+    }
+  },
+  "resetPassword": {
+    "title": "Válassz új jelszót",
+    "intro": "A következő fiókhoz: {{username}}.",
+    "password": "Új jelszó",
+    "submit": "Jelszó mentése",
+    "notValid": {
+      "title": "Ez a visszaállító hivatkozás nem működik",
+      "text": "Lehet, hogy már felhasználták, vagy lejárt. Kérj egy újat."
     }
   }
 }

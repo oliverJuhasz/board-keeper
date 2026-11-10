@@ -1,6 +1,5 @@
 import { screen } from "@testing-library/react"
-import userEvent from "@testing-library/user-event"
-import { http, HttpResponse } from "msw"
+import { http } from "msw"
 import { beforeEach, expect, test } from "vitest"
 import { anna, gamesAre, genericModule, problem, signedInAs } from "@/test/api"
 import { renderApp } from "@/test/renderApp"
@@ -55,29 +54,6 @@ test("shows a game module's key while its texts can't be loaded", async () => {
   renderApp("/")
 
   expect(await screen.findByText("generic")).toBeInTheDocument()
-})
-
-test("switches everything to the chosen language, and saves the choice on the account", async () => {
-  gamesAre([])
-  let saved: unknown
-  server.use(
-    http.put("*/api/account/language", async ({ request }) => {
-      saved = await request.json()
-      return new HttpResponse(null, { status: 204 })
-    }),
-  )
-  renderApp("/")
-  await screen.findByText("Generic")
-
-  await userEvent.selectOptions(screen.getByRole("combobox", { name: "Language" }), "Magyar")
-
-  // The frontend's own texts, and the Game Module's name from the API.
-  expect(await screen.findByText("Még nincsenek játékok.")).toBeInTheDocument()
-  expect(await screen.findByText("Általános")).toBeInTheDocument()
-  expect(screen.getByRole("combobox", { name: "Nyelv" })).toHaveValue("hu")
-  expect(document.documentElement).toHaveAttribute("lang", "hu")
-  expect(localStorage.getItem("boardkeeper.language")).toBe("hu")
-  expect(saved).toEqual({ language: "hu" })
 })
 
 test("uses the language saved on the account", async () => {
