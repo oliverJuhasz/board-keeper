@@ -5,18 +5,32 @@ package io.github.oliverjuhasz.boardkeeper.access;
  *
  * <p>The list is fixed in code, because code checks it. The names are stored in the database
  * and used in the API, so renaming one needs a database migration.
+ *
+ * <p>Some Permissions are for Admins only: they belong to the Admin Role and cannot be put
+ * into any other Role (ADR 0015).
  */
 public enum Permission {
-    CREATE_PLAYERS,
+    CREATE_PLAYERS(false),
     /** Rename a Player. */
-    EDIT_PLAYERS,
+    EDIT_PLAYERS(false),
     /** Remove a Player that has no Account and no Plays. */
-    REMOVE_PLAYERS,
-    CREATE_PLAYS,
+    REMOVE_PLAYERS(false),
+    CREATE_PLAYS(false),
     /** Create and cancel Invites and Reset Links. */
-    MANAGE_INVITES,
+    MANAGE_INVITES(true),
     /** See the Accounts, give and take their Roles, and disable them. */
-    MANAGE_ACCOUNTS,
+    MANAGE_ACCOUNTS(true),
     /** Create, change and delete Roles. */
-    MANAGE_ROLES
+    MANAGE_ROLES(true);
+
+    private final boolean adminOnly;
+
+    Permission(boolean adminOnly) {
+        this.adminOnly = adminOnly;
+    }
+
+    /** Whether only the Admin Role can hold this Permission. */
+    public boolean isAdminOnly() {
+        return adminOnly;
+    }
 }

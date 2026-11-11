@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/dialog"
 import { FieldGroup } from "@/components/ui/field"
 import { roleName } from "@/features/roles/roleName"
-import { useCan } from "@/features/session/useSession"
 
 /** Chooses which Roles an Account holds. */
 export function AccountRolesDialog({
@@ -30,7 +29,6 @@ export function AccountRolesDialog({
 }) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
-  const can = useCan()
   const [roleIds, setRoleIds] = useState(account.roleIds)
 
   const save = api.useMutation("put", "/api/accounts/{id}/roles", {
@@ -58,20 +56,14 @@ export function AccountRolesDialog({
           </DialogHeader>
           <FormProblem error={save.error} />
           <FieldGroup className="gap-3">
-            {roles.map((role) => {
-              // A Role can only be given or taken away by someone who holds everything in it.
-              const withinOwn = role.permissions.every(can)
-              return (
-                <CheckboxField
-                  key={role.id}
-                  label={roleName(t, role)}
-                  hint={withinOwn ? undefined : t("accounts.rolesDialog.beyondOwn")}
-                  checked={roleIds.includes(role.id)}
-                  disabled={!withinOwn}
-                  onChange={(checked) => toggle(role.id, checked)}
-                />
-              )
-            })}
+            {roles.map((role) => (
+              <CheckboxField
+                key={role.id}
+                label={roleName(t, role)}
+                checked={roleIds.includes(role.id)}
+                onChange={(checked) => toggle(role.id, checked)}
+              />
+            ))}
           </FieldGroup>
           <DialogFooter>
             <DialogClose render={<Button variant="outline" />}>{t("common.cancel")}</DialogClose>

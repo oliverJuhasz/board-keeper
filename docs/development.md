@@ -131,9 +131,9 @@ void setLanguage(@AuthenticationPrincipal CurrentAccount account, @RequestBody L
 PlayerResponse create(@Valid @RequestBody CreatePlayerRequest body) { ... }
 ```
 
-To add a Permission, add it to the `Permission` enum, regenerate `api/openapi.json`, and add its name to the three translation files. The Admin Role gets it automatically. In the frontend, `useCan()` tells whether the signed-in Account holds a Permission, for showing or hiding what needs it.
+To add a Permission, add it to the `Permission` enum and to `frontend/src/features/roles/permissions.ts`, regenerate `api/openapi.json`, and add its name to the three translation files. The Admin Role gets it automatically. In the frontend, `useCan()` tells whether the signed-in Account holds a Permission, for showing or hiding what needs it.
 
-**Nobody hands out more than they hold.** Giving a Role, changing a Role, disabling an Account and creating a Reset Link all check that the Permissions involved are ones the acting Account holds itself ([ADR 0014](adr/0014-nobody-hands-out-more-than-they-hold.md)). The check is `RoleAdministration.requireWithinOwn`. Use it for anything new that lets one Account affect another's access.
+**Admin-only Permissions.** Managing Roles, Accounts and Invites belongs to the Admin Role alone ([ADR 0015](adr/0015-admin-powers-are-admin-only.md)). In `Permission`, these are marked `adminOnly`. They are checked like any other Permission, with `@RequiresPermission`, but no other Role can hold them: `RoleAdministration` refuses, and `RoleRepository` ignores such a row even if the database has one.
 
 **One-time links.** An Invite or a Reset Link is a link with a random token in it. The token is shown once, when the Invite is created; the database keeps only a hash of it (`LinkTokens`), so reading the database does not give anyone a usable link. `Invites` and `RegistrationController` show the pattern.
 

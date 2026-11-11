@@ -109,19 +109,18 @@
     "invites": {
       "notValid": "Deze uitnodigingslink werkt niet meer. Vraag een nieuwe aan.",
       "playerHasAccount": "Deze speler heeft al een account.",
-      "roleNotAllowed": "Je kunt niemand met deze rol uitnodigen.",
       "notFound": "Deze uitnodiging bestaat niet meer."
     },
     "roles": {
       "notFound": "Deze rol bestaat niet meer.",
       "nameTaken": "Er is al een rol met deze naam.",
       "adminCannotChange": "De rol Beheerder kan niet worden gewijzigd.",
-      "builtInCannotDelete": "De ingebouwde rollen kunnen niet worden verwijderd."
+      "builtInCannotDelete": "De ingebouwde rollen kunnen niet worden verwijderd.",
+      "adminOnlyPermission": "Alleen de rol Beheerder kan dit recht hebben."
     },
     "access": {
       "notSignedIn": "Je bent niet meer ingelogd.",
-      "denied": "Je mag dit niet doen.",
-      "beyondOwnPermissions": "Je kunt geen rechten geven, afnemen of overrulen die je zelf niet hebt."
+      "denied": "Je mag dit niet doen."
     },
     "resetLinks": {
       "notValid": "Deze link werkt niet meer. Vraag een nieuwe aan."
@@ -152,8 +151,7 @@
       "addTitle": "Rol toevoegen",
       "editTitle": "{{name}} bewerken",
       "submitAdd": "Rol toevoegen",
-      "submitEdit": "Rol opslaan",
-      "notYours": "Je kunt geen recht geven dat je zelf niet hebt."
+      "submitEdit": "Rol opslaan"
     },
     "deleteDialog": {
       "title": "{{name}} verwijderen?",
@@ -256,8 +254,7 @@
     "rolesDialog": {
       "title": "Rollen van {{username}}",
       "description": "Een account mag alles wat een van zijn rollen toestaat.",
-      "submit": "Rollen opslaan",
-      "beyondOwn": "Bevat rechten die jij niet hebt."
+      "submit": "Rollen opslaan"
     },
     "disableDialog": {
       "title": "{{username}} uitschakelen?",

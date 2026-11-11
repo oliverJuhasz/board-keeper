@@ -608,7 +608,7 @@
     },
     "/api/accounts/{id}/roles" : {
       "put" : {
-        "description" : "Only Roles within the caller's own Permissions can be given or taken away, and the last Admin keeps the Admin Role.",
+        "description" : "The last Admin who can sign in keeps the Admin Role.",
         "operationId" : "setAccountRoles",
         "parameters" : [ {
           "in" : "path",
@@ -1199,7 +1199,7 @@
     },
     "/api/reset-links" : {
       "post" : {
-        "description" : "Replaces any earlier Reset Link for the same Account. The answer holds the link's token, which cannot be asked for again. Only possible for an Account that holds no Permission its creator lacks.",
+        "description" : "Replaces any earlier Reset Link for the same Account. The answer holds the link's token, which cannot be asked for again.",
         "operationId" : "createResetLink",
         "requestBody" : {
           "content" : {
@@ -1270,7 +1270,7 @@
         "tags" : [ "Roles" ]
       },
       "post" : {
-        "description" : "It can hold only Permissions that its creator holds.",
+        "description" : "It cannot hold the Permissions that are for Admins only.",
         "operationId" : "createRole",
         "requestBody" : {
           "content" : {

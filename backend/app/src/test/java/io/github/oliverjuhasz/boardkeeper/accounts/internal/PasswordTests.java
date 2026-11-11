@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.github.oliverjuhasz.boardkeeper.TestBrowser;
 import io.github.oliverjuhasz.boardkeeper.TestDatabase;
 import io.github.oliverjuhasz.boardkeeper.TestcontainersConfiguration;
-import io.github.oliverjuhasz.boardkeeper.access.Permission;
 import io.github.oliverjuhasz.boardkeeper.players.Players;
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -155,20 +154,14 @@ class PasswordTests {
     }
 
     @Test
-    void aResetLinkCannotBeMadeForAnAccountThatHoldsMoreThanItsCreator() {
-        accounts.memberWith("dora", Permission.MANAGE_INVITES);
-        TestBrowser dora = accounts.signedIn(mvc, "dora");
-        UUID annasPlayer = accounts.playerOf(accounts.admin("second-admin"));
+    void onlyAnAdminCanCreateAResetLink() {
+        TestBrowser member = accounts.signedIn(mvc, "bence");
 
-        // Otherwise "manage Invites" would be the key to every Admin's Account.
-        assertThat(dora.post("/api/reset-links", "{\"playerId\": \"%s\"}".formatted(annasPlayer)))
+        // A Reset Link is the key to an Account.
+        assertThat(member.post("/api/reset-links", "{\"playerId\": \"%s\"}".formatted(bencesPlayer)))
                 .hasStatus(403)
                 .bodyJson()
-                .isLenientlyEqualTo("{\"code\": \"access.beyondOwnPermissions\"}");
-        assertThat(dora.post("/api/reset-links", "{\"playerId\": \"%s\"}".formatted(bencesPlayer))).hasStatusOk();
-
-        TestBrowser member = accounts.signedIn(mvc, "bence");
-        assertThat(member.post("/api/reset-links", "{\"playerId\": \"%s\"}".formatted(bencesPlayer))).hasStatus(403);
+                .isLenientlyEqualTo("{\"code\": \"access.denied\"}");
     }
 
     private boolean canSignIn(String username, String password) {

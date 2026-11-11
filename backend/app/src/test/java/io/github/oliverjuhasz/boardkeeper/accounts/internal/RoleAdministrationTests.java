@@ -84,12 +84,12 @@ class RoleAdministrationTests {
     void aRoleCanBeRenamedAndGivenOtherPermissions() {
         String id = idOf(admin.post("/api/roles", role("Scorekeeper", "CREATE_PLAYS")));
 
-        assertThat(admin.put("/api/roles/" + id, role("Organiser", "CREATE_PLAYERS", "MANAGE_INVITES")))
+        assertThat(admin.put("/api/roles/" + id, role("Organiser", "CREATE_PLAYERS", "REMOVE_PLAYERS")))
                 .hasStatusOk()
                 .bodyJson()
-                .isLenientlyEqualTo("{\"name\": \"Organiser\", \"permissions\": [\"CREATE_PLAYERS\", \"MANAGE_INVITES\"]}");
+                .isLenientlyEqualTo("{\"name\": \"Organiser\", \"permissions\": [\"CREATE_PLAYERS\", \"REMOVE_PLAYERS\"]}");
         assertThat(roles.find(UUID.fromString(id)).orElseThrow().permissions())
-                .containsExactlyInAnyOrder(Permission.CREATE_PLAYERS, Permission.MANAGE_INVITES);
+                .containsExactlyInAnyOrder(Permission.CREATE_PLAYERS, Permission.REMOVE_PLAYERS);
     }
 
     @Test
@@ -112,17 +112,17 @@ class RoleAdministrationTests {
 
     @Test
     void deletingARoleTakesItFromItsAccountsAndFromOpenInvites() {
-        accounts.memberWith("bence", Permission.MANAGE_INVITES);
+        accounts.memberWith("bence", Permission.EDIT_PLAYERS);
         TestBrowser bence = accounts.signedIn(mvc, "bence");
         UUID bencesRole = roles.findIdByName("Role of bence").orElseThrow();
         UUID dora = players.create("Dora").id();
         admin.post("/api/invites", "{\"playerId\": \"%s\", \"roleId\": \"%s\"}".formatted(dora, bencesRole));
-        assertThat(bence.get("/api/invites")).hasStatusOk();
+        assertThat(bence.put("/api/players/" + dora, "{\"name\": \"Dóra\"}")).hasStatusOk();
 
         assertThat(admin.delete("/api/roles/" + bencesRole)).hasStatus(204);
 
         // Bence lost the Permission at once, and the Invite now gives the Member Role.
-        assertThat(bence.get("/api/invites")).hasStatus(403);
+        assertThat(bence.put("/api/players/" + dora, "{\"name\": \"Dora\"}")).hasStatus(403);
         assertThat(dsl.select(INVITE.ROLE_ID).from(INVITE).fetchSingle().value1()).isEqualTo(roles.idOf(BuiltInRole.MEMBER));
     }
 
@@ -136,7 +136,7 @@ class RoleAdministrationTests {
     }
 
     @Test
-    void managingRolesNeedsItsPermission() {
+    void onlyAnAdminCanManageRoles() {
         accounts.member("bence");
         TestBrowser member = accounts.signedIn(mvc, "bence");
 
@@ -149,24 +149,31 @@ class RoleAdministrationTests {
     }
 
     @Test
-    void nobodyCanPutMoreIntoARoleThanTheyHoldThemselves() {
-        accounts.memberWith("bence", Permission.MANAGE_ROLES);
-        TestBrowser bence = accounts.signedIn(mvc, "bence");
-        String bencesRole = roles.findIdByName("Role of bence").orElseThrow().toString();
-        String powerful = idOf(admin.post("/api/roles", role("Powerful", "MANAGE_ACCOUNTS")));
-
-        // Bence holds Create Players, Create Plays and Manage Roles: those he may hand out.
-        assertThat(bence.post("/api/roles", role("Helper", "CREATE_PLAYERS"))).hasStatusOk();
-
-        // Not a Permission he lacks, whether in a new Role, in his own, or by touching a Role above him.
-        assertBeyondOwn(bence.post("/api/roles", role("Sneaky", "MANAGE_ACCOUNTS")));
-        assertBeyondOwn(bence.put("/api/roles/" + bencesRole, role("Role of bence", "MANAGE_ROLES", "MANAGE_ACCOUNTS")));
-        assertBeyondOwn(bence.put("/api/roles/" + powerful, role("Powerless")));
-        assertBeyondOwn(bence.delete("/api/roles/" + powerful));
+    void aRoleCannotHoldAPermissionThatIsForAdminsOnly() {
+        for (String adminOnly : new String[] {"MANAGE_ROLES", "MANAGE_ACCOUNTS", "MANAGE_INVITES"}) {
+            assertThat(admin.post("/api/roles", role("Sneaky", "CREATE_PLAYS", adminOnly)))
+                    .as(adminOnly)
+                    .hasStatus(409)
+                    .bodyJson()
+                    .isLenientlyEqualTo("{\"code\": \"roles.adminOnlyPermission\"}");
+        }
+        UUID member = roles.idOf(BuiltInRole.MEMBER);
+        assertThat(admin.put("/api/roles/" + member, role("Member", "MANAGE_ACCOUNTS"))).hasStatus(409);
     }
 
-    private static void assertBeyondOwn(MvcTestResult result) {
-        assertThat(result).hasStatus(403).bodyJson().isLenientlyEqualTo("{\"code\": \"access.beyondOwnPermissions\"}");
+    @Test
+    void anAdminOnlyPermissionNeverComesFromAnotherRoleWhateverTheDatabaseHolds() {
+        // memberWith writes straight to the database, past the rule above.
+        accounts.memberWith("bence", Permission.MANAGE_ROLES, Permission.EDIT_PLAYERS);
+        TestBrowser bence = accounts.signedIn(mvc, "bence");
+
+        assertThat(bence.get("/api/session"))
+                .bodyJson()
+                .extractingPath("$.account.permissions")
+                .asArray()
+                .contains("EDIT_PLAYERS")
+                .doesNotContain("MANAGE_ROLES");
+        assertThat(bence.post("/api/roles", role("Helper", "CREATE_PLAYERS"))).hasStatus(403);
     }
 
     private static String role(String name, String... permissions) {

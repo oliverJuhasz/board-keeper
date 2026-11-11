@@ -17,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { allPermissions } from "./permissions"
+import { assignablePermissions } from "./permissions"
 import { RoleDialog } from "./RoleDialog"
 import { roleName } from "./roleName"
 
@@ -40,13 +40,13 @@ export function RolesPage() {
 
   /** What a Role may do, in words. */
   function permissionsOf(role: Role) {
-    if (role.permissions.length === allPermissions.length) {
+    if (role.builtIn === "ADMIN") {
       return t("roles.allPermissions")
     }
     if (role.permissions.length === 0) {
       return t("roles.noPermissions")
     }
-    return allPermissions
+    return assignablePermissions
       .filter((permission) => role.permissions.includes(permission))
       .map((permission) => t(`permissions.${permission}.name`))
       .join(", ")

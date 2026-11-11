@@ -139,7 +139,7 @@ class InviteTests {
     }
 
     @Test
-    void invitingNeedsThePermissionToManageInvites() {
+    void onlyAnAdminCanInvite() {
         accounts.member("bence");
         TestBrowser member = accounts.signedIn(mvc, "bence");
 
@@ -148,26 +148,26 @@ class InviteTests {
     }
 
     @Test
-    void anInviteCanGiveAnotherRoleOnlyIfItsCreatorMayManageAccounts() {
+    void anInviteCanGiveARoleOtherThanMember() {
         UUID adminRole = roles.idOf(BuiltInRole.ADMIN);
-        String asAdmin = "{\"playerId\": \"%s\", \"roleId\": \"%s\"}".formatted(dora, adminRole);
 
-        // Someone who may only manage Invites cannot make an Admin through an Invite.
-        accounts.memberWith("bence", Permission.MANAGE_INVITES);
-        TestBrowser inviter = accounts.signedIn(mvc, "bence");
-        assertThat(inviter.post("/api/invites", asAdmin))
-                .hasStatus(403)
-                .bodyJson()
-                .isLenientlyEqualTo("{\"code\": \"invites.roleNotAllowed\"}");
-        assertThat(inviter.post("/api/invites", "{\"playerId\": \"%s\"}".formatted(dora))).hasStatusOk();
+        String token = tokenOf(
+                admin.post("/api/invites", "{\"playerId\": \"%s\", \"roleId\": \"%s\"}".formatted(dora, adminRole)));
 
-        // An Admin can.
-        String token = tokenOf(admin.post("/api/invites", asAdmin));
         assertThat(TestBrowser.open(mvc).post("/api/registration/" + token, registration("dora")))
                 .bodyJson()
                 .extractingPath("$.account.permissions")
                 .asArray()
                 .contains("MANAGE_ROLES");
+    }
+
+    @Test
+    void anInviteCannotGiveARoleThatDoesNotExist() {
+        assertThat(admin.post(
+                        "/api/invites", "{\"playerId\": \"%s\", \"roleId\": \"%s\"}".formatted(dora, UUID.randomUUID())))
+                .hasStatus(404)
+                .bodyJson()
+                .isLenientlyEqualTo("{\"code\": \"roles.notFound\"}");
     }
 
     @Test

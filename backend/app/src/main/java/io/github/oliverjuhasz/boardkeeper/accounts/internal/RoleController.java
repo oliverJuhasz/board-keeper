@@ -1,6 +1,5 @@
 package io.github.oliverjuhasz.boardkeeper.accounts.internal;
 
-import io.github.oliverjuhasz.boardkeeper.access.CurrentAccount;
 import io.github.oliverjuhasz.boardkeeper.access.Permission;
 import io.github.oliverjuhasz.boardkeeper.access.RequiresPermission;
 import io.github.oliverjuhasz.boardkeeper.accounts.internal.RoleRepository.RoleRow;
@@ -16,7 +15,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -53,10 +51,10 @@ class RoleController {
     @RequiresPermission(Permission.MANAGE_ROLES)
     @Operation(
             summary = "Create a Role",
-            description = "It can hold only Permissions that its creator holds.",
+            description = "It cannot hold the Permissions that are for Admins only.",
             operationId = "createRole")
-    RoleResponse create(@AuthenticationPrincipal CurrentAccount account, @Valid @RequestBody RoleRequest body) {
-        return RoleResponse.from(administration.create(body.name(), body.permissions(), account));
+    RoleResponse create(@Valid @RequestBody RoleRequest body) {
+        return RoleResponse.from(administration.create(body.name(), body.permissions()));
     }
 
     @PutMapping("/{id}")
@@ -65,9 +63,8 @@ class RoleController {
             summary = "Change a Role's name and Permissions",
             description = "The Admin Role cannot be changed. The Member Role keeps its name.",
             operationId = "updateRole")
-    RoleResponse update(
-            @PathVariable UUID id, @AuthenticationPrincipal CurrentAccount account, @Valid @RequestBody RoleRequest body) {
-        return RoleResponse.from(administration.update(id, body.name(), body.permissions(), account));
+    RoleResponse update(@PathVariable UUID id, @Valid @RequestBody RoleRequest body) {
+        return RoleResponse.from(administration.update(id, body.name(), body.permissions()));
     }
 
     @DeleteMapping("/{id}")
@@ -77,8 +74,8 @@ class RoleController {
             summary = "Delete a Role",
             description = "Accounts that held it lose it. The two built-in Roles cannot be deleted.",
             operationId = "deleteRole")
-    void delete(@PathVariable UUID id, @AuthenticationPrincipal CurrentAccount account) {
-        administration.delete(id, account);
+    void delete(@PathVariable UUID id) {
+        administration.delete(id);
     }
 
     record RoleRequest(

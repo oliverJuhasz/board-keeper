@@ -3,10 +3,8 @@ package io.github.oliverjuhasz.boardkeeper.accounts.internal;
 import io.github.oliverjuhasz.boardkeeper.access.CurrentAccount;
 import io.github.oliverjuhasz.boardkeeper.accounts.internal.AccountRepository.AccountRow;
 import io.github.oliverjuhasz.boardkeeper.accounts.internal.AccountRepository.AccountSummary;
-import io.github.oliverjuhasz.boardkeeper.accounts.internal.RoleRepository.RoleRow;
 import io.github.oliverjuhasz.boardkeeper.problems.Problem;
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -15,14 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * What someone who may manage Accounts can do to them: change their Roles, and disable or
- * enable them. Two things are protected throughout:
- *
- * <ul>
- *   <li>Nobody can hand out, take away or overrule more than they hold themselves (see
- *       {@link RoleAdministration#requireWithinOwn}).
- *   <li>There is always at least one Admin who can sign in.
- * </ul>
+ * What an Admin can do to other people's Accounts: change their Roles, and disable or enable
+ * them. One thing is protected throughout: there is always at least one Admin who can sign in.
  */
 @Service
 class AccountAdministration {
@@ -44,17 +36,13 @@ class AccountAdministration {
     }
 
     @Transactional
-    void setRoles(UUID accountId, Set<UUID> roleIds, CurrentAccount actor) {
+    void setRoles(UUID accountId, Set<UUID> roleIds) {
         accounts.find(accountId).orElseThrow(() -> Problem.notFound(NOT_FOUND));
         Set<UUID> before = accounts.findRoleIds(accountId);
-
-        // Every Role that is given or taken away has to be within what the actor holds.
-        Set<UUID> changed = new HashSet<>(before);
-        changed.addAll(roleIds);
-        changed.removeIf(roleId -> before.contains(roleId) && roleIds.contains(roleId));
-        for (UUID roleId : changed) {
-            RoleRow role = roles.find(roleId).orElseThrow(() -> Problem.notFound("roles.notFound"));
-            RoleAdministration.requireWithinOwn(actor, role.permissions());
+        for (UUID roleId : roleIds) {
+            if (!roles.exists(roleId)) {
+                throw Problem.notFound("roles.notFound");
+            }
         }
 
         UUID admin = roles.idOf(BuiltInRole.ADMIN);
@@ -70,7 +58,6 @@ class AccountAdministration {
         if (accountId.equals(actor.accountId())) {
             throw Problem.conflict("accounts.cannotDisableSelf");
         }
-        RoleAdministration.requireWithinOwn(actor, roles.permissionsOf(accountId));
         if (disabled && !account.disabled() && accounts.findRoleIds(accountId).contains(roles.idOf(BuiltInRole.ADMIN))) {
             requireAnotherAdmin(accountId);
         }

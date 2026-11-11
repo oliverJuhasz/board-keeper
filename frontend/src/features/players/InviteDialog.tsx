@@ -6,19 +6,16 @@ import { LinkDialog } from "@/components/LinkDialog"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { roleName } from "@/features/roles/roleName"
-import { useCan } from "@/features/session/useSession"
 import { formatDate } from "@/lib/dates"
 
 /** Invites a Player to register an Account, and shows the link to send them. */
 export function InviteDialog({ player, onClose }: { player: Player; onClose: () => void }) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
-  const can = useCan()
   const roleFieldId = useId()
 
-  // Giving a Role other than Member needs the Permission to manage Accounts.
-  const mayChooseRole = can("MANAGE_ACCOUNTS")
-  const roles = api.useQuery("get", "/api/roles", {}, { enabled: mayChooseRole })
+  // The new Account starts as a Member unless another Role is chosen here.
+  const roles = api.useQuery("get", "/api/roles")
   const memberRoleId = roles.data?.find((role) => role.builtIn === "MEMBER")?.id
   const [chosenRoleId, setChosenRoleId] = useState<string>()
 
@@ -50,7 +47,7 @@ export function InviteDialog({ player, onClose }: { player: Player; onClose: () 
       }
       onClose={onClose}
     >
-      {mayChooseRole && roles.data && (
+      {roles.data && (
         <Field>
           <FieldLabel htmlFor={roleFieldId}>{t("players.inviteDialog.role")}</FieldLabel>
           <NativeSelect

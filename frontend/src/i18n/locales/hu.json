@@ -109,19 +109,18 @@
     "invites": {
       "notValid": "Ez a meghívó hivatkozás már nem működik. Kérj egy újat.",
       "playerHasAccount": "Ennek a játékosnak már van fiókja.",
-      "roleNotAllowed": "Ezzel a szerepkörrel nem hívhatsz meg senkit.",
       "notFound": "Ez a meghívó már nem létezik."
     },
     "roles": {
       "notFound": "Ez a szerepkör már nem létezik.",
       "nameTaken": "Már van ilyen nevű szerepkör.",
       "adminCannotChange": "Az Adminisztrátor szerepkör nem módosítható.",
-      "builtInCannotDelete": "A beépített szerepkörök nem törölhetők."
+      "builtInCannotDelete": "A beépített szerepkörök nem törölhetők.",
+      "adminOnlyPermission": "Ezzel a jogosultsággal csak az Adminisztrátor szerepkör rendelkezhet."
     },
     "access": {
       "notSignedIn": "Már nem vagy bejelentkezve.",
-      "denied": "Ehhez nincs jogosultságod.",
-      "beyondOwnPermissions": "Nem adhatsz, vehetsz el vagy bírálhatsz felül olyan jogosultságot, amellyel te sem rendelkezel."
+      "denied": "Ehhez nincs jogosultságod."
     },
     "resetLinks": {
       "notValid": "Ez a visszaállító hivatkozás már nem működik. Kérj egy újat."
@@ -152,8 +151,7 @@
       "addTitle": "Szerepkör hozzáadása",
       "editTitle": "{{name}} szerkesztése",
       "submitAdd": "Szerepkör hozzáadása",
-      "submitEdit": "Szerepkör mentése",
-      "notYours": "Nem adhatsz olyan jogosultságot, amellyel te sem rendelkezel."
+      "submitEdit": "Szerepkör mentése"
     },
     "deleteDialog": {
       "title": "Törlöd: {{name}}?",
@@ -256,8 +254,7 @@
     "rolesDialog": {
       "title": "{{username}} szerepkörei",
       "description": "Egy fiók mindent megtehet, amit bármelyik szerepköre megenged.",
-      "submit": "Szerepkörök mentése",
-      "beyondOwn": "Olyan jogosultságot tartalmaz, amellyel te nem rendelkezel."
+      "submit": "Szerepkörök mentése"
     },
     "disableDialog": {
       "title": "Letiltod: {{username}}?",

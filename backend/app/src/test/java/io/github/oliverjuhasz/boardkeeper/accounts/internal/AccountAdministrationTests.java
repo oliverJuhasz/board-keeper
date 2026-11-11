@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.github.oliverjuhasz.boardkeeper.TestBrowser;
 import io.github.oliverjuhasz.boardkeeper.TestDatabase;
 import io.github.oliverjuhasz.boardkeeper.TestcontainersConfiguration;
-import io.github.oliverjuhasz.boardkeeper.access.Permission;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,7 +13,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
-import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -61,11 +59,12 @@ class AccountAdministrationTests {
     }
 
     @Test
-    void managingAccountsNeedsItsPermission() {
+    void onlyAnAdminCanManageAccounts() {
         TestBrowser member = accounts.signedIn(mvc, "bence");
 
         assertThat(member.get("/api/accounts")).hasStatus(403);
         assertThat(member.put("/api/accounts/" + bence + "/roles", rolesRequest(adminRole))).hasStatus(403);
+        assertThat(member.put("/api/accounts/" + anna + "/disabled", "{\"disabled\": true}")).hasStatus(403);
     }
 
     @Test
@@ -116,29 +115,11 @@ class AccountAdministrationTests {
     }
 
     @Test
-    void someoneWhoIsNotAnAdminCannotOverruleOne() {
-        accounts.memberWith("dora", Permission.MANAGE_ACCOUNTS);
-        TestBrowser dora = accounts.signedIn(mvc, "dora");
-
-        // Dora may manage Accounts, but only within what she holds herself.
-        assertBeyondOwn(dora.put("/api/accounts/" + bence + "/roles", rolesRequest(memberRole, adminRole)));
-        assertBeyondOwn(dora.put("/api/accounts/" + anna + "/roles", rolesRequest(memberRole)));
-        assertBeyondOwn(dora.put("/api/accounts/" + anna + "/disabled", "{\"disabled\": true}"));
-
-        // A Member is within her reach.
-        assertThat(dora.put("/api/accounts/" + bence + "/disabled", "{\"disabled\": true}")).hasStatus(204);
-    }
-
-    @Test
     void anAccountThatDoesNotExistIsNotFound() {
         assertThat(admin.put("/api/accounts/" + UUID.randomUUID() + "/roles", rolesRequest(memberRole)))
                 .hasStatus(404)
                 .bodyJson()
                 .isLenientlyEqualTo("{\"code\": \"accounts.notFound\"}");
-    }
-
-    private static void assertBeyondOwn(MvcTestResult result) {
-        assertThat(result).hasStatus(403).bodyJson().isLenientlyEqualTo("{\"code\": \"access.beyondOwnPermissions\"}");
     }
 
     private static String rolesRequest(UUID... roleIds) {

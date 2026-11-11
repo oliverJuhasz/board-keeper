@@ -1,22 +1,18 @@
 package io.github.oliverjuhasz.boardkeeper.accounts.internal;
 
-import io.github.oliverjuhasz.boardkeeper.access.CurrentAccount;
 import io.github.oliverjuhasz.boardkeeper.access.Permission;
 import io.github.oliverjuhasz.boardkeeper.accounts.internal.RoleRepository.RoleRow;
 import io.github.oliverjuhasz.boardkeeper.problems.Problem;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Creating, changing and deleting Roles.
- *
- * <p>One rule runs through all of it, and through {@link AccountAdministration} too: nobody
- * can hand out more than they hold themselves. Without it, the Permission to manage Roles
- * would be a way to become an Admin: add every Permission to a Role you already have.
+ * Creating, changing and deleting Roles. Only an Admin can do this, so there is no question of
+ * someone handing out more than they hold. What a Role can hold is limited instead: the
+ * Admin-only Permissions belong to the Admin Role alone (ADR 0015).
  */
 @Service
 class RoleAdministration {
@@ -34,16 +30,16 @@ class RoleAdministration {
         this.invites = invites;
     }
 
-    /** The rule: an Account may only deal in Permissions it holds itself. */
-    static void requireWithinOwn(CurrentAccount actor, Set<Permission> permissions) {
-        if (!actor.permissions().containsAll(permissions)) {
-            throw new Problem(HttpStatus.FORBIDDEN, "access.beyondOwnPermissions");
+    /** Refuses a Role that would hold a Permission meant for Admins only. */
+    private static void requireNoAdminOnly(Set<Permission> permissions) {
+        if (permissions.stream().anyMatch(Permission::isAdminOnly)) {
+            throw Problem.conflict("roles.adminOnlyPermission");
         }
     }
 
     @Transactional
-    RoleRow create(String name, Set<Permission> permissions, CurrentAccount actor) {
-        requireWithinOwn(actor, permissions);
+    RoleRow create(String name, Set<Permission> permissions) {
+        requireNoAdminOnly(permissions);
         String trimmed = name.strip();
         if (roles.findIdByName(trimmed).isPresent()) {
             throw Problem.conflict(NAME_TAKEN);
@@ -62,13 +58,12 @@ class RoleAdministration {
      * Role keeps its name, which the interface translates, but its Permissions can change.
      */
     @Transactional
-    RoleRow update(UUID roleId, String name, Set<Permission> permissions, CurrentAccount actor) {
+    RoleRow update(UUID roleId, String name, Set<Permission> permissions) {
         RoleRow role = roles.find(roleId).orElseThrow(() -> Problem.notFound(NOT_FOUND));
         if (role.builtIn() == BuiltInRole.ADMIN) {
             throw Problem.conflict("roles.adminCannotChange");
         }
-        requireWithinOwn(actor, role.permissions());
-        requireWithinOwn(actor, permissions);
+        requireNoAdminOnly(permissions);
 
         String newName = role.builtIn() == null ? name.strip() : role.name();
         if (roles.findIdByName(newName).filter(other -> !other.equals(roleId)).isPresent()) {
@@ -88,12 +83,11 @@ class RoleAdministration {
      * given it give the Member Role instead. The two built-in Roles cannot be deleted.
      */
     @Transactional
-    void delete(UUID roleId, CurrentAccount actor) {
+    void delete(UUID roleId) {
         RoleRow role = roles.find(roleId).orElseThrow(() -> Problem.notFound(NOT_FOUND));
         if (role.builtIn() != null) {
             throw Problem.conflict("roles.builtInCannotDelete");
         }
-        requireWithinOwn(actor, role.permissions());
         invites.replaceRole(roleId, roles.idOf(BuiltInRole.MEMBER));
         roles.delete(roleId);
     }
