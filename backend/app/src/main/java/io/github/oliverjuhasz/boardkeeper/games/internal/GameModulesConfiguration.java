@@ -15,8 +15,11 @@ class GameModulesConfiguration {
      */
     @Bean
     GameModules gameModules() {
-        return new GameModules(ServiceLoader.load(GameModule.class).stream()
+        GameModules modules = new GameModules(ServiceLoader.load(GameModule.class).stream()
                 .map(ServiceLoader.Provider::get)
                 .toList());
+        // Fail at startup, not at the first added Game, if the Generic Module is missing.
+        modules.generic();
+        return modules;
     }
 }

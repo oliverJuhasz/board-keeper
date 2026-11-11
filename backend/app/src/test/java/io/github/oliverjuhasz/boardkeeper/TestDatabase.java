@@ -33,7 +33,7 @@ public class TestDatabase {
         // Put the Member Role back to the Permissions it starts with, in case a test changed them.
         var member = dsl.select(ROLE.ID).from(ROLE).where(ROLE.BUILT_IN.eq("MEMBER")).fetchSingle().value1();
         dsl.deleteFrom(ROLE_PERMISSION).where(ROLE_PERMISSION.ROLE_ID.eq(member)).execute();
-        for (String permission : new String[] {"CREATE_PLAYERS", "CREATE_PLAYS"}) {
+        for (String permission : new String[] {"CREATE_PLAYERS", "CREATE_PLAYS", "CREATE_GAMES", "EDIT_GAMES"}) {
             dsl.insertInto(ROLE_PERMISSION, ROLE_PERMISSION.ROLE_ID, ROLE_PERMISSION.PERMISSION)
                     .values(member, permission)
                     .execute();
