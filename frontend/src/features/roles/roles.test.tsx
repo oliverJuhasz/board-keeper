@@ -25,7 +25,9 @@ test("lists the roles and what each may do", async () => {
 
   await screen.findByRole("row", { name: /Scorekeeper/ })
   expect(within(rowOf("Admin")).getByText("Every permission")).toBeInTheDocument()
-  expect(within(rowOf("Member")).getByText("Create players, Create plays")).toBeInTheDocument()
+  expect(
+    within(rowOf("Member")).getByText("Create players, Create games, Edit games, Create plays"),
+  ).toBeInTheDocument()
   expect(within(rowOf("Scorekeeper")).getByText("Rename players, Create plays")).toBeInTheDocument()
 })
 
@@ -92,7 +94,7 @@ test("edits the member role's permissions, but not its name", async () => {
     .poll(() => sent)
     .toEqual({
       id: memberRole.id,
-      body: { name: "Member", permissions: ["CREATE_PLAYS"] },
+      body: { name: "Member", permissions: ["CREATE_GAMES", "EDIT_GAMES", "CREATE_PLAYS"] },
     })
 })
 
@@ -105,7 +107,7 @@ test("offers only the permissions a role can hold", async () => {
 
   // Managing roles, accounts and invites is for admins only.
   const dialog = await screen.findByRole("dialog")
-  expect(within(dialog).getAllByRole("checkbox")).toHaveLength(4)
+  expect(within(dialog).getAllByRole("checkbox")).toHaveLength(7)
   expect(within(dialog).getByRole("checkbox", { name: "Create players" })).toBeInTheDocument()
   expect(within(dialog).queryByRole("checkbox", { name: "Manage roles" })).not.toBeInTheDocument()
   expect(

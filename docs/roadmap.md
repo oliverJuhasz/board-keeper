@@ -55,10 +55,17 @@ Recording without a connection, teams, unfinished plays, game nights, importing 
 | **M5** | Passkeys, PWA, self-hosting guide | Passkey registration and sign-in, installing and updating the app, the guide | Spring Security passkeys; service workers |
 | **M6** | More games | 7 Wonders Duel with Pantheon and Agora (Victory Types); Spirit Island with its expansions (Player Setup, number Variants); 7 Wonders with Leaders and Cities (Player Setup, negative Score Categories); screens for Recalculation | Stretching the module contract |
 
+## Settled for milestone M2
+
+- A Play records its Game, its Players and their Results, a date without a time, an optional location as free text, and optional notes.
+- Changing a Play, which means editing or deleting it, has three Permissions: for Plays you recorded, for Plays you took part in, and for any Play. A Member gets the first two.
+- With the Generic Module, each Game stores how its Plays are recorded by default: competitive or Cooperative, Points or Winner only, and whether the highest or the lowest score wins. The recorder can change these for a single Play. For a tie, the recorder picks who won it or leaves the Placing shared.
+- M2 is delivered in three slices: the Game catalogue, recording a Play, and the play history.
+
 ## Details to settle when a milestone starts
 
-- **M2:** which fields a Play has besides its Game, date and Players, for example an optional location and notes.
-- **M2:** how to keep each Spring Modulith module to its own tables. The generated jOOQ classes are currently one package that every module may use, so nothing yet stops `stats` from reading the `plays` tables, which ADR 0011 rules out.
+- **M3:** making a Game with a module of its own appear in the catalogue by itself, named by its module. Until the first such module exists, every Game is added by hand and scored by the Generic Module.
+- **M3:** what happens to a Game that was added by hand when a module for it arrives later. Its earlier Plays stay as the Generic Module recorded them.
 - **M5:** how a sole Admin who has forgotten their password gets back in. Today that needs a second Admin to create a Reset Link. The self-hosting guide needs an answer for when there is none.
 - **M5:** splitting the frontend's JavaScript by page. It has grown to about 250 kB compressed, all loaded up front.
 - **M3 and M6:** each game's exact scoring and tie-break rules, taken from its official rulebook. Online summaries disagree, for example on the order of Calico's tie-breakers and on Spirit Island's score formula.

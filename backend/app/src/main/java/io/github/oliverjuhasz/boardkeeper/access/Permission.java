@@ -15,6 +15,11 @@ public enum Permission {
     EDIT_PLAYERS(false),
     /** Remove a Player that has no Account and no Plays. */
     REMOVE_PLAYERS(false),
+    CREATE_GAMES(false),
+    /** Rename a Game and change how its Plays are recorded. */
+    EDIT_GAMES(false),
+    /** Remove a Game that has no Plays. */
+    REMOVE_GAMES(false),
     CREATE_PLAYS(false),
     /** Create and cancel Invites and Reset Links. */
     MANAGE_INVITES(true),

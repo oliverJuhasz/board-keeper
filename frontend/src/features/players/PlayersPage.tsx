@@ -20,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { LoadingRows } from "@/features/games/LoadingRows"
+import { LoadingRows } from "@/components/LoadingRows"
 import { useCan, useCurrentAccount } from "@/features/session/useSession"
 import { InviteDialog } from "./InviteDialog"
 import { PlayerNameDialog } from "./PlayerNameDialog"

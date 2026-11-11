@@ -20,6 +20,9 @@ export const anna: CurrentAccount = {
     "CREATE_PLAYERS",
     "EDIT_PLAYERS",
     "REMOVE_PLAYERS",
+    "CREATE_GAMES",
+    "EDIT_GAMES",
+    "REMOVE_GAMES",
     "CREATE_PLAYS",
     "MANAGE_INVITES",
     "MANAGE_ACCOUNTS",
@@ -34,13 +37,7 @@ export const bence: CurrentAccount = {
   playerId: "0193a000-0000-7000-8000-0000000000b2",
   playerName: "Bence",
   language: "en",
-  permissions: ["CREATE_PLAYERS", "CREATE_PLAYS"],
-}
-
-const gameModuleTexts: Record<string, Record<string, string>> = {
-  en: { "generic.name": "Generic" },
-  nl: { "generic.name": "Algemeen" },
-  hu: { "generic.name": "Általános" },
+  permissions: ["CREATE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "CREATE_PLAYS"],
 }
 
 export function signedInAs(account: CurrentAccount) {
@@ -54,15 +51,34 @@ export function signedOut() {
   )
 }
 
-/** What the start page loads. */
-export function gamesAre(games: Game[], gameModules: GameModule[] = [genericModule]) {
-  server.use(
-    http.get("*/api/games", () => HttpResponse.json(games)),
-    http.get("*/api/game-modules", () => HttpResponse.json(gameModules)),
-    http.get("*/api/game-modules/texts/:language", ({ params }) =>
-      HttpResponse.json(gameModuleTexts[params.language as string]),
-    ),
-  )
+/** A competitive Game recorded in points, where the highest score wins. */
+export const calico: Game = {
+  id: "0193a000-0000-7000-8000-0000000000e1",
+  name: "Calico",
+  gameModuleId: genericModule.id,
+  cooperative: false,
+  recordingMode: "POINTS",
+  lowestScoreWins: false,
+}
+
+/** A Cooperative Game recorded as won or lost. */
+export const pandemic: Game = {
+  id: "0193a000-0000-7000-8000-0000000000e2",
+  name: "Pandemic",
+  gameModuleId: genericModule.id,
+  cooperative: true,
+  recordingMode: "WINNER_ONLY",
+  lowestScoreWins: false,
+}
+
+/**
+ * What the Games page, the start page, loads. The list is kept here, so a test's own handlers
+ * can change it and the page sees the change when it loads the list again.
+ */
+export function gamesAre(games: Game[]) {
+  const state = { games: [...games] }
+  server.use(http.get("*/api/games", () => HttpResponse.json(state.games)))
+  return state
 }
 
 /** An error answer in the backend's format. */

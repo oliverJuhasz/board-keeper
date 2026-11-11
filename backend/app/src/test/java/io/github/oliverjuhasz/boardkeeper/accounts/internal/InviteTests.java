@@ -77,7 +77,7 @@ class InviteTests {
                 .bodyJson()
                 .isLenientlyEqualTo("""
                         {"account": {"username": "dora", "playerId": "%s", "playerName": "Dora", "language": "nl",
-                                     "permissions": ["CREATE_PLAYERS", "CREATE_PLAYS"]}}
+                                     "permissions": ["CREATE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "CREATE_PLAYS"]}}
                         """.formatted(dora));
 
         // They are signed in, the Player is claimed, and the Invite is used up.
@@ -200,7 +200,8 @@ class InviteTests {
                 .bodyJson()
                 .isLenientlyEqualTo("""
                         [{"name": "Admin", "builtIn": "ADMIN"},
-                         {"name": "Member", "builtIn": "MEMBER", "permissions": ["CREATE_PLAYERS", "CREATE_PLAYS"]}]
+                         {"name": "Member", "builtIn": "MEMBER",
+                          "permissions": ["CREATE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "CREATE_PLAYS"]}]
                         """);
         assertThat(admin.get("/api/roles")).bodyJson().extractingPath("$[0].permissions").asArray().hasSize(Permission.values().length);
     }

@@ -66,7 +66,7 @@ class SignInTests {
                 .bodyJson()
                 .isLenientlyEqualTo("""
                         {"account": {"username": "Bence", "playerName": "Player of Bence", "language": "en",
-                                     "permissions": ["CREATE_PLAYERS", "CREATE_PLAYS"]}}
+                                     "permissions": ["CREATE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "CREATE_PLAYS"]}}
                         """);
 
         assertThat(browser.get("/api/session")).bodyJson().extractingPath("$.account.username").isEqualTo("Bence");

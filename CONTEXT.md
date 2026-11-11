@@ -53,7 +53,7 @@ The package that adds support for one Game to Board Keeper: how its Plays are re
 _Avoid_: Plugin, extension, score sheet
 
 **Generic Module**:
-The built-in Game Module for any Game that has no module of its own. It records only totals, or only the winner.
+The built-in Game Module for any Game that has no module of its own, which is every Game someone adds to the catalogue by hand. It records only totals, or only the winner.
 _Avoid_: Default game, fallback
 
 **Score Category**:

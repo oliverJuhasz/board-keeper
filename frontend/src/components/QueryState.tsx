@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { LoadingRows } from "@/features/games/LoadingRows"
+import { LoadingRows } from "@/components/LoadingRows"
 
 /**
  * Draws its content once everything it needs has loaded. Until then it shows placeholder rows,

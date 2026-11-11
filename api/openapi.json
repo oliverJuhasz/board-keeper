@@ -54,7 +54,7 @@
           },
           "permissions" : {
             "items" : {
-              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_PLAYS", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES" ],
+              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "REMOVE_GAMES", "CREATE_PLAYS", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES" ],
               "type" : "string"
             },
             "type" : "array",
@@ -98,6 +98,9 @@
       },
       "Game" : {
         "properties" : {
+          "cooperative" : {
+            "type" : "boolean"
+          },
           "gameModuleId" : {
             "format" : "uuid",
             "type" : "string"
@@ -106,11 +109,18 @@
             "format" : "uuid",
             "type" : "string"
           },
+          "lowestScoreWins" : {
+            "type" : "boolean"
+          },
           "name" : {
+            "type" : "string"
+          },
+          "recordingMode" : {
+            "enum" : [ "POINTS", "WINNER_ONLY" ],
             "type" : "string"
           }
         },
-        "required" : [ "gameModuleId", "id", "name" ],
+        "required" : [ "cooperative", "gameModuleId", "id", "lowestScoreWins", "name", "recordingMode" ],
         "type" : "object"
       },
       "GameModule" : {
@@ -124,6 +134,29 @@
           }
         },
         "required" : [ "id", "key" ],
+        "type" : "object"
+      },
+      "GameRequest" : {
+        "properties" : {
+          "cooperative" : {
+            "description" : "Everyone wins or loses together, against the game",
+            "type" : "boolean"
+          },
+          "lowestScoreWins" : {
+            "description" : "For a competitive Play recorded in points: the lowest score wins",
+            "type" : "boolean"
+          },
+          "name" : {
+            "maxLength" : 100,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "recordingMode" : {
+            "enum" : [ "POINTS", "WINNER_ONLY" ],
+            "type" : "string"
+          }
+        },
+        "required" : [ "cooperative", "lowestScoreWins", "name", "recordingMode" ],
         "type" : "object"
       },
       "Invite" : {
@@ -349,7 +382,7 @@
           },
           "permissions" : {
             "items" : {
-              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_PLAYS", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES" ],
+              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "REMOVE_GAMES", "CREATE_PLAYS", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES" ],
               "type" : "string"
             },
             "type" : "array",
@@ -368,7 +401,7 @@
           },
           "permissions" : {
             "items" : {
-              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_PLAYS", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES" ],
+              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "REMOVE_GAMES", "CREATE_PLAYS", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES" ],
               "type" : "string"
             },
             "type" : "array",
@@ -779,7 +812,123 @@
             "description" : "The request could not be carried out"
           }
         },
-        "summary" : "List the Games in the catalogue",
+        "summary" : "List the Games in the catalogue by name",
+        "tags" : [ "Games" ]
+      },
+      "post" : {
+        "description" : "A Game added this way is scored by the Generic Module.",
+        "operationId" : "createGame",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/GameRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Game"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Add a Game to the catalogue",
+        "tags" : [ "Games" ]
+      }
+    },
+    "/api/games/{id}" : {
+      "delete" : {
+        "description" : "Only a Game without Plays can be removed.",
+        "operationId" : "removeGame",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Remove a Game",
+        "tags" : [ "Games" ]
+      },
+      "put" : {
+        "operationId" : "updateGame",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/GameRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Game"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Rename a Game and change how its Plays are recorded",
         "tags" : [ "Games" ]
       }
     },

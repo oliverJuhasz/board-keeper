@@ -19,6 +19,9 @@ import java.util.regex.Pattern;
  */
 public final class GameModules {
 
+    /** The key of the Generic Module, which scores every Game that has no module of its own. */
+    public static final String GENERIC_KEY = "generic";
+
     private static final Pattern KEY_FORMAT = Pattern.compile("[a-z0-9]+(-[a-z0-9]+)*");
 
     private final List<GameModule> modules;
@@ -59,5 +62,13 @@ public final class GameModules {
 
     public Optional<GameModule> byId(UUID id) {
         return modules.stream().filter(module -> module.id().equals(id)).findFirst();
+    }
+
+    /** The Generic Module. Board Keeper cannot run without it. */
+    public GameModule generic() {
+        return modules.stream()
+                .filter(module -> module.key().equals(GENERIC_KEY))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("The Generic Module ('" + GENERIC_KEY + "') is not installed"));
     }
 }
