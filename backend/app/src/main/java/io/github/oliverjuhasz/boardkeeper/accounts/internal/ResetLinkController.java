@@ -42,8 +42,7 @@ class ResetLinkController {
     @Operation(
             summary = "Create a Reset Link for the Account of a Player",
             description = "Replaces any earlier Reset Link for the same Account. The answer holds the "
-                    + "link's token, which cannot be asked for again. Only possible for an Account that "
-                    + "holds no Permission its creator lacks.",
+                    + "link's token, which cannot be asked for again.",
             operationId = "createResetLink")
     NewResetLinkResponse create(@AuthenticationPrincipal CurrentAccount account, @Valid @RequestBody ResetLinkRequest body) {
         NewResetLink created = passwords.createResetLink(body.playerId(), account);

@@ -46,12 +46,10 @@ class AccountAdministrationController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(
             summary = "Set which Roles an Account holds",
-            description = "Only Roles within the caller's own Permissions can be given or taken away, "
-                    + "and the last Admin keeps the Admin Role.",
+            description = "The last Admin who can sign in keeps the Admin Role.",
             operationId = "setAccountRoles")
-    void setRoles(
-            @PathVariable UUID id, @AuthenticationPrincipal CurrentAccount account, @Valid @RequestBody RolesRequest body) {
-        administration.setRoles(id, body.roleIds(), account);
+    void setRoles(@PathVariable UUID id, @Valid @RequestBody RolesRequest body) {
+        administration.setRoles(id, body.roleIds());
     }
 
     @PutMapping("/{id}/disabled")

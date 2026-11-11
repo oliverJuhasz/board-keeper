@@ -117,13 +117,17 @@ class RoleRepository {
     /** A Role as stored. {@code builtIn} is null for a Role that an Admin created. */
     record RoleRow(UUID id, String name, BuiltInRole builtIn, Set<Permission> permissions) {}
 
-    /** A name in the database that the code no longer knows is skipped, not an error. */
+    /**
+     * A Permission that a Role other than Admin holds. Two kinds of rows are skipped instead of
+     * being an error: a name the code no longer knows, and an Admin-only Permission, which no
+     * other Role can hold whatever the database says.
+     */
     private static Optional<Permission> parse(String name) {
         if (name == null) {
             return Optional.empty();
         }
         try {
-            return Optional.of(Permission.valueOf(name));
+            return Optional.of(Permission.valueOf(name)).filter(permission -> !permission.isAdminOnly());
         } catch (IllegalArgumentException e) {
             return Optional.empty();
         }

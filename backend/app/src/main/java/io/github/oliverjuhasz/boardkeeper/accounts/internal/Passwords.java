@@ -15,8 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Changing passwords: your own, when you know the current one, and anyone's through a Reset
- * Link. Board Keeper sends no email, so a forgotten password is solved by someone who may
- * manage Invites creating a Reset Link and passing it on.
+ * Link. Board Keeper sends no email, so a forgotten password is solved by an Admin creating a
+ * Reset Link and passing it on.
  */
 @Service
 class Passwords {
@@ -26,19 +26,16 @@ class Passwords {
     private static final String NOT_VALID = "resetLinks.notValid";
 
     private final AccountRepository accounts;
-    private final RoleRepository roles;
     private final PasswordResetRepository resets;
     private final PasswordEncoder passwordEncoder;
     private final SignInSessions sessions;
 
     Passwords(
             AccountRepository accounts,
-            RoleRepository roles,
             PasswordResetRepository resets,
             PasswordEncoder passwordEncoder,
             SignInSessions sessions) {
         this.accounts = accounts;
-        this.roles = roles;
         this.resets = resets;
         this.passwordEncoder = passwordEncoder;
         this.sessions = sessions;
@@ -56,13 +53,11 @@ class Passwords {
 
     /**
      * Creates a Reset Link for the Account of a Player, replacing any earlier one. A Reset Link
-     * is the key to an Account, so it can only be made for an Account that holds no more than
-     * its creator does.
+     * is the key to an Account, which is why only an Admin can create one.
      */
     @Transactional
     NewResetLink createResetLink(UUID playerId, CurrentAccount creator) {
         UUID accountId = accounts.findIdByPlayer(playerId).orElseThrow(() -> Problem.notFound("accounts.notFound"));
-        RoleAdministration.requireWithinOwn(creator, roles.permissionsOf(accountId));
 
         String token = LinkTokens.newToken();
         OffsetDateTime expiresAt = OffsetDateTime.now().plus(RESET_LINK_VALIDITY);

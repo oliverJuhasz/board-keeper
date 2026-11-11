@@ -16,6 +16,7 @@ import org.springframework.security.web.authentication.session.SessionAuthentica
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.session.FindByIndexNameSessionRepository;
 import org.springframework.session.Session;
+import org.springframework.session.security.web.authentication.SpringSessionRememberMeServices;
 import org.springframework.stereotype.Component;
 
 /** Starts and ends the session that keeps an Account signed in. */
@@ -25,19 +26,20 @@ class SignInSessions {
     /** How long "Stay signed in" lasts without a visit. Every visit starts the count again. */
     static final Duration STAY_SIGNED_IN = Duration.ofDays(90);
 
-    /** Set on the request to tell the session cookie to outlive the browser being closed. */
-    static final String STAY_SIGNED_IN_ATTRIBUTE = SignInSessions.class.getName() + ".STAY_SIGNED_IN";
-
     private final SecurityContextRepository contextRepository;
     private final FindByIndexNameSessionRepository<? extends Session> sessionRepository;
     private final SessionAuthenticationStrategy newSessionId = new ChangeSessionIdAuthenticationStrategy();
     private final SecurityContextLogoutHandler signOut = new SecurityContextLogoutHandler();
+    private final SpringSessionRememberMeServices staySignedIn = new SpringSessionRememberMeServices();
 
     SignInSessions(
             SecurityContextRepository contextRepository,
             FindByIndexNameSessionRepository<? extends Session> sessionRepository) {
         this.contextRepository = contextRepository;
         this.sessionRepository = sessionRepository;
+        // We decide ourselves, from the sign-in request, whether to call it at all.
+        staySignedIn.setAlwaysRemember(true);
+        staySignedIn.setValiditySeconds((int) STAY_SIGNED_IN.toSeconds());
     }
 
     void start(UUID accountId, boolean staySignedIn, HttpServletRequest request, HttpServletResponse response) {
@@ -47,10 +49,11 @@ class SignInSessions {
         // Give the session a new id, so that an id someone planted in the browser beforehand is worthless.
         newSessionId.onAuthentication(authentication, request, response);
 
-        HttpSession session = request.getSession(true);
+        request.getSession(true);
         if (staySignedIn) {
-            session.setMaxInactiveInterval((int) STAY_SIGNED_IN.toSeconds());
-            request.setAttribute(STAY_SIGNED_IN_ATTRIBUTE, true);
+            // Spring Session's own "remember me": it lets this session sit unused for 90 days and
+            // tells the cookie to outlive the browser being closed (see sessionCookieSerializer).
+            this.staySignedIn.loginSuccess(request, response, authentication);
         }
 
         SecurityContext context = SecurityContextHolder.createEmptyContext();
