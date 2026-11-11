@@ -3,15 +3,7 @@ import userEvent from "@testing-library/user-event"
 import { http, HttpResponse } from "msw"
 import { expect, test } from "vitest"
 import type { Role } from "@/api/client"
-import {
-  accountsAre,
-  adminRole,
-  anna,
-  bence,
-  memberRole,
-  scorekeeperRole,
-  signedInAs,
-} from "@/test/api"
+import { accountsAre, adminRole, anna, memberRole, scorekeeperRole, signedInAs } from "@/test/api"
 import { renderApp } from "@/test/renderApp"
 import { server } from "@/test/server"
 
@@ -68,12 +60,12 @@ test("adds a role with the ticked permissions", async () => {
   await userEvent.click(await screen.findByRole("button", { name: "Add role" }))
   const dialog = await screen.findByRole("dialog", { name: "Add a role" })
   await userEvent.type(within(dialog).getByLabelText("Name"), "Organiser")
-  await userEvent.click(within(dialog).getByRole("checkbox", { name: "Manage invites" }))
+  await userEvent.click(within(dialog).getByRole("checkbox", { name: "Remove players" }))
   await userEvent.click(within(dialog).getByRole("checkbox", { name: "Create players" }))
   await userEvent.click(within(dialog).getByRole("button", { name: "Add role" }))
 
   expect(await screen.findByRole("row", { name: /Organiser/ })).toBeInTheDocument()
-  expect(sent).toEqual({ name: "Organiser", permissions: ["MANAGE_INVITES", "CREATE_PLAYERS"] })
+  expect(sent).toEqual({ name: "Organiser", permissions: ["REMOVE_PLAYERS", "CREATE_PLAYERS"] })
 })
 
 test("edits the member role's permissions, but not its name", async () => {
@@ -104,22 +96,22 @@ test("edits the member role's permissions, but not its name", async () => {
     })
 })
 
-test("can't tick a permission you don't have yourself", async () => {
-  signedInAs({ ...bence, permissions: [...bence.permissions, "MANAGE_ROLES"] })
+test("offers only the permissions a role can hold", async () => {
+  signedInAs(anna)
   accountsAre([], allRoles)
   renderApp("/roles")
 
   await userEvent.click(await screen.findByRole("button", { name: "Add role" }))
 
+  // Managing roles, accounts and invites is for admins only.
   const dialog = await screen.findByRole("dialog")
-  expect(within(dialog).getByRole("checkbox", { name: "Manage accounts" })).toHaveAttribute(
-    "aria-disabled",
-    "true",
-  )
-  expect(within(dialog).getByRole("checkbox", { name: "Create players" })).not.toHaveAttribute(
-    "aria-disabled",
-    "true",
-  )
+  expect(within(dialog).getAllByRole("checkbox")).toHaveLength(4)
+  expect(within(dialog).getByRole("checkbox", { name: "Create players" })).toBeInTheDocument()
+  expect(within(dialog).queryByRole("checkbox", { name: "Manage roles" })).not.toBeInTheDocument()
+  expect(
+    within(dialog).queryByRole("checkbox", { name: "Manage accounts" }),
+  ).not.toBeInTheDocument()
+  expect(within(dialog).queryByRole("checkbox", { name: "Manage invites" })).not.toBeInTheDocument()
 })
 
 test("deletes a role only after asking", async () => {

@@ -62,28 +62,6 @@ test("changes an account's roles", async () => {
   expect(sent).toEqual({ id: bence.id, body: { roleIds: [memberRole.id, adminRole.id] } })
 })
 
-test("can't give a role that holds more than you do", async () => {
-  // Someone who may manage accounts, but is no admin.
-  signedInAs({ ...bence, permissions: [...bence.permissions, "MANAGE_ACCOUNTS"] })
-  accountsAre([annaAccount, benceAccount])
-  renderApp("/accounts")
-
-  await openActionsFor("anna")
-  await userEvent.click(await screen.findByRole("menuitem", { name: "Change roles" }))
-
-  const dialog = await screen.findByRole("dialog")
-  // The checkbox is not a native input, so being disabled shows as aria-disabled.
-  expect(within(dialog).getByRole("checkbox", { name: "Admin" })).toHaveAttribute(
-    "aria-disabled",
-    "true",
-  )
-  expect(within(dialog).getByText("Holds permissions you don't have.")).toBeInTheDocument()
-  expect(within(dialog).getByRole("checkbox", { name: "Member" })).not.toHaveAttribute(
-    "aria-disabled",
-    "true",
-  )
-})
-
 test("disables an account only after asking, and can enable it again", async () => {
   signedInAs(anna)
   const state = accountsAre([annaAccount, benceAccount])

@@ -109,19 +109,18 @@
     "invites": {
       "notValid": "This invite link doesn't work any more. Ask for a new one.",
       "playerHasAccount": "This player already has an account.",
-      "roleNotAllowed": "You can't invite someone with this role.",
       "notFound": "This invite no longer exists."
     },
     "roles": {
       "notFound": "This role no longer exists.",
       "nameTaken": "There is already a role with this name.",
       "adminCannotChange": "The Admin role can't be changed.",
-      "builtInCannotDelete": "The built-in roles can't be deleted."
+      "builtInCannotDelete": "The built-in roles can't be deleted.",
+      "adminOnlyPermission": "Only the Admin role can hold this permission."
     },
     "access": {
       "notSignedIn": "You are no longer signed in.",
-      "denied": "You aren't allowed to do this.",
-      "beyondOwnPermissions": "You can't give, take away or overrule permissions you don't have yourself."
+      "denied": "You aren't allowed to do this."
     },
     "resetLinks": {
       "notValid": "This reset link doesn't work any more. Ask for a new one."
@@ -152,8 +151,7 @@
       "addTitle": "Add a role",
       "editTitle": "Edit {{name}}",
       "submitAdd": "Add role",
-      "submitEdit": "Save role",
-      "notYours": "You can't give a permission you don't have yourself."
+      "submitEdit": "Save role"
     },
     "deleteDialog": {
       "title": "Delete {{name}}?",
@@ -256,8 +254,7 @@
     "rolesDialog": {
       "title": "Roles of {{username}}",
       "description": "An account can do everything any of its roles allows.",
-      "submit": "Save roles",
-      "beyondOwn": "Holds permissions you don't have."
+      "submit": "Save roles"
     },
     "disableDialog": {
       "title": "Disable {{username}}?",

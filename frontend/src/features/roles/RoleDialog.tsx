@@ -19,8 +19,7 @@ import {
 } from "@/components/ui/dialog"
 import { FieldGroup, FieldLegend, FieldSet } from "@/components/ui/field"
 import { playerName } from "@/features/session/accountRules"
-import { useCan } from "@/features/session/useSession"
-import { allPermissions } from "./permissions"
+import { assignablePermissions } from "./permissions"
 import { roleName } from "./roleName"
 
 // A Role's name follows the same rule as a Player's: 1 to 50 characters.
@@ -30,7 +29,6 @@ const roleForm = z.object({ name: playerName })
 export function RoleDialog({ role, onClose }: { role?: Role; onClose: () => void }) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
-  const can = useCan()
   const form = useForm({
     resolver: zodResolver(roleForm),
     defaultValues: { name: role ? roleName(t, role) : "" },
@@ -84,18 +82,13 @@ export function RoleDialog({ role, onClose }: { role?: Role; onClose: () => void
             <FieldSet>
               <FieldLegend variant="label">{t("roles.permissions")}</FieldLegend>
               <FieldGroup className="gap-3">
-                {allPermissions.map((permission) => (
+                {/* Managing Roles, Accounts and Invites is for Admins only, so it isn't offered. */}
+                {assignablePermissions.map((permission) => (
                   <CheckboxField
                     key={permission}
                     label={t(`permissions.${permission}.name`)}
-                    // Nobody can hand out a Permission they don't hold themselves.
-                    hint={
-                      can(permission)
-                        ? t(`permissions.${permission}.hint`)
-                        : t("roles.dialog.notYours")
-                    }
+                    hint={t(`permissions.${permission}.hint`)}
                     checked={permissions.includes(permission)}
-                    disabled={!can(permission)}
                     onChange={(checked) => toggle(permission, checked)}
                   />
                 ))}
