@@ -91,6 +91,10 @@ The image cannot be built from source inside `docker build`, because generating 
 
 **Spring Modulith modules** divide the core itself. Every package directly under `io.github.oliverjuhasz.boardkeeper` in `app` is one, such as `games`. Classes in a module's own package are its public interface. Classes in its sub-packages, such as `games.internal`, are hidden from other modules. `ModularityTests` fails the build when a module breaks this, and writes diagrams of the modules to `backend/app/target/spring-modulith-docs`.
 
+### Each module has its own tables
+
+The jOOQ classes for every table are generated into one shared package, so any module could, technically, query any table. `TableOwnershipTests` stops that: it lists which tables belong to which Spring Modulith module, and fails the build when a module touches a table that isn't its own. A module that needs another module's data asks that module's service, as `accounts` asks `Players` for a Player's name.
+
 ### How Game Modules are found
 
 Game Modules are plain Java, with no Spring. The core finds them with Java's `ServiceLoader`: each module's jar names its class in `META-INF/services/io.github.oliverjuhasz.boardkeeper.gameapi.GameModule`. At startup, `GameModules` checks them all, and the application refuses to start if two share an id or a key, or if one has no English translation file.
@@ -100,6 +104,7 @@ Game Modules are plain Java, with no Spring. The core finds them with Java's `Se
 1. Add a file to `backend/app/src/main/resources/db/migration`, named `V<next number>__<what_it_does>.sql`, with two underscores after the number. Never edit a migration that has been applied to a real database.
 2. Build. The build applies every migration to a throwaway PostgreSQL and regenerates the jOOQ classes into `backend/app/target/generated-sources/jooq`. In an IDE, reload the Maven project or run "Generate Sources".
 3. Use the regenerated classes, starting from `Tables`.
+4. For a new table, add it to `TableOwnershipTests` under the module that owns it.
 
 ### Changing the API
 
