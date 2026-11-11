@@ -1,3 +1,7 @@
+---
+status: superseded by ADR-0015
+---
+
 # Nobody can hand out more than they hold
 
 Wherever one Account acts on another Account's access, it can only deal in Permissions it holds itself. This covers:

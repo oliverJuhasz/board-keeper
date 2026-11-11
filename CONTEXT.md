@@ -95,11 +95,11 @@ The one-time link, written to the server's log while no Account exists, that cre
 _Avoid_: Install link, bootstrap token
 
 **Invite**:
-An offer to the person behind a Player to register an Account that claims that Player: a link that works once and for a limited time. Registering is only possible through an Invite.
+An offer from an Admin to the person behind a Player to register an Account that claims that Player: a link that works once and for a limited time. Registering is only possible through an Invite.
 _Avoid_: Invitation code, sign-up link
 
 **Reset Link**:
-A one-time link that lets the owner of an Account choose a new password, created for them by someone who may manage Invites. Board Keeper sends no email, so this is how a forgotten password is solved.
+A one-time link that lets the owner of an Account choose a new password, created for them by an Admin. Board Keeper sends no email, so this is how a forgotten password is solved.
 _Avoid_: Recovery link, forgot-password link
 
 **Disabled Account**:
@@ -117,7 +117,7 @@ A named set of Permissions given to Accounts. An Account can hold several Roles 
 _Avoid_: Permission set, group
 
 **Admin**:
-The built-in Role that holds every Permission; also any Account holding it. At least one Account always holds it.
+The built-in Role that holds every Permission; also any Account holding it. Only an Admin can manage Roles, Accounts and Invites. At least one Account always holds the Role.
 
 **Member**:
 The built-in Role an Invite gives unless the Admin picks another.
