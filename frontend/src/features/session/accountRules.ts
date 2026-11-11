@@ -19,4 +19,10 @@ export const playerName = z
   .min(1, "validation.required")
   .max(50, "validation.nameTooLong")
 
+export const gameName = z
+  .string()
+  .trim()
+  .min(1, "validation.required")
+  .max(100, "validation.gameNameTooLong")
+
 export const required = z.string().min(1, "validation.required")

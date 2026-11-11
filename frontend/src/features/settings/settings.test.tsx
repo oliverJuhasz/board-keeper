@@ -30,10 +30,9 @@ test("switches everything to the chosen language, and saves the choice on the ac
   expect(localStorage.getItem("boardkeeper.language")).toBe("hu")
   expect(saved).toEqual({ language: "hu" })
 
-  // The rest of the app follows, including the Game Module's name, which comes from the API.
+  // The rest of the app follows.
   await userEvent.click(screen.getByRole("link", { name: "Játékok" }))
   expect(await screen.findByText("Még nincsenek játékok.")).toBeInTheDocument()
-  expect(await screen.findByText("Általános")).toBeInTheDocument()
 })
 
 test("changes the password and says what happened", async () => {

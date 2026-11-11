@@ -11,13 +11,47 @@
     "description": "The games you can record plays of.",
     "empty": "No games yet.",
     "loading": "Loading games",
-    "loadFailed": "Couldn't load the games"
-  },
-  "gameModules": {
-    "title": "Game modules",
-    "description": "The scoring support built into this installation.",
-    "loading": "Loading game modules",
-    "loadFailed": "Couldn't load the game modules"
+    "loadFailed": "Couldn't load the games",
+    "add": "Add game",
+    "name": "Name",
+    "recorded": "How plays are recorded",
+    "actions": "Actions for {{name}}",
+    "edit": "Edit",
+    "remove": "Remove",
+    "recordedAs": {
+      "pointsHighest": "Points, highest wins",
+      "pointsLowest": "Points, lowest wins",
+      "winnerOnly": "Winner only",
+      "cooperativeScore": "Cooperative, with a score",
+      "cooperativeWonLost": "Cooperative, won or lost"
+    },
+    "dialog": {
+      "addTitle": "Add a game",
+      "addDescription": "For a game Board Keeper has no scoring of its own for. You record totals or the winner.",
+      "editTitle": "Edit {{name}}",
+      "defaultsHint": "These are the starting choices for a new play. Whoever records a play can change them for that play.",
+      "kind": "Kind of game",
+      "competitive": "Competitive",
+      "competitiveHint": "Players play against each other.",
+      "cooperative": "Cooperative",
+      "cooperativeHint": "Everyone wins or loses together, against the game.",
+      "recording": "What is recorded",
+      "points": "Points",
+      "pointsHint": "A score for each player, or one for the group in a cooperative game.",
+      "winnerOnly": "Winner only",
+      "wonOrLostOnly": "Won or lost only",
+      "outcomeHint": "No scores, just how it ended.",
+      "winner": "Who wins",
+      "highest": "The highest score",
+      "lowest": "The lowest score",
+      "submitAdd": "Add game",
+      "submitEdit": "Save game"
+    },
+    "removeDialog": {
+      "title": "Remove {{name}}?",
+      "description": "This can't be undone.",
+      "confirm": "Remove game"
+    }
   },
   "notFound": {
     "title": "Page not found",
@@ -78,7 +112,8 @@
     "usernameInvalid": "Use 3 to 30 letters, digits, dots, hyphens or underscores.",
     "passwordTooShort": "Use at least 16 characters.",
     "passwordTooLong": "Use at most 200 characters.",
-    "nameTooLong": "Use at most 50 characters."
+    "nameTooLong": "Use at most 50 characters.",
+    "gameNameTooLong": "Use at most 100 characters."
   },
   "problems": {
     "unknown": "Something went wrong. Try again.",
@@ -124,6 +159,11 @@
     },
     "resetLinks": {
       "notValid": "This reset link doesn't work any more. Ask for a new one."
+    },
+    "games": {
+      "nameTaken": "There is already a game with this name.",
+      "notFound": "This game no longer exists.",
+      "inUse": "This game can't be removed: plays have been recorded for it."
     }
   },
   "nav": {
@@ -290,6 +330,18 @@
     "MANAGE_ROLES": {
       "name": "Manage roles",
       "hint": "Create, change and delete roles."
+    },
+    "CREATE_GAMES": {
+      "name": "Create games",
+      "hint": "Add games to the catalogue."
+    },
+    "EDIT_GAMES": {
+      "name": "Edit games",
+      "hint": "Rename a game and change how its plays are recorded."
+    },
+    "REMOVE_GAMES": {
+      "name": "Remove games",
+      "hint": "Only games without plays."
     }
   },
   "resetPassword": {

@@ -11,13 +11,47 @@
     "description": "A játékok, amelyek partijait rögzítheted.",
     "empty": "Még nincsenek játékok.",
     "loading": "Játékok betöltése",
-    "loadFailed": "Nem sikerült betölteni a játékokat"
-  },
-  "gameModules": {
-    "title": "Játékmodulok",
-    "description": "A telepítésbe beépített pontozási támogatás.",
-    "loading": "Játékmodulok betöltése",
-    "loadFailed": "Nem sikerült betölteni a játékmodulokat"
+    "loadFailed": "Nem sikerült betölteni a játékokat",
+    "add": "Játék hozzáadása",
+    "name": "Név",
+    "recorded": "A partik rögzítése",
+    "actions": "Műveletek: {{name}}",
+    "edit": "Szerkesztés",
+    "remove": "Eltávolítás",
+    "recordedAs": {
+      "pointsHighest": "Pontok, a legtöbb nyer",
+      "pointsLowest": "Pontok, a legkevesebb nyer",
+      "winnerOnly": "Csak a győztes",
+      "cooperativeScore": "Kooperatív, pontszámmal",
+      "cooperativeWonLost": "Kooperatív, győzelem vagy vereség"
+    },
+    "dialog": {
+      "addTitle": "Játék hozzáadása",
+      "addDescription": "Olyan játékhoz, amelyhez a Board Keepernek nincs saját pontozása. Összpontszámot vagy a győztest rögzítheted.",
+      "editTitle": "{{name}} szerkesztése",
+      "defaultsHint": "Ezek az új partik kiinduló beállításai. Aki a partit rögzíti, az adott partira megváltoztathatja őket.",
+      "kind": "A játék típusa",
+      "competitive": "Kompetitív",
+      "competitiveHint": "A játékosok egymás ellen játszanak.",
+      "cooperative": "Kooperatív",
+      "cooperativeHint": "Mindenki együtt nyer vagy veszít, a játék ellen.",
+      "recording": "Mit rögzítünk",
+      "points": "Pontok",
+      "pointsHint": "Játékosonként egy pontszám, kooperatív játéknál egy a csapatnak.",
+      "winnerOnly": "Csak a győztes",
+      "wonOrLostOnly": "Csak győzelem vagy vereség",
+      "outcomeHint": "Pontszámok nélkül, csak a végeredmény.",
+      "winner": "Ki nyer",
+      "highest": "A legmagasabb pontszám",
+      "lowest": "A legalacsonyabb pontszám",
+      "submitAdd": "Játék hozzáadása",
+      "submitEdit": "Játék mentése"
+    },
+    "removeDialog": {
+      "title": "Eltávolítod: {{name}}?",
+      "description": "Ezt nem lehet visszavonni.",
+      "confirm": "Játék eltávolítása"
+    }
   },
   "notFound": {
     "title": "Az oldal nem található",
@@ -78,7 +112,8 @@
     "usernameInvalid": "3–30 betűt, számjegyet, pontot, kötőjelet vagy aláhúzásjelet használj.",
     "passwordTooShort": "Legalább 16 karaktert használj.",
     "passwordTooLong": "Legfeljebb 200 karaktert használj.",
-    "nameTooLong": "Legfeljebb 50 karaktert használj."
+    "nameTooLong": "Legfeljebb 50 karaktert használj.",
+    "gameNameTooLong": "Legfeljebb 100 karaktert használj."
   },
   "problems": {
     "unknown": "Valami hiba történt. Próbáld újra.",
@@ -124,6 +159,11 @@
     },
     "resetLinks": {
       "notValid": "Ez a visszaállító hivatkozás már nem működik. Kérj egy újat."
+    },
+    "games": {
+      "nameTaken": "Már van ilyen nevű játék.",
+      "notFound": "Ez a játék már nem létezik.",
+      "inUse": "Ezt a játékot nem lehet eltávolítani: már rögzítettek hozzá partikat."
     }
   },
   "nav": {
@@ -290,6 +330,18 @@
     "MANAGE_ROLES": {
       "name": "Szerepkörök kezelése",
       "hint": "Szerepkörök létrehozása, módosítása és törlése."
+    },
+    "CREATE_GAMES": {
+      "name": "Játékok létrehozása",
+      "hint": "Játékok felvétele a listára."
+    },
+    "EDIT_GAMES": {
+      "name": "Játékok szerkesztése",
+      "hint": "Egy játék átnevezése és a partik rögzítési módjának módosítása."
+    },
+    "REMOVE_GAMES": {
+      "name": "Játékok eltávolítása",
+      "hint": "Csak olyan játékoké, amelyeknek nincsenek partijaik."
     }
   },
   "resetPassword": {

@@ -11,13 +11,47 @@
     "description": "De spellen waarvan je partijen kunt vastleggen.",
     "empty": "Nog geen spellen.",
     "loading": "Spellen laden",
-    "loadFailed": "De spellen konden niet worden geladen"
-  },
-  "gameModules": {
-    "title": "Spelmodules",
-    "description": "De puntentelling die in deze installatie is ingebouwd.",
-    "loading": "Spelmodules laden",
-    "loadFailed": "De spelmodules konden niet worden geladen"
+    "loadFailed": "De spellen konden niet worden geladen",
+    "add": "Spel toevoegen",
+    "name": "Naam",
+    "recorded": "Hoe partijen worden vastgelegd",
+    "actions": "Acties voor {{name}}",
+    "edit": "Bewerken",
+    "remove": "Verwijderen",
+    "recordedAs": {
+      "pointsHighest": "Punten, hoogste wint",
+      "pointsLowest": "Punten, laagste wint",
+      "winnerOnly": "Alleen de winnaar",
+      "cooperativeScore": "Coöperatief, met score",
+      "cooperativeWonLost": "Coöperatief, gewonnen of verloren"
+    },
+    "dialog": {
+      "addTitle": "Spel toevoegen",
+      "addDescription": "Voor een spel waarvoor Board Keeper geen eigen puntentelling heeft. Je legt totalen of de winnaar vast.",
+      "editTitle": "{{name}} bewerken",
+      "defaultsHint": "Dit zijn de beginkeuzes voor een nieuwe partij. Wie een partij vastlegt, kan ze voor die partij aanpassen.",
+      "kind": "Soort spel",
+      "competitive": "Competitief",
+      "competitiveHint": "Spelers spelen tegen elkaar.",
+      "cooperative": "Coöperatief",
+      "cooperativeHint": "Iedereen wint of verliest samen, tegen het spel.",
+      "recording": "Wat wordt vastgelegd",
+      "points": "Punten",
+      "pointsHint": "Een score per speler, of één voor de groep bij een coöperatief spel.",
+      "winnerOnly": "Alleen de winnaar",
+      "wonOrLostOnly": "Alleen gewonnen of verloren",
+      "outcomeHint": "Geen scores, alleen hoe het afliep.",
+      "winner": "Wie wint",
+      "highest": "De hoogste score",
+      "lowest": "De laagste score",
+      "submitAdd": "Spel toevoegen",
+      "submitEdit": "Spel opslaan"
+    },
+    "removeDialog": {
+      "title": "{{name}} verwijderen?",
+      "description": "Dit kan niet ongedaan worden gemaakt.",
+      "confirm": "Spel verwijderen"
+    }
   },
   "notFound": {
     "title": "Pagina niet gevonden",
@@ -78,7 +112,8 @@
     "usernameInvalid": "Gebruik 3 tot 30 letters, cijfers, punten, streepjes of underscores.",
     "passwordTooShort": "Gebruik minstens 16 tekens.",
     "passwordTooLong": "Gebruik hoogstens 200 tekens.",
-    "nameTooLong": "Gebruik hoogstens 50 tekens."
+    "nameTooLong": "Gebruik hoogstens 50 tekens.",
+    "gameNameTooLong": "Gebruik hoogstens 100 tekens."
   },
   "problems": {
     "unknown": "Er ging iets mis. Probeer het opnieuw.",
@@ -124,6 +159,11 @@
     },
     "resetLinks": {
       "notValid": "Deze link werkt niet meer. Vraag een nieuwe aan."
+    },
+    "games": {
+      "nameTaken": "Er is al een spel met deze naam.",
+      "notFound": "Dit spel bestaat niet meer.",
+      "inUse": "Dit spel kan niet worden verwijderd: er zijn partijen voor vastgelegd."
     }
   },
   "nav": {
@@ -290,6 +330,18 @@
     "MANAGE_ROLES": {
       "name": "Rollen beheren",
       "hint": "Rollen maken, wijzigen en verwijderen."
+    },
+    "CREATE_GAMES": {
+      "name": "Spellen toevoegen",
+      "hint": "Spellen aan de lijst toevoegen."
+    },
+    "EDIT_GAMES": {
+      "name": "Spellen bewerken",
+      "hint": "Een spel hernoemen en wijzigen hoe partijen worden vastgelegd."
+    },
+    "REMOVE_GAMES": {
+      "name": "Spellen verwijderen",
+      "hint": "Alleen spellen zonder partijen."
     }
   },
   "resetPassword": {

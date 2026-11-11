@@ -1,5 +1,6 @@
 import { createBrowserRouter, type RouteObject } from "react-router"
 import { AccountsPage } from "./features/accounts/AccountsPage"
+import { GamesPage } from "./features/games/GamesPage"
 import { RolesPage } from "./features/roles/RolesPage"
 import { ResetPasswordPage } from "./features/session/ResetPasswordPage"
 import { SettingsPage } from "./features/settings/SettingsPage"
@@ -9,7 +10,6 @@ import { RedirectIfSignedIn, RequireSignedIn } from "./features/session/RequireS
 import { SetupPage } from "./features/session/SetupPage"
 import { SignInPage } from "./features/session/SignInPage"
 import { AppLayout } from "./routes/AppLayout"
-import { HomePage } from "./routes/HomePage"
 import { NotFoundPage } from "./routes/NotFoundPage"
 import { PublicLayout } from "./routes/PublicLayout"
 
@@ -41,7 +41,7 @@ export const routes: RouteObject[] = [
       </RequireSignedIn>
     ),
     children: [
-      { index: true, element: <HomePage /> },
+      { index: true, element: <GamesPage /> },
       { path: "players", element: <PlayersPage /> },
       { path: "accounts", element: <AccountsPage /> },
       { path: "roles", element: <RolesPage /> },
