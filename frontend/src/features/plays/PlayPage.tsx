@@ -1,12 +1,17 @@
+import { useQueryClient } from "@tanstack/react-query"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { Link, useParams } from "react-router"
+import { Link, useNavigate, useParams } from "react-router"
 import { api, type Play, type Result } from "@/api/client"
 import { problemCode } from "@/api/problems"
+import { ActionsMenu } from "@/components/ActionsMenu"
+import { ConfirmDialog } from "@/components/ConfirmDialog"
 import { LinkButton } from "@/components/LinkButton"
 import { PageHeader } from "@/components/PageHeader"
 import { PageMessage } from "@/components/PageMessage"
 import { QueryState } from "@/components/QueryState"
 import { Badge } from "@/components/ui/badge"
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import {
   Table,
   TableBody,
@@ -18,6 +23,7 @@ import {
 import { useRecordedAs } from "@/features/games/recordedAs"
 import { useCan } from "@/features/session/useSession"
 import { formatDateTime, formatDay } from "@/lib/dates"
+import { playKey, playsKey } from "./playQueries"
 
 /** One Play with its Results, at /plays/<id>. */
 export function PlayPage() {
@@ -29,8 +35,8 @@ export function PlayPage() {
   if (problemCode(play.error) === "plays.notFound") {
     return (
       <PageMessage title={t("problems.plays.notFound")}>
-        <Link to="/" className="text-foreground underline underline-offset-4">
-          {t("plays.page.backToGames")}
+        <Link to="/plays" className="text-foreground underline underline-offset-4">
+          {t("plays.page.backToPlays")}
         </Link>
       </PageMessage>
     )
@@ -48,9 +54,21 @@ export function PlayPage() {
 
 function PlayDetails({ play }: { play: Play }) {
   const { t } = useTranslation()
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const can = useCan()
   const recordedAs = useRecordedAs()
+  const [deleting, setDeleting] = useState(false)
   const points = play.recordingMode === "POINTS"
+
+  const remove = api.useMutation("delete", "/api/plays/{id}", {
+    onSuccess: () => {
+      // Throw away what was fetched about the Play and the history, so neither is shown again.
+      void navigate("/plays")
+      queryClient.removeQueries({ queryKey: playKey(play.id) })
+      queryClient.removeQueries({ queryKey: playsKey })
+    },
+  })
   // "Lowest score wins" is a Variant of the Generic Module, kept in the Play's Setup.
   const lowestScoreWins = play.setup.lowestScoreWins === "true"
 
@@ -60,11 +78,25 @@ function PlayDetails({ play }: { play: Play }) {
         title={play.game.name}
         description={[formatDay(play.playedOn), play.location].filter(Boolean).join(" · ")}
         action={
-          can("CREATE_PLAYS") && (
-            <LinkButton to={`/plays/new?game=${play.game.id}`}>
-              {t("plays.page.recordAnother")}
-            </LinkButton>
-          )
+          <div className="flex items-center gap-1">
+            {can("CREATE_PLAYS") && (
+              <LinkButton to={`/plays/new?game=${play.game.id}`}>
+                {t("plays.page.recordAnother")}
+              </LinkButton>
+            )}
+            {/* The server says whether this Account may change this particular Play: that
+                depends on who recorded it and who played in it, not on a Permission alone. */}
+            {play.canChange && (
+              <ActionsMenu label={t("plays.page.actions")}>
+                <DropdownMenuItem render={<Link to={`/plays/${play.id}/edit`} />}>
+                  {t("plays.page.edit")}
+                </DropdownMenuItem>
+                <DropdownMenuItem variant="destructive" onClick={() => setDeleting(true)}>
+                  {t("plays.page.delete")}
+                </DropdownMenuItem>
+              </ActionsMenu>
+            )}
+          </div>
         }
       />
 
@@ -139,6 +171,18 @@ function PlayDetails({ play }: { play: Play }) {
           date: formatDateTime(play.recordedAt),
         })}
       </p>
+
+      {deleting && (
+        <ConfirmDialog
+          title={t("plays.page.deleteDialog.title")}
+          description={t("plays.page.deleteDialog.description", { game: play.game.name })}
+          confirm={t("plays.page.deleteDialog.confirm")}
+          onConfirm={() => remove.mutate({ params: { path: { id: play.id } } })}
+          pending={remove.isPending}
+          error={remove.error}
+          onClose={() => setDeleting(false)}
+        />
+      )}
     </div>
   )
 }

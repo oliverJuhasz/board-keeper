@@ -152,7 +152,8 @@ class PlayHistoryApiTests {
         newestFirst.add(record(calico, "2026-03-09", anna, bence));
         newestFirst = newestFirst.reversed();
 
-        MvcTestResult first = member.get("/api/plays?limit=2");
+        // An empty "after" asks for the first page, like none at all.
+        MvcTestResult first = member.get("/api/plays?limit=2&after=");
         assertThat(idsIn(first)).isEqualTo(newestFirst.subList(0, 2));
 
         MvcTestResult second = member.get("/api/plays?limit=2&after=" + json(first).get("next").asString());

@@ -1549,7 +1549,7 @@
             "type" : "string"
           }
         }, {
-          "description" : "The \"next\" of the page before the one you want",
+          "description" : "The \"next\" of the page before the one you want. Leave it out, or empty, for the first page.",
           "in" : "query",
           "name" : "after",
           "required" : false,

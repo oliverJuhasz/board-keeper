@@ -1,5 +1,6 @@
 import { expect, test } from "vitest"
-import { playForm, tiedForFirst, toNewPlay, type PlayForm } from "./playForm"
+import type { Play } from "@/api/client"
+import { fromPlay, playForm, tiedForFirst, toNewPlay, type PlayFormValues } from "./playForm"
 
 const anna = "0193a000-0000-7000-8000-0000000000b1"
 const bence = "0193a000-0000-7000-8000-0000000000b2"
@@ -9,7 +10,7 @@ function scored(playerId: string, score: string) {
   return { playerId, score, won: false }
 }
 
-function form(overrides: Partial<PlayForm>): PlayForm {
+function form(overrides: Partial<PlayFormValues>): PlayFormValues {
   return {
     playedOn: "2026-03-14",
     location: "",
@@ -26,7 +27,7 @@ function form(overrides: Partial<PlayForm>): PlayForm {
 }
 
 /** The fields the form would show a message at, with the name of the message. */
-function problemsOf(values: PlayForm) {
+function problemsOf(values: PlayFormValues) {
   const checked = playForm.safeParse(values)
   return checked.success
     ? {}
@@ -115,5 +116,72 @@ test("a play cannot be dated in the future", () => {
 
   expect(problemsOf(form({ players, playedOn: "2999-01-01" }))).toEqual({
     playedOn: "validation.dateInFuture",
+  })
+})
+
+/** A recorded Play as the API gives it, with only what matters here filled in. */
+function recorded(overrides: Partial<Play>): Play {
+  return {
+    id: "play",
+    game: { id: "game", name: "Calico" },
+    playedOn: "2026-03-14",
+    recordingMode: "POINTS",
+    setup: { cooperative: "false", lowestScoreWins: "false" },
+    cooperative: false,
+    results: [],
+    recordedBy: { id: anna, name: "Anna" },
+    recordedAt: "2026-03-14T12:00:00Z",
+    canChange: true,
+    ...overrides,
+  }
+}
+
+function result(playerId: string, total: number, markedWinner = false) {
+  return {
+    player: { id: playerId, name: playerId },
+    scores: { total },
+    markedWinner,
+    total,
+    placing: 1,
+    won: true,
+  }
+}
+
+test("a recorded play fills the form with what was entered for it", () => {
+  const values = fromPlay(
+    recorded({
+      location: "At Dora's",
+      setup: { cooperative: "false", lowestScoreWins: "true" },
+      results: [result(anna, 50), result(bence, 50, true)],
+    }),
+  )
+
+  expect(values).toMatchObject({
+    playedOn: "2026-03-14",
+    location: "At Dora's",
+    notes: "",
+    lowestScoreWins: true,
+    players: [scored(anna, "50"), { playerId: bence, score: "50", won: true }],
+    tieWinner: bence,
+  })
+})
+
+test("saving an unchanged play sends what was recorded", () => {
+  const competitive = recorded({ results: [result(anna, 50), result(bence, 50, true)] })
+  expect(toNewPlay("game", fromPlay(competitive)).players).toEqual([
+    { playerId: anna, scores: { total: 50 }, winner: false },
+    { playerId: bence, scores: { total: 50 }, winner: true },
+  ])
+
+  const cooperative = recorded({
+    cooperative: true,
+    setup: { cooperative: "true", lowestScoreWins: "false" },
+    group: { won: false, scores: { total: 17 }, total: 17 },
+    results: [{ player: { id: anna, name: "Anna" }, scores: {}, markedWinner: false, won: false }],
+  })
+  expect(toNewPlay("game", fromPlay(cooperative))).toMatchObject({
+    setup: { cooperative: "true", lowestScoreWins: "false" },
+    players: [{ playerId: anna, winner: false }],
+    group: { won: false, scores: { total: 17 } },
   })
 })

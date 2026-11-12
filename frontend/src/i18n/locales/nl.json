@@ -98,6 +98,25 @@
       "groupScoreHint": "Optioneel. Eén score voor de hele groep.",
       "submit": "Partij vastleggen"
     },
+    "history": {
+      "title": "Partijen",
+      "description": "Alle vastgelegde partijen, de nieuwste eerst.",
+      "loading": "Partijen laden",
+      "loadFailed": "De partijen konden niet worden geladen",
+      "empty": "Nog geen partijen. Leg er een vast bij een spel op de pagina Spellen.",
+      "noMatch": "Geen partijen die bij deze filters passen.",
+      "filters": "Filters",
+      "mine": "Mijn partijen",
+      "mineHint": "Alleen partijen waaraan ik meedeed.",
+      "game": "Spel",
+      "allGames": "Alle spellen",
+      "player": "Speler",
+      "anyPlayer": "Alle spelers",
+      "from": "Vanaf",
+      "to": "Tot en met",
+      "clear": "Filters wissen",
+      "showMore": "Meer tonen"
+    },
     "page": {
       "loading": "De partij laden",
       "loadFailed": "De partij kon niet worden geladen",
@@ -113,7 +132,25 @@
       "notes": "Notities",
       "recordedBy": "Vastgelegd door {{name}} op {{date}}.",
       "recordAnother": "Nog een partij vastleggen",
-      "backToGames": "Terug naar spellen"
+      "backToPlays": "Terug naar partijen",
+      "actions": "Acties voor deze partij",
+      "edit": "Bewerken",
+      "delete": "Verwijderen",
+      "deleteDialog": {
+        "title": "Deze partij verwijderen?",
+        "description": "Deze partij {{game}} is dan voorgoed weg. Dit kan niet ongedaan worden gemaakt.",
+        "confirm": "Partij verwijderen"
+      }
+    },
+    "edit": {
+      "title": "Een partij bewerken",
+      "description": "Wijzig wie {{game}} speelden, en hoe het afliep.",
+      "submit": "Partij opslaan",
+      "notAllowed": {
+        "title": "Je kunt deze partij niet wijzigen",
+        "text": "Je hebt niet de bevoegdheid om hem te bewerken of te verwijderen.",
+        "link": "Terug naar de partij"
+      }
     }
   },
   "notFound": {
@@ -242,11 +279,13 @@
       "playerTwice": "Een speler kan maar één keer aan een partij meedoen.",
       "dateInFuture": "De datum kan niet in de toekomst liggen.",
       "gameModuleMissing": "Deze versie van Board Keeper kan de score van dit spel niet berekenen.",
-      "notFound": "Deze partij bestaat niet meer."
+      "notFound": "Deze partij bestaat niet meer.",
+      "gameCannotChange": "Een partij kan niet naar een ander spel worden verplaatst."
     }
   },
   "nav": {
     "games": "Spellen",
+    "plays": "Partijen",
     "players": "Spelers"
   },
   "roles": {
@@ -397,6 +436,18 @@
     "CREATE_PLAYS": {
       "name": "Partijen vastleggen",
       "hint": "Gespeelde partijen vastleggen."
+    },
+    "CHANGE_PLAYS_RECORDED": {
+      "name": "Zelf vastgelegde partijen wijzigen",
+      "hint": "De partijen bewerken en verwijderen die ze zelf hebben vastgelegd."
+    },
+    "CHANGE_PLAYS_TAKEN_PART_IN": {
+      "name": "Zelf gespeelde partijen wijzigen",
+      "hint": "De partijen bewerken en verwijderen waaraan ze zelf hebben meegedaan."
+    },
+    "CHANGE_ANY_PLAY": {
+      "name": "Alle partijen wijzigen",
+      "hint": "Elke partij bewerken en verwijderen, wie hem ook heeft vastgelegd of gespeeld."
     },
     "MANAGE_INVITES": {
       "name": "Uitnodigingen beheren",

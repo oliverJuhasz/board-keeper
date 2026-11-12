@@ -98,6 +98,25 @@
       "groupScoreHint": "Nem kötelező. Egy pontszám az egész csapatnak.",
       "submit": "Parti rögzítése"
     },
+    "history": {
+      "title": "Partik",
+      "description": "Minden rögzített parti, a legújabbal kezdve.",
+      "loading": "Partik betöltése",
+      "loadFailed": "Nem sikerült betölteni a partikat",
+      "empty": "Még nincsenek partik. A Játékok oldalon, egy játék soránál rögzíthetsz egyet.",
+      "noMatch": "Nincs a szűrőknek megfelelő parti.",
+      "filters": "Szűrők",
+      "mine": "Az én partijaim",
+      "mineHint": "Csak azok a partik, amelyekben részt vettem.",
+      "game": "Játék",
+      "allGames": "Minden játék",
+      "player": "Játékos",
+      "anyPlayer": "Bármelyik játékos",
+      "from": "Ettől",
+      "to": "Eddig",
+      "clear": "Szűrők törlése",
+      "showMore": "Továbbiak"
+    },
     "page": {
       "loading": "A parti betöltése",
       "loadFailed": "Nem sikerült betölteni a partit",
@@ -113,7 +132,25 @@
       "notes": "Jegyzetek",
       "recordedBy": "Rögzítette: {{name}}, {{date}}.",
       "recordAnother": "Újabb parti rögzítése",
-      "backToGames": "Vissza a játékokhoz"
+      "backToPlays": "Vissza a partikhoz",
+      "actions": "Műveletek ezzel a partival",
+      "edit": "Szerkesztés",
+      "delete": "Törlés",
+      "deleteDialog": {
+        "title": "Törlöd ezt a partit?",
+        "description": "Ez a parti ({{game}}) végleg eltűnik. Ezt nem lehet visszavonni.",
+        "confirm": "Parti törlése"
+      }
+    },
+    "edit": {
+      "title": "Parti szerkesztése",
+      "description": "{{game}}: módosítsd, kik játszottak, és hogyan végződött.",
+      "submit": "Parti mentése",
+      "notAllowed": {
+        "title": "Ezt a partit nem módosíthatod",
+        "text": "Nincs jogosultságod a szerkesztéséhez vagy a törléséhez.",
+        "link": "Vissza a partihoz"
+      }
     }
   },
   "notFound": {
@@ -242,11 +279,13 @@
       "playerTwice": "Egy játékos csak egyszer szerepelhet egy partiban.",
       "dateInFuture": "A dátum nem lehet a jövőben.",
       "gameModuleMissing": "A Board Keeper ezen verziója nem tudja pontozni ezt a játékot.",
-      "notFound": "Ez a parti már nem létezik."
+      "notFound": "Ez a parti már nem létezik.",
+      "gameCannotChange": "Egy partit nem lehet másik játékhoz áthelyezni."
     }
   },
   "nav": {
     "games": "Játékok",
+    "plays": "Partik",
     "players": "Játékosok"
   },
   "roles": {
@@ -397,6 +436,18 @@
     "CREATE_PLAYS": {
       "name": "Partik rögzítése",
       "hint": "Lejátszott partik rögzítése."
+    },
+    "CHANGE_PLAYS_RECORDED": {
+      "name": "Az általa rögzített partik módosítása",
+      "hint": "Az általa rögzített partik szerkesztése és törlése."
+    },
+    "CHANGE_PLAYS_TAKEN_PART_IN": {
+      "name": "Azon partik módosítása, amelyekben részt vett",
+      "hint": "Azoknak a partiknak a szerkesztése és törlése, amelyekben játékosként részt vett."
+    },
+    "CHANGE_ANY_PLAY": {
+      "name": "Bármely parti módosítása",
+      "hint": "Minden parti szerkesztése és törlése, bárki rögzítette vagy játszotta is."
     },
     "MANAGE_INVITES": {
       "name": "Meghívók kezelése",

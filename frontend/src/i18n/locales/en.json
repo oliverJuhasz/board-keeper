@@ -98,6 +98,25 @@
       "groupScoreHint": "Optional. One score for the whole group.",
       "submit": "Record play"
     },
+    "history": {
+      "title": "Plays",
+      "description": "Every play that was recorded, newest first.",
+      "loading": "Loading plays",
+      "loadFailed": "Couldn't load the plays",
+      "empty": "No plays yet. Record one from a game's row on the Games page.",
+      "noMatch": "No plays match these filters.",
+      "filters": "Filters",
+      "mine": "My plays",
+      "mineHint": "Only plays I took part in.",
+      "game": "Game",
+      "allGames": "All games",
+      "player": "Player",
+      "anyPlayer": "Any player",
+      "from": "From",
+      "to": "Until",
+      "clear": "Clear filters",
+      "showMore": "Show more"
+    },
     "page": {
       "loading": "Loading the play",
       "loadFailed": "Couldn't load the play",
@@ -113,7 +132,25 @@
       "notes": "Notes",
       "recordedBy": "Recorded by {{name}} on {{date}}.",
       "recordAnother": "Record another play",
-      "backToGames": "Back to games"
+      "backToPlays": "Back to plays",
+      "actions": "Actions for this play",
+      "edit": "Edit",
+      "delete": "Delete",
+      "deleteDialog": {
+        "title": "Delete this play?",
+        "description": "This play of {{game}} will be gone for good. This can't be undone.",
+        "confirm": "Delete play"
+      }
+    },
+    "edit": {
+      "title": "Edit a play",
+      "description": "Change who played {{game}}, and how it ended.",
+      "submit": "Save play",
+      "notAllowed": {
+        "title": "You can't change this play",
+        "text": "You don't have the permission to edit or delete it.",
+        "link": "Back to the play"
+      }
     }
   },
   "notFound": {
@@ -242,11 +279,13 @@
       "playerTwice": "A player can be in a play only once.",
       "dateInFuture": "The date can't be in the future.",
       "gameModuleMissing": "This version of Board Keeper can't score this game.",
-      "notFound": "This play no longer exists."
+      "notFound": "This play no longer exists.",
+      "gameCannotChange": "A play can't be moved to another game."
     }
   },
   "nav": {
     "games": "Games",
+    "plays": "Plays",
     "players": "Players"
   },
   "roles": {
@@ -397,6 +436,18 @@
     "CREATE_PLAYS": {
       "name": "Create plays",
       "hint": "Record plays."
+    },
+    "CHANGE_PLAYS_RECORDED": {
+      "name": "Change plays they recorded",
+      "hint": "Edit and delete the plays they recorded themselves."
+    },
+    "CHANGE_PLAYS_TAKEN_PART_IN": {
+      "name": "Change plays they took part in",
+      "hint": "Edit and delete the plays they were a player in."
+    },
+    "CHANGE_ANY_PLAY": {
+      "name": "Change any play",
+      "hint": "Edit and delete every play, whoever recorded it or played in it."
     },
     "MANAGE_INVITES": {
       "name": "Manage invites",

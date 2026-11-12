@@ -81,13 +81,13 @@ class PlayController {
                     @RequestParam(required = false)
                     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
                     LocalDate to,
-            @Parameter(description = "The \"next\" of the page before the one you want")
+            @Parameter(description = "The \"next\" of the page before the one you want. Leave it out, or empty, for the first page.")
                     @RequestParam(required = false)
                     String after,
             @Parameter(description = "How many Plays a page has, at most " + Plays.MAX_PAGE_SIZE)
                     @RequestParam(defaultValue = "" + Plays.DEFAULT_PAGE_SIZE)
                     int limit) {
-        PlayHistory.Position position = after == null
+        PlayHistory.Position position = after == null || after.isBlank()
                 ? null
                 : PlayHistory.Position.parse(after)
                         .orElseThrow(() -> new Problem(HttpStatus.BAD_REQUEST, "request.invalid"));
