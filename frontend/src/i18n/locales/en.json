@@ -18,32 +18,11 @@
     "actions": "Actions for {{name}}",
     "edit": "Edit",
     "remove": "Remove",
-    "recordedAs": {
-      "pointsHighest": "Points, highest wins",
-      "pointsLowest": "Points, lowest wins",
-      "winnerOnly": "Winner only",
-      "cooperativeScore": "Cooperative, with a score",
-      "cooperativeWonLost": "Cooperative, won or lost"
-    },
     "dialog": {
       "addTitle": "Add a game",
       "addDescription": "For a game Board Keeper has no scoring of its own for. You record totals or the winner.",
       "editTitle": "Edit {{name}}",
       "defaultsHint": "These are the starting choices for a new play. Whoever records a play can change them for that play.",
-      "kind": "Kind of game",
-      "competitive": "Competitive",
-      "competitiveHint": "Players play against each other.",
-      "cooperative": "Cooperative",
-      "cooperativeHint": "Everyone wins or loses together, against the game.",
-      "recording": "What is recorded",
-      "points": "Points",
-      "pointsHint": "A score for each player, or one for the group in a cooperative game.",
-      "winnerOnly": "Winner only",
-      "wonOrLostOnly": "Won or lost only",
-      "outcomeHint": "No scores, just how it ended.",
-      "winner": "Who wins",
-      "highest": "The highest score",
-      "lowest": "The lowest score",
       "submitAdd": "Add game",
       "submitEdit": "Save game"
     },
@@ -51,6 +30,90 @@
       "title": "Remove {{name}}?",
       "description": "This can't be undone.",
       "confirm": "Remove game"
+    }
+  },
+  "recording": {
+    "as": {
+      "pointsHighest": "Points, highest wins",
+      "pointsLowest": "Points, lowest wins",
+      "winnerOnly": "Winner only",
+      "cooperativeScore": "Cooperative, with a score",
+      "cooperativeWonLost": "Cooperative, won or lost"
+    },
+    "kind": "Kind of game",
+    "competitive": "Competitive",
+    "competitiveHint": "Players play against each other.",
+    "cooperative": "Cooperative",
+    "cooperativeHint": "Everyone wins or loses together, against the game.",
+    "recording": "What is recorded",
+    "points": "Points",
+    "pointsHint": "A score for each player, or one for the group in a cooperative game.",
+    "winnerOnly": "Winner only",
+    "wonOrLostOnly": "Won or lost only",
+    "outcomeHint": "No scores, just how it ended.",
+    "winner": "Who wins",
+    "highest": "The highest score",
+    "lowest": "The lowest score"
+  },
+  "plays": {
+    "record": {
+      "action": "Record play",
+      "actionFor": "Record a play of {{name}}",
+      "title": "Record a play",
+      "description": "Who played {{game}}, and how it ended.",
+      "loading": "Loading the game and the players",
+      "loadFailed": "Couldn't load what is needed to record a play",
+      "noGame": {
+        "title": "Which game?",
+        "text": "Start recording a play from the game's row on the Games page.",
+        "link": "Go to Games"
+      },
+      "date": "Date",
+      "location": "Location",
+      "locationHint": "Optional. Where you played, in your own words.",
+      "notes": "Notes",
+      "notesHint": "Optional. Anything you want to remember about this play.",
+      "recordedAs": "Recorded as",
+      "change": "Change",
+      "changeHint": "Only for this play. The game keeps its own choices.",
+      "players": "Players",
+      "noPlayers": "Nobody yet. Add everyone who played.",
+      "addPlayer": "Add a player",
+      "choosePlayer": "Choose a player…",
+      "everyoneAdded": "Every player is in this play already. You add new players on the Players page.",
+      "removePlayer": "Remove {{name}}",
+      "score": "Score",
+      "scoreOf": "Score of {{name}}",
+      "won": "Won",
+      "wonBy": "{{name}} won",
+      "tie": {
+        "legend": "Tie for first place",
+        "hint": "Pick who won the tie, or leave the win shared.",
+        "shared": "Shared win"
+      },
+      "outcome": "How did it end?",
+      "outcomeWon": "The group won",
+      "outcomeLost": "The group lost",
+      "groupScore": "Score",
+      "groupScoreHint": "Optional. One score for the whole group.",
+      "submit": "Record play"
+    },
+    "page": {
+      "loading": "Loading the play",
+      "loadFailed": "Couldn't load the play",
+      "results": "Results",
+      "placing": "Placing",
+      "player": "Player",
+      "score": "Score",
+      "winner": "Winner",
+      "wonTogether": "Won together",
+      "lostTogether": "Lost together",
+      "groupScore": "Score: {{score}}",
+      "players": "Players",
+      "notes": "Notes",
+      "recordedBy": "Recorded by {{name}} on {{date}}.",
+      "recordAnother": "Record another play",
+      "backToGames": "Back to games"
     }
   },
   "notFound": {
@@ -113,7 +176,16 @@
     "passwordTooShort": "Use at least 16 characters.",
     "passwordTooLong": "Use at most 200 characters.",
     "nameTooLong": "Use at most 50 characters.",
-    "gameNameTooLong": "Use at most 100 characters."
+    "gameNameTooLong": "Use at most 100 characters.",
+    "scoreRequired": "Enter a score.",
+    "wholeNumber": "Enter a whole number.",
+    "playersTooFew": "Add at least two players.",
+    "playerRequired": "Add at least one player.",
+    "winnerRequired": "Tick at least one winner.",
+    "outcomeRequired": "Say whether the group won or lost.",
+    "dateInFuture": "The date can't be in the future.",
+    "locationTooLong": "Use at most 100 characters.",
+    "notesTooLong": "Use at most 2000 characters."
   },
   "problems": {
     "unknown": "Something went wrong. Try again.",
@@ -164,6 +236,13 @@
       "nameTaken": "There is already a game with this name.",
       "notFound": "This game no longer exists.",
       "inUse": "This game can't be removed: plays have been recorded for it."
+    },
+    "plays": {
+      "invalidEntry": "These results don't fit together. Check them and try again.",
+      "playerTwice": "A player can be in a play only once.",
+      "dateInFuture": "The date can't be in the future.",
+      "gameModuleMissing": "This version of Board Keeper can't score this game.",
+      "notFound": "This play no longer exists."
     }
   },
   "nav": {

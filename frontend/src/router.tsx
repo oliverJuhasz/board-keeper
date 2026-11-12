@@ -5,6 +5,8 @@ import { RolesPage } from "./features/roles/RolesPage"
 import { ResetPasswordPage } from "./features/session/ResetPasswordPage"
 import { SettingsPage } from "./features/settings/SettingsPage"
 import { PlayersPage } from "./features/players/PlayersPage"
+import { PlayPage } from "./features/plays/PlayPage"
+import { RecordPlayPage } from "./features/plays/RecordPlayPage"
 import { RegisterPage } from "./features/session/RegisterPage"
 import { RedirectIfSignedIn, RequireSignedIn } from "./features/session/RequireSignedIn"
 import { SetupPage } from "./features/session/SetupPage"
@@ -43,6 +45,8 @@ export const routes: RouteObject[] = [
     children: [
       { index: true, element: <GamesPage /> },
       { path: "players", element: <PlayersPage /> },
+      { path: "plays/new", element: <RecordPlayPage /> },
+      { path: "plays/:id", element: <PlayPage /> },
       { path: "accounts", element: <AccountsPage /> },
       { path: "roles", element: <RolesPage /> },
       { path: "settings", element: <SettingsPage /> },

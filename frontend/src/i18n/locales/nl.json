@@ -18,32 +18,11 @@
     "actions": "Acties voor {{name}}",
     "edit": "Bewerken",
     "remove": "Verwijderen",
-    "recordedAs": {
-      "pointsHighest": "Punten, hoogste wint",
-      "pointsLowest": "Punten, laagste wint",
-      "winnerOnly": "Alleen de winnaar",
-      "cooperativeScore": "Coöperatief, met score",
-      "cooperativeWonLost": "Coöperatief, gewonnen of verloren"
-    },
     "dialog": {
       "addTitle": "Spel toevoegen",
       "addDescription": "Voor een spel waarvoor Board Keeper geen eigen puntentelling heeft. Je legt totalen of de winnaar vast.",
       "editTitle": "{{name}} bewerken",
       "defaultsHint": "Dit zijn de beginkeuzes voor een nieuwe partij. Wie een partij vastlegt, kan ze voor die partij aanpassen.",
-      "kind": "Soort spel",
-      "competitive": "Competitief",
-      "competitiveHint": "Spelers spelen tegen elkaar.",
-      "cooperative": "Coöperatief",
-      "cooperativeHint": "Iedereen wint of verliest samen, tegen het spel.",
-      "recording": "Wat wordt vastgelegd",
-      "points": "Punten",
-      "pointsHint": "Een score per speler, of één voor de groep bij een coöperatief spel.",
-      "winnerOnly": "Alleen de winnaar",
-      "wonOrLostOnly": "Alleen gewonnen of verloren",
-      "outcomeHint": "Geen scores, alleen hoe het afliep.",
-      "winner": "Wie wint",
-      "highest": "De hoogste score",
-      "lowest": "De laagste score",
       "submitAdd": "Spel toevoegen",
       "submitEdit": "Spel opslaan"
     },
@@ -51,6 +30,90 @@
       "title": "{{name}} verwijderen?",
       "description": "Dit kan niet ongedaan worden gemaakt.",
       "confirm": "Spel verwijderen"
+    }
+  },
+  "recording": {
+    "as": {
+      "pointsHighest": "Punten, hoogste wint",
+      "pointsLowest": "Punten, laagste wint",
+      "winnerOnly": "Alleen de winnaar",
+      "cooperativeScore": "Coöperatief, met score",
+      "cooperativeWonLost": "Coöperatief, gewonnen of verloren"
+    },
+    "kind": "Soort spel",
+    "competitive": "Competitief",
+    "competitiveHint": "Spelers spelen tegen elkaar.",
+    "cooperative": "Coöperatief",
+    "cooperativeHint": "Iedereen wint of verliest samen, tegen het spel.",
+    "recording": "Wat wordt vastgelegd",
+    "points": "Punten",
+    "pointsHint": "Een score per speler, of één voor de groep bij een coöperatief spel.",
+    "winnerOnly": "Alleen de winnaar",
+    "wonOrLostOnly": "Alleen gewonnen of verloren",
+    "outcomeHint": "Geen scores, alleen hoe het afliep.",
+    "winner": "Wie wint",
+    "highest": "De hoogste score",
+    "lowest": "De laagste score"
+  },
+  "plays": {
+    "record": {
+      "action": "Partij vastleggen",
+      "actionFor": "Een partij {{name}} vastleggen",
+      "title": "Een partij vastleggen",
+      "description": "Wie {{game}} speelden, en hoe het afliep.",
+      "loading": "Het spel en de spelers laden",
+      "loadFailed": "Wat nodig is om een partij vast te leggen, kon niet worden geladen",
+      "noGame": {
+        "title": "Welk spel?",
+        "text": "Begin met het vastleggen van een partij bij het spel op de pagina Spellen.",
+        "link": "Naar Spellen"
+      },
+      "date": "Datum",
+      "location": "Locatie",
+      "locationHint": "Optioneel. Waar jullie speelden, in je eigen woorden.",
+      "notes": "Notities",
+      "notesHint": "Optioneel. Alles wat je over deze partij wilt onthouden.",
+      "recordedAs": "Vastgelegd als",
+      "change": "Wijzigen",
+      "changeHint": "Alleen voor deze partij. Het spel houdt zijn eigen keuzes.",
+      "players": "Spelers",
+      "noPlayers": "Nog niemand. Voeg iedereen toe die meespeelde.",
+      "addPlayer": "Speler toevoegen",
+      "choosePlayer": "Kies een speler…",
+      "everyoneAdded": "Alle spelers doen al mee aan deze partij. Nieuwe spelers voeg je toe op de pagina Spelers.",
+      "removePlayer": "{{name}} verwijderen",
+      "score": "Score",
+      "scoreOf": "Score van {{name}}",
+      "won": "Gewonnen",
+      "wonBy": "{{name}} heeft gewonnen",
+      "tie": {
+        "legend": "Gelijkspel om de eerste plaats",
+        "hint": "Kies wie het gelijkspel won, of laat de winst gedeeld.",
+        "shared": "Gedeelde winst"
+      },
+      "outcome": "Hoe liep het af?",
+      "outcomeWon": "De groep heeft gewonnen",
+      "outcomeLost": "De groep heeft verloren",
+      "groupScore": "Score",
+      "groupScoreHint": "Optioneel. Eén score voor de hele groep.",
+      "submit": "Partij vastleggen"
+    },
+    "page": {
+      "loading": "De partij laden",
+      "loadFailed": "De partij kon niet worden geladen",
+      "results": "Resultaten",
+      "placing": "Plaats",
+      "player": "Speler",
+      "score": "Score",
+      "winner": "Winnaar",
+      "wonTogether": "Samen gewonnen",
+      "lostTogether": "Samen verloren",
+      "groupScore": "Score: {{score}}",
+      "players": "Spelers",
+      "notes": "Notities",
+      "recordedBy": "Vastgelegd door {{name}} op {{date}}.",
+      "recordAnother": "Nog een partij vastleggen",
+      "backToGames": "Terug naar spellen"
     }
   },
   "notFound": {
@@ -113,7 +176,16 @@
     "passwordTooShort": "Gebruik minstens 16 tekens.",
     "passwordTooLong": "Gebruik hoogstens 200 tekens.",
     "nameTooLong": "Gebruik hoogstens 50 tekens.",
-    "gameNameTooLong": "Gebruik hoogstens 100 tekens."
+    "gameNameTooLong": "Gebruik hoogstens 100 tekens.",
+    "scoreRequired": "Vul een score in.",
+    "wholeNumber": "Vul een geheel getal in.",
+    "playersTooFew": "Voeg minstens twee spelers toe.",
+    "playerRequired": "Voeg minstens één speler toe.",
+    "winnerRequired": "Vink minstens één winnaar aan.",
+    "outcomeRequired": "Geef aan of de groep gewonnen of verloren heeft.",
+    "dateInFuture": "De datum kan niet in de toekomst liggen.",
+    "locationTooLong": "Gebruik hoogstens 100 tekens.",
+    "notesTooLong": "Gebruik hoogstens 2000 tekens."
   },
   "problems": {
     "unknown": "Er ging iets mis. Probeer het opnieuw.",
@@ -164,6 +236,13 @@
       "nameTaken": "Er is al een spel met deze naam.",
       "notFound": "Dit spel bestaat niet meer.",
       "inUse": "Dit spel kan niet worden verwijderd: er zijn partijen voor vastgelegd."
+    },
+    "plays": {
+      "invalidEntry": "Deze resultaten kloppen niet met elkaar. Kijk ze na en probeer het opnieuw.",
+      "playerTwice": "Een speler kan maar één keer aan een partij meedoen.",
+      "dateInFuture": "De datum kan niet in de toekomst liggen.",
+      "gameModuleMissing": "Deze versie van Board Keeper kan de score van dit spel niet berekenen.",
+      "notFound": "Deze partij bestaat niet meer."
     }
   },
   "nav": {
