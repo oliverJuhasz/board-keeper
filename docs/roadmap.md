@@ -65,6 +65,9 @@ Recording without a connection, teams, unfinished plays, game nights, importing 
 - The recorder's choice in a tie applies to first place only. Players tied further down share their Placing.
 - With the Generic Module, a competitive Play needs at least two Players. A Solo Play can be recorded as Cooperative: won or lost, with an optional score. Solo Plays of competitive Games wait for the solo styles of M3.
 - A Play can be dated today or earlier.
+- A location is at most 100 characters, and notes at most 2000.
+- The form puts whoever records the Play in as its first Player, and they can be taken out again.
+- For a tie for first place, the form offers one Player or a shared win. The API also accepts several marked Players, who then share first place ahead of the others tied with them.
 - M2 is delivered in three slices: the Game catalogue, recording a Play, and the play history.
 
 ## Details to settle when a milestone starts
