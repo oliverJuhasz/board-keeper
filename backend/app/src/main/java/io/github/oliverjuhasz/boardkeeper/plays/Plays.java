@@ -85,10 +85,23 @@ public class Plays {
     public Play record(NewPlay newPlay, CurrentAccount recorder) {
         Game game = games.find(newPlay.gameId()).orElseThrow(() -> Problem.notFound("games.notFound"));
         checkPlayersAndDate(newPlay);
-        Scored scored = score(moduleOf(game.gameModuleId()), newPlay);
+        Scored scored = score(moduleOf(game.gameModuleId()), newPlay.playerIds(), newPlay.entry());
 
         UUID id = repository.insert(game, newPlay, scored.group(), scored.results(), recorder.playerId());
         return repository.find(id).orElseThrow();
+    }
+
+    /**
+     * Works out how a Play would end without recording it, for a form that wants to show the
+     * totals and Placings while it is being filled in, and to know whether there is a tie the
+     * recorder has to decide.
+     */
+    public PlayPreview preview(UUID gameModuleId, List<UUID> playerIds, PlayEntry entry) {
+        if (playerIds.size() != entry.players().size()) {
+            throw new IllegalArgumentException("A Play needs exactly one entry for each of its Players");
+        }
+        Scored scored = score(moduleOf(gameModuleId), playerIds, entry);
+        return new PlayPreview(scored.group(), scored.results(), scored.tieForRecorder());
     }
 
     /**
@@ -121,7 +134,7 @@ public class Plays {
             throw Problem.unprocessable("plays.gameCannotChange");
         }
         checkPlayersAndDate(changed);
-        Scored scored = score(moduleOf(play.gameModuleId()), changed);
+        Scored scored = score(moduleOf(play.gameModuleId()), changed.playerIds(), changed.entry());
 
         repository.update(id, changed, scored.group(), scored.results());
         return repository.find(id).orElseThrow();
@@ -165,18 +178,22 @@ public class Plays {
     }
 
     /** Has the Game Module score the entry, and puts its answer next to what was entered. */
-    private static Scored score(GameModule module, NewPlay newPlay) {
-        List<UUID> playerIds = newPlay.playerIds();
-        PlayEntry entry = newPlay.entry();
+    private static Scored score(GameModule module, List<UUID> playerIds, PlayEntry entry) {
         Outcome outcome;
         try {
             outcome = module.score(entry);
         } catch (InvalidPlayException refusal) {
-            throw Problem.unprocessable("plays.invalidEntry", module.key() + ".invalid." + refusal.reason());
+            // The frontend has the texts for the reasons that are the same for every Game, and
+            // the module has the texts for its own.
+            String reason = refusal.isStandard()
+                    ? "plays.invalid." + refusal.reason()
+                    : module.key() + ".invalid." + refusal.reason();
+            throw Problem.unprocessable("plays.invalidEntry", reason);
         }
 
         Play.GroupResult group = null;
         List<Play.Result> results = new ArrayList<>();
+        List<UUID> tieForRecorder = List.of();
         // Outcome is sealed, so the compiler checks that both kinds are handled here.
         switch (outcome) {
             case Outcome.Competitive competitive -> {
@@ -195,6 +212,7 @@ public class Plays {
                             calculated.placing(),
                             calculated.won()));
                 }
+                tieForRecorder = competitive.tieForRecorder().stream().map(playerIds::get).toList();
             }
             case Outcome.Cooperative cooperative -> {
                 Map<String, Integer> groupScores = entry.group() == null ? Map.of() : entry.group().scores();
@@ -207,9 +225,9 @@ public class Plays {
                 }
             }
         }
-        return new Scored(group, results);
+        return new Scored(group, results, tieForRecorder);
     }
 
     /** A Game Module's answer in the form it is stored in. {@code group} is null for a competitive Play. */
-    private record Scored(Play.GroupResult group, List<Play.Result> results) {}
+    private record Scored(Play.GroupResult group, List<Play.Result> results, List<UUID> tieForRecorder) {}
 }
