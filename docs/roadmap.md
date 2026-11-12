@@ -60,11 +60,18 @@ Recording without a connection, teams, unfinished plays, game nights, importing 
 - A Play records its Game, its Players and their Results, a date without a time, an optional location as free text, and optional notes.
 - Changing a Play, which means editing or deleting it, has three Permissions: for Plays you recorded, for Plays you took part in, and for any Play. A Member gets the first two.
 - With the Generic Module, each Game stores how its Plays are recorded by default: competitive or Cooperative, Points or Winner only, and whether the highest or the lowest score wins. The recorder can change these for a single Play. For a tie, the recorder picks who won it or leaves the Placing shared.
+- Scores are whole numbers and can be negative.
+- A competitive Play recorded with only the winner has one or more winners. Nobody in it gets a Placing.
+- The recorder's choice in a tie applies to first place only. Players tied further down share their Placing.
+- With the Generic Module, a competitive Play needs at least two Players. A Solo Play can be recorded as Cooperative: won or lost, with an optional score. Solo Plays of competitive Games wait for the solo styles of M3.
+- A Play can be dated today or earlier.
 - M2 is delivered in three slices: the Game catalogue, recording a Play, and the play history.
 
 ## Details to settle when a milestone starts
 
 - **M3:** making a Game with a module of its own appear in the catalogue by itself, named by its module. Until the first such module exists, every Game is added by hand and scored by the Generic Module.
+- **M3:** how the frontend builds the form for a Game with a module of its own. Today's form knows the Generic Module's two Variants and its one Score Category; a real module has to describe its own.
+- **M3:** whether to offer adding a new Player from the form that records a Play. Today that is done on the Players page first.
 - **M3:** what happens to a Game that was added by hand when a module for it arrives later. Its earlier Plays stay as the Generic Module recorded them.
 - **M5:** how a sole Admin who has forgotten their password gets back in. Today that needs a second Admin to create a Reset Link. The self-hosting guide needs an answer for when there is none.
 - **M5:** splitting the frontend's JavaScript by page. It has grown to about 250 kB compressed, all loaded up front.

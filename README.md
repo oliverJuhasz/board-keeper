@@ -40,7 +40,8 @@ Milestones M0 and M1 are done, and M2 has started. Board Keeper builds, runs as 
 - Accounts with sign-in, created through a first-time Setup Link and through Invites
 - Players, who exist with or without an Account
 - a catalogue of Games, each with how its Plays are recorded by default
+- recording Plays of any Game in the catalogue: competitive or Cooperative, in points or with only the winner, with Placings and shared wins
 - Roles made of fine-grained Permissions, with pages for managing Roles and Accounts
 - password changes and Reset Links
 
-Milestone M2 is under way. Recording Plays comes next.
+Milestone M2 is under way. The play history comes next, with editing and deleting Plays.
