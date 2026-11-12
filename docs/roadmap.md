@@ -70,6 +70,10 @@ Recording without a connection, teams, unfinished plays, game nights, importing 
 - For a tie for first place, the form offers one Player or a shared win. The API also accepts several marked Players, who then share first place ahead of the others tied with them.
 - M2 is delivered in three slices: the Game catalogue, recording a Play, and the play history.
 
+## Settled for milestone M3
+
+- **The form asks who won a tie only when the scores can't say.** A Game Module names its Tie-breakers. Where a Tie-breaker is something that was entered, such as the money each Player has left in a Game where money decides a tie, the module decides the tie itself and the form does not ask. The form asks only when the Game decides a tie by something that isn't recorded, such as who played the fewest cards, and only if the Players are still tied after the Tie-breakers the module can work out. The Generic Module records nothing but totals, so with it the form always asks.
+
 ## Details to settle when a milestone starts
 
 - **M3:** making a Game with a module of its own appear in the catalogue by itself, named by its module. Until the first such module exists, every Game is added by hand and scored by the Generic Module.
