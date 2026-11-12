@@ -2,6 +2,13 @@ package io.github.oliverjuhasz.boardkeeper.plays;
 
 import static io.github.oliverjuhasz.boardkeeper.jooq.Tables.PLAY;
 import static io.github.oliverjuhasz.boardkeeper.jooq.Tables.ROLE_PERMISSION;
+import static io.github.oliverjuhasz.boardkeeper.plays.PlayRequests.COMPETITIVE;
+import static io.github.oliverjuhasz.boardkeeper.plays.PlayRequests.COOPERATIVE;
+import static io.github.oliverjuhasz.boardkeeper.plays.PlayRequests.idOf;
+import static io.github.oliverjuhasz.boardkeeper.plays.PlayRequests.notScored;
+import static io.github.oliverjuhasz.boardkeeper.plays.PlayRequests.scored;
+import static io.github.oliverjuhasz.boardkeeper.plays.PlayRequests.tieWinner;
+import static io.github.oliverjuhasz.boardkeeper.plays.PlayRequests.winner;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.oliverjuhasz.boardkeeper.TestBrowser;
@@ -12,7 +19,6 @@ import io.github.oliverjuhasz.boardkeeper.gameapi.RecordingMode;
 import io.github.oliverjuhasz.boardkeeper.games.Game.RecordingDefaults;
 import io.github.oliverjuhasz.boardkeeper.games.Games;
 import io.github.oliverjuhasz.boardkeeper.players.Players;
-import java.io.UnsupportedEncodingException;
 import java.time.LocalDate;
 import java.util.UUID;
 import org.jooq.DSLContext;
@@ -24,16 +30,12 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
-import tools.jackson.databind.json.JsonMapper;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)
 class PlaysApiTests {
 
-    private static final JsonMapper JSON = JsonMapper.builder().build();
-    private static final String COMPETITIVE = "{}";
-    private static final String COOPERATIVE = "{\"cooperative\": \"true\"}";
 
     @Autowired
     private MockMvcTester mvc;
@@ -302,33 +304,6 @@ class PlaysApiTests {
     }
 
     private String play(String recordingMode, String setup, String playedOn, String... playerEntries) {
-        return """
-                {"gameId": "%s", "playedOn": "%s", "recordingMode": "%s", "setup": %s, "players": [%s]}
-                """.formatted(calico, playedOn, recordingMode, setup, String.join(", ", playerEntries));
-    }
-
-    private static String scored(UUID player, int total) {
-        return "{\"playerId\": \"%s\", \"scores\": {\"total\": %d}, \"winner\": false}".formatted(player, total);
-    }
-
-    /** A Player with a score whom the recorder also marked as the winner, to decide a tie. */
-    private static String tieWinner(UUID player, int total) {
-        return "{\"playerId\": \"%s\", \"scores\": {\"total\": %d}, \"winner\": true}".formatted(player, total);
-    }
-
-    private static String winner(UUID player) {
-        return "{\"playerId\": \"%s\", \"winner\": true}".formatted(player);
-    }
-
-    private static String notScored(UUID player) {
-        return "{\"playerId\": \"%s\", \"winner\": false}".formatted(player);
-    }
-
-    private static String idOf(MvcTestResult result) {
-        try {
-            return JSON.readTree(result.getResponse().getContentAsString()).get("id").asString();
-        } catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException(e);
-        }
+        return PlayRequests.play(calico, recordingMode, setup, playedOn, playerEntries);
     }
 }

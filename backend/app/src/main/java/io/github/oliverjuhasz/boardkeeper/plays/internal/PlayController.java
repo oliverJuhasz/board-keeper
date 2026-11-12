@@ -13,9 +13,11 @@ import io.github.oliverjuhasz.boardkeeper.players.Player;
 import io.github.oliverjuhasz.boardkeeper.players.Players;
 import io.github.oliverjuhasz.boardkeeper.plays.NewPlay;
 import io.github.oliverjuhasz.boardkeeper.plays.Play;
+import io.github.oliverjuhasz.boardkeeper.plays.PlayHistory;
 import io.github.oliverjuhasz.boardkeeper.plays.Plays;
 import io.github.oliverjuhasz.boardkeeper.problems.Problem;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -29,12 +31,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -52,6 +60,43 @@ class PlayController {
         this.players = players;
     }
 
+    @GetMapping
+    @Operation(
+            summary = "List the Plays, newest first",
+            description = "The play history, a page at a time. Every filter is optional. To get the page after one,"
+                    + " pass its \"next\" as \"after\" and keep the filters the same.",
+            operationId = "listPlays")
+    PlayHistoryResponse list(
+            @AuthenticationPrincipal CurrentAccount account,
+            @Parameter(description = "Only Plays of this Game") @RequestParam(required = false) UUID gameId,
+            @Parameter(description = "Only Plays this Player took part in. Give it several times for Plays that all"
+                            + " of those Players took part in.")
+                    @RequestParam(required = false)
+                    Set<UUID> playerId,
+            @Parameter(description = "Only Plays on this day or later")
+                    @RequestParam(required = false)
+                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate from,
+            @Parameter(description = "Only Plays on this day or earlier")
+                    @RequestParam(required = false)
+                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate to,
+            @Parameter(description = "The \"next\" of the page before the one you want")
+                    @RequestParam(required = false)
+                    String after,
+            @Parameter(description = "How many Plays a page has, at most " + Plays.MAX_PAGE_SIZE)
+                    @RequestParam(defaultValue = "" + Plays.DEFAULT_PAGE_SIZE)
+                    int limit) {
+        PlayHistory.Position position = after == null
+                ? null
+                : PlayHistory.Position.parse(after)
+                        .orElseThrow(() -> new Problem(HttpStatus.BAD_REQUEST, "request.invalid"));
+        PlayHistory history = plays.history(new PlayHistory.Filter(gameId, playerId, from, to), position, limit);
+        return new PlayHistoryResponse(
+                toResponses(history.plays(), account),
+                history.next() == null ? null : history.next().toString());
+    }
+
     @PostMapping
     @RequiresPermission(Permission.CREATE_PLAYS)
     @Operation(
@@ -61,47 +106,85 @@ class PlayController {
             operationId = "recordPlay")
     PlayResponse record(
             @AuthenticationPrincipal CurrentAccount account, @Valid @RequestBody NewPlayRequest body) {
-        return toResponse(plays.record(body.toNewPlay(), account));
+        return toResponse(plays.record(body.toNewPlay(), account), account);
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Show a Play with its Results", operationId = "getPlay")
-    PlayResponse get(@PathVariable UUID id) {
-        return toResponse(plays.find(id).orElseThrow(() -> Problem.notFound("plays.notFound")));
+    PlayResponse get(@AuthenticationPrincipal CurrentAccount account, @PathVariable UUID id) {
+        return toResponse(plays.find(id).orElseThrow(() -> Problem.notFound("plays.notFound")), account);
     }
 
-    /** Adds the names the frontend shows: of the Game, of the Players and of who recorded it. */
-    private PlayResponse toResponse(Play play) {
-        Game game = games.find(play.gameId()).orElseThrow();
+    @PutMapping("/{id}")
+    @Operation(
+            summary = "Change a Play",
+            description = "Replaces everything that was entered for the Play and works out its Results again. The"
+                    + " Game has to stay the same. Who may do this depends on the Play: see \"canChange\".",
+            operationId = "changePlay")
+    PlayResponse change(
+            @AuthenticationPrincipal CurrentAccount account,
+            @PathVariable UUID id,
+            @Valid @RequestBody NewPlayRequest body) {
+        return toResponse(plays.change(id, body.toNewPlay(), account), account);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(
+            summary = "Delete a Play",
+            description = "For good. Who may do this depends on the Play: see \"canChange\".",
+            operationId = "deletePlay")
+    void delete(@AuthenticationPrincipal CurrentAccount account, @PathVariable UUID id) {
+        plays.delete(id, account);
+    }
+
+    private PlayResponse toResponse(Play play, CurrentAccount account) {
+        return toResponses(List.of(play), account).getFirst();
+    }
+
+    /**
+     * Adds what the frontend shows besides the Plays themselves: the names of the Games, of the
+     * Players and of who recorded each Play, and whether the signed-in Account may change it.
+     * The names are fetched once for all the Plays together.
+     */
+    private List<PlayResponse> toResponses(List<Play> plays, CurrentAccount account) {
+        Set<UUID> gameIds = new HashSet<>();
         Set<UUID> playerIds = new HashSet<>();
-        play.results().forEach(result -> playerIds.add(result.playerId()));
-        playerIds.add(play.recordedBy());
+        for (Play play : plays) {
+            gameIds.add(play.gameId());
+            playerIds.add(play.recordedBy());
+            play.results().forEach(result -> playerIds.add(result.playerId()));
+        }
+        Map<UUID, Game> gamesById = games.find(gameIds);
         Map<UUID, Player> playersById = players.find(playerIds);
 
-        return new PlayResponse(
-                play.id(),
-                new NamedReference(game.id(), game.name()),
-                play.playedOn(),
-                play.location(),
-                play.notes(),
-                play.recordingMode(),
-                play.setup(),
-                play.cooperative(),
-                play.group() == null
-                        ? null
-                        : new GroupResultResponse(
-                                play.group().won(), play.group().scores(), play.group().total()),
-                play.results().stream()
-                        .map(result -> new ResultResponse(
-                                NamedReference.to(playersById.get(result.playerId())),
-                                result.scores(),
-                                result.markedWinner(),
-                                result.total(),
-                                result.placing(),
-                                result.won()))
-                        .toList(),
-                NamedReference.to(playersById.get(play.recordedBy())),
-                play.recordedAt());
+        return plays.stream()
+                .map(play -> new PlayResponse(
+                        play.id(),
+                        NamedReference.to(gamesById.get(play.gameId())),
+                        play.playedOn(),
+                        play.location(),
+                        play.notes(),
+                        play.recordingMode(),
+                        play.setup(),
+                        play.cooperative(),
+                        play.group() == null
+                                ? null
+                                : new GroupResultResponse(
+                                        play.group().won(), play.group().scores(), play.group().total()),
+                        play.results().stream()
+                                .map(result -> new ResultResponse(
+                                        NamedReference.to(playersById.get(result.playerId())),
+                                        result.scores(),
+                                        result.markedWinner(),
+                                        result.total(),
+                                        result.placing(),
+                                        result.won()))
+                                .toList(),
+                        NamedReference.to(playersById.get(play.recordedBy())),
+                        play.recordedAt(),
+                        this.plays.mayChange(play, account)))
+                .toList();
     }
 
     @Schema(
@@ -176,7 +259,8 @@ class PlayController {
                 "cooperative",
                 "results",
                 "recordedBy",
-                "recordedAt"
+                "recordedAt",
+                "canChange"
             })
     record PlayResponse(
             UUID id,
@@ -190,7 +274,16 @@ class PlayController {
             @Schema(description = "For a Cooperative Play: how it ended for the group") GroupResultResponse group,
             @Schema(description = "One per Player, in the order they were entered") List<ResultResponse> results,
             @Schema(description = "The Player of the Account that recorded it") NamedReference recordedBy,
-            Instant recordedAt) {}
+            Instant recordedAt,
+            @Schema(description = "Whether the signed-in Account may edit and delete this Play") boolean canChange) {}
+
+    @Schema(
+            name = "PlayHistory",
+            requiredProperties = {"plays"})
+    record PlayHistoryResponse(
+            List<PlayResponse> plays,
+            @Schema(description = "Pass this as \"after\" to get the next page. Absent when this is the last page.")
+                    String next) {}
 
     @Schema(
             name = "Result",
@@ -220,6 +313,10 @@ class PlayController {
 
         static NamedReference to(Player player) {
             return new NamedReference(player.id(), player.name());
+        }
+
+        static NamedReference to(Game game) {
+            return new NamedReference(game.id(), game.name());
         }
     }
 

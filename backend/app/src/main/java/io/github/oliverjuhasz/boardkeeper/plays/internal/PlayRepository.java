@@ -2,16 +2,21 @@ package io.github.oliverjuhasz.boardkeeper.plays.internal;
 
 import static io.github.oliverjuhasz.boardkeeper.jooq.Tables.PLAY;
 import static io.github.oliverjuhasz.boardkeeper.jooq.Tables.PLAY_RESULT;
+import static org.jooq.impl.DSL.exists;
 import static org.jooq.impl.DSL.multiset;
+import static org.jooq.impl.DSL.noCondition;
 import static org.jooq.impl.DSL.select;
+import static org.jooq.impl.DSL.selectOne;
 
 import io.github.oliverjuhasz.boardkeeper.gameapi.RecordingMode;
 import io.github.oliverjuhasz.boardkeeper.games.Game;
 import io.github.oliverjuhasz.boardkeeper.plays.NewPlay;
 import io.github.oliverjuhasz.boardkeeper.plays.Play;
+import io.github.oliverjuhasz.boardkeeper.plays.PlayHistory;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.Record;
@@ -56,6 +61,43 @@ public class PlayRepository {
                 .fetchOptional(PlayRepository::toPlay);
     }
 
+    /**
+     * The Plays that pass the filter, from the newest day back, and within a day from the last
+     * one recorded: ids are handed out in the order of recording.
+     *
+     * @param after the Play to start after; null to start at the newest
+     */
+    public List<Play> findPage(PlayHistory.Filter filter, PlayHistory.Position after, int limit) {
+        Condition passesFilter = noCondition();
+        if (filter.gameId() != null) {
+            passesFilter = passesFilter.and(PLAY.GAME_ID.eq(filter.gameId()));
+        }
+        for (UUID playerId : filter.playerIds()) {
+            passesFilter = passesFilter.and(exists(selectOne()
+                    .from(PLAY_RESULT)
+                    .where(PLAY_RESULT.PLAY_ID.eq(PLAY.ID))
+                    .and(PLAY_RESULT.PLAYER_ID.eq(playerId))));
+        }
+        if (filter.from() != null) {
+            passesFilter = passesFilter.and(PLAY.PLAYED_ON.ge(filter.from()));
+        }
+        if (filter.to() != null) {
+            passesFilter = passesFilter.and(PLAY.PLAYED_ON.le(filter.to()));
+        }
+
+        var newestFirst = dsl.select(PLAY.asterisk(), RESULTS)
+                .from(PLAY)
+                .where(passesFilter)
+                .orderBy(PLAY.PLAYED_ON.desc(), PLAY.ID.desc());
+        // seek() continues after a given row of the ordering, where offset() would count rows
+        // to skip. It turns into "where (played_on, id) < (?, ?)", which the index on those two
+        // columns answers directly.
+        var page = after == null
+                ? newestFirst.limit(limit)
+                : newestFirst.seek(after.playedOn(), after.id()).limit(limit);
+        return page.fetch(PlayRepository::toPlay);
+    }
+
     /** Stores a Play with its Results and gives the id it got. */
     public UUID insert(Game game, NewPlay newPlay, Play.GroupResult group, List<Play.Result> results, UUID recordedBy) {
         UUID id = dsl.insertInto(PLAY)
@@ -74,9 +116,37 @@ public class PlayRepository {
                 .returningResult(PLAY.ID)
                 .fetchSingle()
                 .value1();
+        insertResults(id, results);
+        return id;
+    }
 
-        // One round trip for all the Results, instead of one each.
-        var insertResults = dsl.insertInto(
+    /** Replaces what was entered for a Play and what was calculated from it. Its Game and its recorder stay. */
+    public void update(UUID id, NewPlay changed, Play.GroupResult group, List<Play.Result> results) {
+        dsl.update(PLAY)
+                .set(PLAY.PLAYED_ON, changed.playedOn())
+                .set(PLAY.LOCATION, changed.location())
+                .set(PLAY.NOTES, changed.notes())
+                .set(PLAY.RECORDING_MODE, changed.entry().recordingMode().name())
+                .set(PLAY.SETUP, JsonColumns.toJson(changed.entry().setup()))
+                .set(PLAY.COOPERATIVE, group != null)
+                .set(PLAY.GROUP_WON, group == null ? null : group.won())
+                .set(PLAY.GROUP_SCORES, group == null ? null : JsonColumns.toJson(group.scores()))
+                .set(PLAY.GROUP_TOTAL, group == null ? null : group.total())
+                .where(PLAY.ID.eq(id))
+                .execute();
+        // The Players themselves may have changed, so the Results are written anew.
+        dsl.deleteFrom(PLAY_RESULT).where(PLAY_RESULT.PLAY_ID.eq(id)).execute();
+        insertResults(id, results);
+    }
+
+    /** Deletes a Play. Its Results go with it, through the foreign key's "on delete cascade". */
+    public void delete(UUID id) {
+        dsl.deleteFrom(PLAY).where(PLAY.ID.eq(id)).execute();
+    }
+
+    /** One round trip for all the Results, instead of one each. */
+    private void insertResults(UUID playId, List<Play.Result> results) {
+        var insert = dsl.insertInto(
                 PLAY_RESULT,
                 PLAY_RESULT.PLAY_ID,
                 PLAY_RESULT.PLAYER_ID,
@@ -88,8 +158,8 @@ public class PlayRepository {
                 PLAY_RESULT.WON);
         for (int i = 0; i < results.size(); i++) {
             Play.Result result = results.get(i);
-            insertResults = insertResults.values(
-                    id,
+            insert = insert.values(
+                    playId,
                     result.playerId(),
                     i,
                     JsonColumns.toJson(result.scores()),
@@ -98,8 +168,7 @@ public class PlayRepository {
                     result.placing(),
                     result.won());
         }
-        insertResults.execute();
-        return id;
+        insert.execute();
     }
 
     private static Play toPlay(Record row) {
