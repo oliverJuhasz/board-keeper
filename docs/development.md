@@ -110,6 +110,14 @@ Game Modules are plain Java, with no Spring. The core finds them with Java's `Se
 
 `PlayRepository` reads a Play together with its Results in one query, using jOOQ's `multiset`.
 
+### How the play history is paged
+
+`GET /api/plays` answers with one page of Plays and, if there are more, a `next`. Asking again with `after=<that next>` gives the following page. `next` names the last Play of the page (its day and its id), and the next page starts right after that Play. `PlayRepository.findPage` does this with jOOQ's `seek`, which becomes `where (played_on, id) < (?, ?)` in SQL.
+
+The other way to page, "skip the first 50 rows" (`offset`), gets slower the further you go, and shows a Play twice or skips one when Plays are added or deleted between two requests.
+
+In the frontend, `PlaysPage.tsx` uses TanStack Query's `useInfiniteQuery`, which keeps the pages fetched so far and fetches the next one on "Show more". The filters are kept in the page's address (`/plays?game=…&mine=1`) with React Router's `useSearchParams`, so a filtered list can be bookmarked and survives a reload.
+
 ### Changing the database
 
 1. Add a file to `backend/app/src/main/resources/db/migration`, named `V<next number>__<what_it_does>.sql`, with two underscores after the number. Never edit a migration that has been applied to a real database.
@@ -149,6 +157,8 @@ PlayerResponse create(@Valid @RequestBody CreatePlayerRequest body) { ... }
 
 To add a Permission, add it to the `Permission` enum and to `frontend/src/features/roles/permissions.ts`, regenerate `api/openapi.json`, and add its name to the three translation files. The Admin Role gets it automatically. In the frontend, `useCan()` tells whether the signed-in Account holds a Permission, for showing or hiding what needs it.
 
+**Permissions that depend on the item.** Whether an Account may change a Play depends on the Play: there is a Permission for Plays you recorded, one for Plays you took part in, and one for any Play. An annotation on the method cannot decide that, because it runs before the Play is known. So the service decides: `Plays.mayChange(play, account)` holds the rule, and `Plays.change` and `Plays.delete` throw `Problem.forbidden` when it says no. The API tells the frontend the outcome for each Play as `canChange`, so the rule lives in one place and the frontend does not repeat it.
+
 **Admin-only Permissions.** Managing Roles, Accounts and Invites belongs to the Admin Role alone ([ADR 0015](adr/0015-admin-powers-are-admin-only.md)). In `Permission`, these are marked `adminOnly`. They are checked like any other Permission, with `@RequiresPermission`, but no other Role can hold them: `RoleAdministration` refuses, and `RoleRepository` ignores such a row even if the database has one.
 
 **One-time links.** An Invite or a Reset Link is a link with a random token in it. The token is shown once, when the Invite is created; the database keeps only a hash of it (`LinkTokens`), so reading the database does not give anyone a usable link. `Invites` and `RegistrationController` show the pattern.
@@ -159,7 +169,7 @@ To add a Permission, add it to the `Permission` enum and to `frontend/src/featur
 throw Problem.conflict("players.nameTaken");
 ```
 
-`Problem.conflict` answers "409 Conflict", `Problem.notFound` "404 Not Found", and `Problem.unprocessable` "422 Unprocessable Content", for a request that is well-formed but asks for something that breaks a rule.
+`Problem.conflict` answers "409 Conflict", `Problem.notFound` "404 Not Found", `Problem.forbidden` "403 Forbidden", and `Problem.unprocessable` "422 Unprocessable Content", for a request that is well-formed but asks for something that breaks a rule.
 
 Rules on a request's fields are annotations such as `@Size(min = 16)` on the request record, checked because the parameter is marked `@Valid`. The frontend's forms check the same rules first, with Zod, so the person sees the message next to the field without a round trip.
 
@@ -169,7 +179,7 @@ Rules on a request's fields are annotations such as `@Size(min = 16)` on the req
 
 A form is described once with Zod, which gives both the checks and the TypeScript type, and run by React Hook Form. `frontend/src/features/session/SignInPage.tsx` is the example to copy. `TextField` draws a labelled input with its hint and error; `FormProblem` shows why the server refused a submission.
 
-`frontend/src/features/plays/` is the example of a bigger form. Its rules and what it sends are in `playForm.ts`, apart from the page, so they can be tested without drawing anything. It uses three more parts of React Hook Form and Zod:
+`frontend/src/features/plays/` is the example of a bigger form. Its rules and what it sends are in `playForm.ts`, apart from the page, so they can be tested without drawing anything. The form itself, `PlayEntryForm.tsx`, is used by two pages: one records a new Play and one edits an existing Play. Each page says what the form starts with and where the result is sent. It uses three more parts of React Hook Form and Zod:
 
 - `useFieldArray` for the list of Players, where rows are added and removed;
 - `useWatch` to redraw when a field changes that others depend on, such as the Recording Mode;

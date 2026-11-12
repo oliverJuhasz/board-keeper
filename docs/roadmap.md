@@ -68,6 +68,10 @@ Recording without a connection, teams, unfinished plays, game nights, importing 
 - A location is at most 100 characters, and notes at most 2000.
 - The form puts whoever records the Play in as its first Player, and they can be taken out again.
 - For a tie for first place, the form offers one Player or a shared win. The API also accepts several marked Players, who then share first place ahead of the others tied with them.
+- Editing a Play can change everything that was entered for it, and scores it again. Its Game cannot be changed, and who recorded it and when stay as they were.
+- A deleted Play is gone for good, after an "are you sure?".
+- The play history is a page of its own in the navigation. The Games page stays the start page for now; this is looked at again when statistics arrive in M4.
+- The history can be narrowed to "my plays" (Plays I took part in), a Game, a Player, and a period. It shows 50 Plays at a time, newest first, with a button to show more.
 - M2 is delivered in three slices: the Game catalogue, recording a Play, and the play history.
 
 ## Settled for milestone M3
@@ -80,6 +84,7 @@ Recording without a connection, teams, unfinished plays, game nights, importing 
 - **M3:** how the frontend builds the form for a Game with a module of its own. Today's form knows the Generic Module's two Variants and its one Score Category; a real module has to describe its own.
 - **M3:** whether to offer adding a new Player from the form that records a Play. Today that is done on the Players page first.
 - **M3:** what happens to a Game that was added by hand when a module for it arrives later. Its earlier Plays stay as the Generic Module recorded them.
+- **M4:** whether the play history or a statistics overview becomes the start page.
 - **M5:** how a sole Admin who has forgotten their password gets back in. Today that needs a second Admin to create a Reset Link. The self-hosting guide needs an answer for when there is none.
 - **M5:** splitting the frontend's JavaScript by page. It has grown to about 250 kB compressed, all loaded up front.
 - **M3 and M6:** each game's exact scoring and tie-break rules, taken from its official rulebook. Online summaries disagree, for example on the order of Calico's tie-breakers and on Spirit Island's score formula.
