@@ -159,6 +159,45 @@
         "required" : [ "cooperative", "lowestScoreWins", "name", "recordingMode" ],
         "type" : "object"
       },
+      "GroupEntry" : {
+        "properties" : {
+          "scores" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "The group's value for each Score Category. The Generic Module has one, \"total\".",
+            "type" : "object"
+          },
+          "won" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "won" ],
+        "type" : "object"
+      },
+      "GroupResult" : {
+        "properties" : {
+          "scores" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "As entered: the group's value for each Score Category",
+            "type" : "object"
+          },
+          "total" : {
+            "description" : "Absent when no score was recorded",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "won" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "scores", "won" ],
+        "type" : "object"
+      },
       "Invite" : {
         "properties" : {
           "expired" : {
@@ -209,6 +248,20 @@
         "required" : [ "language" ],
         "type" : "object"
       },
+      "NamedReference" : {
+        "description" : "A Game or a Player, with the name to show for it",
+        "properties" : {
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "id", "name" ],
+        "type" : "object"
+      },
       "NewInvite" : {
         "properties" : {
           "invite" : {
@@ -231,6 +284,56 @@
           }
         },
         "required" : [ "password" ],
+        "type" : "object"
+      },
+      "NewPlay" : {
+        "properties" : {
+          "gameId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "group" : {
+            "$ref" : "#/components/schemas/GroupEntry",
+            "description" : "For a Cooperative Play: how it ended for the group"
+          },
+          "location" : {
+            "description" : "Where it was played, in your own words",
+            "maxLength" : 100,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "notes" : {
+            "maxLength" : 2000,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "playedOn" : {
+            "description" : "The day it was played. Not later than today.",
+            "format" : "date",
+            "type" : "string"
+          },
+          "players" : {
+            "description" : "Who played, in the order you want them listed",
+            "items" : {
+              "$ref" : "#/components/schemas/PlayerEntry"
+            },
+            "maxItems" : 100,
+            "minItems" : 0,
+            "type" : "array"
+          },
+          "recordingMode" : {
+            "enum" : [ "POINTS", "WINNER_ONLY" ],
+            "type" : "string"
+          },
+          "setup" : {
+            "additionalProperties" : {
+              "type" : "string"
+            },
+            "description" : "The Setup: the value chosen for each Variant, by the Variant's key. The keys are the Game Module's. The Generic Module has the on/off Variants \"cooperative\" and \"lowestScoreWins\", each \"true\" or \"false\".",
+            "type" : "object"
+          }
+        },
+        "required" : [ "gameId", "playedOn", "players", "recordingMode", "setup" ],
         "type" : "object"
       },
       "NewResetLink" : {
@@ -272,6 +375,62 @@
         "required" : [ "username" ],
         "type" : "object"
       },
+      "Play" : {
+        "properties" : {
+          "cooperative" : {
+            "description" : "Whether the Players won or lost together",
+            "type" : "boolean"
+          },
+          "game" : {
+            "$ref" : "#/components/schemas/NamedReference"
+          },
+          "group" : {
+            "$ref" : "#/components/schemas/GroupResult",
+            "description" : "For a Cooperative Play: how it ended for the group"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "location" : {
+            "type" : "string"
+          },
+          "notes" : {
+            "type" : "string"
+          },
+          "playedOn" : {
+            "format" : "date",
+            "type" : "string"
+          },
+          "recordedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "recordedBy" : {
+            "$ref" : "#/components/schemas/NamedReference",
+            "description" : "The Player of the Account that recorded it"
+          },
+          "recordingMode" : {
+            "enum" : [ "POINTS", "WINNER_ONLY" ],
+            "type" : "string"
+          },
+          "results" : {
+            "description" : "One per Player, in the order they were entered",
+            "items" : {
+              "$ref" : "#/components/schemas/Result"
+            },
+            "type" : "array"
+          },
+          "setup" : {
+            "additionalProperties" : {
+              "type" : "string"
+            },
+            "type" : "object"
+          }
+        },
+        "required" : [ "cooperative", "game", "id", "playedOn", "recordedAt", "recordedBy", "recordingMode", "results", "setup" ],
+        "type" : "object"
+      },
       "Player" : {
         "properties" : {
           "id" : {
@@ -283,6 +442,28 @@
           }
         },
         "required" : [ "id", "name" ],
+        "type" : "object"
+      },
+      "PlayerEntry" : {
+        "properties" : {
+          "playerId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "scores" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "The value for each Score Category, by the category's key. The Generic Module has one, \"total\". Leave it out when only the winner is recorded.",
+            "type" : "object"
+          },
+          "winner" : {
+            "description" : "Whether you mark this Player as a winner. With Recording Mode WINNER_ONLY that is the Result. With POINTS it decides a tie for first place.",
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "playerId", "winner" ],
         "type" : "object"
       },
       "PlayerRequest" : {
@@ -311,6 +492,10 @@
               "$ref" : "#/components/schemas/FieldProblem"
             },
             "type" : "array"
+          },
+          "reason" : {
+            "description" : "For the code plays.invalidEntry: why the Game Module refused the Play, as a name in that module's texts, such as generic.invalid.winnerMissing",
+            "type" : "string"
           },
           "status" : {
             "description" : "The HTTP status",
@@ -364,6 +549,41 @@
           }
         },
         "required" : [ "playerId" ],
+        "type" : "object"
+      },
+      "Result" : {
+        "description" : "What one Player got in a Play",
+        "properties" : {
+          "markedWinner" : {
+            "description" : "As entered: whether the recorder marked the Player as a winner",
+            "type" : "boolean"
+          },
+          "placing" : {
+            "description" : "Absent in a Cooperative Play, and when only the winner was recorded",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "player" : {
+            "$ref" : "#/components/schemas/NamedReference"
+          },
+          "scores" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "As entered: the value for each Score Category",
+            "type" : "object"
+          },
+          "total" : {
+            "description" : "Absent when no scores were recorded for the Player",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "won" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "markedWinner", "player", "scores", "won" ],
         "type" : "object"
       },
       "Role" : {
@@ -1262,6 +1482,84 @@
         },
         "summary" : "Rename a Player",
         "tags" : [ "Players" ]
+      }
+    },
+    "/api/plays" : {
+      "post" : {
+        "description" : "The Game's Game Module works out the Results from what is entered. What it refuses is answered with the code plays.invalidEntry and the module's reason.",
+        "operationId" : "recordPlay",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/NewPlay"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Play"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Record a Play",
+        "tags" : [ "Plays" ]
+      }
+    },
+    "/api/plays/{id}" : {
+      "get" : {
+        "operationId" : "getPlay",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Play"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Show a Play with its Results",
+        "tags" : [ "Plays" ]
       }
     },
     "/api/registration/{token}" : {

@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 
 import io.github.oliverjuhasz.boardkeeper.gameapi.GameModule;
+import io.github.oliverjuhasz.boardkeeper.gameapi.Outcome;
+import io.github.oliverjuhasz.boardkeeper.gameapi.PlayEntry;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -62,5 +64,12 @@ class GameModulesTests {
                 .withMessageContaining("i18n/untranslated_en.properties");
     }
 
-    private record FakeModule(UUID id, String key) implements GameModule {}
+    /** A Game Module that is only there to be found: nothing here scores a Play with it. */
+    private record FakeModule(UUID id, String key) implements GameModule {
+
+        @Override
+        public Outcome score(PlayEntry entry) {
+            throw new UnsupportedOperationException();
+        }
+    }
 }

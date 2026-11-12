@@ -29,6 +29,9 @@ class ProblemHandler extends ResponseEntityExceptionHandler {
     ProblemDetail handle(Problem problem) {
         ProblemDetail detail = ProblemDetail.forStatus(problem.status());
         detail.setProperty("code", problem.code());
+        if (problem.reason() != null) {
+            detail.setProperty("reason", problem.reason());
+        }
         return detail;
     }
 

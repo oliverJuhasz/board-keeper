@@ -30,6 +30,7 @@ class TableOwnershipTests {
     private static final Map<String, Set<String>> TABLES_OF = Map.of(
             "games", Set.of("Game"),
             "players", Set.of("Player"),
+            "plays", Set.of("Play", "PlayResult"),
             "accounts", Set.of("Account", "AccountRole", "Role", "RolePermission", "Invite", "PasswordReset"));
 
     private static final String ROOT = "io.github.oliverjuhasz.boardkeeper";
