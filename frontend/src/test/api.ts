@@ -1,5 +1,14 @@
 import { http, HttpResponse } from "msw"
-import type { Account, CurrentAccount, Game, GameModule, Invite, Player, Role } from "@/api/client"
+import type {
+  Account,
+  CurrentAccount,
+  Game,
+  GameModule,
+  Invite,
+  Play,
+  Player,
+  Role,
+} from "@/api/client"
 import { server } from "./server"
 
 // Ready-made answers of the pretend backend, for tests to combine.
@@ -152,4 +161,66 @@ export function accountsAre(accounts: Account[], roles: Role[] = [adminRole, mem
     http.get("*/api/players", () => HttpResponse.json([annaPlayer, bencePlayer, doraPlayer])),
   )
   return state
+}
+
+/** What the page for recording a Play loads besides the Games: the Players and the Game Modules' texts. */
+export function playCanBeEntered(gameModuleTexts: Record<string, string> = {}) {
+  server.use(
+    http.get("*/api/players", () => HttpResponse.json([annaPlayer, bencePlayer, doraPlayer])),
+    http.get("*/api/game-modules/texts/:language", () => HttpResponse.json(gameModuleTexts)),
+  )
+}
+
+/** A competitive Play of Calico in points, recorded by Bence: Anna won, Dora came second. */
+export const calicoPlay: Play = {
+  id: "0193a000-0000-7000-8000-0000000000f1",
+  game: { id: calico.id, name: calico.name },
+  playedOn: "2026-03-14",
+  location: "At Dora's",
+  notes: "Dora's first play.",
+  recordingMode: "POINTS",
+  setup: { cooperative: "false", lowestScoreWins: "false" },
+  cooperative: false,
+  results: [
+    {
+      player: doraPlayer,
+      scores: { total: 61 },
+      markedWinner: false,
+      total: 61,
+      placing: 2,
+      won: false,
+    },
+    {
+      player: annaPlayer,
+      scores: { total: 74 },
+      markedWinner: false,
+      total: 74,
+      placing: 1,
+      won: true,
+    },
+  ],
+  recordedBy: bencePlayer,
+  recordedAt: "2026-03-14T12:00:00Z",
+}
+
+/** A Cooperative Play of Pandemic that was lost, with a score for the group. */
+export const pandemicPlay: Play = {
+  id: "0193a000-0000-7000-8000-0000000000f2",
+  game: { id: pandemic.id, name: pandemic.name },
+  playedOn: "2026-03-15",
+  recordingMode: "POINTS",
+  setup: { cooperative: "true", lowestScoreWins: "false" },
+  cooperative: true,
+  group: { won: false, scores: { total: 17 }, total: 17 },
+  results: [
+    { player: annaPlayer, scores: {}, markedWinner: false, won: false },
+    { player: bencePlayer, scores: {}, markedWinner: false, won: false },
+  ],
+  recordedBy: annaPlayer,
+  recordedAt: "2026-03-15T12:00:00Z",
+}
+
+/** Answers a request for this Play. */
+export function playIs(play: Play) {
+  server.use(http.get(`*/api/plays/${play.id}`, () => HttpResponse.json(play)))
 }

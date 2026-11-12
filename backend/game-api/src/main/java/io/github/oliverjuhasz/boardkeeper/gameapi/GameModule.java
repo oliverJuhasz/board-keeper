@@ -10,8 +10,9 @@ import java.util.UUID;
  * {@code META-INF/services/io.github.oliverjuhasz.boardkeeper.gameapi.GameModule}, and the
  * class has a public no-argument constructor.
  *
- * <p>This is the skeleton of the contract: identity only. How a module describes and scores
- * its Game is added in milestone M3.
+ * <p>So far the contract covers a module's identity and its scoring. How a module describes
+ * its Game to the people recording a Play (its Variants, Expansions and Score Categories) is
+ * added in milestone M3.
  */
 public interface GameModule {
 
@@ -28,4 +29,16 @@ public interface GameModule {
      * {@code hu}. English is required.
      */
     String key();
+
+    /**
+     * Works out how a Play ended from what was entered for it.
+     *
+     * <p>The answer must depend on the entry alone: the core stores it, and runs this method
+     * again over the same entry when someone asks for a Recalculation (ADR 0010). A module
+     * therefore keeps no state and looks nothing up.
+     *
+     * @throws InvalidPlayException when the entry breaks the Game's rules, for example because a
+     *     score is missing
+     */
+    Outcome score(PlayEntry entry);
 }

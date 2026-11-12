@@ -6,7 +6,6 @@ import { useTranslation } from "react-i18next"
 import { z } from "zod"
 import { api, type Game } from "@/api/client"
 import { FormProblem } from "@/components/FormProblem"
-import { RadioField } from "@/components/RadioField"
 import { TextField } from "@/components/TextField"
 import { Button } from "@/components/ui/button"
 import {
@@ -20,6 +19,8 @@ import {
 } from "@/components/ui/dialog"
 import { FieldGroup } from "@/components/ui/field"
 import { gameName } from "@/features/session/accountRules"
+import { asksWhoWins, type Recording } from "./recordedAs"
+import { RecordingChoices } from "./RecordingChoices"
 
 const gameForm = z.object({ name: gameName })
 
@@ -34,13 +35,11 @@ export function GameDialog({ game, onClose }: { game?: Game; onClose: () => void
     resolver: zodResolver(gameForm),
     defaultValues: { name: game?.name ?? "" },
   })
-  const [kind, setKind] = useState<"competitive" | "cooperative">(
-    game?.cooperative ? "cooperative" : "competitive",
-  )
-  const [recordingMode, setRecordingMode] = useState(game?.recordingMode ?? "POINTS")
-  const [winner, setWinner] = useState<"highest" | "lowest">(
-    game?.lowestScoreWins ? "lowest" : "highest",
-  )
+  const [recording, setRecording] = useState<Recording>({
+    cooperative: game?.cooperative ?? false,
+    recordingMode: game?.recordingMode ?? "POINTS",
+    lowestScoreWins: game?.lowestScoreWins ?? false,
+  })
 
   const onSuccess = () => {
     void queryClient.invalidateQueries({ queryKey: ["get", "/api/games"] })
@@ -49,16 +48,12 @@ export function GameDialog({ game, onClose }: { game?: Game; onClose: () => void
   const create = api.useMutation("post", "/api/games", { onSuccess })
   const update = api.useMutation("put", "/api/games/{id}", { onSuccess })
 
-  const cooperative = kind === "cooperative"
-  // "Who wins" only makes sense when players compete on points.
-  const asksWhoWins = !cooperative && recordingMode === "POINTS"
-
   const submit = form.handleSubmit(({ name }) => {
     const body = {
       name,
-      cooperative,
-      recordingMode,
-      lowestScoreWins: asksWhoWins && winner === "lowest",
+      ...recording,
+      // A choice made earlier, and hidden since, doesn't count.
+      lowestScoreWins: asksWhoWins(recording) && recording.lowestScoreWins,
     }
     if (game) {
       update.mutate({ params: { path: { id: game.id } }, body })
@@ -90,53 +85,7 @@ export function GameDialog({ game, onClose }: { game?: Game; onClose: () => void
               error={form.formState.errors.name}
               {...form.register("name")}
             />
-            <RadioField
-              legend={t("games.dialog.kind")}
-              value={kind}
-              onChange={setKind}
-              options={[
-                {
-                  value: "competitive",
-                  label: t("games.dialog.competitive"),
-                  hint: t("games.dialog.competitiveHint"),
-                },
-                {
-                  value: "cooperative",
-                  label: t("games.dialog.cooperative"),
-                  hint: t("games.dialog.cooperativeHint"),
-                },
-              ]}
-            />
-            <RadioField
-              legend={t("games.dialog.recording")}
-              value={recordingMode}
-              onChange={setRecordingMode}
-              options={[
-                {
-                  value: "POINTS",
-                  label: t("games.dialog.points"),
-                  hint: t("games.dialog.pointsHint"),
-                },
-                {
-                  value: "WINNER_ONLY",
-                  label: cooperative
-                    ? t("games.dialog.wonOrLostOnly")
-                    : t("games.dialog.winnerOnly"),
-                  hint: t("games.dialog.outcomeHint"),
-                },
-              ]}
-            />
-            {asksWhoWins && (
-              <RadioField
-                legend={t("games.dialog.winner")}
-                value={winner}
-                onChange={setWinner}
-                options={[
-                  { value: "highest", label: t("games.dialog.highest") },
-                  { value: "lowest", label: t("games.dialog.lowest") },
-                ]}
-              />
-            )}
+            <RecordingChoices value={recording} onChange={setRecording} />
             <DialogFooter>
               <DialogClose render={<Button type="button" variant="outline" />}>
                 {t("common.cancel")}

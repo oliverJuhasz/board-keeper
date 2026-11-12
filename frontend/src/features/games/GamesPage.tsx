@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next"
 import { api, type Game } from "@/api/client"
 import { ActionsMenu } from "@/components/ActionsMenu"
 import { ConfirmDialog } from "@/components/ConfirmDialog"
+import { LinkButton } from "@/components/LinkButton"
 import { PageHeader } from "@/components/PageHeader"
 import { QueryState } from "@/components/QueryState"
 import { Button } from "@/components/ui/button"
@@ -19,6 +20,7 @@ import {
 } from "@/components/ui/table"
 import { useCan } from "@/features/session/useSession"
 import { GameDialog } from "./GameDialog"
+import { useRecordedAs } from "./recordedAs"
 
 type OpenDialog = { kind: "add" } | { kind: "edit" | "remove"; game: Game } | undefined
 
@@ -27,6 +29,7 @@ export function GamesPage() {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const can = useCan()
+  const recordedAs = useRecordedAs()
   const [dialog, setDialog] = useState<OpenDialog>()
   const games = api.useQuery("get", "/api/games")
   const close = () => setDialog(undefined)
@@ -37,21 +40,6 @@ export function GamesPage() {
       close()
     },
   })
-
-  /** How a Game's Plays are recorded by default, in a few words. */
-  function recordedAs(game: Game) {
-    if (game.cooperative) {
-      return game.recordingMode === "POINTS"
-        ? t("games.recordedAs.cooperativeScore")
-        : t("games.recordedAs.cooperativeWonLost")
-    }
-    if (game.recordingMode === "WINNER_ONLY") {
-      return t("games.recordedAs.winnerOnly")
-    }
-    return game.lowestScoreWins
-      ? t("games.recordedAs.pointsLowest")
-      : t("games.recordedAs.pointsHighest")
-  }
 
   return (
     <div className="space-y-6">
@@ -77,7 +65,8 @@ export function GamesPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>{t("games.name")}</TableHead>
-                  <TableHead>{t("games.recorded")}</TableHead>
+                  {/* Left out on a phone, where the row needs its width for the buttons. */}
+                  <TableHead className="hidden sm:table-cell">{t("games.recorded")}</TableHead>
                   <TableHead />
                 </TableRow>
               </TableHeader>
@@ -85,25 +74,38 @@ export function GamesPage() {
                 {games.data?.map((game) => (
                   <TableRow key={game.id}>
                     <TableCell className="font-medium">{game.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{recordedAs(game)}</TableCell>
-                    <TableCell className="text-right">
-                      {(can("EDIT_GAMES") || can("REMOVE_GAMES")) && (
-                        <ActionsMenu label={t("games.actions", { name: game.name })}>
-                          {can("EDIT_GAMES") && (
-                            <DropdownMenuItem onClick={() => setDialog({ kind: "edit", game })}>
-                              {t("games.edit")}
-                            </DropdownMenuItem>
-                          )}
-                          {can("REMOVE_GAMES") && (
-                            <DropdownMenuItem
-                              variant="destructive"
-                              onClick={() => setDialog({ kind: "remove", game })}
-                            >
-                              {t("games.remove")}
-                            </DropdownMenuItem>
-                          )}
-                        </ActionsMenu>
-                      )}
+                    <TableCell className="hidden text-muted-foreground sm:table-cell">
+                      {recordedAs(game)}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center justify-end gap-1">
+                        {can("CREATE_PLAYS") && (
+                          <LinkButton
+                            to={`/plays/new?game=${game.id}`}
+                            size="sm"
+                            aria-label={t("plays.record.actionFor", { name: game.name })}
+                          >
+                            {t("plays.record.action")}
+                          </LinkButton>
+                        )}
+                        {(can("EDIT_GAMES") || can("REMOVE_GAMES")) && (
+                          <ActionsMenu label={t("games.actions", { name: game.name })}>
+                            {can("EDIT_GAMES") && (
+                              <DropdownMenuItem onClick={() => setDialog({ kind: "edit", game })}>
+                                {t("games.edit")}
+                              </DropdownMenuItem>
+                            )}
+                            {can("REMOVE_GAMES") && (
+                              <DropdownMenuItem
+                                variant="destructive"
+                                onClick={() => setDialog({ kind: "remove", game })}
+                              >
+                                {t("games.remove")}
+                              </DropdownMenuItem>
+                            )}
+                          </ActionsMenu>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

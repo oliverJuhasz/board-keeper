@@ -4,6 +4,7 @@ import static io.github.oliverjuhasz.boardkeeper.jooq.Tables.PLAYER;
 import static org.jooq.impl.DSL.lower;
 
 import io.github.oliverjuhasz.boardkeeper.players.Player;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -31,6 +32,13 @@ public class PlayerRepository {
                 .from(PLAYER)
                 .where(PLAYER.ID.eq(id))
                 .fetchOptional(row -> new Player(row.value1(), row.value2()));
+    }
+
+    public List<Player> findAll(Collection<UUID> ids) {
+        return dsl.select(PLAYER.ID, PLAYER.NAME)
+                .from(PLAYER)
+                .where(PLAYER.ID.in(ids))
+                .fetch(row -> new Player(row.value1(), row.value2()));
     }
 
     /** The Player with this name, whatever its capitals. */

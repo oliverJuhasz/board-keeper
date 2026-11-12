@@ -37,6 +37,11 @@ class ProblemApiDocumentation {
             @Schema(description = "The HTTP status") int status,
             @Schema(description = "What went wrong, as a code for the frontend to translate, such as players.nameTaken")
                     String code,
+            @Schema(
+                            description =
+                                    "For the code plays.invalidEntry: why the Game Module refused the Play, as a name in that"
+                                            + " module's texts, such as generic.invalid.winnerMissing")
+                    String reason,
             @Schema(description = "For the code request.invalid: the fields that broke a rule") List<FieldProblemResponse> errors,
             String title,
             String detail) {}

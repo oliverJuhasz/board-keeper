@@ -99,6 +99,17 @@ The jOOQ classes for every table are generated into one shared package, so any m
 
 Game Modules are plain Java, with no Spring. The core finds them with Java's `ServiceLoader`: each module's jar names its class in `META-INF/services/io.github.oliverjuhasz.boardkeeper.gameapi.GameModule`. At startup, `GameModules` checks them all, and the application refuses to start if two share an id or a key, or if one has no English translation file.
 
+### How a Play is recorded
+
+1. The frontend sends `POST /api/plays` with the Game, the date, the Players, and what was entered about how it went. That last part has the same shape for every Game Module: a Recording Mode, the Setup as a value for each Variant, the scores of each Player by Score Category, and for a Cooperative Play the group's result.
+2. `Plays.record`, in the `plays` module, checks what the core knows about: that the Game and the Players exist, that nobody is entered twice, and that the date is not in the future.
+3. It hands the entry to the Game's Game Module: `GameModule.score(PlayEntry)` answers with an `Outcome`, or throws an `InvalidPlayException` with the module's reason. The core passes that on as the Problem `plays.invalidEntry`, with the reason as a name in the module's own texts, such as `generic.invalid.winnerMissing`.
+4. The Play is stored with both what was entered and what the module calculated ([ADR 0010](adr/0010-results-stored-recalculated-on-request.md)). The parts whose names belong to the Game Module, the Setup and the scores by Score Category, are kept in `jsonb` columns; `JsonColumns` converts them to and from Java maps.
+
+`Outcome` is a `sealed` interface with two records, `Competitive` and `Cooperative`. Sealed means the compiler knows these are the only two kinds, so the `switch` in `Plays.record` must handle both and needs no `default`.
+
+`PlayRepository` reads a Play together with its Results in one query, using jOOQ's `multiset`.
+
 ### Changing the database
 
 1. Add a file to `backend/app/src/main/resources/db/migration`, named `V<next number>__<what_it_does>.sql`, with two underscores after the number. Never edit a migration that has been applied to a real database.
@@ -148,6 +159,8 @@ To add a Permission, add it to the `Permission` enum and to `frontend/src/featur
 throw Problem.conflict("players.nameTaken");
 ```
 
+`Problem.conflict` answers "409 Conflict", `Problem.notFound` "404 Not Found", and `Problem.unprocessable` "422 Unprocessable Content", for a request that is well-formed but asks for something that breaks a rule.
+
 Rules on a request's fields are annotations such as `@Size(min = 16)` on the request record, checked because the parameter is marked `@Valid`. The frontend's forms check the same rules first, with Zod, so the person sees the message next to the field without a round trip.
 
 **Tests.** `TestBrowser` calls the API as a browser would: it keeps cookies between requests and sends the CSRF token. `TestAccounts` creates Accounts, and `TestDatabase.empty()` clears the database between tests that make several requests. A test that only needs "someone is signed in" can use `@WithMockUser` instead.
@@ -155,6 +168,12 @@ Rules on a request's fields are annotations such as `@Size(min = 16)` on the req
 ### Forms in the frontend
 
 A form is described once with Zod, which gives both the checks and the TypeScript type, and run by React Hook Form. `frontend/src/features/session/SignInPage.tsx` is the example to copy. `TextField` draws a labelled input with its hint and error; `FormProblem` shows why the server refused a submission.
+
+`frontend/src/features/plays/` is the example of a bigger form. Its rules and what it sends are in `playForm.ts`, apart from the page, so they can be tested without drawing anything. It uses three more parts of React Hook Form and Zod:
+
+- `useFieldArray` for the list of Players, where rows are added and removed;
+- `useWatch` to redraw when a field changes that others depend on, such as the Recording Mode;
+- Zod's `superRefine` for rules that involve several fields, such as "a competitive Play needs two Players".
 
 ### Building blocks for pages
 
@@ -167,7 +186,8 @@ New pages are put together from these, in `frontend/src/components/`. `frontend/
 | `ActionsMenu` | The "…" menu at the end of a table row |
 | `ConfirmDialog` | "Are you sure?" before something that can't be undone |
 | `LinkDialog` | Creating a one-time link and showing it to copy |
-| `TextField`, `CheckboxField` | A labelled input or checkbox with hint and error |
+| `LinkButton` | A link to another page that looks like a button |
+| `TextField`, `TextAreaField`, `CheckboxField`, `RadioField` | A labelled input, text box, checkbox or set of choices, with hint and error |
 | `FormProblem` | Why the server refused a submission |
 | `PageMessage` | A page that only has something to say |
 
@@ -189,7 +209,7 @@ return <p>{t("games.empty")}</p>
 
 TypeScript knows the names from `en.json`, so a misspelt name does not compile.
 
-**A Game Module's texts** are in the module itself, in `i18n/<key>_en.properties`, `_nl` and `_hu`, saved as UTF-8. Every name starts with the module's key, such as `calico.name`. English is required; a text missing in Dutch or Hungarian is shown in English, and the backend logs a warning at startup. The frontend loads these texts from `/api/game-modules/texts/{language}` through the `useGameModuleTexts` hook.
+**A Game Module's texts** are in the module itself, in `i18n/<key>_en.properties`, `_nl` and `_hu`, saved as UTF-8. Every name starts with the module's key, such as `calico.name`. English is required; a text missing in Dutch or Hungarian is shown in English, and the backend logs a warning at startup. The frontend loads these texts from `/api/game-modules/texts/{language}` through the `useGameModuleTexts` hook, in `frontend/src/features/games/`.
 
 **Which language is shown:** the one chosen with the switcher, which the browser remembers; otherwise the browser's own language; otherwise English. `frontend/src/i18n/index.ts` sets this up. The backend's list of languages is the `Language` enum.
 
@@ -207,13 +227,15 @@ This writes `frontend/src/components/ui/dialog.tsx`. Run `npm run format` afterw
 
 ### Adding a Game Module
 
-The contract is only identity for now; milestone M3 adds scoring.
+The contract, in `backend/game-api`, covers a module's identity and its scoring. How a module describes its Game to the frontend (its Variants, Expansions and Score Categories) comes in milestone M3; until then the frontend's form only knows the Generic Module.
 
 1. Copy `backend/games/generic` to `backend/games/<key>` and rename the artifact to `game-<key>`.
 2. Give the module a newly generated UUID. It is stored with every Play, so it never changes afterwards ([ADR 0012](adr/0012-game-module-uuid-and-key.md)).
 3. Name the module's class in its `META-INF/services` file.
-4. Add `i18n/<key>_en.properties`, and the same for `nl` and `hu`, with at least `<key>.name`.
-5. Register it in three places: as a `<module>` and under `<dependencyManagement>` in `backend/pom.xml`, and as a `runtime` dependency in `backend/app/pom.xml`.
+4. Implement `score`. It must depend on the entry alone, because a Recalculation runs it again over the stored entry. Refuse an entry that breaks the Game's rules by throwing `InvalidPlayException` with a short reason. Take the rules from the Game's official rulebook.
+5. Add `i18n/<key>_en.properties`, and the same for `nl` and `hu`, with at least `<key>.name` and a text `<key>.invalid.<reason>` for every reason `score` can give.
+6. Test the scoring with plain unit tests, as `GenericScoringTests` does. A Game Module needs no Spring and no database.
+7. Register it in three places: as a `<module>` and under `<dependencyManagement>` in `backend/pom.xml`, and as a `runtime` dependency in `backend/app/pom.xml`.
 
 ## Continuous integration
 

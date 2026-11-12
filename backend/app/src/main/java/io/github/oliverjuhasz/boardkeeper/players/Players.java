@@ -2,9 +2,13 @@ package io.github.oliverjuhasz.boardkeeper.players;
 
 import io.github.oliverjuhasz.boardkeeper.players.internal.PlayerRepository;
 import io.github.oliverjuhasz.boardkeeper.problems.Problem;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
@@ -32,6 +36,11 @@ public class Players {
 
     public Optional<Player> find(UUID id) {
         return repository.find(id);
+    }
+
+    /** The Players with these ids, by id. An id that no Player has is simply missing from the answer. */
+    public Map<UUID, Player> find(Collection<UUID> ids) {
+        return repository.findAll(ids).stream().collect(Collectors.toMap(Player::id, Function.identity()));
     }
 
     /**
@@ -70,7 +79,7 @@ public class Players {
     }
 
     /**
-     * Removes a Player that nothing refers to. A Player with an Account, or (later) with Plays,
+     * Removes a Player that nothing refers to. A Player with an Account, or with Plays,
      * is protected by the database's foreign keys and reported as {@code players.inUse}.
      */
     @Transactional

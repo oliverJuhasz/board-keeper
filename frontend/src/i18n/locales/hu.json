@@ -18,32 +18,11 @@
     "actions": "Műveletek: {{name}}",
     "edit": "Szerkesztés",
     "remove": "Eltávolítás",
-    "recordedAs": {
-      "pointsHighest": "Pontok, a legtöbb nyer",
-      "pointsLowest": "Pontok, a legkevesebb nyer",
-      "winnerOnly": "Csak a győztes",
-      "cooperativeScore": "Kooperatív, pontszámmal",
-      "cooperativeWonLost": "Kooperatív, győzelem vagy vereség"
-    },
     "dialog": {
       "addTitle": "Játék hozzáadása",
       "addDescription": "Olyan játékhoz, amelyhez a Board Keepernek nincs saját pontozása. Összpontszámot vagy a győztest rögzítheted.",
       "editTitle": "{{name}} szerkesztése",
       "defaultsHint": "Ezek az új partik kiinduló beállításai. Aki a partit rögzíti, az adott partira megváltoztathatja őket.",
-      "kind": "A játék típusa",
-      "competitive": "Kompetitív",
-      "competitiveHint": "A játékosok egymás ellen játszanak.",
-      "cooperative": "Kooperatív",
-      "cooperativeHint": "Mindenki együtt nyer vagy veszít, a játék ellen.",
-      "recording": "Mit rögzítünk",
-      "points": "Pontok",
-      "pointsHint": "Játékosonként egy pontszám, kooperatív játéknál egy a csapatnak.",
-      "winnerOnly": "Csak a győztes",
-      "wonOrLostOnly": "Csak győzelem vagy vereség",
-      "outcomeHint": "Pontszámok nélkül, csak a végeredmény.",
-      "winner": "Ki nyer",
-      "highest": "A legmagasabb pontszám",
-      "lowest": "A legalacsonyabb pontszám",
       "submitAdd": "Játék hozzáadása",
       "submitEdit": "Játék mentése"
     },
@@ -51,6 +30,90 @@
       "title": "Eltávolítod: {{name}}?",
       "description": "Ezt nem lehet visszavonni.",
       "confirm": "Játék eltávolítása"
+    }
+  },
+  "recording": {
+    "as": {
+      "pointsHighest": "Pontok, a legtöbb nyer",
+      "pointsLowest": "Pontok, a legkevesebb nyer",
+      "winnerOnly": "Csak a győztes",
+      "cooperativeScore": "Kooperatív, pontszámmal",
+      "cooperativeWonLost": "Kooperatív, győzelem vagy vereség"
+    },
+    "kind": "A játék típusa",
+    "competitive": "Kompetitív",
+    "competitiveHint": "A játékosok egymás ellen játszanak.",
+    "cooperative": "Kooperatív",
+    "cooperativeHint": "Mindenki együtt nyer vagy veszít, a játék ellen.",
+    "recording": "Mit rögzítünk",
+    "points": "Pontok",
+    "pointsHint": "Játékosonként egy pontszám, kooperatív játéknál egy a csapatnak.",
+    "winnerOnly": "Csak a győztes",
+    "wonOrLostOnly": "Csak győzelem vagy vereség",
+    "outcomeHint": "Pontszámok nélkül, csak a végeredmény.",
+    "winner": "Ki nyer",
+    "highest": "A legmagasabb pontszám",
+    "lowest": "A legalacsonyabb pontszám"
+  },
+  "plays": {
+    "record": {
+      "action": "Parti rögzítése",
+      "actionFor": "Parti rögzítése: {{name}}",
+      "title": "Parti rögzítése",
+      "description": "{{game}}: kik játszottak, és hogyan végződött.",
+      "loading": "A játék és a játékosok betöltése",
+      "loadFailed": "Nem sikerült betölteni, ami a parti rögzítéséhez kell",
+      "noGame": {
+        "title": "Melyik játék?",
+        "text": "A parti rögzítését a Játékok oldalon, a játék soránál kezdheted el.",
+        "link": "Ugrás a Játékokhoz"
+      },
+      "date": "Dátum",
+      "location": "Helyszín",
+      "locationHint": "Nem kötelező. Hol játszottatok, a saját szavaiddal.",
+      "notes": "Jegyzetek",
+      "notesHint": "Nem kötelező. Bármi, amire emlékezni szeretnél erről a partiról.",
+      "recordedAs": "Rögzítés módja",
+      "change": "Módosítás",
+      "changeHint": "Csak erre a partira. A játék megtartja a saját beállításait.",
+      "players": "Játékosok",
+      "noPlayers": "Még senki. Add hozzá mindenkit, aki játszott.",
+      "addPlayer": "Játékos hozzáadása",
+      "choosePlayer": "Válassz játékost…",
+      "everyoneAdded": "Már minden játékos szerepel ebben a partiban. Új játékost a Játékosok oldalon adhatsz hozzá.",
+      "removePlayer": "{{name}} eltávolítása",
+      "score": "Pontszám",
+      "scoreOf": "{{name}} pontszáma",
+      "won": "Nyert",
+      "wonBy": "{{name}} nyert",
+      "tie": {
+        "legend": "Holtverseny az első helyen",
+        "hint": "Válaszd ki, ki nyerte a holtversenyt, vagy hagyd megosztva a győzelmet.",
+        "shared": "Megosztott győzelem"
+      },
+      "outcome": "Hogyan végződött?",
+      "outcomeWon": "A csapat nyert",
+      "outcomeLost": "A csapat veszített",
+      "groupScore": "Pontszám",
+      "groupScoreHint": "Nem kötelező. Egy pontszám az egész csapatnak.",
+      "submit": "Parti rögzítése"
+    },
+    "page": {
+      "loading": "A parti betöltése",
+      "loadFailed": "Nem sikerült betölteni a partit",
+      "results": "Eredmények",
+      "placing": "Helyezés",
+      "player": "Játékos",
+      "score": "Pontszám",
+      "winner": "Győztes",
+      "wonTogether": "Közös győzelem",
+      "lostTogether": "Közös vereség",
+      "groupScore": "Pontszám: {{score}}",
+      "players": "Játékosok",
+      "notes": "Jegyzetek",
+      "recordedBy": "Rögzítette: {{name}}, {{date}}.",
+      "recordAnother": "Újabb parti rögzítése",
+      "backToGames": "Vissza a játékokhoz"
     }
   },
   "notFound": {
@@ -113,7 +176,16 @@
     "passwordTooShort": "Legalább 16 karaktert használj.",
     "passwordTooLong": "Legfeljebb 200 karaktert használj.",
     "nameTooLong": "Legfeljebb 50 karaktert használj.",
-    "gameNameTooLong": "Legfeljebb 100 karaktert használj."
+    "gameNameTooLong": "Legfeljebb 100 karaktert használj.",
+    "scoreRequired": "Adj meg egy pontszámot.",
+    "wholeNumber": "Egész számot adj meg.",
+    "playersTooFew": "Adj hozzá legalább két játékost.",
+    "playerRequired": "Adj hozzá legalább egy játékost.",
+    "winnerRequired": "Jelölj meg legalább egy győztest.",
+    "outcomeRequired": "Add meg, hogy a csapat nyert-e vagy veszített.",
+    "dateInFuture": "A dátum nem lehet a jövőben.",
+    "locationTooLong": "Legfeljebb 100 karaktert használj.",
+    "notesTooLong": "Legfeljebb 2000 karaktert használj."
   },
   "problems": {
     "unknown": "Valami hiba történt. Próbáld újra.",
@@ -164,6 +236,13 @@
       "nameTaken": "Már van ilyen nevű játék.",
       "notFound": "Ez a játék már nem létezik.",
       "inUse": "Ezt a játékot nem lehet eltávolítani: már rögzítettek hozzá partikat."
+    },
+    "plays": {
+      "invalidEntry": "Ezek az eredmények nem állnak össze. Nézd át őket, és próbáld újra.",
+      "playerTwice": "Egy játékos csak egyszer szerepelhet egy partiban.",
+      "dateInFuture": "A dátum nem lehet a jövőben.",
+      "gameModuleMissing": "A Board Keeper ezen verziója nem tudja pontozni ezt a játékot.",
+      "notFound": "Ez a parti már nem létezik."
     }
   },
   "nav": {
