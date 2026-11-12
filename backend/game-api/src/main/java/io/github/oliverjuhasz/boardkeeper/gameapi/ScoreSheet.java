@@ -1,0 +1,91 @@
+package io.github.oliverjuhasz.boardkeeper.gameapi;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * What is entered for a Play of a Game, described so that the core can check it and the
+ * frontend can draw a form for it: the Game's score pad, with what the pad itself leaves
+ * unsaid, such as how many can play and how a tie is decided.
+ *
+ * <p>The description holds only keys. The module's translation files hold what people read:
+ *
+ * <ul>
+ *   <li>{@code <module>.variant.<key>} for a Variant, and {@code <module>.variant.<key>.<option>}
+ *       for each option of a choice;
+ *   <li>{@code <module>.category.<key>} for a Score Category;
+ *   <li>{@code <module>.tie}, when {@code recorderDecidesTies} is set: how the Game decides a
+ *       tie, for the recorder who is asked to say who won it.
+ * </ul>
+ *
+ * @param minPlayers the fewest Players a Play can have
+ * @param maxPlayers the most Players a Play can have; null when there is no limit
+ * @param variants the Variants a recorder chooses from, in the order to offer them
+ * @param categories the Score Categories, in the order of the score pad
+ * @param tieBreakers how Players with equal totals are put in order, first one first. Empty when
+ *     nothing that is entered can decide a tie.
+ * @param recorderDecidesTies whether a tie for first place that is left after the
+ *     {@code tieBreakers} is decided by something that is not entered. If so, the recorder is
+ *     asked who won it. If not, such a tie is a shared win.
+ */
+public record ScoreSheet(
+        int minPlayers,
+        Integer maxPlayers,
+        List<Variant> variants,
+        List<ScoreCategory> categories,
+        List<TieBreaker> tieBreakers,
+        boolean recorderDecidesTies) {
+
+    public ScoreSheet {
+        variants = List.copyOf(variants);
+        categories = List.copyOf(categories);
+        tieBreakers = List.copyOf(tieBreakers);
+        if (minPlayers < 1 || (maxPlayers != null && maxPlayers < minPlayers)) {
+            throw new IllegalArgumentException("A score sheet is for at least one Player, and for no more than its maximum");
+        }
+
+        Set<String> variantKeys = new HashSet<>();
+        for (Variant variant : variants) {
+            if (!variantKeys.add(variant.key())) {
+                throw new IllegalArgumentException("Two Variants have the key '" + variant.key() + "'");
+            }
+        }
+        Set<String> categoryKeys = new HashSet<>();
+        for (ScoreCategory category : categories) {
+            if (!categoryKeys.add(category.key())) {
+                throw new IllegalArgumentException("Two Score Categories have the key '" + category.key() + "'");
+            }
+            ScoreCategory.OnlyWhen onlyWhen = category.onlyWhen();
+            if (onlyWhen != null && variants.stream().noneMatch(variant ->
+                    variant.key().equals(onlyWhen.variant()) && variant.allows(onlyWhen.value()))) {
+                throw new IllegalArgumentException("The Score Category '" + category.key()
+                        + "' depends on a Variant or a value that is not on the sheet");
+            }
+        }
+        for (TieBreaker tieBreaker : tieBreakers) {
+            if (!categoryKeys.contains(tieBreaker.category())) {
+                throw new IllegalArgumentException(
+                        "The Tie-breaker '" + tieBreaker.category() + "' is not a Score Category of the sheet");
+            }
+        }
+    }
+
+    /** The Score Categories that are on the pad for a Play with this Setup. */
+    public List<ScoreCategory> categoriesFor(Map<String, String> setup) {
+        return categories.stream()
+                .filter(category -> category.onlyWhen() == null
+                        || category.onlyWhen().value().equals(valueOf(category.onlyWhen().variant(), setup)))
+                .toList();
+    }
+
+    /** What a Setup holds for a Variant: what was chosen, or else the Variant's default. */
+    public String valueOf(String variantKey, Map<String, String> setup) {
+        Variant variant = variants.stream()
+                .filter(candidate -> candidate.key().equals(variantKey))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("No Variant '" + variantKey + "' on the sheet"));
+        return setup.getOrDefault(variantKey, variant.defaultValue());
+    }
+}

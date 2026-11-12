@@ -80,6 +80,18 @@ class GenericScoringTests {
         }
 
         @Test
+        void aTieForFirstPlaceIsTheRecordersToDecide() {
+            assertThat(tieForRecorder(entry(RecordingMode.POINTS, COMPETITIVE, scored(50), scored(20), scored(50))))
+                    .containsExactly(0, 2);
+            // The question stays open after it was answered, so the answer can be changed.
+            assertThat(tieForRecorder(entry(RecordingMode.POINTS, COMPETITIVE, tieWinner(50), scored(50))))
+                    .containsExactly(0, 1);
+            assertThat(tieForRecorder(entry(RecordingMode.POINTS, COMPETITIVE, scored(50), scored(20)))).isEmpty();
+            assertThat(tieForRecorder(entry(RecordingMode.POINTS, COMPETITIVE, scored(50), scored(20), scored(20))))
+                    .isEmpty();
+        }
+
+        @Test
         void aPlayerWithoutTheBestTotalCannotBeMarkedAsTheWinner() {
             assertRefused("winnerNotInFirstPlace", entry(RecordingMode.POINTS, COMPETITIVE, scored(50), tieWinner(20)));
             assertRefused("winnerNotInFirstPlace", entry(RecordingMode.POINTS, LOWEST_WINS, tieWinner(50), scored(20)));
@@ -223,6 +235,10 @@ class GenericScoringTests {
         Outcome outcome = module.score(entry);
         assertThat(outcome).isInstanceOf(Outcome.Competitive.class);
         return ((Outcome.Competitive) outcome).results();
+    }
+
+    private List<Integer> tieForRecorder(PlayEntry entry) {
+        return ((Outcome.Competitive) module.score(entry)).tieForRecorder();
     }
 
     private void assertRefused(String reason, PlayEntry entry) {
