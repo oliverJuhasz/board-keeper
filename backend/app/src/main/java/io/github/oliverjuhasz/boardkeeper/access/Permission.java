@@ -21,6 +21,12 @@ public enum Permission {
     /** Remove a Game that has no Plays. */
     REMOVE_GAMES(false),
     CREATE_PLAYS(false),
+    /** Edit or delete a Play that the Account recorded itself. */
+    CHANGE_PLAYS_RECORDED(false),
+    /** Edit or delete a Play that the Account's own Player took part in. */
+    CHANGE_PLAYS_TAKEN_PART_IN(false),
+    /** Edit or delete any Play, whoever recorded it or played in it. */
+    CHANGE_ANY_PLAY(false),
     /** Create and cancel Invites and Reset Links. */
     MANAGE_INVITES(true),
     /** See the Accounts, give and take their Roles, and disable them. */

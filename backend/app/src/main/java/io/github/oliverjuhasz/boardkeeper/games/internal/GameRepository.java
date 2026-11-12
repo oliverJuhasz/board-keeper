@@ -6,6 +6,7 @@ import static org.jooq.impl.DSL.lower;
 import io.github.oliverjuhasz.boardkeeper.gameapi.RecordingMode;
 import io.github.oliverjuhasz.boardkeeper.games.Game;
 import io.github.oliverjuhasz.boardkeeper.games.Game.RecordingDefaults;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -29,6 +30,10 @@ public class GameRepository {
 
     public Optional<Game> find(UUID id) {
         return selectGames().where(GAME.ID.eq(id)).fetchOptional(GameRepository::toGame);
+    }
+
+    public List<Game> findAll(Collection<UUID> ids) {
+        return selectGames().where(GAME.ID.in(ids)).fetch(GameRepository::toGame);
     }
 
     /** The Game with this name, whatever its capitals. */

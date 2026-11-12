@@ -35,6 +35,11 @@ public class Problem extends RuntimeException {
         return new Problem(HttpStatus.NOT_FOUND, code);
     }
 
+    /** The signed-in Account may not do this to this particular thing (403). */
+    public static Problem forbidden(String code) {
+        return new Problem(HttpStatus.FORBIDDEN, code);
+    }
+
     /** The request is well-formed, but what it asks for breaks a rule (422). */
     public static Problem unprocessable(String code) {
         return new Problem(HttpStatus.UNPROCESSABLE_CONTENT, code);

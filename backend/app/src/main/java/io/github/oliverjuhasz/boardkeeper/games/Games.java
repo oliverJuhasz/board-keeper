@@ -3,9 +3,13 @@ package io.github.oliverjuhasz.boardkeeper.games;
 import io.github.oliverjuhasz.boardkeeper.games.Game.RecordingDefaults;
 import io.github.oliverjuhasz.boardkeeper.games.internal.GameRepository;
 import io.github.oliverjuhasz.boardkeeper.problems.Problem;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
@@ -38,6 +42,11 @@ public class Games {
 
     public Optional<Game> find(UUID id) {
         return repository.find(id);
+    }
+
+    /** The Games with these ids, by id. An id that no Game has is simply missing from the answer. */
+    public Map<UUID, Game> find(Collection<UUID> ids) {
+        return repository.findAll(ids).stream().collect(Collectors.toMap(Game::id, Function.identity()));
     }
 
     @Transactional

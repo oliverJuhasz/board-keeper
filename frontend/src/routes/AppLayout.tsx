@@ -24,6 +24,9 @@ export function AppLayout() {
               <NavLink to="/" end className={navLink}>
                 {t("nav.games")}
               </NavLink>
+              <NavLink to="/plays" className={navLink}>
+                {t("nav.plays")}
+              </NavLink>
               <NavLink to="/players" className={navLink}>
                 {t("nav.players")}
               </NavLink>

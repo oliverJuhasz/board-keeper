@@ -33,6 +33,9 @@ export const anna: CurrentAccount = {
     "EDIT_GAMES",
     "REMOVE_GAMES",
     "CREATE_PLAYS",
+    "CHANGE_PLAYS_RECORDED",
+    "CHANGE_PLAYS_TAKEN_PART_IN",
+    "CHANGE_ANY_PLAY",
     "MANAGE_INVITES",
     "MANAGE_ACCOUNTS",
     "MANAGE_ROLES",
@@ -46,7 +49,14 @@ export const bence: CurrentAccount = {
   playerId: "0193a000-0000-7000-8000-0000000000b2",
   playerName: "Bence",
   language: "en",
-  permissions: ["CREATE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "CREATE_PLAYS"],
+  permissions: [
+    "CREATE_PLAYERS",
+    "CREATE_GAMES",
+    "EDIT_GAMES",
+    "CREATE_PLAYS",
+    "CHANGE_PLAYS_RECORDED",
+    "CHANGE_PLAYS_TAKEN_PART_IN",
+  ],
 }
 
 export function signedInAs(account: CurrentAccount) {
@@ -201,6 +211,7 @@ export const calicoPlay: Play = {
   ],
   recordedBy: bencePlayer,
   recordedAt: "2026-03-14T12:00:00Z",
+  canChange: true,
 }
 
 /** A Cooperative Play of Pandemic that was lost, with a score for the group. */
@@ -218,9 +229,31 @@ export const pandemicPlay: Play = {
   ],
   recordedBy: annaPlayer,
   recordedAt: "2026-03-15T12:00:00Z",
+  canChange: true,
 }
 
 /** Answers a request for this Play. */
 export function playIs(play: Play) {
   server.use(http.get(`*/api/plays/${play.id}`, () => HttpResponse.json(play)))
+}
+
+/**
+ * What the Plays page loads: the play history, and the Games and Players for its filters.
+ * Every request for the history is remembered, with the filters it asked for.
+ */
+export function historyIs(...pages: Play[][]) {
+  const asked: URLSearchParams[] = []
+  server.use(
+    http.get("*/api/plays", ({ request }) => {
+      const query = new URL(request.url).searchParams
+      asked.push(query)
+      // "after" is empty for the first page, and "page-2", "page-3" and so on after that.
+      const index = query.get("after") ? Number(query.get("after")?.slice(5)) - 1 : 0
+      const next = index + 1 < pages.length ? `page-${index + 2}` : undefined
+      return HttpResponse.json({ plays: pages[index] ?? [], next })
+    }),
+    http.get("*/api/games", () => HttpResponse.json([calico, pandemic])),
+    http.get("*/api/players", () => HttpResponse.json([annaPlayer, bencePlayer, doraPlayer])),
+  )
+  return asked
 }

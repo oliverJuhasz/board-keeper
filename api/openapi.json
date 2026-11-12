@@ -54,7 +54,7 @@
           },
           "permissions" : {
             "items" : {
-              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "REMOVE_GAMES", "CREATE_PLAYS", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES" ],
+              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "REMOVE_GAMES", "CREATE_PLAYS", "CHANGE_PLAYS_RECORDED", "CHANGE_PLAYS_TAKEN_PART_IN", "CHANGE_ANY_PLAY", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES" ],
               "type" : "string"
             },
             "type" : "array",
@@ -377,6 +377,10 @@
       },
       "Play" : {
         "properties" : {
+          "canChange" : {
+            "description" : "Whether the signed-in Account may edit and delete this Play",
+            "type" : "boolean"
+          },
           "cooperative" : {
             "description" : "Whether the Players won or lost together",
             "type" : "boolean"
@@ -428,7 +432,23 @@
             "type" : "object"
           }
         },
-        "required" : [ "cooperative", "game", "id", "playedOn", "recordedAt", "recordedBy", "recordingMode", "results", "setup" ],
+        "required" : [ "canChange", "cooperative", "game", "id", "playedOn", "recordedAt", "recordedBy", "recordingMode", "results", "setup" ],
+        "type" : "object"
+      },
+      "PlayHistory" : {
+        "properties" : {
+          "next" : {
+            "description" : "Pass this as \"after\" to get the next page. Absent when this is the last page.",
+            "type" : "string"
+          },
+          "plays" : {
+            "items" : {
+              "$ref" : "#/components/schemas/Play"
+            },
+            "type" : "array"
+          }
+        },
+        "required" : [ "plays" ],
         "type" : "object"
       },
       "Player" : {
@@ -602,7 +622,7 @@
           },
           "permissions" : {
             "items" : {
-              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "REMOVE_GAMES", "CREATE_PLAYS", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES" ],
+              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "REMOVE_GAMES", "CREATE_PLAYS", "CHANGE_PLAYS_RECORDED", "CHANGE_PLAYS_TAKEN_PART_IN", "CHANGE_ANY_PLAY", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES" ],
               "type" : "string"
             },
             "type" : "array",
@@ -621,7 +641,7 @@
           },
           "permissions" : {
             "items" : {
-              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "REMOVE_GAMES", "CREATE_PLAYS", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES" ],
+              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "REMOVE_GAMES", "CREATE_PLAYS", "CHANGE_PLAYS_RECORDED", "CHANGE_PLAYS_TAKEN_PART_IN", "CHANGE_ANY_PLAY", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES" ],
               "type" : "string"
             },
             "type" : "array",
@@ -1485,6 +1505,93 @@
       }
     },
     "/api/plays" : {
+      "get" : {
+        "description" : "The play history, a page at a time. Every filter is optional. To get the page after one, pass its \"next\" as \"after\" and keep the filters the same.",
+        "operationId" : "listPlays",
+        "parameters" : [ {
+          "description" : "Only Plays of this Game",
+          "in" : "query",
+          "name" : "gameId",
+          "required" : false,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        }, {
+          "description" : "Only Plays this Player took part in. Give it several times for Plays that all of those Players took part in.",
+          "in" : "query",
+          "name" : "playerId",
+          "required" : false,
+          "schema" : {
+            "items" : {
+              "format" : "uuid",
+              "type" : "string"
+            },
+            "type" : "array",
+            "uniqueItems" : true
+          }
+        }, {
+          "description" : "Only Plays on this day or later",
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "format" : "date",
+            "type" : "string"
+          }
+        }, {
+          "description" : "Only Plays on this day or earlier",
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "format" : "date",
+            "type" : "string"
+          }
+        }, {
+          "description" : "The \"next\" of the page before the one you want. Leave it out, or empty, for the first page.",
+          "in" : "query",
+          "name" : "after",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "description" : "How many Plays a page has, at most 100",
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "default" : 50,
+            "format" : "int32",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PlayHistory"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "List the Plays, newest first",
+        "tags" : [ "Plays" ]
+      },
       "post" : {
         "description" : "The Game's Game Module works out the Results from what is entered. What it refuses is answered with the code plays.invalidEntry and the module's reason.",
         "operationId" : "recordPlay",
@@ -1525,6 +1632,36 @@
       }
     },
     "/api/plays/{id}" : {
+      "delete" : {
+        "description" : "For good. Who may do this depends on the Play: see \"canChange\".",
+        "operationId" : "deletePlay",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Delete a Play",
+        "tags" : [ "Plays" ]
+      },
       "get" : {
         "operationId" : "getPlay",
         "parameters" : [ {
@@ -1559,6 +1696,53 @@
           }
         },
         "summary" : "Show a Play with its Results",
+        "tags" : [ "Plays" ]
+      },
+      "put" : {
+        "description" : "Replaces everything that was entered for the Play and works out its Results again. The Game has to stay the same. Who may do this depends on the Play: see \"canChange\".",
+        "operationId" : "changePlay",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/NewPlay"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Play"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Change a Play",
         "tags" : [ "Plays" ]
       }
     },

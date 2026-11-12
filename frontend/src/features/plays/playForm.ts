@@ -1,5 +1,5 @@
 import { z } from "zod"
-import type { NewPlay } from "@/api/client"
+import type { Game, NewPlay, Play } from "@/api/client"
 import { todayIso } from "@/lib/dates"
 
 // The form for a Play that the Generic Module scores. It knows that module's Setup (the on/off
@@ -73,13 +73,13 @@ export const playForm = z
     }
   })
 
-export type PlayForm = z.infer<typeof playForm>
+export type PlayFormValues = z.infer<typeof playForm>
 
 /**
  * The Players who share the best score, once every Player has a score and more than one of
  * them has the best. Only for a competitive Play recorded in points.
  */
-export function tiedForFirst(play: Pick<PlayForm, "players" | "lowestScoreWins">): string[] {
+export function tiedForFirst(play: Pick<PlayFormValues, "players" | "lowestScoreWins">): string[] {
   const scores = play.players.map((player) => player.score.trim())
   if (scores.length < 2 || !scores.every((score) => WHOLE_NUMBER.test(score))) {
     return []
@@ -91,12 +91,12 @@ export function tiedForFirst(play: Pick<PlayForm, "players" | "lowestScoreWins">
 }
 
 /** What the API is sent for a form that passed its checks. */
-export function toNewPlay(gameId: string, play: PlayForm): NewPlay {
+export function toNewPlay(gameId: string, play: PlayFormValues): NewPlay {
   const points = play.recordingMode === "POINTS"
   const competitiveInPoints = !play.cooperative && points
   const tied = competitiveInPoints ? tiedForFirst(play) : []
 
-  function isMarkedWinner(player: PlayForm["players"][number]) {
+  function isMarkedWinner(player: PlayFormValues["players"][number]) {
     if (play.cooperative) {
       return false
     }
@@ -127,5 +127,47 @@ export function toNewPlay(gameId: string, play: PlayForm): NewPlay {
           scores: points && play.groupScore !== "" ? { total: Number(play.groupScore) } : undefined,
         }
       : undefined,
+  }
+}
+
+/**
+ * The form as it starts out for a new Play of a Game: the Game's own recording choices, today's
+ * date, and one Player already put in if `firstPlayerId` is given.
+ */
+export function blankPlay(game: Game, firstPlayerId?: string): PlayFormValues {
+  return {
+    playedOn: todayIso(),
+    location: "",
+    notes: "",
+    cooperative: game.cooperative,
+    recordingMode: game.recordingMode,
+    lowestScoreWins: game.lowestScoreWins,
+    players: firstPlayerId ? [{ playerId: firstPlayerId, score: "", won: false }] : [],
+    tieWinner: "",
+    groupOutcome: "",
+    groupScore: "",
+  }
+}
+
+/** The form filled in with a recorded Play, for editing it. The opposite of toNewPlay. */
+export function fromPlay(play: Play): PlayFormValues {
+  const markedWinners = play.results.filter((result) => result.markedWinner)
+  return {
+    playedOn: play.playedOn,
+    location: play.location ?? "",
+    notes: play.notes ?? "",
+    cooperative: play.cooperative,
+    recordingMode: play.recordingMode,
+    lowestScoreWins: play.setup.lowestScoreWins === "true",
+    players: play.results.map((result) => ({
+      playerId: result.player.id,
+      score: result.scores.total?.toString() ?? "",
+      won: result.markedWinner,
+    })),
+    // The form can give a tie to one Player. A Play recorded through the API with several
+    // marked winners shows as a shared win here.
+    tieWinner: markedWinners.length === 1 ? markedWinners[0].player.id : "",
+    groupOutcome: play.group ? (play.group.won ? "won" : "lost") : "",
+    groupScore: play.group?.scores.total?.toString() ?? "",
   }
 }
