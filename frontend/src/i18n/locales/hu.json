@@ -31,7 +31,13 @@
       "description": "Ezt nem lehet visszavonni.",
       "confirm": "Játék eltávolítása"
     },
-    "ownScorePad": "Saját pontozólap"
+    "ownScorePad": "Saját pontozólap",
+    "startTitle": "Parti rögzítése",
+    "startDescription": "Válassz játékot, vagy játsszatok újra ugyanazokkal a játékosokkal.",
+    "playAgain": "Újra",
+    "playAgainWith": "{{game}} újra: {{players}}",
+    "lastPlayed": "Utoljára játszva: {{when}}",
+    "neverPlayed": "Még nem játszottátok"
   },
   "recording": {
     "as": {

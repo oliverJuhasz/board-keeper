@@ -110,6 +110,17 @@ class PlayController {
         return toResponse(plays.record(body.toNewPlay(), account), account);
     }
 
+    @GetMapping("/last-played")
+    @Operation(
+            summary = "When each Game was last played",
+            description = "For putting the most recently played Games first. A Game without Plays is left out.",
+            operationId = "listLastPlayed")
+    List<LastPlayedResponse> lastPlayed() {
+        return plays.lastPlayedOn().entrySet().stream()
+                .map(entry -> new LastPlayedResponse(entry.getKey(), entry.getValue()))
+                .toList();
+    }
+
     @PostMapping("/preview")
     @Operation(
             summary = "Work out how a Play would end, without recording it",
@@ -361,6 +372,11 @@ class PlayController {
             boolean won,
             @Schema(description = "As entered: the group's value for each Score Category") Map<String, Integer> scores,
             @Schema(description = "Absent when no score was recorded") Integer total) {}
+
+    @Schema(
+            name = "LastPlayed",
+            requiredProperties = {"gameId", "playedOn"})
+    record LastPlayedResponse(UUID gameId, @Schema(description = "The day of the Game's latest Play") LocalDate playedOn) {}
 
     @Schema(
             name = "PlayPreview",

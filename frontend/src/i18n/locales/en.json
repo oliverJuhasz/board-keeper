@@ -31,7 +31,13 @@
       "description": "This can't be undone.",
       "confirm": "Remove game"
     },
-    "ownScorePad": "Its own score pad"
+    "ownScorePad": "Its own score pad",
+    "startTitle": "Record a play",
+    "startDescription": "Pick a game, or play again with the same players.",
+    "playAgain": "Play again",
+    "playAgainWith": "Play {{game}} again with {{players}}",
+    "lastPlayed": "Last played {{when}}",
+    "neverPlayed": "Not played yet"
   },
   "recording": {
     "as": {

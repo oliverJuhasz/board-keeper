@@ -279,6 +279,21 @@
         "required" : [ "language" ],
         "type" : "object"
       },
+      "LastPlayed" : {
+        "properties" : {
+          "gameId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "playedOn" : {
+            "description" : "The day of the Game's latest Play",
+            "format" : "date",
+            "type" : "string"
+          }
+        },
+        "required" : [ "gameId", "playedOn" ],
+        "type" : "object"
+      },
       "NamedReference" : {
         "description" : "A Player, with the name to show for them",
         "properties" : {
@@ -1877,6 +1892,39 @@
           }
         },
         "summary" : "Record a Play",
+        "tags" : [ "Plays" ]
+      }
+    },
+    "/api/plays/last-played" : {
+      "get" : {
+        "description" : "For putting the most recently played Games first. A Game without Plays is left out.",
+        "operationId" : "listLastPlayed",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/LastPlayed"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "When each Game was last played",
         "tags" : [ "Plays" ]
       }
     },

@@ -1,11 +1,11 @@
 import { useQueryClient } from "@tanstack/react-query"
-import { PlusIcon } from "lucide-react"
+import { ChevronRightIcon, PlusIcon } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
+import { Link } from "react-router"
 import { api, type Game } from "@/api/client"
 import { ActionsMenu } from "@/components/ActionsMenu"
 import { ConfirmDialog } from "@/components/ConfirmDialog"
-import { LinkButton } from "@/components/LinkButton"
 import { PageHeader } from "@/components/PageHeader"
 import { QueryState } from "@/components/QueryState"
 import { Button } from "@/components/ui/button"
@@ -18,14 +18,22 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { PlayAgain } from "@/features/plays/PlayAgain"
 import { useCan } from "@/features/session/useSession"
+import { formatRecentDay } from "@/lib/dates"
 import { GameDialog } from "./GameDialog"
 import { useRecordedAs } from "./recordedAs"
 import { useGameName } from "./useGameModules"
 
 type OpenDialog = { kind: "add" } | { kind: "edit" | "remove"; game: Game } | undefined
 
-/** The catalogue of Games: the list you pick from when recording a Play. */
+/**
+ * The start page: where a Play is recorded from, in as few taps as possible. Recent Plays are
+ * offered to play again with the same Players. Below them come the Games, the most recently
+ * played first, and a tap on a Game opens the form for a Play of it.
+ *
+ * It is also the catalogue of Games, where they are added, edited and removed.
+ */
 export function GamesPage() {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
@@ -34,7 +42,18 @@ export function GamesPage() {
   const gameName = useGameName()
   const [dialog, setDialog] = useState<OpenDialog>()
   const games = api.useQuery("get", "/api/games")
+  const lastPlayed = api.useQuery("get", "/api/plays/last-played")
   const close = () => setDialog(undefined)
+  const records = can("CREATE_PLAYS")
+
+  /** The day a Game was last played, or undefined if it never was. */
+  const lastPlayedOn = (game: Game) =>
+    lastPlayed.data?.find((entry) => entry.gameId === game.id)?.playedOn
+  // The most recently played first. Games never played follow, in the catalogue's order, by
+  // name. toSorted() keeps the order of Games it calls equal.
+  const recentFirst = (games.data ?? []).toSorted((a, b) =>
+    (lastPlayedOn(b) ?? "").localeCompare(lastPlayedOn(a) ?? ""),
+  )
 
   const remove = api.useMutation("delete", "/api/games/{id}", {
     onSuccess: () => {
@@ -46,8 +65,8 @@ export function GamesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={t("games.title")}
-        description={t("games.description")}
+        title={records ? t("games.startTitle") : t("games.title")}
+        description={records ? t("games.startDescription") : t("games.description")}
         action={
           can("CREATE_GAMES") && (
             <Button onClick={() => setDialog({ kind: "add" })}>
@@ -58,64 +77,89 @@ export function GamesPage() {
         }
       />
 
-      <QueryState queries={[games]} loading={t("games.loading")} failed={t("games.loadFailed")}>
+      <QueryState
+        queries={[games, lastPlayed]}
+        loading={t("games.loading")}
+        failed={t("games.loadFailed")}
+      >
         {() =>
           games.data?.length === 0 ? (
             <p className="text-muted-foreground">{t("games.empty")}</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("games.name")}</TableHead>
-                  {/* Left out on a phone, where the row needs its width for the buttons. */}
-                  <TableHead className="hidden sm:table-cell">{t("games.recorded")}</TableHead>
-                  <TableHead />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {games.data?.map((game) => (
-                  <TableRow key={game.id}>
-                    <TableCell className="font-medium">{gameName(game)}</TableCell>
-                    <TableCell className="hidden text-muted-foreground sm:table-cell">
-                      {/* A Game with a module of its own has no recording choices to show. */}
-                      {game.hasOwnModule ? t("games.ownScorePad") : recordedAs(game)}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-end gap-1">
-                        {can("CREATE_PLAYS") && (
-                          <LinkButton
-                            to={`/plays/new?game=${game.id}`}
-                            size="sm"
-                            aria-label={t("plays.record.actionFor", { name: gameName(game) })}
-                          >
-                            {t("plays.record.action")}
-                          </LinkButton>
-                        )}
-                        {/* A Game with a module of its own is named by the module and stays
-                            while the module does: there is nothing to edit or remove. */}
-                        {!game.hasOwnModule && (can("EDIT_GAMES") || can("REMOVE_GAMES")) && (
-                          <ActionsMenu label={t("games.actions", { name: game.name })}>
-                            {can("EDIT_GAMES") && (
-                              <DropdownMenuItem onClick={() => setDialog({ kind: "edit", game })}>
-                                {t("games.edit")}
-                              </DropdownMenuItem>
-                            )}
-                            {can("REMOVE_GAMES") && (
-                              <DropdownMenuItem
-                                variant="destructive"
-                                onClick={() => setDialog({ kind: "remove", game })}
-                              >
-                                {t("games.remove")}
-                              </DropdownMenuItem>
-                            )}
-                          </ActionsMenu>
-                        )}
-                      </div>
-                    </TableCell>
+            <div className="space-y-6">
+              {records && <PlayAgain games={games.data ?? []} />}
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t("games.name")}</TableHead>
+                    {/* Left out on a phone, where the row needs its width for the buttons. */}
+                    <TableHead className="hidden sm:table-cell">{t("games.recorded")}</TableHead>
+                    <TableHead />
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {recentFirst.map((game) => (
+                    // "relative" lets the Game's link stretch over the whole row, so a tap
+                    // anywhere on it opens the form. The menu is lifted above the link.
+                    <TableRow key={game.id} className="relative">
+                      <TableCell>
+                        {records ? (
+                          <Link
+                            to={`/plays/new?game=${game.id}`}
+                            aria-label={t("plays.record.actionFor", { name: gameName(game) })}
+                            className="font-medium outline-none after:absolute after:inset-0 after:rounded-md focus-visible:after:ring-2 focus-visible:after:ring-ring"
+                          >
+                            {gameName(game)}
+                          </Link>
+                        ) : (
+                          <span className="font-medium">{gameName(game)}</span>
+                        )}
+                        <span className="block text-sm text-muted-foreground">
+                          {lastPlayedOn(game)
+                            ? t("games.lastPlayed", {
+                                when: formatRecentDay(lastPlayedOn(game) ?? ""),
+                              })
+                            : t("games.neverPlayed")}
+                        </span>
+                      </TableCell>
+                      <TableCell className="hidden text-muted-foreground sm:table-cell">
+                        {/* A Game with a module of its own has no recording choices to show. */}
+                        {game.hasOwnModule ? t("games.ownScorePad") : recordedAs(game)}
+                      </TableCell>
+                      <TableCell>
+                        <div className="relative z-10 flex items-center justify-end gap-1">
+                          {/* A Game with a module of its own is named by the module and stays
+                            while the module does: there is nothing to edit or remove. */}
+                          {!game.hasOwnModule && (can("EDIT_GAMES") || can("REMOVE_GAMES")) && (
+                            <ActionsMenu label={t("games.actions", { name: game.name })}>
+                              {can("EDIT_GAMES") && (
+                                <DropdownMenuItem onClick={() => setDialog({ kind: "edit", game })}>
+                                  {t("games.edit")}
+                                </DropdownMenuItem>
+                              )}
+                              {can("REMOVE_GAMES") && (
+                                <DropdownMenuItem
+                                  variant="destructive"
+                                  onClick={() => setDialog({ kind: "remove", game })}
+                                >
+                                  {t("games.remove")}
+                                </DropdownMenuItem>
+                              )}
+                            </ActionsMenu>
+                          )}
+                          {records && (
+                            <ChevronRightIcon
+                              aria-hidden
+                              className="size-4 text-muted-foreground"
+                            />
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )
         }
       </QueryState>

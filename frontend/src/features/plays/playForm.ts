@@ -360,3 +360,36 @@ export function fromPlay(module: GameModule, play: Play): PlayFormValues {
     groupScore: play.group?.scores.total?.toString() ?? "",
   }
 }
+
+/**
+ * The form for playing a recorded Play again: the same Players in the same order, and, if the
+ * Play was scored by the module that scores its Game today, the same choices. Only the date and
+ * the scores are new.
+ *
+ * @param playerIds the Players that exist today; anyone removed since is left out
+ */
+export function playAgain(
+  module: GameModule,
+  game: Game,
+  previous: Play,
+  playerIds: string[],
+): PlayFormValues {
+  const blank = blankPlay(module, game)
+  const sameModule = previous.gameModuleId === module.id
+  return {
+    ...blank,
+    recordingMode: sameModule ? previous.recordingMode : blank.recordingMode,
+    setup: sameModule
+      ? Object.fromEntries(
+          module.scorePad.variants.map((variant) => [
+            variant.key,
+            previous.setup[variant.key] ?? variant.defaultValue,
+          ]),
+        )
+      : blank.setup,
+    players: previous.results
+      .map((result) => result.player.id)
+      .filter((playerId) => playerIds.includes(playerId))
+      .map((playerId) => newPlayerRow(module.scorePad, playerId)),
+  }
+}

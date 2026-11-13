@@ -58,6 +58,11 @@ public class Plays {
         return repository.find(id);
     }
 
+    /** The day each Game was last played on, by the Game's id. A Game without Plays is missing. */
+    public Map<UUID, LocalDate> lastPlayedOn() {
+        return repository.lastPlayedOnByGame();
+    }
+
     /**
      * A page of the play history, newest first.
      *
