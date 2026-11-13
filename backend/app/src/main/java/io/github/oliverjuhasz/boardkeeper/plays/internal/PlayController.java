@@ -14,6 +14,7 @@ import io.github.oliverjuhasz.boardkeeper.players.Players;
 import io.github.oliverjuhasz.boardkeeper.plays.NewPlay;
 import io.github.oliverjuhasz.boardkeeper.plays.Play;
 import io.github.oliverjuhasz.boardkeeper.plays.PlayHistory;
+import io.github.oliverjuhasz.boardkeeper.plays.PlayPreview;
 import io.github.oliverjuhasz.boardkeeper.plays.Plays;
 import io.github.oliverjuhasz.boardkeeper.problems.Problem;
 import io.swagger.v3.oas.annotations.Operation;
@@ -109,6 +110,30 @@ class PlayController {
         return toResponse(plays.record(body.toNewPlay(), account), account);
     }
 
+    @PostMapping("/preview")
+    @Operation(
+            summary = "Work out how a Play would end, without recording it",
+            description = "For a form that shows totals and Placings while it is filled in. \"tieForRecorder\" names"
+                    + " the Players of a tie for first place that the scores cannot decide: ask the recorder who won"
+                    + " it, and mark that Player as winner.",
+            operationId = "previewPlay")
+    PlayPreviewResponse preview(@Valid @RequestBody PlayPreviewRequest body) {
+        List<UUID> playerIds =
+                body.players().stream().map(PlayerEntryRequest::playerId).toList();
+        PlayPreview preview = plays.preview(body.gameModuleId(), playerIds, body.toEntry());
+        return new PlayPreviewResponse(
+                preview.group() != null,
+                preview.group() == null
+                        ? null
+                        : new GroupResultResponse(
+                                preview.group().won(), preview.group().scores(), preview.group().total()),
+                preview.results().stream()
+                        .map(result ->
+                                new PreviewResultResponse(result.playerId(), result.total(), result.placing(), result.won()))
+                        .toList(),
+                preview.tieForRecorder());
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "Show a Play with its Results", operationId = "getPlay")
     PlayResponse get(@AuthenticationPrincipal CurrentAccount account, @PathVariable UUID id) {
@@ -161,7 +186,8 @@ class PlayController {
         return plays.stream()
                 .map(play -> new PlayResponse(
                         play.id(),
-                        NamedReference.to(gamesById.get(play.gameId())),
+                        gameReference(gamesById.get(play.gameId())),
+                        play.gameModuleId(),
                         play.playedOn(),
                         play.location(),
                         play.notes(),
@@ -185,6 +211,10 @@ class PlayController {
                         play.recordedAt(),
                         this.plays.mayChange(play, account)))
                 .toList();
+    }
+
+    private GameReference gameReference(Game game) {
+        return new GameReference(game.id(), game.name(), games.moduleKeyOf(game).filter(key -> games.hasOwnModule(game)).orElse(null));
     }
 
     @Schema(
@@ -216,14 +246,35 @@ class PlayController {
                     location,
                     notes,
                     players.stream().map(PlayerEntryRequest::playerId).toList(),
-                    new PlayEntry(
-                            recordingMode,
-                            setup,
-                            players.stream()
-                                    .map(player -> new PlayerEntry(orEmpty(player.scores()), player.winner()))
-                                    .toList(),
-                            group == null ? null : new GroupEntry(group.won(), orEmpty(group.scores()))));
+                    entryOf(recordingMode, setup, players, group));
         }
+    }
+
+    @Schema(
+            name = "PlayPreviewRequest",
+            description = "What is entered about how a Play went, with the Game Module to score it",
+            requiredProperties = {"gameModuleId", "recordingMode", "setup", "players"})
+    record PlayPreviewRequest(
+            @NotNull UUID gameModuleId,
+            @NotNull RecordingMode recordingMode,
+            @NotNull Map<String, @NotNull String> setup,
+            @NotNull @Size(max = Plays.MAX_PLAYERS) List<@NotNull @Valid PlayerEntryRequest> players,
+            @Valid GroupEntryRequest group) {
+
+        PlayEntry toEntry() {
+            return entryOf(recordingMode, setup, players, group);
+        }
+    }
+
+    private static PlayEntry entryOf(
+            RecordingMode recordingMode, Map<String, String> setup, List<PlayerEntryRequest> players, GroupEntryRequest group) {
+        return new PlayEntry(
+                recordingMode,
+                setup,
+                players.stream()
+                        .map(player -> new PlayerEntry(orEmpty(player.scores()), player.winner()))
+                        .toList(),
+                group == null ? null : new GroupEntry(group.won(), orEmpty(group.scores())));
     }
 
     @Schema(
@@ -253,6 +304,7 @@ class PlayController {
             requiredProperties = {
                 "id",
                 "game",
+                "gameModuleId",
                 "playedOn",
                 "recordingMode",
                 "setup",
@@ -264,7 +316,10 @@ class PlayController {
             })
     record PlayResponse(
             UUID id,
-            NamedReference game,
+            GameReference game,
+            @Schema(description = "The Game Module that scored this Play. The keys in \"setup\" and \"scores\" are its."
+                            + " It can differ from the module that scores the Game today.")
+                    UUID gameModuleId,
             LocalDate playedOn,
             String location,
             String notes,
@@ -306,17 +361,40 @@ class PlayController {
             @Schema(description = "Absent when no score was recorded") Integer total) {}
 
     @Schema(
+            name = "PlayPreview",
+            requiredProperties = {"cooperative", "results", "tieForRecorder"})
+    record PlayPreviewResponse(
+            boolean cooperative,
+            GroupResultResponse group,
+            @Schema(description = "One per Player, in the order they were entered") List<PreviewResultResponse> results,
+            @Schema(description = "The Players of a tie for first place that the recorder may decide. Empty when the"
+                            + " scores decide who won.")
+                    List<UUID> tieForRecorder) {}
+
+    @Schema(
+            name = "PreviewResult",
+            requiredProperties = {"playerId", "won"})
+    record PreviewResultResponse(UUID playerId, Integer total, Integer placing, boolean won) {}
+
+    @Schema(
+            name = "GameReference",
+            description = "The Game of a Play, with the name to show for it",
+            requiredProperties = {"id", "name"})
+    record GameReference(
+            UUID id,
+            String name,
+            @Schema(description = "For a Game with a Game Module of its own: the module's key. The Game is then shown"
+                            + " under the name in the module's texts, \"<moduleKey>.name\".")
+                    String moduleKey) {}
+
+    @Schema(
             name = "NamedReference",
-            description = "A Game or a Player, with the name to show for it",
+            description = "A Player, with the name to show for them",
             requiredProperties = {"id", "name"})
     record NamedReference(UUID id, String name) {
 
         static NamedReference to(Player player) {
             return new NamedReference(player.id(), player.name());
-        }
-
-        static NamedReference to(Game game) {
-            return new NamedReference(game.id(), game.name());
         }
     }
 

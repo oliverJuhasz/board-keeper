@@ -10,9 +10,9 @@ import java.util.UUID;
  * {@code META-INF/services/io.github.oliverjuhasz.boardkeeper.gameapi.GameModule}, and the
  * class has a public no-argument constructor.
  *
- * <p>So far the contract covers a module's identity and its scoring. How a module describes
- * its Game to the people recording a Play (its Variants, Expansions and Score Categories) is
- * added in milestone M3.
+ * <p>A module has an identity, describes its Game's score pad, and scores what was entered on
+ * it. Most modules get the scoring from {@link StandardGameModule} and only write the
+ * description.
  */
 public interface GameModule {
 
@@ -29,6 +29,13 @@ public interface GameModule {
      * {@code hu}. English is required.
      */
     String key();
+
+    /**
+     * Describes what is entered for a Play of this Game. The core checks nothing against it;
+     * it is for the frontend, which draws the form from it. What {@link #score} accepts has to
+     * agree with it.
+     */
+    ScorePad scorePad();
 
     /**
      * Works out how a Play ended from what was entered for it.

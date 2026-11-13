@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event"
 import { http, HttpResponse } from "msw"
 import { expect, test } from "vitest"
 import type { Game } from "@/api/client"
-import { anna, bence, calico, gamesAre, pandemic, problem, signedInAs } from "@/test/api"
+import { anna, bence, azul, gamesAre, pandemic, problem, signedInAs } from "@/test/api"
 import { renderApp } from "@/test/renderApp"
 import { server } from "@/test/server"
 
@@ -22,7 +22,7 @@ function gamesCanBeAdded(state: { games: Game[] }) {
     http.post("*/api/games", async ({ request }) => {
       const body = (await request.json()) as Omit<Game, "id" | "gameModuleId">
       sent.push(body)
-      const created = { ...calico, id: "0193a000-0000-7000-8000-0000000000e9", ...body }
+      const created = { ...azul, id: "0193a000-0000-7000-8000-0000000000e9", ...body }
       state.games.push(created)
       return HttpResponse.json(created)
     }),
@@ -33,15 +33,15 @@ function gamesCanBeAdded(state: { games: Game[] }) {
 test("lists the games and how their plays are recorded", async () => {
   signedInAs(anna)
   gamesAre([
-    calico,
+    azul,
     pandemic,
-    { ...calico, id: "0193a000-0000-7000-8000-0000000000e3", name: "Golf", lowestScoreWins: true },
+    { ...azul, id: "0193a000-0000-7000-8000-0000000000e3", name: "Golf", lowestScoreWins: true },
   ])
 
   renderApp("/")
 
-  await screen.findByRole("row", { name: /Calico/ })
-  expect(within(rowOf("Calico")).getByText("Points, highest wins")).toBeInTheDocument()
+  await screen.findByRole("row", { name: /Azul/ })
+  expect(within(rowOf("Azul")).getByText("Points, highest wins")).toBeInTheDocument()
   expect(within(rowOf("Golf")).getByText("Points, lowest wins")).toBeInTheDocument()
   expect(within(rowOf("Pandemic")).getByText("Cooperative, won or lost")).toBeInTheDocument()
 })
@@ -62,11 +62,11 @@ test("says so when there are no games yet, or when they can't be loaded", async 
 
 test("a member can add and edit games, but not remove them", async () => {
   signedInAs(bence)
-  gamesAre([calico])
+  gamesAre([azul])
   renderApp("/")
 
   expect(await screen.findByRole("button", { name: "Add game" })).toBeInTheDocument()
-  await openActionsFor("Calico")
+  await openActionsFor("Azul")
   expect(await screen.findByRole("menuitem", { name: "Edit" })).toBeInTheDocument()
   expect(screen.queryByRole("menuitem", { name: "Remove" })).not.toBeInTheDocument()
 })
@@ -162,13 +162,13 @@ test("edits a game, starting from what it is now", async () => {
 
 test("says so when a game's name is taken, and keeps the dialog open", async () => {
   signedInAs(bence)
-  gamesAre([calico])
+  gamesAre([azul])
   server.use(http.post("*/api/games", () => problem(409, "games.nameTaken")))
   renderApp("/")
 
   await userEvent.click(await screen.findByRole("button", { name: "Add game" }))
   const dialog = await screen.findByRole("dialog")
-  await userEvent.type(within(dialog).getByLabelText("Name"), "calico")
+  await userEvent.type(within(dialog).getByLabelText("Name"), "azul")
   await userEvent.click(within(dialog).getByRole("button", { name: "Add game" }))
 
   expect(await screen.findByText("There is already a game with this name.")).toBeInTheDocument()
@@ -177,7 +177,7 @@ test("says so when a game's name is taken, and keeps the dialog open", async () 
 
 test("an admin removes a game only after being asked", async () => {
   signedInAs(anna)
-  const state = gamesAre([calico, pandemic])
+  const state = gamesAre([azul, pandemic])
   server.use(
     http.delete("*/api/games/:id", ({ params }) => {
       state.games = state.games.filter((game) => game.id !== params.id)
@@ -186,13 +186,13 @@ test("an admin removes a game only after being asked", async () => {
   )
   renderApp("/")
 
-  await openActionsFor("Calico")
+  await openActionsFor("Azul")
   await userEvent.click(await screen.findByRole("menuitem", { name: "Remove" }))
-  expect(await screen.findByRole("alertdialog", { name: "Remove Calico?" })).toBeInTheDocument()
+  expect(await screen.findByRole("alertdialog", { name: "Remove Azul?" })).toBeInTheDocument()
   expect(state.games).toHaveLength(2)
   await userEvent.click(screen.getByRole("button", { name: "Remove game" }))
 
-  await expect.poll(() => screen.queryByRole("row", { name: /Calico/ })).not.toBeInTheDocument()
+  await expect.poll(() => screen.queryByRole("row", { name: /Azul/ })).not.toBeInTheDocument()
   expect(screen.getByRole("row", { name: /Pandemic/ })).toBeInTheDocument()
 })
 

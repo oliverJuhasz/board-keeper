@@ -14,7 +14,9 @@ You don't need Maven. `./mvnw` downloads the right version itself; on Windows, u
 api/openapi.json     the description of the API: written by the backend build, read by the frontend
 backend/
   game-api/          the contract between the core and Game Modules
-  games/generic/     the Generic Module; every Game Module is a folder under games/
+  games/             the Game Modules, one folder each
+    generic/         the Generic Module, for Games without a module of their own
+    calico/          the Game Module for Calico
   app/               the Spring Boot application
 frontend/            the React app
 deploy/              an example Docker Compose setup
@@ -97,18 +99,22 @@ The jOOQ classes for every table are generated into one shared package, so any m
 
 ### How Game Modules are found
 
-Game Modules are plain Java, with no Spring. The core finds them with Java's `ServiceLoader`: each module's jar names its class in `META-INF/services/io.github.oliverjuhasz.boardkeeper.gameapi.GameModule`. At startup, `GameModules` checks them all, and the application refuses to start if two share an id or a key, or if one has no English translation file.
+Game Modules are plain Java, with no Spring. The core finds them with Java's `ServiceLoader`: each module's jar names its class in `META-INF/services/io.github.oliverjuhasz.boardkeeper.gameapi.GameModule`. At startup, `GameModules` and `GameModuleTexts` check them all. The application refuses to start if two modules share an id or a key, or if one has no English text for something its score pad names.
+
+Every module but the Generic Module brings a Game of its own. `Games.addGamesOfModules` runs at startup and puts that Game in the catalogue if it isn't there. Such a Game is shown under the name in the module's texts, and can be neither edited nor removed. If someone had already added a Game by hand under that name, it is handed to the module instead: its earlier Plays stay as the Generic Module recorded them, because every Play remembers the module that scored it.
 
 ### How a Play is recorded
 
 1. The frontend sends `POST /api/plays` with the Game, the date, the Players, and what was entered about how it went. That last part has the same shape for every Game Module: a Recording Mode, the Setup as a value for each Variant, the scores of each Player by Score Category, and for a Cooperative Play the group's result.
 2. `Plays.record`, in the `plays` module, checks what the core knows about: that the Game and the Players exist, that nobody is entered twice, and that the date is not in the future.
-3. It hands the entry to the Game's Game Module: `GameModule.score(PlayEntry)` answers with an `Outcome`, or throws an `InvalidPlayException` with the module's reason. The core passes that on as the Problem `plays.invalidEntry`, with the reason as a name in the module's own texts, such as `generic.invalid.winnerMissing`.
+3. It hands the entry to the Game's Game Module: `GameModule.score(PlayEntry)` answers with an `Outcome`, or throws an `InvalidPlayException` with a reason. The core passes that on as the Problem `plays.invalidEntry`, with the reason as the name of a text: one of the module's own, such as `generic.invalid.winnerMissing`, or one of the frontend's for the reasons that are the same for every Game, such as `plays.invalid.tooFewPlayers`.
 4. The Play is stored with both what was entered and what the module calculated ([ADR 0010](adr/0010-results-stored-recalculated-on-request.md)). The parts whose names belong to the Game Module, the Setup and the scores by Score Category, are kept in `jsonb` columns; `JsonColumns` converts them to and from Java maps.
 
 `Outcome` is a `sealed` interface with two records, `Competitive` and `Cooperative`. Sealed means the compiler knows these are the only two kinds, so the `switch` in `Plays.record` must handle both and needs no `default`.
 
 `PlayRepository` reads a Play together with its Results in one query, using jOOQ's `multiset`.
+
+**Working out a Play before it is recorded.** `POST /api/plays/preview` runs the same scoring and stores nothing. The form calls it while it is filled in, to show the totals and Placings, and to learn whether first place is a tie that the scores cannot decide. The answer names the Players of such a tie in `tieForRecorder`; only then does the form ask who won. So the rules for totals and ties live in the Game Module alone, and the frontend repeats none of them.
 
 ### How the play history is paged
 
@@ -179,7 +185,7 @@ Rules on a request's fields are annotations such as `@Size(min = 16)` on the req
 
 A form is described once with Zod, which gives both the checks and the TypeScript type, and run by React Hook Form. `frontend/src/features/session/SignInPage.tsx` is the example to copy. `TextField` draws a labelled input with its hint and error; `FormProblem` shows why the server refused a submission.
 
-`frontend/src/features/plays/` is the example of a bigger form. Its rules and what it sends are in `playForm.ts`, apart from the page, so they can be tested without drawing anything. The form itself, `PlayEntryForm.tsx`, is used by two pages: one records a new Play and one edits an existing Play. Each page says what the form starts with and where the result is sent. It uses three more parts of React Hook Form and Zod:
+`frontend/src/features/plays/` is the example of a bigger form. It is drawn from the score pad of the Game's Game Module: the Variants become choices and the Score Categories the rows of a pad, and what each is called comes from the module's texts. Its rules and what it sends are in `playForm.ts`, apart from the page, so they can be tested without drawing anything. `usePlayPreview.ts` asks the server how the Play would end, a moment after the recorder stops typing. The form itself, `PlayEntryForm.tsx`, is used by two pages: one records a new Play and one edits an existing Play. Each page says what the form starts with and where the result is sent. It uses three more parts of React Hook Form and Zod:
 
 - `useFieldArray` for the list of Players, where rows are added and removed;
 - `useWatch` to redraw when a field changes that others depend on, such as the Recording Mode;
@@ -219,7 +225,7 @@ return <p>{t("games.empty")}</p>
 
 TypeScript knows the names from `en.json`, so a misspelt name does not compile.
 
-**A Game Module's texts** are in the module itself, in `i18n/<key>_en.properties`, `_nl` and `_hu`, saved as UTF-8. Every name starts with the module's key, such as `calico.name`. English is required; a text missing in Dutch or Hungarian is shown in English, and the backend logs a warning at startup. The frontend loads these texts from `/api/game-modules/texts/{language}` through the `useGameModuleTexts` hook, in `frontend/src/features/games/`.
+**A Game Module's texts** are in the module itself, in `i18n/<key>_en.properties`, `_nl` and `_hu`, saved as UTF-8. Every name starts with the module's key, such as `calico.name`; "Adding a Game Module" below lists the names a module needs. English is required; a text missing in Dutch or Hungarian is shown in English, and the backend logs a warning at startup. The frontend loads these texts from `/api/game-modules/texts/{language}` through the `useGameModuleTexts` hook, in `frontend/src/features/games/`.
 
 **Which language is shown:** the one chosen with the switcher, which the browser remembers; otherwise the browser's own language; otherwise English. `frontend/src/i18n/index.ts` sets this up. The backend's list of languages is the `Language` enum.
 
@@ -237,15 +243,32 @@ This writes `frontend/src/components/ui/dialog.tsx`. Run `npm run format` afterw
 
 ### Adding a Game Module
 
-The contract, in `backend/game-api`, covers a module's identity and its scoring. How a module describes its Game to the frontend (its Variants, Expansions and Score Categories) comes in milestone M3; until then the frontend's form only knows the Generic Module.
+`backend/games/calico` is the example to copy. A module has three parts: an identity, a description of its Game's score pad, and its texts.
 
-1. Copy `backend/games/generic` to `backend/games/<key>` and rename the artifact to `game-<key>`.
+1. Copy `backend/games/calico` to `backend/games/<key>` and rename the artifact to `game-<key>`.
 2. Give the module a newly generated UUID. It is stored with every Play, so it never changes afterwards ([ADR 0012](adr/0012-game-module-uuid-and-key.md)).
 3. Name the module's class in its `META-INF/services` file.
-4. Implement `score`. It must depend on the entry alone, because a Recalculation runs it again over the stored entry. Refuse an entry that breaks the Game's rules by throwing `InvalidPlayException` with a short reason. Take the rules from the Game's official rulebook.
-5. Add `i18n/<key>_en.properties`, and the same for `nl` and `hu`, with at least `<key>.name` and a text `<key>.invalid.<reason>` for every reason `score` can give.
-6. Test the scoring with plain unit tests, as `GenericScoringTests` does. A Game Module needs no Spring and no database.
-7. Register it in three places: as a `<module>` and under `<dependencyManagement>` in `backend/pom.xml`, and as a `runtime` dependency in `backend/app/pom.xml`.
+4. Describe the Game in `scorePad()`: how many can play, its Variants, the rows of its score pad as Score Categories, and its Tie-breakers. Take all of it from the Game's official rulebook, and say in the class's Javadoc where each rule comes from.
+5. Extend `StandardGameModule` if the Game is scored the usual way: every Player adds up the rows of the pad and the highest total wins. The scoring then follows from the description, and there is no `score` to write. A Game that works differently implements `GameModule` itself, as the Generic Module does. Its `score` must depend on the entry alone, because a Recalculation runs it again over the stored entry.
+6. Add `i18n/<key>_en.properties`, and the same for `nl` and `hu`. English needs a text for everything the score pad names, or the application refuses to start:
+
+   | Text | For |
+   |---|---|
+   | `<key>.name` | the Game, as the catalogue lists it |
+   | `<key>.variant.<variant>` | a Variant; `<key>.variant.<variant>.hint` adds a line under it, and is optional |
+   | `<key>.variant.<variant>.<option>` | each option of a Variant that is a choice |
+   | `<key>.category.<category>` | a row of the score pad |
+   | `<key>.tie` | how the Game decides a tie, when the recorder is asked who won one |
+   | `<key>.invalid.<reason>` | a reason of the module's own for refusing an entry |
+
+7. Test the module with plain unit tests, as `CalicoGameModuleTests` does. A Game Module needs no Spring and no database. Use a scoring example from the rulebook as one of the tests.
+8. Register it in three places: as a `<module>` and under `<dependencyManagement>` in `backend/pom.xml`, and as a `runtime` dependency in `backend/app/pom.xml`.
+
+Nothing else changes. When the application next starts, the Game is in the catalogue, and the frontend draws its form from the description.
+
+**Ties.** List as `tieBreakers` the Tie-breakers that can be worked out from what is entered. Set `recorderDecidesTies` when the Game decides what is left by something that is not on the pad; the form then asks the recorder who won, and shows `<key>.tie` as the explanation. Calico is such a Game: its first Tie-breaker is the number of cat tokens, and the pad only has the cats' points.
+
+**Reasons for refusing an entry.** `StandardGameModule` refuses what is wrong in the same way for every Game, such as too few Players or a value a row doesn't allow. Those are the `Standard` reasons of `InvalidPlayException`, and the frontend has their texts, under `plays.invalid` in its translation files. A module only writes texts for reasons of its own.
 
 ## Continuous integration
 

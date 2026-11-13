@@ -23,6 +23,7 @@ import org.springframework.test.web.servlet.assertj.MockMvcTester;
 class GamesApiTests {
 
     private static final String GENERIC_MODULE_ID = "38b119d2-8f9f-4e20-8068-cba305c06cdd";
+    private static final String CALICO_MODULE_ID = "d392b4e5-a531-44c4-85c7-369783d9be5c";
     private static final RecordingDefaults POINTS = new RecordingDefaults(false, RecordingMode.POINTS, false);
 
     @Autowired
@@ -50,11 +51,78 @@ class GamesApiTests {
     }
 
     @Test
-    void listsTheInstalledGameModules() {
+    void listsTheInstalledGameModulesWithTheirScorePads() {
         assertThat(member.get("/api/game-modules"))
                 .hasStatusOk()
                 .bodyJson()
-                .isLenientlyEqualTo("[{\"id\": \"%s\", \"key\": \"generic\"}]".formatted(GENERIC_MODULE_ID));
+                .isLenientlyEqualTo("""
+                        [{"id": "%s", "key": "calico",
+                          "scorePad": {
+                            "minPlayers": 2, "maxPlayers": 4,
+                            "variants": [{"key": "family", "kind": "ON_OFF", "defaultValue": "false"}],
+                            "categories": [
+                              {"key": "designGoals", "countsTowardTotal": true, "min": 0, "step": 1,
+                               "onlyWhen": {"variant": "family", "value": "false"}},
+                              {"key": "cats", "countsTowardTotal": true, "min": 0, "step": 1},
+                              {"key": "buttons", "countsTowardTotal": true, "min": 0, "step": 3}],
+                            "recorderDecidesTies": true}},
+                         {"id": "%s", "key": "generic",
+                          "scorePad": {
+                            "minPlayers": 1,
+                            "variants": [{"key": "cooperative", "kind": "ON_OFF"}, {"key": "lowestScoreWins", "kind": "ON_OFF"}],
+                            "categories": [{"key": "total", "countsTowardTotal": true, "step": 1}],
+                            "recorderDecidesTies": true}}]
+                        """.formatted(CALICO_MODULE_ID, GENERIC_MODULE_ID));
+    }
+
+    @Test
+    void aGameWithAModuleOfItsOwnAppearsInTheCatalogueByItself() {
+        games.addGamesOfModules();
+
+        assertThat(member.get("/api/games"))
+                .hasStatusOk()
+                .bodyJson()
+                .isLenientlyEqualTo("""
+                        [{"name": "Calico", "gameModuleId": "%s", "moduleKey": "calico", "hasOwnModule": true}]
+                        """.formatted(CALICO_MODULE_ID));
+
+        // Bringing the catalogue in step again changes nothing.
+        games.addGamesOfModules();
+        assertThat(games.all()).hasSize(1);
+    }
+
+    @Test
+    void aGameWithAModuleOfItsOwnCanBeNeitherEditedNorRemoved() {
+        games.addGamesOfModules();
+        UUID calico = games.all().getFirst().id();
+
+        assertThat(admin.put("/api/games/" + calico, game("Calico 2", false, "POINTS", false)))
+                .hasStatus(409)
+                .bodyJson()
+                .isLenientlyEqualTo("{\"code\": \"games.hasOwnModule\"}");
+        assertThat(admin.delete("/api/games/" + calico))
+                .hasStatus(409)
+                .bodyJson()
+                .isLenientlyEqualTo("{\"code\": \"games.hasOwnModule\"}");
+        assertThat(games.find(calico).orElseThrow().name()).isEqualTo("Calico");
+        // Its name is taken, too.
+        assertThat(member.post("/api/games", game("calico", false, "POINTS", false))).hasStatus(409);
+    }
+
+    @Test
+    void aGameAddedByHandIsHandedToTheModuleThatNamesIt() {
+        UUID byHand = games.create("calico", POINTS).id();
+        games.create("Azul", POINTS);
+
+        games.addGamesOfModules();
+
+        // The same Game, under the name it was given, now scored by the Calico module.
+        assertThat(member.get("/api/games"))
+                .bodyJson()
+                .isLenientlyEqualTo("""
+                        [{"name": "Azul", "moduleKey": "generic", "hasOwnModule": false},
+                         {"id": "%s", "name": "calico", "moduleKey": "calico", "hasOwnModule": true}]
+                        """.formatted(byHand));
     }
 
     @Test
@@ -86,7 +154,7 @@ class GamesApiTests {
                 .hasStatusOk()
                 .bodyJson()
                 .isLenientlyEqualTo("""
-                        {"name": "Cascadia", "gameModuleId": "%s",
+                        {"name": "Cascadia", "gameModuleId": "%s", "moduleKey": "generic", "hasOwnModule": false,
                          "cooperative": false, "recordingMode": "POINTS", "lowestScoreWins": false}
                         """.formatted(GENERIC_MODULE_ID));
     }

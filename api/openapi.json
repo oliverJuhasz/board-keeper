@@ -99,11 +99,16 @@
       "Game" : {
         "properties" : {
           "cooperative" : {
+            "description" : "For a Game scored by the Generic Module: how its Plays are recorded by default",
             "type" : "boolean"
           },
           "gameModuleId" : {
             "format" : "uuid",
             "type" : "string"
+          },
+          "hasOwnModule" : {
+            "description" : "Whether the Game has a Game Module of its own. Such a Game cannot be edited or removed.",
+            "type" : "boolean"
           },
           "id" : {
             "format" : "uuid",
@@ -112,7 +117,12 @@
           "lowestScoreWins" : {
             "type" : "boolean"
           },
+          "moduleKey" : {
+            "description" : "The key of the Game Module that scores the Game, such as \"calico\". Absent when that module is not installed.",
+            "type" : "string"
+          },
           "name" : {
+            "description" : "The name as stored. A Game with a module of its own is shown under the name in the module's texts instead: \"<moduleKey>.name\".",
             "type" : "string"
           },
           "recordingMode" : {
@@ -120,7 +130,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "cooperative", "gameModuleId", "id", "lowestScoreWins", "name", "recordingMode" ],
+        "required" : [ "cooperative", "gameModuleId", "hasOwnModule", "id", "lowestScoreWins", "name", "recordingMode" ],
         "type" : "object"
       },
       "GameModule" : {
@@ -131,9 +141,30 @@
           },
           "key" : {
             "type" : "string"
+          },
+          "scorePad" : {
+            "$ref" : "#/components/schemas/ScorePad"
           }
         },
-        "required" : [ "id", "key" ],
+        "required" : [ "id", "key", "scorePad" ],
+        "type" : "object"
+      },
+      "GameReference" : {
+        "description" : "The Game of a Play, with the name to show for it",
+        "properties" : {
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "moduleKey" : {
+            "description" : "For a Game with a Game Module of its own: the module's key. The Game is then shown under the name in the module's texts, \"<moduleKey>.name\".",
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "id", "name" ],
         "type" : "object"
       },
       "GameRequest" : {
@@ -249,7 +280,7 @@
         "type" : "object"
       },
       "NamedReference" : {
-        "description" : "A Game or a Player, with the name to show for it",
+        "description" : "A Player, with the name to show for them",
         "properties" : {
           "id" : {
             "format" : "uuid",
@@ -350,6 +381,18 @@
         "required" : [ "expiresAt", "token" ],
         "type" : "object"
       },
+      "OnlyWhen" : {
+        "properties" : {
+          "value" : {
+            "type" : "string"
+          },
+          "variant" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "value", "variant" ],
+        "type" : "object"
+      },
       "PasswordChangeRequest" : {
         "properties" : {
           "currentPassword" : {
@@ -386,7 +429,12 @@
             "type" : "boolean"
           },
           "game" : {
-            "$ref" : "#/components/schemas/NamedReference"
+            "$ref" : "#/components/schemas/GameReference"
+          },
+          "gameModuleId" : {
+            "description" : "The Game Module that scored this Play. The keys in \"setup\" and \"scores\" are its. It can differ from the module that scores the Game today.",
+            "format" : "uuid",
+            "type" : "string"
           },
           "group" : {
             "$ref" : "#/components/schemas/GroupResult",
@@ -432,7 +480,7 @@
             "type" : "object"
           }
         },
-        "required" : [ "canChange", "cooperative", "game", "id", "playedOn", "recordedAt", "recordedBy", "recordingMode", "results", "setup" ],
+        "required" : [ "canChange", "cooperative", "game", "gameModuleId", "id", "playedOn", "recordedAt", "recordedBy", "recordingMode", "results", "setup" ],
         "type" : "object"
       },
       "PlayHistory" : {
@@ -449,6 +497,65 @@
           }
         },
         "required" : [ "plays" ],
+        "type" : "object"
+      },
+      "PlayPreview" : {
+        "properties" : {
+          "cooperative" : {
+            "type" : "boolean"
+          },
+          "group" : {
+            "$ref" : "#/components/schemas/GroupResult"
+          },
+          "results" : {
+            "description" : "One per Player, in the order they were entered",
+            "items" : {
+              "$ref" : "#/components/schemas/PreviewResult"
+            },
+            "type" : "array"
+          },
+          "tieForRecorder" : {
+            "description" : "The Players of a tie for first place that the recorder may decide. Empty when the scores decide who won.",
+            "items" : {
+              "format" : "uuid",
+              "type" : "string"
+            },
+            "type" : "array"
+          }
+        },
+        "required" : [ "cooperative", "results", "tieForRecorder" ],
+        "type" : "object"
+      },
+      "PlayPreviewRequest" : {
+        "description" : "What is entered about how a Play went, with the Game Module to score it",
+        "properties" : {
+          "gameModuleId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "group" : {
+            "$ref" : "#/components/schemas/GroupEntry"
+          },
+          "players" : {
+            "items" : {
+              "$ref" : "#/components/schemas/PlayerEntry"
+            },
+            "maxItems" : 100,
+            "minItems" : 0,
+            "type" : "array"
+          },
+          "recordingMode" : {
+            "enum" : [ "POINTS", "WINNER_ONLY" ],
+            "type" : "string"
+          },
+          "setup" : {
+            "additionalProperties" : {
+              "type" : "string"
+            },
+            "type" : "object"
+          }
+        },
+        "required" : [ "gameModuleId", "players", "recordingMode", "setup" ],
         "type" : "object"
       },
       "Player" : {
@@ -495,6 +602,27 @@
           }
         },
         "required" : [ "name" ],
+        "type" : "object"
+      },
+      "PreviewResult" : {
+        "properties" : {
+          "placing" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "playerId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "total" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "won" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "playerId", "won" ],
         "type" : "object"
       },
       "Problem" : {
@@ -665,6 +793,70 @@
         "required" : [ "roleIds" ],
         "type" : "object"
       },
+      "ScoreCategory" : {
+        "properties" : {
+          "countsTowardTotal" : {
+            "type" : "boolean"
+          },
+          "key" : {
+            "type" : "string"
+          },
+          "max" : {
+            "description" : "The highest value allowed. Absent when there is none.",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "min" : {
+            "description" : "The lowest value allowed. Absent when there is none.",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "onlyWhen" : {
+            "$ref" : "#/components/schemas/OnlyWhen",
+            "description" : "The row is on the pad only when the Setup has this value for this Variant. Absent for a row that is always on it."
+          },
+          "step" : {
+            "description" : "Every value is a multiple of this",
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "countsTowardTotal", "key", "step" ],
+        "type" : "object"
+      },
+      "ScorePad" : {
+        "description" : "What is entered for a Play of the module's Game. It holds keys; what people read is in the module's texts: \"<module>.variant.<key>\", \"<module>.category.<key>\" and \"<module>.tie\".",
+        "properties" : {
+          "categories" : {
+            "description" : "The rows of the score pad, in its order",
+            "items" : {
+              "$ref" : "#/components/schemas/ScoreCategory"
+            },
+            "type" : "array"
+          },
+          "maxPlayers" : {
+            "description" : "Absent when there is no limit",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "minPlayers" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "recorderDecidesTies" : {
+            "description" : "Whether the recorder is asked who won a tie for first place that the scores cannot decide",
+            "type" : "boolean"
+          },
+          "variants" : {
+            "items" : {
+              "$ref" : "#/components/schemas/Variant"
+            },
+            "type" : "array"
+          }
+        },
+        "required" : [ "categories", "minPlayers", "recorderDecidesTies", "variants" ],
+        "type" : "object"
+      },
       "Session" : {
         "properties" : {
           "account" : {
@@ -730,6 +922,30 @@
           }
         },
         "required" : [ "password", "staySignedIn", "username" ],
+        "type" : "object"
+      },
+      "Variant" : {
+        "properties" : {
+          "defaultValue" : {
+            "description" : "What a Setup holds when nothing was chosen. For ON_OFF, \"true\" or \"false\".",
+            "type" : "string"
+          },
+          "key" : {
+            "type" : "string"
+          },
+          "kind" : {
+            "enum" : [ "ON_OFF", "CHOICE" ],
+            "type" : "string"
+          },
+          "options" : {
+            "description" : "For a CHOICE: the keys of the options, in the order to offer them",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          }
+        },
+        "required" : [ "defaultValue", "key", "kind" ],
         "type" : "object"
       }
     }
@@ -1096,7 +1312,7 @@
     },
     "/api/games/{id}" : {
       "delete" : {
-        "description" : "Only a Game without Plays can be removed.",
+        "description" : "Only a Game without Plays and without a Game Module of its own can be removed.",
         "operationId" : "removeGame",
         "parameters" : [ {
           "in" : "path",
@@ -1126,6 +1342,7 @@
         "tags" : [ "Games" ]
       },
       "put" : {
+        "description" : "Not for a Game with a Game Module of its own.",
         "operationId" : "updateGame",
         "parameters" : [ {
           "in" : "path",
@@ -1628,6 +1845,46 @@
           }
         },
         "summary" : "Record a Play",
+        "tags" : [ "Plays" ]
+      }
+    },
+    "/api/plays/preview" : {
+      "post" : {
+        "description" : "For a form that shows totals and Placings while it is filled in. \"tieForRecorder\" names the Players of a tie for first place that the scores cannot decide: ask the recorder who won it, and mark that Player as winner.",
+        "operationId" : "previewPlay",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PlayPreviewRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PlayPreview"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Work out how a Play would end, without recording it",
         "tags" : [ "Plays" ]
       }
     },

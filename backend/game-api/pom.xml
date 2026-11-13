@@ -13,5 +13,18 @@
     <name>Board Keeper: Game API</name>
     <description>The contract between the core and Game Modules. It is the only part of Board Keeper a Game Module may depend on (ADR 0006).</description>
 
-    <!-- Deliberately no dependencies: the contract is plain Java, with no Spring in it. -->
+    <!-- Deliberately no dependencies but for its own tests: the contract is plain Java, with no
+         Spring in it. -->
+    <dependencies>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 </project>

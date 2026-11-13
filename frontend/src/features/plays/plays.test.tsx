@@ -9,14 +9,15 @@ import {
   annaPlayer,
   bence,
   bencePlayer,
-  calico,
-  calicoPlay,
+  azul,
+  azulPlay,
   doraPlayer,
   gamesAre,
   pandemic,
   pandemicPlay,
   playCanBeEntered,
   playIs,
+  playsCanBePreviewed,
   problem,
   signedInAs,
 } from "@/test/api"
@@ -24,7 +25,7 @@ import { renderApp } from "@/test/renderApp"
 import { server } from "@/test/server"
 
 /** Answers "record a play" with the given Play, and remembers what was sent. */
-function playsCanBeRecorded(recorded: Play = calicoPlay) {
+function playsCanBeRecorded(recorded: Play = azulPlay) {
   const sent: NewPlay[] = []
   server.use(
     http.post("*/api/plays", async ({ request }) => {
@@ -46,32 +47,33 @@ async function submit() {
 
 test("a game's row leads to recording a play of it", async () => {
   signedInAs(bence)
-  gamesAre([calico])
+  gamesAre([azul])
   playCanBeEntered()
   renderApp("/")
 
-  await userEvent.click(await screen.findByRole("link", { name: "Record a play of Calico" }))
+  await userEvent.click(await screen.findByRole("link", { name: "Record a play of Azul" }))
 
   expect(await screen.findByRole("heading", { name: "Record a play" })).toBeInTheDocument()
-  expect(screen.getByText("Who played Calico, and how it ended.")).toBeInTheDocument()
+  expect(screen.getByText("Who played Azul, and how it ended.")).toBeInTheDocument()
   expect(screen.getByText("Points, highest wins")).toBeInTheDocument()
 })
 
 test("someone who may not record plays is not offered to", async () => {
   signedInAs({ ...bence, permissions: ["CREATE_GAMES"] })
-  gamesAre([calico])
+  gamesAre([azul])
   renderApp("/")
 
-  await screen.findByRole("row", { name: /Calico/ })
-  expect(screen.queryByRole("link", { name: "Record a play of Calico" })).not.toBeInTheDocument()
+  await screen.findByRole("row", { name: /Azul/ })
+  expect(screen.queryByRole("link", { name: "Record a play of Azul" })).not.toBeInTheDocument()
 })
 
 test("records a competitive play in points and then shows it", async () => {
   signedInAs(bence)
-  gamesAre([calico])
+  gamesAre([azul])
   playCanBeEntered()
+  playsCanBePreviewed()
   const sent = playsCanBeRecorded()
-  renderApp(`/plays/new?game=${calico.id}`)
+  renderApp(`/plays/new?game=${azul.id}`)
 
   // Whoever records is put in as the first player.
   expect(await screen.findByLabelText("Score of Bence")).toBeInTheDocument()
@@ -83,10 +85,10 @@ test("records a competitive play in points and then shows it", async () => {
   await submit()
 
   // The page of the recorded play, as the server answered it.
-  expect(await screen.findByRole("heading", { name: "Calico" })).toBeInTheDocument()
+  expect(await screen.findByRole("heading", { name: "Azul" })).toBeInTheDocument()
   expect(sent).toEqual([
     {
-      gameId: calico.id,
+      gameId: azul.id,
       playedOn: todayIso(),
       location: "At Dora's",
       notes: "Dora's first play.",
@@ -102,9 +104,9 @@ test("records a competitive play in points and then shows it", async () => {
 
 test("a player can be taken out again, and is then on offer again", async () => {
   signedInAs(bence)
-  gamesAre([calico])
+  gamesAre([azul])
   playCanBeEntered()
-  renderApp(`/plays/new?game=${calico.id}`)
+  renderApp(`/plays/new?game=${azul.id}`)
 
   await addPlayer("Anna")
   const offered = () =>
@@ -119,12 +121,13 @@ test("a player can be taken out again, and is then on offer again", async () => 
   expect(offered()).toEqual(["Choose a player…", "Anna", "Dora"])
 })
 
-test("asks who won a tie for first place, and shares the win unless told", async () => {
+test("asks who won a tie for first place, and takes no answer for granted", async () => {
   signedInAs(bence)
-  gamesAre([calico])
+  gamesAre([azul])
   playCanBeEntered()
+  playsCanBePreviewed()
   const sent = playsCanBeRecorded()
-  renderApp(`/plays/new?game=${calico.id}`)
+  renderApp(`/plays/new?game=${azul.id}`)
 
   await addPlayer("Anna")
   await addPlayer("Dora")
@@ -133,33 +136,84 @@ test("asks who won a tie for first place, and shares the win unless told", async
   expect(screen.queryByText("Tie for first place")).not.toBeInTheDocument()
   await userEvent.type(screen.getByLabelText("Score of Dora"), "12")
 
-  expect(screen.getByText("Tie for first place")).toBeInTheDocument()
-  expect(screen.getByRole("radio", { name: "Shared win" })).toBeChecked()
+  // The server found the tie. The question comes with the game module's own explanation.
+  expect(await screen.findByText("Tie for first place")).toBeInTheDocument()
+  expect(screen.getByText("Pick who won the tie, or leave the win shared.")).toBeInTheDocument()
   // Only the two who are tied can be given the win.
   expect(screen.queryByRole("radio", { name: "Dora" })).not.toBeInTheDocument()
+  expect(screen.getByRole("radio", { name: "Shared win" })).not.toBeChecked()
+
+  await submit()
+  expect(
+    await screen.findByText("Say who won the tie, or that the win is shared."),
+  ).toBeInTheDocument()
+  expect(sent).toEqual([])
+
   await userEvent.click(screen.getByRole("radio", { name: "Anna" }))
+  expect(
+    screen.queryByText("Say who won the tie, or that the win is shared."),
+  ).not.toBeInTheDocument()
   await submit()
 
-  await screen.findByRole("heading", { name: "Calico" })
+  await screen.findByRole("heading", { name: "Azul" })
   expect(sent[0].players.map((player) => player.winner)).toEqual([false, true, false])
+})
+
+test("a shared win is an answer to a tie, and marks nobody", async () => {
+  signedInAs(bence)
+  gamesAre([azul])
+  playCanBeEntered()
+  playsCanBePreviewed()
+  const sent = playsCanBeRecorded()
+  renderApp(`/plays/new?game=${azul.id}`)
+
+  await addPlayer("Anna")
+  await userEvent.type(await screen.findByLabelText("Score of Bence"), "70")
+  await userEvent.type(screen.getByLabelText("Score of Anna"), "70")
+  await userEvent.click(await screen.findByRole("radio", { name: "Shared win" }))
+  await submit()
+
+  await screen.findByRole("heading", { name: "Azul" })
+  expect(sent[0].players.map((player) => player.winner)).toEqual([false, false])
+})
+
+test("asks about a tie even when the play is submitted before the form could", async () => {
+  signedInAs(bence)
+  gamesAre([azul])
+  playCanBeEntered()
+  playsCanBePreviewed()
+  const sent = playsCanBeRecorded()
+  renderApp(`/plays/new?game=${azul.id}`)
+
+  await addPlayer("Anna")
+  await userEvent.type(await screen.findByLabelText("Score of Bence"), "70")
+  // Typed and submitted in one go, before the form has asked the server about the scores.
+  await userEvent.type(screen.getByLabelText("Score of Anna"), "70{Enter}")
+
+  expect(
+    await screen.findByText("Say who won the tie, or that the win is shared."),
+  ).toBeInTheDocument()
+  expect(await screen.findByText("Tie for first place")).toBeInTheDocument()
+  expect(sent).toEqual([])
 })
 
 test("checks the players and their scores before sending anything", async () => {
   signedInAs(bence)
-  gamesAre([calico])
+  gamesAre([azul])
   playCanBeEntered()
+  playsCanBePreviewed()
   const sent = playsCanBeRecorded()
-  renderApp(`/plays/new?game=${calico.id}`)
+  renderApp(`/plays/new?game=${azul.id}`)
 
   await screen.findByLabelText("Score of Bence")
   await submit()
-  expect(await screen.findByText("Add at least two players.")).toBeInTheDocument()
+  expect(await screen.findByText("This game needs at least 2 players.")).toBeInTheDocument()
 
   await addPlayer("Anna")
   await userEvent.type(screen.getByLabelText("Score of Anna"), "74")
   await submit()
   expect(await screen.findByText("Enter a score.")).toBeInTheDocument()
-  expect(screen.queryByText("Add at least two players.")).not.toBeInTheDocument()
+  expect(screen.queryByText("This game needs at least 2 players.")).not.toBeInTheDocument()
 
   // The message goes away as soon as its cause is fixed.
   await userEvent.type(screen.getByLabelText("Score of Bence"), "-3")
@@ -169,10 +223,10 @@ test("checks the players and their scores before sending anything", async () => 
 
 test("records only the winner for a game that is recorded that way", async () => {
   signedInAs(bence)
-  gamesAre([{ ...calico, recordingMode: "WINNER_ONLY" }])
+  gamesAre([{ ...azul, recordingMode: "WINNER_ONLY" }])
   playCanBeEntered()
   const sent = playsCanBeRecorded()
-  renderApp(`/plays/new?game=${calico.id}`)
+  renderApp(`/plays/new?game=${azul.id}`)
 
   await addPlayer("Anna")
   expect(screen.queryByLabelText("Score of Anna")).not.toBeInTheDocument()
@@ -182,10 +236,10 @@ test("records only the winner for a game that is recorded that way", async () =>
   await userEvent.click(screen.getByRole("checkbox", { name: "Anna won" }))
   await submit()
 
-  await screen.findByRole("heading", { name: "Calico" })
+  await screen.findByRole("heading", { name: "Azul" })
   expect(sent).toEqual([
     {
-      gameId: calico.id,
+      gameId: azul.id,
       playedOn: todayIso(),
       recordingMode: "WINNER_ONLY",
       setup: { cooperative: "false", lowestScoreWins: "false" },
@@ -232,10 +286,10 @@ test("records a cooperative play as won or lost by the group", async () => {
 
 test("how a play is recorded can be changed for that one play", async () => {
   signedInAs(anna)
-  gamesAre([calico])
+  gamesAre([azul])
   playCanBeEntered()
   const sent = playsCanBeRecorded(pandemicPlay)
-  renderApp(`/plays/new?game=${calico.id}`)
+  renderApp(`/plays/new?game=${azul.id}`)
 
   await userEvent.click(await screen.findByRole("button", { name: "Change" }))
   await userEvent.click(screen.getByRole("radio", { name: "Cooperative" }))
@@ -256,8 +310,9 @@ test("how a play is recorded can be changed for that one play", async () => {
 
 test("shows the game module's own reason when it refuses a play", async () => {
   signedInAs(bence)
-  gamesAre([calico])
-  playCanBeEntered({ "generic.invalid.scoreMissing": "Enter a score for every player." })
+  gamesAre([azul])
+  playCanBeEntered()
+  playsCanBePreviewed()
   server.use(
     http.post("*/api/plays", () =>
       HttpResponse.json(
@@ -266,7 +321,7 @@ test("shows the game module's own reason when it refuses a play", async () => {
       ),
     ),
   )
-  renderApp(`/plays/new?game=${calico.id}`)
+  renderApp(`/plays/new?game=${azul.id}`)
 
   await addPlayer("Anna")
   await userEvent.type(await screen.findByLabelText("Score of Bence"), "1")
@@ -278,10 +333,11 @@ test("shows the game module's own reason when it refuses a play", async () => {
 
 test("says why the server refused a play", async () => {
   signedInAs(bence)
-  gamesAre([calico])
+  gamesAre([azul])
   playCanBeEntered()
+  playsCanBePreviewed()
   server.use(http.post("*/api/plays", () => problem(422, "plays.invalidEntry")))
-  renderApp(`/plays/new?game=${calico.id}`)
+  renderApp(`/plays/new?game=${azul.id}`)
 
   await addPlayer("Anna")
   await userEvent.type(await screen.findByLabelText("Score of Bence"), "1")
@@ -295,7 +351,7 @@ test("says why the server refused a play", async () => {
 
 test("without a known game in the address, points to the Games page", async () => {
   signedInAs(bence)
-  gamesAre([calico])
+  gamesAre([azul])
   playCanBeEntered()
   renderApp("/plays/new")
 
@@ -305,10 +361,10 @@ test("without a known game in the address, points to the Games page", async () =
 
 test("shows a competitive play with the best placing first", async () => {
   signedInAs(bence)
-  playIs(calicoPlay)
-  renderApp(`/plays/${calicoPlay.id}`)
+  playIs(azulPlay)
+  renderApp(`/plays/${azulPlay.id}`)
 
-  expect(await screen.findByRole("heading", { name: "Calico" })).toBeInTheDocument()
+  expect(await screen.findByRole("heading", { name: "Azul" })).toBeInTheDocument()
   expect(screen.getByText("14 March 2026 · At Dora's")).toBeInTheDocument()
   const rows = within(screen.getByRole("table", { name: "Results" })).getAllByRole("row")
   expect(rows.map((row) => row.textContent)).toEqual([
@@ -322,14 +378,14 @@ test("shows a competitive play with the best placing first", async () => {
   ).toBeInTheDocument()
   expect(screen.getByRole("link", { name: "Record another play" })).toHaveAttribute(
     "href",
-    `/plays/new?game=${calico.id}`,
+    `/plays/new?game=${azul.id}`,
   )
 })
 
 test("shows only who won when that is all that was recorded", async () => {
   signedInAs(bence)
   const play: Play = {
-    ...calicoPlay,
+    ...azulPlay,
     recordingMode: "WINNER_ONLY",
     // Entered with the winner last, and shown with the winner first.
     results: [

@@ -30,7 +30,8 @@
       "title": "Eltávolítod: {{name}}?",
       "description": "Ezt nem lehet visszavonni.",
       "confirm": "Játék eltávolítása"
-    }
+    },
+    "ownScorePad": "Saját pontozólap"
   },
   "recording": {
     "as": {
@@ -82,13 +83,10 @@
       "choosePlayer": "Válassz játékost…",
       "everyoneAdded": "Már minden játékos szerepel ebben a partiban. Új játékost a Játékosok oldalon adhatsz hozzá.",
       "removePlayer": "{{name}} eltávolítása",
-      "score": "Pontszám",
-      "scoreOf": "{{name}} pontszáma",
       "won": "Nyert",
       "wonBy": "{{name}} nyert",
       "tie": {
         "legend": "Holtverseny az első helyen",
-        "hint": "Válaszd ki, ki nyerte a holtversenyt, vagy hagyd megosztva a győzelmet.",
         "shared": "Megosztott győzelem"
       },
       "outcome": "Hogyan végződött?",
@@ -96,7 +94,13 @@
       "outcomeLost": "A csapat veszített",
       "groupScore": "Pontszám",
       "groupScoreHint": "Nem kötelező. Egy pontszám az egész csapatnak.",
-      "submit": "Parti rögzítése"
+      "submit": "Parti rögzítése",
+      "padHint": "A pontozólap minden sora, minden játékosnak.",
+      "valueOf": "{{name}}: {{category}}",
+      "pad": "Pontozólap",
+      "total": "Összesen",
+      "placing": "Helyezés",
+      "playersFull": "Ezt a játékot legfeljebb {{max}} játékos játszhatja."
     },
     "history": {
       "title": "Partik",
@@ -140,7 +144,8 @@
         "title": "Törlöd ezt a partit?",
         "description": "Ez a parti ({{game}}) végleg eltűnik. Ezt nem lehet visszavonni.",
         "confirm": "Parti törlése"
-      }
+      },
+      "total": "Összesen"
     },
     "edit": {
       "title": "Parti szerkesztése",
@@ -151,6 +156,15 @@
         "text": "Nincs jogosultságod a szerkesztéséhez vagy a törléséhez.",
         "link": "Vissza a partihoz"
       }
+    },
+    "invalid": {
+      "tooFewPlayers": "Ehhez a játékhoz több játékos kell.",
+      "tooManyPlayers": "Ezt a játékot nem lehet ennyi játékossal játszani.",
+      "scoreMissing": "Minden játékosnál töltsd ki a pontozólap minden sorát.",
+      "scoreNotAllowed": "Az egyik pontszám nem lehetséges a pontozólap adott sorában.",
+      "winnerMissing": "Jelölj meg legalább egy győztest.",
+      "winnerNotTied": "Csak a holtversenyben érintett játékos kaphatja a győzelmet.",
+      "notRecorded": "Olyasmit adtál meg, amit ez a játék nem rögzít."
     }
   },
   "notFound": {
@@ -216,13 +230,18 @@
     "gameNameTooLong": "Legfeljebb 100 karaktert használj.",
     "scoreRequired": "Adj meg egy pontszámot.",
     "wholeNumber": "Egész számot adj meg.",
-    "playersTooFew": "Adj hozzá legalább két játékost.",
+    "playersTooFew": "Ehhez a játékhoz legalább {{min}} játékos kell.",
     "playerRequired": "Adj hozzá legalább egy játékost.",
     "winnerRequired": "Jelölj meg legalább egy győztest.",
     "outcomeRequired": "Add meg, hogy a csapat nyert-e vagy veszített.",
     "dateInFuture": "A dátum nem lehet a jövőben.",
     "locationTooLong": "Legfeljebb 100 karaktert használj.",
-    "notesTooLong": "Legfeljebb 2000 karaktert használj."
+    "notesTooLong": "Legfeljebb 2000 karaktert használj.",
+    "playersTooMany": "Ezt a játékot legfeljebb {{max}} játékos játszhatja.",
+    "scoreTooLow": "Legalább {{min}} legyen.",
+    "scoreTooHigh": "Legfeljebb {{max}} lehet.",
+    "scoreStep": "{{step}} többszörösét add meg.",
+    "tieUnanswered": "Add meg, ki nyerte a holtversenyt, vagy hogy a győzelem megosztott."
   },
   "problems": {
     "unknown": "Valami hiba történt. Próbáld újra.",
@@ -272,7 +291,8 @@
     "games": {
       "nameTaken": "Már van ilyen nevű játék.",
       "notFound": "Ez a játék már nem létezik.",
-      "inUse": "Ezt a játékot nem lehet eltávolítani: már rögzítettek hozzá partikat."
+      "inUse": "Ezt a játékot nem lehet eltávolítani: már rögzítettek hozzá partikat.",
+      "hasOwnModule": "Ez a játék a Board Keeper része, ezért nem lehet módosítani vagy eltávolítani."
     },
     "plays": {
       "invalidEntry": "Ezek az eredmények nem állnak össze. Nézd át őket, és próbáld újra.",

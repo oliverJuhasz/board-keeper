@@ -76,14 +76,19 @@ Recording without a connection, teams, unfinished plays, game nights, importing 
 
 ## Settled for milestone M3
 
+- A Game with a Game Module of its own appears in the catalogue by itself. It is shown under the name its module gives it in each language, and can be neither edited nor removed.
+- A Game that was added by hand under the name of a module's Game is handed to that module when the module arrives. Its earlier Plays stay as recorded, with totals only, and new Plays use the module's score pad.
+- A module describes its score pad: how many can play, its Variants, its Score Categories and its Tie-breakers. One general form in the frontend draws it, so adding a game needs no frontend code.
+- The order of work is the describing side of the contract with Calico, then Wyrmspan, then Harmonies. Solo styles come with the first of these games that needs one.
+- The form that records a Play will offer adding a new Player, for Accounts that may create Players.
+- Calico is scored from the publisher's rulebook (page 8): design goals, cats and buttons add up, and a tie goes to the most cat tokens, then the most button tokens, then is shared. The number of cat tokens is not on the score pad, so the form asks who won a tie. The family variant is recorded as a Variant. The beginner setup and the lower variance variant for two players change nothing about the scoring and are not recorded.
 - **The form asks who won a tie only when the scores can't say.** A Game Module names its Tie-breakers. Where a Tie-breaker is something that was entered, such as the money each Player has left in a Game where money decides a tie, the module decides the tie itself and the form does not ask. The form asks only when the Game decides a tie by something that isn't recorded, such as who played the fewest cards, and only if the Players are still tied after the Tie-breakers the module can work out. The Generic Module records nothing but totals, so with it the form always asks.
 
 ## Details to settle when a milestone starts
 
-- **M3:** making a Game with a module of its own appear in the catalogue by itself, named by its module. Until the first such module exists, every Game is added by hand and scored by the Generic Module.
-- **M3:** how the frontend builds the form for a Game with a module of its own. Today's form knows the Generic Module's two Variants and its one Score Category; a real module has to describe its own.
-- **M3:** whether to offer adding a new Player from the form that records a Play. Today that is done on the Players page first.
-- **M3:** what happens to a Game that was added by hand when a module for it arrives later. Its earlier Plays stay as the Generic Module recorded them.
+- **M3:** how a Solo Play of Calico is recorded. Calico is for one to four players, and its module takes two to four for now. The rulebook gives a solo game no winner: there is a score, and there are ten scenarios that are passed or not.
+- **M3:** the name for what a module describes. The code calls it a score pad, after the rulebooks. It is not in the glossary yet.
+- **M6:** a Variant that is a number in a range, such as an adversary's level. The contract has on/off and choice Variants so far.
 - **M4:** whether the play history or a statistics overview becomes the start page.
 - **M5:** how a sole Admin who has forgotten their password gets back in. Today that needs a second Admin to create a Reset Link. The self-hosting guide needs an answer for when there is none.
 - **M5:** splitting the frontend's JavaScript by page. It has grown to about 250 kB compressed, all loaded up front.

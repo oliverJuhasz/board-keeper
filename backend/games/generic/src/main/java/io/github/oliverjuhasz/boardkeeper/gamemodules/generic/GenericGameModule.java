@@ -7,11 +7,15 @@ import io.github.oliverjuhasz.boardkeeper.gameapi.PlayEntry;
 import io.github.oliverjuhasz.boardkeeper.gameapi.PlayerEntry;
 import io.github.oliverjuhasz.boardkeeper.gameapi.PlayerResult;
 import io.github.oliverjuhasz.boardkeeper.gameapi.RecordingMode;
+import io.github.oliverjuhasz.boardkeeper.gameapi.ScoreCategory;
+import io.github.oliverjuhasz.boardkeeper.gameapi.ScorePad;
+import io.github.oliverjuhasz.boardkeeper.gameapi.Variant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.IntStream;
 
 /**
  * The Generic Module: the built-in Game Module for any Game that has no module of its own. It
@@ -53,6 +57,22 @@ public final class GenericGameModule implements GameModule {
         return KEY;
     }
 
+    /**
+     * The pad names this module's two Variants and its one Score Category. It cannot say
+     * that the "cooperative" Variant turns a Play into a Cooperative one, with a result for the
+     * group. No other module needs that, so the frontend knows it about this module.
+     */
+    @Override
+    public ScorePad scorePad() {
+        return new ScorePad(
+                1,
+                null,
+                List.of(new Variant.OnOff(COOPERATIVE, false), new Variant.OnOff(LOWEST_SCORE_WINS, false)),
+                List.of(ScoreCategory.of(TOTAL).mayBeNegative()),
+                List.of(),
+                true);
+    }
+
     @Override
     public Outcome score(PlayEntry entry) {
         entry.setup().forEach((variant, value) -> {
@@ -73,7 +93,7 @@ public final class GenericGameModule implements GameModule {
         if (entry.players().size() < 2) {
             throw new InvalidPlayException("tooFewPlayers");
         }
-        return new Outcome.Competitive(points ? byPoints(entry) : byMarkedWinners(entry));
+        return points ? byPoints(entry) : new Outcome.Competitive(byMarkedWinners(entry), List.of());
     }
 
     private static boolean isOn(PlayEntry entry, String variant) {
@@ -119,7 +139,7 @@ public final class GenericGameModule implements GameModule {
      * best total, the ones marked as winner come first, and the rest share the Placing after
      * them. Marking none of them, or all of them, leaves first place shared.
      */
-    private static List<PlayerResult> byPoints(PlayEntry entry) {
+    private static Outcome byPoints(PlayEntry entry) {
         List<PlayerEntry> players = entry.players();
         for (PlayerEntry player : players) {
             if (player.scores().isEmpty()) {
@@ -139,7 +159,7 @@ public final class GenericGameModule implements GameModule {
         }
         int markedWinners = (int) players.stream().filter(PlayerEntry::winner).count();
 
-        return players.stream()
+        List<PlayerResult> results = players.stream()
                 .map(player -> {
                     int total = total(player);
                     int placing;
@@ -157,6 +177,13 @@ public final class GenericGameModule implements GameModule {
                     return new PlayerResult(total, placing, placing == 1);
                 })
                 .toList();
+
+        // With nothing but totals, any tie for first place is the recorder's to decide.
+        List<Integer> tied = IntStream.range(0, players.size())
+                .filter(player -> total(players.get(player)) == best)
+                .boxed()
+                .toList();
+        return new Outcome.Competitive(results, tied.size() > 1 ? tied : List.of());
     }
 
     private static int total(PlayerEntry player) {

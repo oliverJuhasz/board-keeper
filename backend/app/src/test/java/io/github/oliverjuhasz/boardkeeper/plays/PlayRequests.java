@@ -44,6 +44,12 @@ final class PlayRequests {
         return "{\"playerId\": \"%s\", \"winner\": false}".formatted(player);
     }
 
+    /** A Player's row on Calico's score pad. */
+    static String calicoPad(UUID player, int designGoals, int cats, int buttons) {
+        return "{\"playerId\": \"%s\", \"scores\": {\"designGoals\": %d, \"cats\": %d, \"buttons\": %d}, \"winner\": false}"
+                .formatted(player, designGoals, cats, buttons);
+    }
+
     static JsonNode json(MvcTestResult result) {
         try {
             return JSON.readTree(result.getResponse().getContentAsString());

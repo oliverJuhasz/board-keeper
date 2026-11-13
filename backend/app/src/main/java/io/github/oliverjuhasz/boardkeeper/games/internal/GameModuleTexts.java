@@ -1,6 +1,8 @@
 package io.github.oliverjuhasz.boardkeeper.games.internal;
 
 import io.github.oliverjuhasz.boardkeeper.gameapi.GameModule;
+import io.github.oliverjuhasz.boardkeeper.gameapi.ScorePad;
+import io.github.oliverjuhasz.boardkeeper.gameapi.Variant;
 import io.github.oliverjuhasz.boardkeeper.games.GameModules;
 import io.github.oliverjuhasz.boardkeeper.language.Language;
 import java.io.IOException;
@@ -28,7 +30,7 @@ import org.springframework.stereotype.Component;
  * Hungarian is shown in English, and a warning is logged.
  */
 @Component
-class GameModuleTexts {
+public class GameModuleTexts {
 
     private static final Logger log = LoggerFactory.getLogger(GameModuleTexts.class);
 
@@ -40,6 +42,7 @@ class GameModuleTexts {
         }
         for (GameModule module : gameModules.all()) {
             Map<String, String> fallback = read(module, Language.FALLBACK);
+            requireTextsForPad(module, fallback.keySet());
             for (Language language : Language.values()) {
                 Map<String, String> own = language == Language.FALLBACK ? fallback : read(module, language);
                 warnAboutDifferences(module, language, fallback.keySet(), own.keySet());
@@ -52,8 +55,26 @@ class GameModuleTexts {
         }
     }
 
+    /** The name of a module's Game in every language, such as "7 Wonders Duel" and "7 Csoda Párbaj". */
+    public Set<String> namesOf(GameModule module) {
+        Set<String> names = new TreeSet<>();
+        for (Language language : Language.values()) {
+            names.add(texts.get(language).get(nameText(module)));
+        }
+        return names;
+    }
+
+    /** The name of a module's Game in English, the language every module has. */
+    public String englishNameOf(GameModule module) {
+        return texts.get(Language.FALLBACK).get(nameText(module));
+    }
+
+    private static String nameText(GameModule module) {
+        return module.key() + ".name";
+    }
+
     /** Every Game Module's texts in the given language, by name. */
-    Map<String, String> in(Language language) {
+    public Map<String, String> in(Language language) {
         return Collections.unmodifiableMap(texts.get(language));
     }
 
@@ -79,6 +100,33 @@ class GameModuleTexts {
             result.put(name, properties.getProperty(name));
         }
         return result;
+    }
+
+    /**
+     * The frontend draws a module's form from its score pad and looks up what to call each
+     * part of it in the module's texts. A text missing in English would leave a blank there, so
+     * the application refuses to start without it.
+     */
+    private static void requireTextsForPad(GameModule module, Set<String> english) {
+        String prefix = module.key() + ".";
+        ScorePad pad = module.scorePad();
+        Set<String> needed = new TreeSet<>();
+        needed.add(prefix + "name");
+        for (Variant variant : pad.variants()) {
+            needed.add(prefix + "variant." + variant.key());
+            if (variant instanceof Variant.Choice choice) {
+                choice.options().forEach(option -> needed.add(prefix + "variant." + variant.key() + "." + option));
+            }
+        }
+        pad.categories().forEach(category -> needed.add(prefix + "category." + category.key()));
+        if (pad.recorderDecidesTies()) {
+            needed.add(prefix + "tie");
+        }
+        needed.removeAll(english);
+        if (!needed.isEmpty()) {
+            throw new IllegalStateException(
+                    "Game Module '" + module.key() + "' has no English text for " + needed + ", which its score pad names");
+        }
     }
 
     private static void warnAboutDifferences(GameModule module, Language language, Set<String> english, Set<String> own) {

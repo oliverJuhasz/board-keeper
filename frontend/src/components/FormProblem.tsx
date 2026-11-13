@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next"
 import type { Problem } from "@/api/client"
 import { problemMessage } from "@/api/problems"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import i18n from "@/i18n"
 
 /**
  * Shows why submitting a form failed, if it did. Pass the error of the form's mutation.
@@ -21,11 +22,13 @@ export function FormProblem({
     return null
   }
   const reason = (error as Problem).reason
+  // A reason is the name of a text: of the Game Module's, or one of the frontend's own for the
+  // reasons that are the same for every Game.
+  const explained =
+    reason && (reasons?.[reason] ?? (i18n.exists(reason) ? t(reason as "problems.unknown") : ""))
   return (
     <Alert variant="destructive">
-      <AlertDescription>
-        {(reason && reasons?.[reason]) || problemMessage(t, error)}
-      </AlertDescription>
+      <AlertDescription>{explained || problemMessage(t, error)}</AlertDescription>
     </Alert>
   )
 }

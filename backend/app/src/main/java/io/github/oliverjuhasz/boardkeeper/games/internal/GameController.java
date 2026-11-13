@@ -40,7 +40,7 @@ class GameController {
     @GetMapping
     @Operation(summary = "List the Games in the catalogue by name", operationId = "listGames")
     List<GameResponse> list() {
-        return games.all().stream().map(GameResponse::from).toList();
+        return games.all().stream().map(this::toResponse).toList();
     }
 
     @PostMapping
@@ -50,14 +50,17 @@ class GameController {
             description = "A Game added this way is scored by the Generic Module.",
             operationId = "createGame")
     GameResponse create(@Valid @RequestBody GameRequest body) {
-        return GameResponse.from(games.create(body.name(), body.defaults()));
+        return toResponse(games.create(body.name(), body.defaults()));
     }
 
     @PutMapping("/{id}")
     @RequiresPermission(Permission.EDIT_GAMES)
-    @Operation(summary = "Rename a Game and change how its Plays are recorded", operationId = "updateGame")
+    @Operation(
+            summary = "Rename a Game and change how its Plays are recorded",
+            description = "Not for a Game with a Game Module of its own.",
+            operationId = "updateGame")
     GameResponse update(@PathVariable UUID id, @Valid @RequestBody GameRequest body) {
-        return GameResponse.from(games.update(id, body.name(), body.defaults()));
+        return toResponse(games.update(id, body.name(), body.defaults()));
     }
 
     @DeleteMapping("/{id}")
@@ -65,7 +68,7 @@ class GameController {
     @RequiresPermission(Permission.REMOVE_GAMES)
     @Operation(
             summary = "Remove a Game",
-            description = "Only a Game without Plays can be removed.",
+            description = "Only a Game without Plays and without a Game Module of its own can be removed.",
             operationId = "removeGame")
     void remove(@PathVariable UUID id) {
         games.remove(id);
@@ -84,25 +87,43 @@ class GameController {
         }
     }
 
+    private GameResponse toResponse(Game game) {
+        return new GameResponse(
+                game.id(),
+                game.name(),
+                game.gameModuleId(),
+                games.moduleKeyOf(game).orElse(null),
+                games.hasOwnModule(game),
+                game.defaults().cooperative(),
+                game.defaults().recordingMode(),
+                game.defaults().lowestScoreWins());
+    }
+
     @Schema(
             name = "Game",
-            requiredProperties = {"id", "name", "gameModuleId", "cooperative", "recordingMode", "lowestScoreWins"})
+            requiredProperties = {
+                "id",
+                "name",
+                "gameModuleId",
+                "hasOwnModule",
+                "cooperative",
+                "recordingMode",
+                "lowestScoreWins"
+            })
     record GameResponse(
             UUID id,
-            String name,
+            @Schema(description = "The name as stored. A Game with a module of its own is shown under the name in the"
+                            + " module's texts instead: \"<moduleKey>.name\".")
+                    String name,
             UUID gameModuleId,
-            boolean cooperative,
+            @Schema(description = "The key of the Game Module that scores the Game, such as \"calico\". Absent when"
+                            + " that module is not installed.")
+                    String moduleKey,
+            @Schema(description = "Whether the Game has a Game Module of its own. Such a Game cannot be edited or"
+                            + " removed.")
+                    boolean hasOwnModule,
+            @Schema(description = "For a Game scored by the Generic Module: how its Plays are recorded by default")
+                    boolean cooperative,
             RecordingMode recordingMode,
-            boolean lowestScoreWins) {
-
-        static GameResponse from(Game game) {
-            return new GameResponse(
-                    game.id(),
-                    game.name(),
-                    game.gameModuleId(),
-                    game.defaults().cooperative(),
-                    game.defaults().recordingMode(),
-                    game.defaults().lowestScoreWins());
-        }
-    }
+            boolean lowestScoreWins) {}
 }

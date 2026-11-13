@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
+import { useGameName } from "@/features/games/useGameModules"
 import { useCurrentAccount } from "@/features/session/useSession"
 import { formatDay } from "@/lib/dates"
 
@@ -22,6 +23,7 @@ import { formatDay } from "@/lib/dates"
 export function PlaysPage() {
   const { t } = useTranslation()
   const account = useCurrentAccount()
+  const gameName = useGameName()
   const [searchParams, setSearchParams] = useSearchParams()
   const filters = {
     mine: searchParams.get("mine") === "1",
@@ -103,7 +105,7 @@ export function PlaysPage() {
                 <NativeSelectOption value="">{t("plays.history.allGames")}</NativeSelectOption>
                 {games.data?.map((game) => (
                   <NativeSelectOption key={game.id} value={game.id}>
-                    {game.name}
+                    {gameName(game)}
                   </NativeSelectOption>
                 ))}
               </NativeSelect>
@@ -208,6 +210,7 @@ function FilterField({ label, children }: { label: string; children: (id: string
 /** One Play in the history: its Game and day, and how it ended. The whole of it is a link to the Play. */
 function PlaySummary({ play }: { play: Play }) {
   const { t } = useTranslation()
+  const gameName = useGameName()
   // Best first: by Placing, or winners first when nobody was placed.
   const results = play.results.toSorted(
     (a, b) => (a.placing ?? (a.won ? 0 : 1)) - (b.placing ?? (b.won ? 0 : 1)),
@@ -216,7 +219,7 @@ function PlaySummary({ play }: { play: Play }) {
   return (
     <Link to={`/plays/${play.id}`} className="block space-y-1 px-3 py-2.5 hover:bg-muted/50">
       <div className="flex items-baseline justify-between gap-3">
-        <span className="font-medium">{play.game.name}</span>
+        <span className="font-medium">{gameName(play.game)}</span>
         <span className="shrink-0 text-sm text-muted-foreground">{formatDay(play.playedOn)}</span>
       </div>
       {play.group ? (

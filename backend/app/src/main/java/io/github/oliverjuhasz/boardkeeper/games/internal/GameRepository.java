@@ -44,6 +44,16 @@ public class GameRepository {
                 .fetchOptional(row -> row.value1());
     }
 
+    /** Whether some Game is scored by this Game Module. */
+    public boolean existsByModule(UUID gameModuleId) {
+        return dsl.fetchExists(GAME, GAME.GAME_MODULE_ID.eq(gameModuleId));
+    }
+
+    /** Gives a Game to another Game Module, for the Plays that are recorded from now on. */
+    public void changeModule(UUID id, UUID gameModuleId) {
+        dsl.update(GAME).set(GAME.GAME_MODULE_ID, gameModuleId).where(GAME.ID.eq(id)).execute();
+    }
+
     public Game insert(String name, UUID gameModuleId, RecordingDefaults defaults) {
         UUID id = dsl.insertInto(GAME)
                 .set(GAME.NAME, name)
