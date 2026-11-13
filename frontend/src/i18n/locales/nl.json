@@ -101,7 +101,9 @@
       "pad": "Scoreblok",
       "total": "Totaal",
       "placing": "Plaats",
-      "playersFull": "Dit spel is voor hoogstens {{max}} spelers."
+      "playersFull": "Dit spel is voor hoogstens {{max}} spelers.",
+      "lost": "Verloren",
+      "soloResult": "Uitslag"
     },
     "history": {
       "title": "Partijen",
@@ -147,7 +149,9 @@
         "confirm": "Partij verwijderen"
       },
       "total": "Totaal",
-      "pad": "Scoreblok"
+      "pad": "Scoreblok",
+      "won": "Gewonnen",
+      "lost": "Verloren"
     },
     "edit": {
       "title": "Een partij bewerken",
@@ -166,7 +170,8 @@
       "scoreNotAllowed": "Een van de scores kan niet op zijn regel van het scoreblok.",
       "winnerMissing": "Geef minstens één winnaar aan.",
       "winnerNotTied": "Alleen een speler die bij het gelijkspel hoort, kan de winst krijgen.",
-      "notRecorded": "Er is iets ingevuld dat dit spel niet vastlegt."
+      "notRecorded": "Er is iets ingevuld dat dit spel niet vastlegt.",
+      "scoresNeeded": "Een solopartij van dit spel wordt met de scores vastgelegd."
     }
   },
   "notFound": {
@@ -243,7 +248,8 @@
     "scoreTooLow": "Vul {{min}} of meer in.",
     "scoreTooHigh": "Vul {{max}} of minder in.",
     "scoreStep": "Vul een veelvoud van {{step}} in.",
-    "tieUnanswered": "Geef aan wie het gelijkspel won, of dat de winst gedeeld is."
+    "tieUnanswered": "Geef aan wie het gelijkspel won, of dat de winst gedeeld is.",
+    "soloScoresOnly": "Een solopartij van dit spel wordt met de scores vastgelegd. Kies Punten."
   },
   "problems": {
     "unknown": "Er ging iets mis. Probeer het opnieuw.",

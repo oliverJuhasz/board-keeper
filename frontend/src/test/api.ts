@@ -10,7 +10,7 @@ import type {
   Player,
   Role,
 } from "@/api/client"
-import { calicoModule, genericModule } from "./gameModules"
+import { calicoModule, genericModule, wyrmspanModule } from "./gameModules"
 import { server } from "./server"
 
 // Ready-made answers of the pretend backend, for tests to combine.
@@ -85,6 +85,18 @@ export const calico: Game = {
   name: "Calico",
   gameModuleId: calicoModule.id,
   moduleKey: "calico",
+  hasOwnModule: true,
+  cooperative: false,
+  recordingMode: "POINTS",
+  lowestScoreWins: false,
+}
+
+/** A Game with a Game Module of its own that can be played alone against the Automa. */
+export const wyrmspan: Game = {
+  id: "0193a000-0000-7000-8000-0000000000e5",
+  name: "Wyrmspan",
+  gameModuleId: wyrmspanModule.id,
+  moduleKey: "wyrmspan",
   hasOwnModule: true,
   cooperative: false,
   recordingMode: "POINTS",

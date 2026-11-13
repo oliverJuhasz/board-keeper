@@ -9,10 +9,10 @@ export const genericModule: GameModule = {
   scorePad: {
     minPlayers: 1,
     variants: [
-      { key: "cooperative", kind: "ON_OFF", defaultValue: "false" },
-      { key: "lowestScoreWins", kind: "ON_OFF", defaultValue: "false" },
+      { key: "cooperative", kind: "ON_OFF", defaultValue: "false", soloOnly: false },
+      { key: "lowestScoreWins", kind: "ON_OFF", defaultValue: "false", soloOnly: false },
     ],
-    categories: [{ key: "total", countsTowardTotal: true, step: 1 }],
+    categories: [{ key: "total", countsTowardTotal: true, step: 1, soloOnly: false }],
     recorderDecidesTies: true,
   },
 }
@@ -21,9 +21,9 @@ export const calicoModule: GameModule = {
   id: "d392b4e5-a531-44c4-85c7-369783d9be5c",
   key: "calico",
   scorePad: {
-    minPlayers: 2,
+    minPlayers: 1,
     maxPlayers: 4,
-    variants: [{ key: "family", kind: "ON_OFF", defaultValue: "false" }],
+    variants: [{ key: "family", kind: "ON_OFF", defaultValue: "false", soloOnly: false }],
     categories: [
       {
         key: "designGoals",
@@ -31,15 +31,45 @@ export const calicoModule: GameModule = {
         min: 0,
         step: 1,
         onlyWhen: { variant: "family", value: "false" },
+        soloOnly: false,
       },
-      { key: "cats", countsTowardTotal: true, min: 0, step: 1 },
-      { key: "buttons", countsTowardTotal: true, min: 0, step: 3 },
+      { key: "cats", countsTowardTotal: true, min: 0, step: 1, soloOnly: false },
+      { key: "buttons", countsTowardTotal: true, min: 0, step: 3, soloOnly: false },
     ],
     recorderDecidesTies: true,
+    solo: { kind: "FOR_SCORE_ONLY" },
   },
 }
 
-export const gameModules = [calicoModule, genericModule]
+/** Played alone against the Automa, whose score is a row of the pad in a Solo Play only. */
+export const wyrmspanModule: GameModule = {
+  id: "19fc28f0-730d-49aa-8157-730bf2ee89dc",
+  key: "wyrmspan",
+  scorePad: {
+    minPlayers: 1,
+    maxPlayers: 5,
+    variants: [
+      {
+        key: "automaLevel",
+        kind: "CHOICE",
+        options: ["1", "2", "3"],
+        defaultValue: "1",
+        soloOnly: true,
+      },
+      { key: "ravelMode", kind: "ON_OFF", defaultValue: "false", soloOnly: true },
+    ],
+    categories: [
+      { key: "dragonGuild", countsTowardTotal: true, min: 0, step: 1, soloOnly: false },
+      { key: "printedDragons", countsTowardTotal: true, min: 0, step: 1, soloOnly: false },
+      { key: "eggs", countsTowardTotal: true, min: 0, step: 1, soloOnly: false },
+      { key: "automa", countsTowardTotal: false, min: 0, step: 1, soloOnly: true },
+    ],
+    recorderDecidesTies: true,
+    solo: { kind: "AGAINST_OPPONENT", opponentCategory: "automa", tieWins: true },
+  },
+}
+
+export const gameModules = [calicoModule, genericModule, wyrmspanModule]
 
 export const gameModuleTexts: Record<string, string> = {
   "generic.name": "Generic",
@@ -53,4 +83,15 @@ export const gameModuleTexts: Record<string, string> = {
   "calico.category.cats": "Cats",
   "calico.category.buttons": "Buttons",
   "calico.tie": "The player with the most cat tokens wins the tie.",
+  "wyrmspan.name": "Wyrmspan",
+  "wyrmspan.variant.automaLevel": "Automa level",
+  "wyrmspan.variant.automaLevel.1": "Level 1",
+  "wyrmspan.variant.automaLevel.2": "Level 2",
+  "wyrmspan.variant.automaLevel.3": "Level 3",
+  "wyrmspan.variant.ravelMode": "Ravel Mode",
+  "wyrmspan.category.dragonGuild": "Dragon Guild",
+  "wyrmspan.category.printedDragons": "Printed on dragons",
+  "wyrmspan.category.eggs": "Eggs",
+  "wyrmspan.category.automa": "The Automa's score",
+  "wyrmspan.tie": "The player with the most visible dragons wins the tie.",
 }

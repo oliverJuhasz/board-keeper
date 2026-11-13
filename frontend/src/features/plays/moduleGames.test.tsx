@@ -188,12 +188,14 @@ test("each row of the pad has its own limits", async () => {
 
 test("a game says how many can play", async () => {
   await startCalico()
+  // Calico can be played alone, so the recorder on their own is enough. Nobody isn't.
+  await userEvent.click(screen.getByRole("button", { name: "Remove Bence" }))
 
   await userEvent.click(screen.getByRole("button", { name: "Record play" }))
-  expect(await screen.findByText("This game needs at least 2 players.")).toBeInTheDocument()
+  expect(await screen.findByText("Add at least one player.")).toBeInTheDocument()
 
   await userEvent.selectOptions(screen.getByLabelText("Add a player"), "Anna")
-  expect(screen.queryByText("This game needs at least 2 players.")).not.toBeInTheDocument()
+  expect(screen.queryByText("Add at least one player.")).not.toBeInTheDocument()
 })
 
 test("a tie is explained in the game's own words", async () => {

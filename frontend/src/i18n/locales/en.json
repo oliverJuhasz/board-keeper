@@ -101,7 +101,9 @@
       "pad": "Score pad",
       "total": "Total",
       "placing": "Placing",
-      "playersFull": "This game is for at most {{max}} players."
+      "playersFull": "This game is for at most {{max}} players.",
+      "lost": "Lost",
+      "soloResult": "Result"
     },
     "history": {
       "title": "Plays",
@@ -147,7 +149,9 @@
         "confirm": "Delete play"
       },
       "total": "Total",
-      "pad": "Score pad"
+      "pad": "Score pad",
+      "won": "Won",
+      "lost": "Lost"
     },
     "edit": {
       "title": "Edit a play",
@@ -166,7 +170,8 @@
       "scoreNotAllowed": "One of the scores isn't possible in its row of the score pad.",
       "winnerMissing": "Mark at least one winner.",
       "winnerNotTied": "Only a player who is part of the tie can be given the win.",
-      "notRecorded": "Something was entered that this game doesn't record."
+      "notRecorded": "Something was entered that this game doesn't record.",
+      "scoresNeeded": "A solo play of this game is recorded with its scores."
     }
   },
   "notFound": {
@@ -243,7 +248,8 @@
     "scoreTooLow": "Enter {{min}} or more.",
     "scoreTooHigh": "Enter {{max}} or less.",
     "scoreStep": "Enter a multiple of {{step}}.",
-    "tieUnanswered": "Say who won the tie, or that the win is shared."
+    "tieUnanswered": "Say who won the tie, or that the win is shared.",
+    "soloScoresOnly": "A solo play of this game is recorded with its scores. Choose Points."
   },
   "problems": {
     "unknown": "Something went wrong. Try again.",
