@@ -1,8 +1,10 @@
 package io.github.oliverjuhasz.boardkeeper.games.internal;
 
+import io.github.oliverjuhasz.boardkeeper.BoardKeeperApplication;
 import io.github.oliverjuhasz.boardkeeper.games.Games;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 /**
@@ -11,6 +13,8 @@ import org.springframework.stereotype.Component;
  * and before the application takes requests.
  */
 @Component
+// Work for the application that serves Board Keeper, not for a command.
+@Profile("!" + BoardKeeperApplication.COMMAND_PROFILE)
 class GameCatalogueStartup implements ApplicationRunner {
 
     private final Games games;

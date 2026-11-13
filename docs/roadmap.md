@@ -97,7 +97,7 @@ Recording without a connection, teams, unfinished plays, game nights, importing 
 
 ## Settled for milestone M5
 
-- **A sole Admin who has forgotten their password** gets back in with a command run on the container. It writes a one-time Reset Link for the Account to the log, the way the first-time setup link is written, and does not start the web server. Only someone who can run commands on the container can use it.
+- **A sole Admin who has forgotten their password** gets back in with a command run on the container. It writes a one-time Reset Link for the Account to the log, the way the first-time setup link is written, and stops again. Only someone who can run commands on the container can use it.
 - **The frontend's code is split by page**, before the app can be installed on a phone. Each page is loaded the first time it is needed, so the first load stops growing with every new page, and after an update a browser downloads only the files that changed. The first load today is still about 270 kB compressed: most of it is the libraries the start page needs, such as React, the router and the form libraries, and the start page leads straight to the form for a Play.
 
 ## Details to settle when a milestone starts

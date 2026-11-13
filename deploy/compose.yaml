@@ -10,6 +10,11 @@
 #
 # On its first start, Board Keeper writes a one-time link to its log for creating the first
 # Admin: docker compose logs app
+#
+# If the only Admin has forgotten their password, this writes a one-time Reset Link for their
+# Account to the console, while Board Keeper keeps running:
+#
+#   docker compose exec app java -jar board-keeper.jar --reset-link-for=USERNAME
 
 name: board-keeper
 

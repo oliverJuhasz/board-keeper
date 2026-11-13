@@ -1,5 +1,6 @@
 package io.github.oliverjuhasz.boardkeeper.accounts.internal;
 
+import io.github.oliverjuhasz.boardkeeper.BoardKeeperApplication;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
@@ -28,9 +29,14 @@ class SetupLink {
         this.accounts = accounts;
     }
 
+    /**
+     * Not when the application runs a command and stops: the link lives in this process's
+     * memory and would be gone with it.
+     */
     @EventListener(ApplicationReadyEvent.class)
-    void offerWhenThereAreNoAccounts() {
-        if (!accounts.anyExist()) {
+    void offerWhenThereAreNoAccounts(ApplicationReadyEvent ready) {
+        boolean command = ready.getApplicationContext().getEnvironment().matchesProfiles(BoardKeeperApplication.COMMAND_PROFILE);
+        if (!command && !accounts.anyExist()) {
             offer();
         }
     }
