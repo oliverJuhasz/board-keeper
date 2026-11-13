@@ -520,28 +520,44 @@
     }
   },
   "stats": {
+    "winsOf": "{{wins}}/{{plays}}",
+    "solo": "Szólópartik",
+    "together": "Közösen játszva",
+    "won": "Nyertetek",
+    "columns": {
+      "player": "Játékos",
+      "game": "Játék",
+      "plays": "Partik",
+      "wins": "Győzelmek",
+      "bestScore": "Legjobb pontszám",
+      "averageScore": "Átlagos pontszám",
+      "averagePlacing": "Átlagos helyezés"
+    },
     "game": {
+      "played_one": "Egyszer játszottátok",
+      "played_other": "{{count}} alkalommal játszottátok",
       "loading": "A statisztika betöltése",
       "loadFailed": "Nem sikerült betölteni a statisztikát",
       "backToGames": "Vissza a játékokhoz",
-      "played_one": "Egyszer játszottátok",
-      "played_other": "{{count}} alkalommal játszottátok",
       "record": "Parti rögzítése",
       "empty": "Ezzel a játékkal még nincs parti. A statisztika az elsővel indul.",
       "players": "Játékosok",
-      "player": "Játékos",
-      "plays": "Partik",
-      "wins": "Győzelmek",
-      "winsOf": "{{wins}}/{{plays}}",
-      "bestScore": "Legjobb pontszám",
-      "averageScore": "Átlagos pontszám",
-      "averagePlacing": "Átlagos helyezés",
       "padAverages": "Átlagok a pontozólapon",
       "padAveragesHint": "Egy játékos átlagosan ennyi pontot szerez soronként.",
-      "together": "Közösen játszva",
-      "won": "Nyertetek",
-      "solo": "Szólópartik",
       "allPlays": "Összes parti: {{game}}"
+    },
+    "player": {
+      "played_one": "Egyszer játszott",
+      "played_other": "{{count}} alkalommal játszott",
+      "loading": "A statisztika betöltése",
+      "loadFailed": "Nem sikerült betölteni a statisztikát",
+      "backToPlayers": "Vissza a játékosokhoz",
+      "neverPlayed": "Még nem játszott",
+      "empty": "{{name}} még nem játszott. A statisztika az első partival indul.",
+      "games": "Játékok",
+      "winsAgainstOthers": "Győzelmek mások ellen",
+      "winsTogether": "Közös győzelmek",
+      "allPlays": "Összes parti: {{name}}"
     }
   }
 }

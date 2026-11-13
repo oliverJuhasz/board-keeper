@@ -141,6 +141,8 @@ So a listener can see an event twice, and two listeners can run at once. Copying
 
 **Testing.** Because the listeners run on other threads, a test that records a Play and then reads statistics waits for them with Awaitility, which retries an assertion until it holds: see `StatsApiTests`.
 
+**The pages.** `GET /api/stats/games/{id}` and `GET /api/stats/players/{id}` feed the pages at `/games/<id>` and `/players/<id>` in `frontend/src/features/stats/`. The tables they share are in `StatsTables.tsx`: a Game's page has a row for each Player, a Player's page a row for each Game. On a phone too narrow for every column the table scrolls sideways, with the first column held in place.
+
 ### Changing the database
 
 1. Add a file to `backend/app/src/main/resources/db/migration`, named `V<next number>__<what_it_does>.sql`, with two underscores after the number. Never edit a migration that has been applied to a real database.
@@ -220,6 +222,7 @@ New pages are put together from these, in `frontend/src/components/`. `frontend/
 | `ConfirmDialog` | "Are you sure?" before something that can't be undone |
 | `LinkDialog` | Creating a one-time link and showing it to copy |
 | `LinkButton` | A link to another page that looks like a button |
+| `QuietLink` | A link in text or a table, such as a name that leads to its statistics, with a faint underline |
 | `TextField`, `TextAreaField`, `CheckboxField`, `RadioField` | A labelled input, text box, checkbox or set of choices, with hint and error |
 | `FormProblem` | Why the server refused a submission |
 | `PageMessage` | A page that only has something to say |

@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next"
-import { Link, NavLink, Outlet } from "react-router"
+import { Link, NavLink, Outlet, useMatch } from "react-router"
 import { AccountMenu } from "@/features/session/AccountMenu"
 import { useAccountLanguage } from "@/features/session/useChangeLanguage"
 
@@ -7,6 +7,9 @@ import { useAccountLanguage } from "@/features/session/useChangeLanguage"
 export function AppLayout() {
   const { t } = useTranslation()
   useAccountLanguage()
+  // A Game's statistics belong with the Games, though their address doesn't start with the
+  // start page's "/". useMatch says whether the current address fits a pattern.
+  const onGamePage = useMatch("/games/*") !== null
 
   // NavLink is a link that knows whether it points at the current page.
   const navLink = ({ isActive }: { isActive: boolean }) =>
@@ -19,7 +22,7 @@ export function AppLayout() {
           {/* The name stays on one line on a phone 360 pixels wide or more. Below that there
               is no room for it beside the menu, so it may wrap. "min-[360px]:" is Tailwind's way
               to give a breakpoint of its own where the standard ones ("sm:" at 640) don't fit. */}
-          <div className="flex items-center gap-4 sm:gap-5">
+          <div className="flex items-center gap-3 min-[400px]:gap-4 sm:gap-5">
             <Link
               to="/"
               className="font-heading text-lg font-semibold min-[360px]:shrink-0 min-[360px]:whitespace-nowrap"
@@ -27,7 +30,11 @@ export function AppLayout() {
               Board Keeper
             </Link>
             <nav className="flex gap-3 text-sm font-medium sm:gap-4">
-              <NavLink to="/" end className={navLink}>
+              <NavLink
+                to="/"
+                end
+                className={({ isActive }) => navLink({ isActive: isActive || onGamePage })}
+              >
                 {t("nav.games")}
               </NavLink>
               <NavLink to="/plays" className={navLink}>

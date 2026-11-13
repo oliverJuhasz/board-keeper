@@ -21,6 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { LoadingRows } from "@/components/LoadingRows"
+import { QuietLink } from "@/components/QuietLink"
 import { useCan, useCurrentAccount } from "@/features/session/useSession"
 import { InviteDialog } from "./InviteDialog"
 import { PlayerNameDialog } from "./PlayerNameDialog"
@@ -91,7 +92,8 @@ export function PlayersPage() {
               return (
                 <TableRow key={player.id}>
                   <TableCell className="font-medium">
-                    {player.name}
+                    {/* The name leads to the Player's statistics. */}
+                    <QuietLink to={`/players/${player.id}`}>{player.name}</QuietLink>
                     {player.id === account.playerId && (
                       <Badge variant="outline" className="ml-2">
                         {t("players.you")}

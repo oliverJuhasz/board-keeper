@@ -10,6 +10,7 @@ import { LinkButton } from "@/components/LinkButton"
 import { PageHeader } from "@/components/PageHeader"
 import { PageMessage } from "@/components/PageMessage"
 import { QueryState } from "@/components/QueryState"
+import { QuietLink } from "@/components/QuietLink"
 import { Badge } from "@/components/ui/badge"
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import {
@@ -134,14 +135,8 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
     <div className="space-y-6">
       <PageHeader
         title={
-          // The Game's name leads to its statistics. The faint underline shows that it is a
-          // link, also on a phone, where nothing changes under a finger before the tap.
-          <Link
-            to={`/games/${play.game.id}`}
-            className="underline decoration-muted-foreground/40 underline-offset-4 hover:decoration-foreground"
-          >
-            {gameName(play.game)}
-          </Link>
+          // The Game's name leads to its statistics.
+          <QuietLink to={`/games/${play.game.id}`}>{gameName(play.game)}</QuietLink>
         }
         description={[formatDay(play.playedOn), play.location].filter(Boolean).join(" · ")}
         action={

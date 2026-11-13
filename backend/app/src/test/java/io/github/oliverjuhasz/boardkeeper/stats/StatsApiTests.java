@@ -31,7 +31,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
 /**
- * The statistics of a Game. They are brought up to date by event listeners that run on threads
+ * The statistics of a Game and of a Player. They are brought up to date by event listeners that run on threads
  * of their own after a Play has been saved, so every test waits for its numbers to arrive.
  */
 @SpringBootTest
@@ -199,6 +199,63 @@ class StatsApiTests {
                 .hasStatus(404)
                 .bodyJson()
                 .isLenientlyEqualTo("{\"code\": \"games.notFound\"}");
+    }
+
+    @Test
+    void aPlayersStatisticsCoverEveryGameTheyPlayed() {
+        UUID azul = generic("Azul", false);
+        UUID pandemic = games.create("Pandemic", new RecordingDefaults(true, RecordingMode.POINTS, false)).id();
+        UUID calico = gameOfModule("calico");
+        UUID wyrmspan = gameOfModule("wyrmspan");
+        member.post("/api/plays", pointsPlay(azul, "2026-03-01", scored(anna, 50), scored(dora, 40)));
+        member.post("/api/plays", pointsPlay(azul, "2026-03-02", scored(anna, 30), scored(dora, 45)));
+        member.post("/api/plays", play(wyrmspan, "WINNER_ONLY", "{}", "2026-03-03", winner(anna), notScored(bence)));
+        member.post("/api/plays", """
+                {"gameId": "%s", "playedOn": "2026-03-04", "recordingMode": "WINNER_ONLY", "setup": %s,
+                 "players": [%s, %s], "group": {"won": true, "scores": {}}}
+                """.formatted(pandemic, COOPERATIVE, notScored(anna), notScored(dora)));
+        member.post("/api/plays", pointsPlay(calico, "2026-03-05", calicoPad(anna, 28, 23, 21)));
+
+        eventually(() -> assertThat(member.get("/api/stats/players/" + anna))
+                .hasStatusOk()
+                .bodyJson()
+                .isLenientlyEqualTo("""
+                        {"playerId": "%s", "name": "Anna", "plays": 5, "lastPlayedOn": "2026-03-05",
+                         "againstOthers": {"plays": 3, "wins": 2, "averagePlacing": 1.5},
+                         "together": {"plays": 1, "wins": 1},
+                         "soloPlays": 1,
+                         "games": [
+                           {"gameId": "%s", "plays": 2, "wins": 1, "bestScore": 50, "averageScore": 40.0,
+                            "averagePlacing": 1.5},
+                           {"gameId": "%s", "plays": 1, "wins": 1},
+                           {"gameId": "%s", "plays": 1, "wins": 1}],
+                         "solo": [{"gameId": "%s", "plays": 1, "wins": 0, "playsAgainstOpponent": 0, "bestScore": 72,
+                                   "averageScore": 72.0}]}
+                        """.formatted(anna, azul, pandemic, wyrmspan, calico)));
+        // The Games played as often come in the order they were last played, the latest first.
+        assertThat(member.get("/api/stats/players/" + anna))
+                .bodyJson()
+                .extractingPath("$.games[*].gameId")
+                .asArray()
+                .containsExactly(azul.toString(), pandemic.toString(), wyrmspan.toString());
+        assertThat(member.get("/api/stats/players/" + anna)).bodyJson().doesNotHavePath("$.games[1].bestScore");
+    }
+
+    @Test
+    void aPlayerWhoHasNotPlayedHasNoStatisticsYet() {
+        assertThat(member.get("/api/stats/players/" + bence))
+                .hasStatusOk()
+                .bodyJson()
+                .isLenientlyEqualTo("{\"name\": \"Bence\", \"plays\": 0, \"soloPlays\": 0, \"games\": [], \"solo\": []}");
+        assertThat(member.get("/api/stats/players/" + bence)).bodyJson().doesNotHavePath("$.againstOthers");
+    }
+
+    @Test
+    void anUnknownPlayerIsNotFound() {
+        assertThat(member.get("/api/stats/players/" + UUID.randomUUID()))
+                .hasStatus(404)
+                .bodyJson()
+                .isLenientlyEqualTo("{\"code\": \"players.notFound\"}");
     }
 
     @Test
