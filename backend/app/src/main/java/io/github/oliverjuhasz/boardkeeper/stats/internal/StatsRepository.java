@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.JSONB;
 import org.springframework.stereotype.Repository;
@@ -158,6 +159,84 @@ class StatsRepository {
                 .fetch(row -> JSON.readValue(row.value1().data(), SCORES));
     }
 
+    /** All Plays a Player took part in, whatever the Game. */
+    PlayerTotals totalsOf(UUID playerId) {
+        Condition againstOthers = STATS_PLAY.SOLO.isFalse().and(STATS_PLAY.COOPERATIVE.isFalse());
+        Condition together = STATS_PLAY.COOPERATIVE.isTrue();
+        return dsl.select(
+                        count(),
+                        max(STATS_PLAY.PLAYED_ON),
+                        count().filterWhere(againstOthers),
+                        count().filterWhere(againstOthers.and(STATS_RESULT.WON.isTrue())),
+                        // Only a Play against others has Placings.
+                        avg(STATS_RESULT.PLACING),
+                        count().filterWhere(together),
+                        count().filterWhere(together.and(STATS_RESULT.WON.isTrue())),
+                        count().filterWhere(STATS_PLAY.SOLO.isTrue()))
+                .from(STATS_RESULT)
+                .join(STATS_PLAY)
+                .on(STATS_PLAY.PLAY_ID.eq(STATS_RESULT.PLAY_ID))
+                .where(STATS_RESULT.PLAYER_ID.eq(playerId))
+                .fetchSingle(row -> new PlayerTotals(
+                        row.value1(),
+                        row.value2(),
+                        row.value3(),
+                        row.value4(),
+                        toDouble(row.value5()),
+                        row.value6(),
+                        row.value7(),
+                        row.value8()));
+    }
+
+    /** What a Player got in each Game they played. */
+    List<GameTally> gameTalliesOf(UUID playerId) {
+        Condition withOthers = STATS_PLAY.SOLO.isFalse();
+        Condition againstOthers = withOthers.and(STATS_PLAY.COOPERATIVE.isFalse());
+        Condition solo = STATS_PLAY.SOLO.isTrue();
+        return dsl.select(
+                        STATS_PLAY.GAME_ID,
+                        max(STATS_PLAY.PLAYED_ON),
+                        count().filterWhere(withOthers),
+                        // In a Cooperative Play, every Player has the group's result.
+                        count().filterWhere(withOthers.and(STATS_RESULT.WON.isTrue())),
+                        max(STATS_RESULT.TOTAL).filterWhere(againstOthers),
+                        min(STATS_RESULT.TOTAL).filterWhere(againstOthers),
+                        avg(STATS_RESULT.TOTAL).filterWhere(againstOthers),
+                        avg(STATS_RESULT.PLACING),
+                        count().filterWhere(solo),
+                        count().filterWhere(solo.and(STATS_RESULT.WON.isTrue())),
+                        count(STATS_RESULT.WON).filterWhere(solo),
+                        max(STATS_RESULT.TOTAL).filterWhere(solo),
+                        min(STATS_RESULT.TOTAL).filterWhere(solo),
+                        avg(STATS_RESULT.TOTAL).filterWhere(solo))
+                .from(STATS_RESULT)
+                .join(STATS_PLAY)
+                .on(STATS_PLAY.PLAY_ID.eq(STATS_RESULT.PLAY_ID))
+                .where(STATS_RESULT.PLAYER_ID.eq(playerId))
+                .groupBy(STATS_PLAY.GAME_ID)
+                .fetch(row -> new GameTally(
+                        row.value1(),
+                        row.value2(),
+                        new PlayerTally(
+                                playerId,
+                                row.value3(),
+                                row.value4(),
+                                row.value3(),
+                                row.value5(),
+                                row.value6(),
+                                toDouble(row.value7()),
+                                toDouble(row.value8())),
+                        new PlayerTally(
+                                playerId,
+                                row.value9(),
+                                row.value10(),
+                                row.value11(),
+                                row.value12(),
+                                row.value13(),
+                                toDouble(row.value14()),
+                                null)));
+    }
+
     private static Double toDouble(BigDecimal value) {
         return value == null ? null : value.doubleValue();
     }
@@ -180,4 +259,25 @@ class StatsRepository {
             Double averagePlacing) {}
 
     record GroupTally(int plays, int wins, Integer highestScore, Double averageScore) {}
+
+    /**
+     * @param plays every Play the Player took part in
+     * @param averagePlacing in the Plays against others recorded with scores
+     */
+    record PlayerTotals(
+            int plays,
+            LocalDate lastPlayedOn,
+            int playsAgainstOthers,
+            int winsAgainstOthers,
+            Double averagePlacing,
+            int playsTogether,
+            int winsTogether,
+            int soloPlays) {}
+
+    /**
+     * @param withOthers the Plays with other Players: against them, or together with them; the
+     *     scores and Placings come from those against them only
+     * @param solo the Solo Plays
+     */
+    record GameTally(UUID gameId, LocalDate lastPlayedOn, PlayerTally withOthers, PlayerTally solo) {}
 }

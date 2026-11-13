@@ -104,6 +104,77 @@ class StatsController {
                 soloStats);
     }
 
+    @GetMapping("/players/{playerId}")
+    @Operation(
+            summary = "Statistics of a Player",
+            description = "Like a Game's statistics, worked out from the statistics' own copy of the Plays. A"
+                    + " Cooperative Play is won or lost by the whole group, so it is counted apart from the Plays"
+                    + " against others, as are Solo Plays.",
+            operationId = "getPlayerStats")
+    PlayerSummaryResponse player(@PathVariable UUID playerId) {
+        Player player = players.find(playerId).orElseThrow(() -> Problem.notFound("players.notFound"));
+        StatsRepository.PlayerTotals totals = repository.totalsOf(playerId);
+        List<StatsRepository.GameTally> tallies = repository.gameTalliesOf(playerId);
+        Map<UUID, Game> gamesById =
+                games.find(tallies.stream().map(StatsRepository.GameTally::gameId).toList());
+        // The most played first; of two played as often, the one played last.
+        Comparator<StatsRepository.GameTally> mostPlayed = Comparator.comparing(StatsRepository.GameTally::lastPlayedOn)
+                .reversed();
+        List<PlayerGameStatsResponse> perGame = tallies.stream()
+                .filter(tally -> tally.withOthers().plays() > 0 && gamesById.containsKey(tally.gameId()))
+                .sorted(Comparator.comparingInt((StatsRepository.GameTally tally) -> tally.withOthers().plays())
+                        .reversed()
+                        .thenComparing(mostPlayed))
+                .map(tally -> {
+                    PlayerTally withOthers = tally.withOthers();
+                    return new PlayerGameStatsResponse(
+                            tally.gameId(),
+                            withOthers.plays(),
+                            withOthers.wins(),
+                            best(gamesById.get(tally.gameId()), withOthers),
+                            withOthers.averageScore(),
+                            withOthers.averagePlacing());
+                })
+                .toList();
+        List<PlayerSoloStatsResponse> perGameSolo = tallies.stream()
+                .filter(tally -> tally.solo().plays() > 0 && gamesById.containsKey(tally.gameId()))
+                .sorted(Comparator.comparingInt((StatsRepository.GameTally tally) -> tally.solo().plays())
+                        .reversed()
+                        .thenComparing(mostPlayed))
+                .map(tally -> {
+                    PlayerTally solo = tally.solo();
+                    return new PlayerSoloStatsResponse(
+                            tally.gameId(),
+                            solo.plays(),
+                            solo.wins(),
+                            solo.playsWonOrLost(),
+                            best(gamesById.get(tally.gameId()), solo),
+                            solo.averageScore());
+                })
+                .toList();
+
+        return new PlayerSummaryResponse(
+                playerId,
+                player.name(),
+                totals.plays(),
+                totals.lastPlayedOn(),
+                totals.playsAgainstOthers() == 0
+                        ? null
+                        : new AgainstOthersResponse(
+                                totals.playsAgainstOthers(), totals.winsAgainstOthers(), totals.averagePlacing()),
+                totals.playsTogether() == 0
+                        ? null
+                        : new TogetherResponse(totals.playsTogether(), totals.winsTogether()),
+                totals.soloPlays(),
+                perGame,
+                perGameSolo);
+    }
+
+    /** The best total: the highest, or the lowest in a Game where the lowest score wins. */
+    private static Integer best(Game game, PlayerTally tally) {
+        return game.defaults().lowestScoreWins() ? tally.lowestScore() : tally.highestScore();
+    }
+
     /** The average of each Score Category, over the Players that have a score for it. */
     private static Map<String, Double> categoryAverages(List<Map<String, Integer>> scores) {
         Map<String, int[]> sumAndCount = new HashMap<>();
@@ -163,6 +234,64 @@ class StatsController {
             int plays,
             int wins,
             @Schema(description = "The highest score of the group. Absent when no score was recorded.") Integer bestScore,
+            Double averageScore) {}
+
+    @Schema(
+            name = "PlayerSummary",
+            description = "How a Player did in all the Games they played",
+            requiredProperties = {"playerId", "name", "plays", "soloPlays", "games", "solo"})
+    record PlayerSummaryResponse(
+            UUID playerId,
+            String name,
+            @Schema(description = "Every Play the Player took part in") int plays,
+            @Schema(description = "The day of the latest Play. Absent when there is none.") LocalDate lastPlayedOn,
+            @Schema(description = "The Plays against others. Absent when there are none.")
+                    AgainstOthersResponse againstOthers,
+            @Schema(description = "The Cooperative Plays. Absent when there are none.") TogetherResponse together,
+            int soloPlays,
+            @Schema(description = "One for each Game the Player played with others, the most played first")
+                    List<PlayerGameStatsResponse> games,
+            @Schema(description = "One for each Game the Player played on their own, the most played first")
+                    List<PlayerSoloStatsResponse> solo) {}
+
+    @Schema(name = "AgainstOthers", requiredProperties = {"plays", "wins"})
+    record AgainstOthersResponse(
+            int plays,
+            @Schema(description = "Shared wins included") int wins,
+            @Schema(description = "Of the Plays recorded with scores. 1 is first.") Double averagePlacing) {}
+
+    @Schema(
+            name = "Together",
+            description = "Cooperative Plays, which the whole group wins or loses",
+            requiredProperties = {"plays", "wins"})
+    record TogetherResponse(int plays, int wins) {}
+
+    @Schema(
+            name = "PlayerGameStats",
+            description = "How a Player did in one Game, in the Plays with others. Cooperative Plays count in"
+                    + " plays and wins; the scores and Placings come from the Plays against others only.",
+            requiredProperties = {"gameId", "plays", "wins"})
+    record PlayerGameStatsResponse(
+            UUID gameId,
+            int plays,
+            int wins,
+            @Schema(description = "The best total: the highest, or the lowest when the lowest score wins. Absent when"
+                            + " no score was recorded.")
+                    Integer bestScore,
+            Double averageScore,
+            @Schema(description = "1 is first") Double averagePlacing) {}
+
+    @Schema(
+            name = "PlayerSoloStats",
+            description = "How a Player did in the Solo Plays of one Game",
+            requiredProperties = {"gameId", "plays", "wins", "playsAgainstOpponent"})
+    record PlayerSoloStatsResponse(
+            UUID gameId,
+            int plays,
+            @Schema(description = "The Solo Plays won against the Game's automated opponent") int wins,
+            @Schema(description = "The Solo Plays against an automated opponent, which are won or lost")
+                    int playsAgainstOpponent,
+            Integer bestScore,
             Double averageScore) {}
 
     @Schema(

@@ -28,6 +28,26 @@
         "required" : [ "disabled", "id", "playerId", "roleIds", "username" ],
         "type" : "object"
       },
+      "AgainstOthers" : {
+        "properties" : {
+          "averagePlacing" : {
+            "description" : "Of the Plays recorded with scores. 1 is first.",
+            "format" : "double",
+            "type" : "number"
+          },
+          "plays" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "wins" : {
+            "description" : "Shared wins included",
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "plays", "wins" ],
+        "type" : "object"
+      },
       "Claims" : {
         "properties" : {
           "playerIds" : {
@@ -683,6 +703,39 @@
         "required" : [ "playerId", "winner" ],
         "type" : "object"
       },
+      "PlayerGameStats" : {
+        "description" : "How a Player did in one Game, in the Plays with others. Cooperative Plays count in plays and wins; the scores and Placings come from the Plays against others only.",
+        "properties" : {
+          "averagePlacing" : {
+            "description" : "1 is first",
+            "format" : "double",
+            "type" : "number"
+          },
+          "averageScore" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "bestScore" : {
+            "description" : "The best total: the highest, or the lowest when the lowest score wins. Absent when no score was recorded.",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "gameId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "plays" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "wins" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "gameId", "plays", "wins" ],
+        "type" : "object"
+      },
       "PlayerRequest" : {
         "properties" : {
           "name" : {
@@ -692,6 +745,39 @@
           }
         },
         "required" : [ "name" ],
+        "type" : "object"
+      },
+      "PlayerSoloStats" : {
+        "description" : "How a Player did in the Solo Plays of one Game",
+        "properties" : {
+          "averageScore" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "bestScore" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "gameId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "plays" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "playsAgainstOpponent" : {
+            "description" : "The Solo Plays against an automated opponent, which are won or lost",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "wins" : {
+            "description" : "The Solo Plays won against the Game's automated opponent",
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "gameId", "plays", "playsAgainstOpponent", "wins" ],
         "type" : "object"
       },
       "PlayerStats" : {
@@ -730,6 +816,56 @@
           }
         },
         "required" : [ "name", "playerId", "plays", "wins" ],
+        "type" : "object"
+      },
+      "PlayerSummary" : {
+        "description" : "How a Player did in all the Games they played",
+        "properties" : {
+          "againstOthers" : {
+            "$ref" : "#/components/schemas/AgainstOthers",
+            "description" : "The Plays against others. Absent when there are none."
+          },
+          "games" : {
+            "description" : "One for each Game the Player played with others, the most played first",
+            "items" : {
+              "$ref" : "#/components/schemas/PlayerGameStats"
+            },
+            "type" : "array"
+          },
+          "lastPlayedOn" : {
+            "description" : "The day of the latest Play. Absent when there is none.",
+            "format" : "date",
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "playerId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "plays" : {
+            "description" : "Every Play the Player took part in",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "solo" : {
+            "description" : "One for each Game the Player played on their own, the most played first",
+            "items" : {
+              "$ref" : "#/components/schemas/PlayerSoloStats"
+            },
+            "type" : "array"
+          },
+          "soloPlays" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "together" : {
+            "$ref" : "#/components/schemas/Together",
+            "description" : "The Cooperative Plays. Absent when there are none."
+          }
+        },
+        "required" : [ "games", "name", "playerId", "plays", "solo", "soloPlays" ],
         "type" : "object"
       },
       "PreviewResult" : {
@@ -1115,6 +1251,21 @@
           }
         },
         "required" : [ "name", "playerId", "plays", "playsAgainstOpponent", "wins" ],
+        "type" : "object"
+      },
+      "Together" : {
+        "description" : "Cooperative Plays, which the whole group wins or loses",
+        "properties" : {
+          "plays" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "wins" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "plays", "wins" ],
         "type" : "object"
       },
       "Variant" : {
@@ -2695,6 +2846,45 @@
           }
         },
         "summary" : "Statistics of a Game",
+        "tags" : [ "Statistics" ]
+      }
+    },
+    "/api/stats/players/{playerId}" : {
+      "get" : {
+        "description" : "Like a Game's statistics, worked out from the statistics' own copy of the Plays. A Cooperative Play is won or lost by the whole group, so it is counted apart from the Plays against others, as are Solo Plays.",
+        "operationId" : "getPlayerStats",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "playerId",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PlayerSummary"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Statistics of a Player",
         "tags" : [ "Statistics" ]
       }
     }

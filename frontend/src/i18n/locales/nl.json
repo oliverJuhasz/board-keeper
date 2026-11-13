@@ -520,28 +520,44 @@
     }
   },
   "stats": {
+    "winsOf": "{{wins}} van {{plays}}",
+    "solo": "Solopartijen",
+    "together": "Samen gespeeld",
+    "won": "Gewonnen",
+    "columns": {
+      "player": "Speler",
+      "game": "Spel",
+      "plays": "Partijen",
+      "wins": "Gewonnen",
+      "bestScore": "Beste score",
+      "averageScore": "Gemiddelde score",
+      "averagePlacing": "Gemiddelde plaats"
+    },
     "game": {
+      "played_one": "Eén keer gespeeld",
+      "played_other": "{{count}} keer gespeeld",
       "loading": "De statistieken laden",
       "loadFailed": "De statistieken konden niet worden geladen",
       "backToGames": "Terug naar spellen",
-      "played_one": "Eén keer gespeeld",
-      "played_other": "{{count}} keer gespeeld",
       "record": "Een partij vastleggen",
       "empty": "Nog geen partijen van dit spel. De statistieken beginnen bij de eerste.",
       "players": "Spelers",
-      "player": "Speler",
-      "plays": "Partijen",
-      "wins": "Gewonnen",
-      "winsOf": "{{wins}} van {{plays}}",
-      "bestScore": "Beste score",
-      "averageScore": "Gemiddelde score",
-      "averagePlacing": "Gemiddelde plaats",
       "padAverages": "Gemiddelden op het scoreblok",
       "padAveragesHint": "Wat een speler gemiddeld per rij scoort.",
-      "together": "Samen gespeeld",
-      "won": "Gewonnen",
-      "solo": "Solopartijen",
       "allPlays": "Alle partijen van {{game}}"
+    },
+    "player": {
+      "played_one": "Eén keer gespeeld",
+      "played_other": "{{count}} keer gespeeld",
+      "loading": "De statistieken laden",
+      "loadFailed": "De statistieken konden niet worden geladen",
+      "backToPlayers": "Terug naar spelers",
+      "neverPlayed": "Nog niet gespeeld",
+      "empty": "Nog geen partijen met {{name}}. De statistieken beginnen bij de eerste.",
+      "games": "Spellen",
+      "winsAgainstOthers": "Gewonnen tegen anderen",
+      "winsTogether": "Samen gewonnen",
+      "allPlays": "Alle partijen van {{name}}"
     }
   }
 }

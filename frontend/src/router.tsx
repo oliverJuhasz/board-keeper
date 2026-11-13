@@ -5,6 +5,7 @@ import { RolesPage } from "./features/roles/RolesPage"
 import { ResetPasswordPage } from "./features/session/ResetPasswordPage"
 import { SettingsPage } from "./features/settings/SettingsPage"
 import { GameStatsPage } from "./features/stats/GameStatsPage"
+import { PlayerStatsPage } from "./features/stats/PlayerStatsPage"
 import { PlayersPage } from "./features/players/PlayersPage"
 import { EditPlayPage } from "./features/plays/EditPlayPage"
 import { PlayPage } from "./features/plays/PlayPage"
@@ -49,6 +50,7 @@ export const routes: RouteObject[] = [
       { index: true, element: <GamesPage /> },
       { path: "games/:id", element: <GameStatsPage /> },
       { path: "players", element: <PlayersPage /> },
+      { path: "players/:id", element: <PlayerStatsPage /> },
       { path: "plays", element: <PlaysPage /> },
       { path: "plays/new", element: <RecordPlayPage /> },
       { path: "plays/:id", element: <PlayPage /> },

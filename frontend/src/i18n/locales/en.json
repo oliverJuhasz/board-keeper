@@ -520,28 +520,44 @@
     }
   },
   "stats": {
+    "winsOf": "{{wins}} of {{plays}}",
+    "solo": "Solo plays",
+    "together": "Played together",
+    "won": "Won",
+    "columns": {
+      "player": "Player",
+      "game": "Game",
+      "plays": "Plays",
+      "wins": "Wins",
+      "bestScore": "Best score",
+      "averageScore": "Average score",
+      "averagePlacing": "Average placing"
+    },
     "game": {
+      "played_one": "Played once",
+      "played_other": "Played {{count}} times",
       "loading": "Loading the statistics",
       "loadFailed": "Couldn't load the statistics",
       "backToGames": "Back to games",
-      "played_one": "Played once",
-      "played_other": "Played {{count}} times",
       "record": "Record a play",
       "empty": "No plays of this game yet. Its statistics start with the first one.",
       "players": "Players",
-      "player": "Player",
-      "plays": "Plays",
-      "wins": "Wins",
-      "winsOf": "{{wins}} of {{plays}}",
-      "bestScore": "Best score",
-      "averageScore": "Average score",
-      "averagePlacing": "Average placing",
       "padAverages": "Score pad averages",
       "padAveragesHint": "What a player scores on each row, on average.",
-      "together": "Played together",
-      "won": "Won",
-      "solo": "Solo plays",
       "allPlays": "All plays of {{game}}"
+    },
+    "player": {
+      "played_one": "Played once",
+      "played_other": "Played {{count}} times",
+      "loading": "Loading the statistics",
+      "loadFailed": "Couldn't load the statistics",
+      "backToPlayers": "Back to players",
+      "neverPlayed": "Hasn't played yet",
+      "empty": "No plays with {{name}} yet. Their statistics start with the first one.",
+      "games": "Games",
+      "winsAgainstOthers": "Wins against others",
+      "winsTogether": "Wins together",
+      "allPlays": "All plays of {{name}}"
     }
   }
 }
