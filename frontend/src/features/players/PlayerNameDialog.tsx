@@ -21,8 +21,20 @@ import { playerName } from "@/features/session/accountRules"
 
 const nameForm = z.object({ name: playerName })
 
-/** The dialog for a Player's name: adds a Player, or renames the one it is given. */
-export function PlayerNameDialog({ player, onClose }: { player?: Player; onClose: () => void }) {
+/**
+ * The dialog for a Player's name: adds a Player, or renames the one it is given.
+ *
+ * @param onAdded called with the new Player once it has been added, before the dialog closes
+ */
+export function PlayerNameDialog({
+  player,
+  onAdded,
+  onClose,
+}: {
+  player?: Player
+  onAdded?: (player: Player) => void
+  onClose: () => void
+}) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const form = useForm({
@@ -35,7 +47,12 @@ export function PlayerNameDialog({ player, onClose }: { player?: Player; onClose
     void queryClient.invalidateQueries({ queryKey: ["get", "/api/players"] })
     onClose()
   }
-  const create = api.useMutation("post", "/api/players", { onSuccess })
+  const create = api.useMutation("post", "/api/players", {
+    onSuccess: (added) => {
+      onAdded?.(added)
+      onSuccess()
+    },
+  })
   const rename = api.useMutation("put", "/api/players/{id}", { onSuccess })
 
   const submit = form.handleSubmit((values) =>
@@ -47,7 +64,16 @@ export function PlayerNameDialog({ player, onClose }: { player?: Player; onClose
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent>
-        <form onSubmit={submit} noValidate>
+        {/* The dialog can be opened from inside another form. React passes events up through
+            the components, not the page, so without stopPropagation submitting this form would
+            submit that one too. */}
+        <form
+          onSubmit={(event) => {
+            event.stopPropagation()
+            void submit(event)
+          }}
+          noValidate
+        >
           <FieldGroup>
             <DialogHeader>
               <DialogTitle>

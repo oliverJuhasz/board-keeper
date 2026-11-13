@@ -27,6 +27,8 @@ import { useRecordedAs } from "@/features/games/recordedAs"
 import { RecordingChoices } from "@/features/games/RecordingChoices"
 import { GENERIC } from "@/features/games/useGameModules"
 import { useGameModuleTexts } from "@/features/games/useGameModuleTexts"
+import { PlayerNameDialog } from "@/features/players/PlayerNameDialog"
+import { useCan } from "@/features/session/useSession"
 import { todayIso } from "@/lib/dates"
 import {
   categoriesOnPad,
@@ -41,6 +43,9 @@ import {
   type PlayFormValues,
 } from "./playForm"
 import { canBePreviewed, previewOptions, usePlayPreview } from "./usePlayPreview"
+
+/** What the list of Players to add holds for "someone new", where the others have their id. */
+const NEW_PLAYER = "new"
 
 /**
  * The form for what is entered about a Play, used both to record a new one and to edit one.
@@ -83,6 +88,7 @@ export function PlayEntryForm({
 }) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
+  const can = useCan()
   const recordedAs = useRecordedAs()
   const texts = useGameModuleTexts()
   const [changingRecording, setChangingRecording] = useState(false)
@@ -112,8 +118,17 @@ export function PlayEntryForm({
     lowestScoreWins: play.setup.lowestScoreWins === "true",
   }
 
-  const nameOf = (playerId: string) => players.find((player) => player.id === playerId)?.name ?? ""
-  const notYetAdded = players.filter(
+  // Players that were added from this form. They are kept here as well, so their names show
+  // at once, without waiting for the list of Players to be fetched again.
+  const [addedHere, setAddedHere] = useState<Player[]>([])
+  const [addingPlayer, setAddingPlayer] = useState(false)
+  const allPlayers = [
+    ...players,
+    ...addedHere.filter((added) => !players.some((player) => player.id === added.id)),
+  ]
+  const nameOf = (playerId: string) =>
+    allPlayers.find((player) => player.id === playerId)?.name ?? ""
+  const notYetAdded = allPlayers.filter(
     (player) => !play.players.some((entered) => entered.playerId === player.id),
   )
   const full = pad.maxPlayers !== undefined && play.players.length >= pad.maxPlayers
@@ -377,12 +392,18 @@ export function PlayEntryForm({
             <FieldDescription>
               {t("plays.record.playersFull", { max: pad.maxPlayers })}
             </FieldDescription>
-          ) : notYetAdded.length > 0 ? (
+          ) : notYetAdded.length > 0 || can("CREATE_PLAYERS") ? (
             // Choosing a name adds that Player as a row; the list then goes back to its first line.
             <NativeSelect
               value=""
               aria-label={t("plays.record.addPlayer")}
-              onChange={(event) => rows.append(newPlayerRow(pad, event.target.value))}
+              onChange={(event) => {
+                if (event.target.value === NEW_PLAYER) {
+                  setAddingPlayer(true)
+                } else {
+                  rows.append(newPlayerRow(pad, event.target.value))
+                }
+              }}
             >
               <NativeSelectOption value="">{t("plays.record.choosePlayer")}</NativeSelectOption>
               {notYetAdded.map((player) => (
@@ -390,6 +411,12 @@ export function PlayEntryForm({
                   {player.name}
                 </NativeSelectOption>
               ))}
+              {/* For someone who has never played before: add them without leaving the form. */}
+              {can("CREATE_PLAYERS") && (
+                <NativeSelectOption value={NEW_PLAYER}>
+                  {t("plays.record.newPlayer")}
+                </NativeSelectOption>
+              )}
             </NativeSelect>
           ) : (
             <FieldDescription>{t("plays.record.everyoneAdded")}</FieldDescription>
@@ -545,6 +572,16 @@ export function PlayEntryForm({
           <LinkButton to={cancelTo}>{t("common.cancel")}</LinkButton>
         </div>
       </FieldGroup>
+
+      {addingPlayer && (
+        <PlayerNameDialog
+          onAdded={(player) => {
+            setAddedHere((already) => [...already, player])
+            rows.append(newPlayerRow(pad, player.id))
+          }}
+          onClose={() => setAddingPlayer(false)}
+        />
+      )}
     </form>
   )
 }
