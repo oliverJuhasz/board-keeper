@@ -619,10 +619,11 @@
             "type" : "integer"
           },
           "won" : {
+            "description" : "Absent in a Solo Play recorded for score only",
             "type" : "boolean"
           }
         },
-        "required" : [ "playerId", "won" ],
+        "required" : [ "playerId" ],
         "type" : "object"
       },
       "Problem" : {
@@ -707,7 +708,7 @@
             "type" : "boolean"
           },
           "placing" : {
-            "description" : "Absent in a Cooperative Play, and when only the winner was recorded",
+            "description" : "Absent in a Cooperative Play and a Solo Play, and when only the winner was recorded",
             "format" : "int32",
             "type" : "integer"
           },
@@ -728,10 +729,11 @@
             "type" : "integer"
           },
           "won" : {
+            "description" : "Absent in a Solo Play recorded for score only, which nobody wins or loses",
             "type" : "boolean"
           }
         },
-        "required" : [ "markedWinner", "player", "scores", "won" ],
+        "required" : [ "markedWinner", "player", "scores" ],
         "type" : "object"
       },
       "Role" : {
@@ -815,13 +817,17 @@
             "$ref" : "#/components/schemas/OnlyWhen",
             "description" : "The row is on the pad only when the Setup has this value for this Variant. Absent for a row that is always on it."
           },
+          "soloOnly" : {
+            "description" : "Whether the row is on the pad of a Solo Play only",
+            "type" : "boolean"
+          },
           "step" : {
             "description" : "Every value is a multiple of this",
             "format" : "int32",
             "type" : "integer"
           }
         },
-        "required" : [ "countsTowardTotal", "key", "step" ],
+        "required" : [ "countsTowardTotal", "key", "soloOnly", "step" ],
         "type" : "object"
       },
       "ScorePad" : {
@@ -846,6 +852,10 @@
           "recorderDecidesTies" : {
             "description" : "Whether the recorder is asked who won a tie for first place that the scores cannot decide",
             "type" : "boolean"
+          },
+          "solo" : {
+            "$ref" : "#/components/schemas/Solo",
+            "description" : "How a Solo Play is recorded. Absent for a Game that is not played alone."
           },
           "variants" : {
             "items" : {
@@ -924,6 +934,24 @@
         "required" : [ "password", "staySignedIn", "username" ],
         "type" : "object"
       },
+      "Solo" : {
+        "properties" : {
+          "kind" : {
+            "enum" : [ "FOR_SCORE_ONLY", "AGAINST_OPPONENT" ],
+            "type" : "string"
+          },
+          "opponentCategory" : {
+            "description" : "For AGAINST_OPPONENT: the key of the Score Category with the opponent's score",
+            "type" : "string"
+          },
+          "tieWins" : {
+            "description" : "For AGAINST_OPPONENT: whether the Player wins when level with the opponent",
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "kind" ],
+        "type" : "object"
+      },
       "Variant" : {
         "properties" : {
           "defaultValue" : {
@@ -943,9 +971,13 @@
               "type" : "string"
             },
             "type" : "array"
+          },
+          "soloOnly" : {
+            "description" : "Whether it is chosen for a Solo Play only",
+            "type" : "boolean"
           }
         },
-        "required" : [ "defaultValue", "key", "kind" ],
+        "required" : [ "defaultValue", "key", "kind", "soloOnly" ],
         "type" : "object"
       }
     }

@@ -115,10 +115,18 @@ class ModuleGamePlaysApiTests {
                 .hasStatus(422)
                 .bodyJson()
                 .isLenientlyEqualTo("{\"code\": \"plays.invalidEntry\", \"reason\": \"plays.invalid.scoreNotAllowed\"}");
-        assertThat(member.post("/api/plays", pointsPlay(calico, "2026-03-14", calicoPad(anna, 28, 23, 21))))
+        String fivePlayers = pointsPlay(
+                calico,
+                "2026-03-14",
+                calicoPad(anna, 1, 1, 3),
+                calicoPad(bence, 1, 1, 3),
+                calicoPad(dora, 1, 1, 3),
+                calicoPad(players.create("Eszter").id(), 1, 1, 3),
+                calicoPad(players.create("Feri").id(), 1, 1, 3));
+        assertThat(member.post("/api/plays", fivePlayers))
                 .hasStatus(422)
                 .bodyJson()
-                .isLenientlyEqualTo("{\"code\": \"plays.invalidEntry\", \"reason\": \"plays.invalid.tooFewPlayers\"}");
+                .isLenientlyEqualTo("{\"code\": \"plays.invalidEntry\", \"reason\": \"plays.invalid.tooManyPlayers\"}");
         // The Generic Module's row means nothing on Calico's pad.
         assertThat(member.post("/api/plays", pointsPlay(calico, "2026-03-14", scored(anna, 72), scored(dora, 58))))
                 .hasStatus(422)
@@ -248,11 +256,77 @@ class ModuleGamePlaysApiTests {
                         .formatted(CALICO_MODULE_ID));
     }
 
+    @Test
+    void aSoloPlayForScoreOnlyIsNeitherWonNorLost() {
+        UUID calico = gameOfModule("calico");
+
+        MvcTestResult recorded = member.post("/api/plays", pointsPlay(calico, "2026-03-14", calicoPad(anna, 28, 23, 21)));
+
+        assertThat(recorded)
+                .hasStatusOk()
+                .bodyJson()
+                .isLenientlyEqualTo("{\"results\": [{\"total\": 72, \"markedWinner\": false}]}");
+        assertThat(recorded).bodyJson().doesNotHavePath("$.results[0].placing");
+        assertThat(recorded).bodyJson().doesNotHavePath("$.results[0].won");
+        // Reading it back from the database gives the same.
+        assertThat(member.get("/api/plays/" + idOf(recorded))).bodyJson().doesNotHavePath("$.results[0].won");
+    }
+
+    @Test
+    void aSoloPlayAgainstTheAutomaIsWonByBeatingItsScore() {
+        UUID wyrmspan = gameOfModule("wyrmspan");
+        String againstTheAutoma = """
+                {"gameId": "%s", "playedOn": "2026-03-14", "recordingMode": "POINTS",
+                 "setup": {"automaLevel": "2", "ravelMode": "false"},
+                 "players": [{"playerId": "%s", "winner": false, "scores": {
+                   "dragonGuild": 12, "printedDragons": 40, "endGameAbilities": 6, "eggs": 9, "cachedResources": 7,
+                   "tuckedCards": 5, "publicObjectives": 11, "coinsAndItems": 3, "automa": %d}}]}
+                """;
+
+        assertThat(member.post("/api/plays", againstTheAutoma.formatted(wyrmspan, anna, 85)))
+                .hasStatusOk()
+                .bodyJson()
+                .isLenientlyEqualTo("""
+                        {"setup": {"automaLevel": "2", "ravelMode": "false"},
+                         "results": [{"scores": {"automa": 85}, "total": 93, "won": true}]}
+                        """);
+        // A tie is won, too, and a higher score than the Player's is lost.
+        assertThat(member.post("/api/plays", againstTheAutoma.formatted(wyrmspan, anna, 93)))
+                .bodyJson()
+                .extractingPath("$.results[0].won")
+                .isEqualTo(true);
+        assertThat(member.post("/api/plays", againstTheAutoma.formatted(wyrmspan, anna, 94)))
+                .bodyJson()
+                .extractingPath("$.results[0].won")
+                .isEqualTo(false);
+    }
+
+    @Test
+    void theAutomaIsNotPartOfAPlayWithMorePlayers() {
+        UUID wyrmspan = gameOfModule("wyrmspan");
+        String withLevel = """
+                {"gameId": "%s", "playedOn": "2026-03-14", "recordingMode": "WINNER_ONLY",
+                 "setup": {"automaLevel": "2"},
+                 "players": [{"playerId": "%s", "winner": true}, {"playerId": "%s", "winner": false}]}
+                """.formatted(wyrmspan, anna, dora);
+
+        assertThat(member.post("/api/plays", withLevel))
+                .hasStatus(422)
+                .bodyJson()
+                .isLenientlyEqualTo("{\"code\": \"plays.invalidEntry\", \"reason\": \"plays.invalid.notRecorded\"}");
+        assertThat(member.post("/api/plays", withLevel.replace("{\"automaLevel\": \"2\"}", "{}"))).hasStatusOk();
+    }
+
     /** The Game that appears in the catalogue for the Calico module. */
     private UUID calicoFromItsModule() {
+        return gameOfModule("calico");
+    }
+
+    /** The Game that appears in the catalogue for the Game Module with this key. */
+    private UUID gameOfModule(String key) {
         games.addGamesOfModules();
         return games.all().stream()
-                .filter(game -> games.moduleKeyOf(game).filter("calico"::equals).isPresent())
+                .filter(game -> games.moduleKeyOf(game).filter(key::equals).isPresent())
                 .findFirst()
                 .orElseThrow()
                 .id();

@@ -78,6 +78,21 @@ export function isCooperative(module: GameModule, play: Pick<PlayFormValues, "se
   return module.key === GENERIC && play.setup.cooperative === "true"
 }
 
+/**
+ * How the Play is played alone, if it is a Solo Play of a Game that can be: for score only, or
+ * against an automated opponent. Undefined for a Play of two Players or more. A Play of one with
+ * the Generic Module is a cooperative Play instead.
+ */
+export function soloOf(module: GameModule, play: Pick<PlayFormValues, "players">) {
+  return play.players.length === 1 ? module.scorePad.solo : undefined
+}
+
+/** The Variants to choose from: those for Solo Plays only are left out of other Plays. */
+export function variantsFor(module: GameModule, play: Pick<PlayFormValues, "players">) {
+  const solo = soloOf(module, play) !== undefined
+  return module.scorePad.variants.filter((variant) => solo || !variant.soloOnly)
+}
+
 /** Whether the Players' scores are entered: in a competitive Play recorded in points. */
 export function entersScores(
   module: GameModule,
@@ -93,12 +108,16 @@ function chosen(pad: ScorePad, setup: Record<string, string>, variantKey: string
   )
 }
 
-/** The rows of the score pad for a Play with this Setup. A Variant can take a row off the pad. */
-export function categoriesOnPad(pad: ScorePad, setup: Record<string, string>) {
+/**
+ * The rows of the score pad for a Play with this Setup. A Variant can take a row off the pad,
+ * and some rows, such as an automated opponent's score, are on the pad of a Solo Play only.
+ */
+export function categoriesOnPad(pad: ScorePad, setup: Record<string, string>, solo = false) {
   return pad.categories.filter(
     (category) =>
-      !category.onlyWhen ||
-      chosen(pad, setup, category.onlyWhen.variant) === category.onlyWhen.value,
+      (solo || !category.soloOnly) &&
+      (!category.onlyWhen ||
+        chosen(pad, setup, category.onlyWhen.variant) === category.onlyWhen.value),
   )
 }
 
@@ -156,14 +175,23 @@ export function entryProblems(module: GameModule, play: PlayFormValues) {
     return problems
   }
 
+  const solo = soloOf(module, play)
   if (!points) {
-    if (play.players.length >= fewest && !play.players.some((player) => player.won)) {
+    if (solo?.kind === "FOR_SCORE_ONLY") {
+      // Played alone for a score, there is nothing else to record.
+      problems.push({ path: ["recordingMode"], message: "validation.soloScoresOnly" })
+    } else if (
+      !solo &&
+      play.players.length >= fewest &&
+      !play.players.some((player) => player.won)
+    ) {
+      // Against an automated opponent, an unticked "won" is a loss. Otherwise someone won.
       problems.push({ path: ["players"], message: "validation.winnerRequired" })
     }
     return problems
   }
 
-  const categories = categoriesOnPad(pad, play.setup)
+  const categories = categoriesOnPad(pad, play.setup, solo !== undefined)
   play.players.forEach((player, index) => {
     for (const category of categories) {
       const message = scoreProblem(category, (player.scores[category.key] ?? "").trim())
@@ -193,11 +221,15 @@ export function newPlayerRow(pad: ScorePad, playerId: string) {
 function entryOf(module: GameModule, play: PlayFormValues, tie: string[]) {
   const cooperative = isCooperative(module, play)
   const points = play.recordingMode === "POINTS"
-  const categories = entersScores(module, play) ? categoriesOnPad(module.scorePad, play.setup) : []
+  const solo = soloOf(module, play) !== undefined
+  const categories = entersScores(module, play)
+    ? categoriesOnPad(module.scorePad, play.setup, solo)
+    : []
 
-  // Every Variant on the pad is sent, chosen or not, so a stored Setup says all there is.
+  // Every Variant that applies is sent, chosen or not, so a stored Setup says all there is.
+  // Those for Solo Plays only are left out of other Plays.
   const setup = Object.fromEntries(
-    module.scorePad.variants.map((variant) => [
+    variantsFor(module, play).map((variant) => [
       variant.key,
       chosen(module.scorePad, play.setup, variant.key) ?? variant.defaultValue,
     ]),
@@ -211,8 +243,12 @@ function entryOf(module: GameModule, play: PlayFormValues, tie: string[]) {
     if (cooperative) {
       return false
     }
-    // In points, a winner is only marked to decide a tie for first place.
-    return points ? tie.includes(player.playerId) && play.tieWinner === player.playerId : player.won
+    // In points, a winner is only marked to decide a tie for first place. A Solo Play in points
+    // has no tie: the scores say whether it was won.
+    if (points) {
+      return !solo && tie.includes(player.playerId) && play.tieWinner === player.playerId
+    }
+    return player.won
   }
 
   return {

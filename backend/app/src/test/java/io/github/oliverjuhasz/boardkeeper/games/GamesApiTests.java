@@ -58,7 +58,7 @@ class GamesApiTests {
                 .isLenientlyEqualTo("""
                         [{"id": "%s", "key": "calico",
                           "scorePad": {
-                            "minPlayers": 2, "maxPlayers": 4,
+                            "minPlayers": 1, "maxPlayers": 4, "solo": {"kind": "FOR_SCORE_ONLY"},
                             "variants": [{"key": "family", "kind": "ON_OFF", "defaultValue": "false"}],
                             "categories": [
                               {"key": "designGoals", "countsTowardTotal": true, "min": 0, "step": 1,
@@ -82,7 +82,19 @@ class GamesApiTests {
                               {"key": "river", "onlyWhen": {"variant": "boardSide", "value": "a"}},
                               {"key": "islands", "min": 5, "step": 5, "onlyWhen": {"variant": "boardSide", "value": "b"}},
                               {"key": "animals"},
-                              {"key": "naturesSpirit", "onlyWhen": {"variant": "naturesSpirit", "value": "true"}}]}}]
+                              {"key": "naturesSpirit", "onlyWhen": {"variant": "naturesSpirit", "value": "true"}}]}},
+                         {"key": "wyrmspan",
+                          "scorePad": {
+                            "minPlayers": 1, "maxPlayers": 5,
+                            "solo": {"kind": "AGAINST_OPPONENT", "opponentCategory": "automa", "tieWins": true},
+                            "variants": [{"key": "automaLevel", "kind": "CHOICE", "options": ["1", "2", "3"], "soloOnly": true},
+                                         {"key": "ravelMode", "kind": "ON_OFF", "soloOnly": true}],
+                            "categories": [
+                              {"key": "dragonGuild", "soloOnly": false}, {"key": "printedDragons"},
+                              {"key": "endGameAbilities"}, {"key": "eggs"}, {"key": "cachedResources"},
+                              {"key": "tuckedCards"}, {"key": "publicObjectives"}, {"key": "coinsAndItems"},
+                              {"key": "automa", "countsTowardTotal": false, "soloOnly": true}],
+                            "recorderDecidesTies": true}}]
                         """.formatted(CALICO_MODULE_ID, GENERIC_MODULE_ID));
     }
 
@@ -95,12 +107,13 @@ class GamesApiTests {
                 .bodyJson()
                 .isLenientlyEqualTo("""
                         [{"name": "Calico", "gameModuleId": "%s", "moduleKey": "calico", "hasOwnModule": true},
-                         {"name": "Harmonies", "moduleKey": "harmonies", "hasOwnModule": true}]
+                         {"name": "Harmonies", "moduleKey": "harmonies", "hasOwnModule": true},
+                         {"name": "Wyrmspan", "moduleKey": "wyrmspan", "hasOwnModule": true}]
                         """.formatted(CALICO_MODULE_ID));
 
         // Bringing the catalogue in step again changes nothing.
         games.addGamesOfModules();
-        assertThat(games.all()).hasSize(2);
+        assertThat(games.all()).hasSize(3);
     }
 
     @Test
@@ -134,7 +147,8 @@ class GamesApiTests {
                 .isLenientlyEqualTo("""
                         [{"name": "Azul", "moduleKey": "generic", "hasOwnModule": false},
                          {"id": "%s", "name": "calico", "moduleKey": "calico", "hasOwnModule": true},
-                         {"name": "Harmonies", "moduleKey": "harmonies", "hasOwnModule": true}]
+                         {"name": "Harmonies", "moduleKey": "harmonies", "hasOwnModule": true},
+                         {"name": "Wyrmspan", "moduleKey": "wyrmspan", "hasOwnModule": true}]
                         """.formatted(byHand));
     }
 

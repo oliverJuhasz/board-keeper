@@ -29,6 +29,8 @@ import java.util.Set;
  * @param recorderDecidesTies whether a tie for first place that is left after the
  *     {@code tieBreakers} is decided by something that is not entered. If so, the recorder is
  *     asked who won it. If not, such a tie is a shared win.
+ * @param solo how a Solo Play is recorded; null for a Game that is not played alone, for which
+ *     the constructor without it is shorter
  */
 public record ScorePad(
         int minPlayers,
@@ -36,7 +38,8 @@ public record ScorePad(
         List<Variant> variants,
         List<ScoreCategory> categories,
         List<TieBreaker> tieBreakers,
-        boolean recorderDecidesTies) {
+        boolean recorderDecidesTies,
+        Solo solo) {
 
     public ScorePad {
         variants = List.copyOf(variants);
@@ -44,6 +47,19 @@ public record ScorePad(
         tieBreakers = List.copyOf(tieBreakers);
         if (minPlayers < 1 || (maxPlayers != null && maxPlayers < minPlayers)) {
             throw new IllegalArgumentException("A score pad is for at least one Player, and for no more than its maximum");
+        }
+        if (solo != null && minPlayers != 1) {
+            throw new IllegalArgumentException("A score pad with a way to record Solo Plays is for one Player or more");
+        }
+        boolean soloOnlyParts = variants.stream().anyMatch(Variant::soloOnly)
+                || categories.stream().anyMatch(ScoreCategory::soloOnly);
+        if (soloOnlyParts && solo == null) {
+            throw new IllegalArgumentException("Only a score pad with a way to record Solo Plays has parts for Solo Plays only");
+        }
+        if (solo instanceof Solo.AgainstOpponent against && categories.stream().noneMatch(category ->
+                category.key().equals(against.opponentCategory()) && category.soloOnly() && !category.countsTowardTotal())) {
+            throw new IllegalArgumentException("The opponent's score '" + against.opponentCategory()
+                    + "' has to be a Score Category for Solo Plays only that does not count toward the total");
         }
 
         Set<String> variantKeys = new HashSet<>();
@@ -72,9 +88,21 @@ public record ScorePad(
         }
     }
 
+    /** A score pad for a Game that is not played alone. */
+    public ScorePad(
+            int minPlayers,
+            Integer maxPlayers,
+            List<Variant> variants,
+            List<ScoreCategory> categories,
+            List<TieBreaker> tieBreakers,
+            boolean recorderDecidesTies) {
+        this(minPlayers, maxPlayers, variants, categories, tieBreakers, recorderDecidesTies, null);
+    }
+
     /** The Score Categories that are on the pad for a Play with this Setup. */
-    public List<ScoreCategory> categoriesFor(Map<String, String> setup) {
+    public List<ScoreCategory> categoriesFor(Map<String, String> setup, boolean soloPlay) {
         return categories.stream()
+                .filter(category -> soloPlay || !category.soloOnly())
                 .filter(category -> category.onlyWhen() == null
                         || category.onlyWhen().value().equals(valueOf(category.onlyWhen().variant(), setup)))
                 .toList();

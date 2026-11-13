@@ -20,8 +20,27 @@ public sealed interface Variant {
     /** Whether a Setup may hold this value for the Variant. */
     boolean allows(String value);
 
-    /** A switch, such as Calico's family variant. In a Setup it is {@code "true"} or {@code "false"}. */
-    record OnOff(String key, boolean onByDefault) implements Variant {
+    /**
+     * Whether the Variant is only chosen for a Solo Play, such as the Automa's level in
+     * Wyrmspan. Only a score pad with a {@link Solo} has such Variants.
+     */
+    boolean soloOnly();
+
+    /**
+     * A switch, such as Calico's family variant. In a Setup it is {@code "true"} or {@code "false"}.
+     *
+     * @param soloOnly see {@link Variant#soloOnly()}
+     */
+    record OnOff(String key, boolean onByDefault, boolean soloOnly) implements Variant {
+
+        public OnOff(String key, boolean onByDefault) {
+            this(key, onByDefault, false);
+        }
+
+        /** The same switch, chosen for Solo Plays only. */
+        public OnOff inSoloPlaysOnly() {
+            return new OnOff(key, onByDefault, true);
+        }
 
         @Override
         public String defaultValue() {
@@ -39,14 +58,24 @@ public sealed interface Variant {
      * chosen option.
      *
      * @param options the keys of the options, in the order to offer them; the first is the default
+     * @param soloOnly see {@link Variant#soloOnly()}
      */
-    record Choice(String key, List<String> options) implements Variant {
+    record Choice(String key, List<String> options, boolean soloOnly) implements Variant {
 
         public Choice {
             options = List.copyOf(options);
             if (options.size() < 2) {
                 throw new IllegalArgumentException("The Variant '" + key + "' needs at least two options");
             }
+        }
+
+        public Choice(String key, List<String> options) {
+            this(key, options, false);
+        }
+
+        /** The same choice, made for Solo Plays only. */
+        public Choice inSoloPlaysOnly() {
+            return new Choice(key, options, true);
         }
 
         @Override

@@ -3,6 +3,7 @@ package io.github.oliverjuhasz.boardkeeper.games.internal;
 import io.github.oliverjuhasz.boardkeeper.gameapi.GameModule;
 import io.github.oliverjuhasz.boardkeeper.gameapi.ScoreCategory;
 import io.github.oliverjuhasz.boardkeeper.gameapi.ScorePad;
+import io.github.oliverjuhasz.boardkeeper.gameapi.Solo;
 import io.github.oliverjuhasz.boardkeeper.gameapi.Variant;
 import io.github.oliverjuhasz.boardkeeper.games.GameModules;
 import io.github.oliverjuhasz.boardkeeper.language.Language;
@@ -67,7 +68,9 @@ class GameModuleController {
             @Schema(description = "The rows of the score pad, in its order") List<ScoreCategoryResponse> categories,
             @Schema(description = "Whether the recorder is asked who won a tie for first place that the scores"
                             + " cannot decide")
-                    boolean recorderDecidesTies) {
+                    boolean recorderDecidesTies,
+            @Schema(description = "How a Solo Play is recorded. Absent for a Game that is not played alone.")
+                    SoloResponse solo) {
 
         static ScorePadResponse from(ScorePad pad) {
             return new ScorePadResponse(
@@ -75,7 +78,37 @@ class GameModuleController {
                     pad.maxPlayers(),
                     pad.variants().stream().map(VariantResponse::from).toList(),
                     pad.categories().stream().map(ScoreCategoryResponse::from).toList(),
-                    pad.recorderDecidesTies());
+                    pad.recorderDecidesTies(),
+                    SoloResponse.from(pad.solo()));
+        }
+    }
+
+    enum SoloKind {
+        /** Played for a score: no winner and no Placing. */
+        FOR_SCORE_ONLY,
+        /** Played against an automated opponent, whose score is a row of the pad. */
+        AGAINST_OPPONENT
+    }
+
+    @Schema(
+            name = "Solo",
+            requiredProperties = {"kind"})
+    record SoloResponse(
+            SoloKind kind,
+            @Schema(description = "For AGAINST_OPPONENT: the key of the Score Category with the opponent's score")
+                    String opponentCategory,
+            @Schema(description = "For AGAINST_OPPONENT: whether the Player wins when level with the opponent")
+                    Boolean tieWins) {
+
+        static SoloResponse from(Solo solo) {
+            if (solo == null) {
+                return null;
+            }
+            return switch (solo) {
+                case Solo.ForScoreOnly forScoreOnly -> new SoloResponse(SoloKind.FOR_SCORE_ONLY, null, null);
+                case Solo.AgainstOpponent against ->
+                    new SoloResponse(SoloKind.AGAINST_OPPONENT, against.opponentCategory(), against.tieWins());
+            };
         }
     }
 
@@ -86,27 +119,30 @@ class GameModuleController {
 
     @Schema(
             name = "Variant",
-            requiredProperties = {"key", "kind", "defaultValue"})
+            requiredProperties = {"key", "kind", "defaultValue", "soloOnly"})
     record VariantResponse(
             String key,
             VariantKind kind,
             @Schema(description = "For a CHOICE: the keys of the options, in the order to offer them") List<String> options,
             @Schema(description = "What a Setup holds when nothing was chosen. For ON_OFF, \"true\" or \"false\".")
-                    String defaultValue) {
+                    String defaultValue,
+            @Schema(description = "Whether it is chosen for a Solo Play only") boolean soloOnly) {
 
         static VariantResponse from(Variant variant) {
             // The switch has no "default": Variant is sealed, so the compiler knows every kind.
             return switch (variant) {
-                case Variant.OnOff onOff -> new VariantResponse(onOff.key(), VariantKind.ON_OFF, null, onOff.defaultValue());
+                case Variant.OnOff onOff ->
+                    new VariantResponse(onOff.key(), VariantKind.ON_OFF, null, onOff.defaultValue(), onOff.soloOnly());
                 case Variant.Choice choice ->
-                    new VariantResponse(choice.key(), VariantKind.CHOICE, choice.options(), choice.defaultValue());
+                    new VariantResponse(
+                            choice.key(), VariantKind.CHOICE, choice.options(), choice.defaultValue(), choice.soloOnly());
             };
         }
     }
 
     @Schema(
             name = "ScoreCategory",
-            requiredProperties = {"key", "countsTowardTotal", "step"})
+            requiredProperties = {"key", "countsTowardTotal", "step", "soloOnly"})
     record ScoreCategoryResponse(
             String key,
             boolean countsTowardTotal,
@@ -115,7 +151,8 @@ class GameModuleController {
             @Schema(description = "Every value is a multiple of this") int step,
             @Schema(description = "The row is on the pad only when the Setup has this value for this Variant. Absent"
                             + " for a row that is always on it.")
-                    OnlyWhenResponse onlyWhen) {
+                    OnlyWhenResponse onlyWhen,
+            @Schema(description = "Whether the row is on the pad of a Solo Play only") boolean soloOnly) {
 
         static ScoreCategoryResponse from(ScoreCategory category) {
             return new ScoreCategoryResponse(
@@ -126,7 +163,8 @@ class GameModuleController {
                     category.step(),
                     category.onlyWhen() == null
                             ? null
-                            : new OnlyWhenResponse(category.onlyWhen().variant(), category.onlyWhen().value()));
+                            : new OnlyWhenResponse(category.onlyWhen().variant(), category.onlyWhen().value()),
+                    category.soloOnly());
         }
     }
 

@@ -38,8 +38,10 @@ import {
   newPlayerRow,
   playFormFor,
   SHARED,
+  soloOf,
   toNewPlay,
   toPreviewRequest,
+  variantsFor,
   type PlayFormValues,
 } from "./playForm"
 import { canBePreviewed, previewOptions, usePlayPreview } from "./usePlayPreview"
@@ -109,7 +111,11 @@ export function PlayEntryForm({
 
   const cooperative = isCooperative(module, play)
   const points = play.recordingMode === "POINTS"
-  const categories = entersScores(module, play) ? categoriesOnPad(pad, play.setup) : []
+  // A Play of one, of a Game that can be played alone: for score only, or against an opponent.
+  const solo = soloOf(module, play)
+  const categories = entersScores(module, play)
+    ? categoriesOnPad(pad, play.setup, solo !== undefined)
+    : []
   // One row fits next to each Player's name. More rows are drawn as a pad, like the paper one.
   const drawnAsPad = categories.length > 1
   const recording = {
@@ -240,7 +246,9 @@ export function PlayEntryForm({
                   ? recordedAs(recording)
                   : points
                     ? t("recording.points")
-                    : t("recording.winnerOnly")}
+                    : solo?.kind === "AGAINST_OPPONENT"
+                      ? t("recording.wonOrLostOnly")
+                      : t("recording.winnerOnly")}
               </span>
             </p>
             {!changingRecording && (
@@ -282,7 +290,11 @@ export function PlayEntryForm({
                     },
                     {
                       value: "WINNER_ONLY",
-                      label: t("recording.winnerOnly"),
+                      // Against an opponent, a Solo Play is won or lost.
+                      label:
+                        solo?.kind === "AGAINST_OPPONENT"
+                          ? t("recording.wonOrLostOnly")
+                          : t("recording.winnerOnly"),
                       hint: t("recording.outcomeHint"),
                     },
                   ]}
@@ -290,12 +302,15 @@ export function PlayEntryForm({
               )}
             </>
           )}
+          {errors.recordingMode?.message && (
+            <FieldError>{t(errors.recordingMode.message as "validation.required")}</FieldError>
+          )}
         </div>
 
         {/* The Variants of a Game with a module of its own. The Generic Module's two are the
             recording choices above. */}
         {!generic &&
-          pad.variants.map((variant) =>
+          variantsFor(module, play).map((variant) =>
             variant.kind === "ON_OFF" ? (
               <CheckboxField
                 key={variant.key}
@@ -348,7 +363,7 @@ export function PlayEntryForm({
                           {...form.register(`players.${index}.scores.${only.key}`)}
                         />
                       )}
-                      {!cooperative && !points && (
+                      {!cooperative && !points && solo?.kind !== "FOR_SCORE_ONLY" && (
                         // The label makes the word "Won" clickable too.
                         <label className="flex items-center gap-2 text-sm">
                           {/* Controller connects a component that isn't a plain <input> to the
@@ -454,7 +469,16 @@ export function PlayEntryForm({
                 <tbody>
                   {categories.map((category) => (
                     <tr key={category.key} className="border-t">
-                      <th scope="row" className="px-3 py-1.5 text-left font-normal">
+                      {/* A row that doesn't count toward the total, such as the opponent's
+                          score in a Solo Play, is set apart a little. */}
+                      <th
+                        scope="row"
+                        className={
+                          category.countsTowardTotal
+                            ? "px-3 py-1.5 text-left font-normal"
+                            : "px-3 py-1.5 text-left font-normal text-muted-foreground italic"
+                        }
+                      >
                         {moduleText(`category.${category.key}`)}
                       </th>
                       {rows.fields.map((row, index) => (
@@ -490,16 +514,41 @@ export function PlayEntryForm({
                       </td>
                     ))}
                   </tr>
-                  <tr className="border-t text-muted-foreground">
-                    <th scope="row" className="px-3 py-2 text-left font-normal">
-                      {t("plays.record.placing")}
-                    </th>
-                    {rows.fields.map((row) => (
-                      <td key={row.id} className="px-2 py-2 pr-5 text-right tabular-nums">
-                        {placingOf(row.playerId) ?? "–"}
-                      </td>
-                    ))}
-                  </tr>
+                  {/* A Solo Play has no Placing. Against an opponent it is won or lost; for
+                      score only there is nothing more to show. */}
+                  {!solo && (
+                    <tr className="border-t text-muted-foreground">
+                      <th scope="row" className="px-3 py-2 text-left font-normal">
+                        {t("plays.record.placing")}
+                      </th>
+                      {rows.fields.map((row) => (
+                        <td key={row.id} className="px-2 py-2 pr-5 text-right tabular-nums">
+                          {placingOf(row.playerId) ?? "–"}
+                        </td>
+                      ))}
+                    </tr>
+                  )}
+                  {solo?.kind === "AGAINST_OPPONENT" && (
+                    <tr className="border-t text-muted-foreground">
+                      <th scope="row" className="px-3 py-2 text-left font-normal">
+                        {t("plays.record.soloResult")}
+                      </th>
+                      {rows.fields.map((row) => {
+                        const won = preview?.results.find(
+                          (result) => result.playerId === row.playerId,
+                        )?.won
+                        return (
+                          <td key={row.id} className="px-2 py-2 pr-5 text-right">
+                            {won === undefined
+                              ? "–"
+                              : won
+                                ? t("plays.record.won")
+                                : t("plays.record.lost")}
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  )}
                 </tfoot>
               </table>
             </div>

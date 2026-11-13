@@ -101,7 +101,9 @@
       "pad": "Pontozólap",
       "total": "Összesen",
       "placing": "Helyezés",
-      "playersFull": "Ezt a játékot legfeljebb {{max}} játékos játszhatja."
+      "playersFull": "Ezt a játékot legfeljebb {{max}} játékos játszhatja.",
+      "lost": "Vesztett",
+      "soloResult": "Eredmény"
     },
     "history": {
       "title": "Partik",
@@ -147,7 +149,9 @@
         "confirm": "Parti törlése"
       },
       "total": "Összesen",
-      "pad": "Pontozólap"
+      "pad": "Pontozólap",
+      "won": "Nyert",
+      "lost": "Vesztett"
     },
     "edit": {
       "title": "Parti szerkesztése",
@@ -166,7 +170,8 @@
       "scoreNotAllowed": "Az egyik pontszám nem lehetséges a pontozólap adott sorában.",
       "winnerMissing": "Jelölj meg legalább egy győztest.",
       "winnerNotTied": "Csak a holtversenyben érintett játékos kaphatja a győzelmet.",
-      "notRecorded": "Olyasmit adtál meg, amit ez a játék nem rögzít."
+      "notRecorded": "Olyasmit adtál meg, amit ez a játék nem rögzít.",
+      "scoresNeeded": "Ennek a játéknak az egyszemélyes partiját a pontszámokkal rögzítjük."
     }
   },
   "notFound": {
@@ -243,7 +248,8 @@
     "scoreTooLow": "Legalább {{min}} legyen.",
     "scoreTooHigh": "Legfeljebb {{max}} lehet.",
     "scoreStep": "{{step}} többszörösét add meg.",
-    "tieUnanswered": "Add meg, ki nyerte a holtversenyt, vagy hogy a győzelem megosztott."
+    "tieUnanswered": "Add meg, ki nyerte a holtversenyt, vagy hogy a győzelem megosztott.",
+    "soloScoresOnly": "Ennek a játéknak az egyszemélyes partiját a pontszámokkal rögzítjük. Válaszd a Pontokat."
   },
   "problems": {
     "unknown": "Valami hiba történt. Próbáld újra.",

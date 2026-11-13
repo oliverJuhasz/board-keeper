@@ -39,7 +39,7 @@ How much of a Play's outcome is recorded. **Points** records scores: one per Pla
 _Avoid_: Scoring type, outcome type
 
 **Solo Play**:
-A Play with a single Player. Whether a Game supports it, and how it is recorded (against an automated opponent, against a target, or for score only), is up to its Game Module.
+A Play with a single Player. Whether a Game supports it, and how it is recorded (against an automated opponent, against a target, or for score only), is up to its Game Module. A Solo Play has no Placing. Played for score only, it is neither won nor lost; played against an automated opponent, it is won or lost.
 _Avoid_: Single-player game
 
 **Victory Type**:
@@ -56,8 +56,12 @@ _Avoid_: Plugin, extension, score sheet
 The built-in Game Module for any Game that has no module of its own, which is every Game someone adds to the catalogue by hand. It records only totals, or only the winner.
 _Avoid_: Default game, fallback
 
+**Score Pad**:
+What is filled in for each Player at the end of a Play of a Game: one row per Score Category, as on the paper pad in the box. Which rows it has can depend on the Setup, and on whether it is a Solo Play.
+_Avoid_: Score sheet, scorecard
+
 **Score Category**:
-One named value recorded or calculated for each Player in a Play, such as "Eggs" in Wingspan.
+One named value recorded or calculated for each Player in a Play, such as "Eggs" in Wingspan; a row of the Score Pad.
 _Avoid_: Score line, field
 
 **Tie-breaker**:

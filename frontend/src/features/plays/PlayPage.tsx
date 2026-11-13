@@ -99,7 +99,13 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
   // How the Play was recorded, in a few words. For a Game without a module of its own those
   // are its recording choices, where "lowest score wins" is a Variant kept in the Setup. For
   // any other Game they are the Variants that were chosen.
+  // A Play of one that isn't cooperative is a Solo Play: it has no Placing, and is won or lost
+  // against an opponent, or played for a score only.
+  const solo = !play.cooperative && play.results.length === 1
   const variantsChosen = (module?.scorePad.variants ?? []).flatMap((variant) => {
+    if (variant.soloOnly && !solo) {
+      return []
+    }
     const value = play.setup[variant.key] ?? variant.defaultValue
     if (variant.kind === "ON_OFF") {
       return value === "true" ? [moduleText(`variant.${variant.key}`)] : []
@@ -115,7 +121,14 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
           recordingMode: play.recordingMode,
           lowestScoreWins: play.setup.lowestScoreWins === "true",
         })
-      : [points ? t("recording.points") : t("recording.winnerOnly"), ...variantsChosen].join(", ")
+      : [
+          points
+            ? t("recording.points")
+            : solo
+              ? t("recording.wonOrLostOnly")
+              : t("recording.winnerOnly"),
+          ...variantsChosen,
+        ].join(", ")
 
   return (
     <div className="space-y-6">
@@ -171,7 +184,9 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
           <Table aria-label={t("plays.page.results")}>
             <TableHeader>
               <TableRow>
-                {points && <TableHead className="w-20">{t("plays.page.placing")}</TableHead>}
+                {points && !solo && (
+                  <TableHead className="w-20">{t("plays.page.placing")}</TableHead>
+                )}
                 <TableHead>{t("plays.page.player")}</TableHead>
                 {points && (
                   <TableHead className="text-right">
@@ -183,11 +198,19 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
             <TableBody>
               {ranked.map((result) => (
                 <TableRow key={result.player.id}>
-                  {points && <TableCell>{result.placing}</TableCell>}
+                  {points && !solo && <TableCell>{result.placing}</TableCell>}
                   <TableCell className="font-medium">
                     <span className="flex items-center gap-2">
                       {result.player.name}
-                      {result.won && <Badge variant="secondary">{t("plays.page.winner")}</Badge>}
+                      {/* A Solo Play against an opponent is won or lost; one for score only
+                          is neither, and has no badge. */}
+                      {solo
+                        ? result.won !== undefined && (
+                            <Badge variant={result.won ? "secondary" : "outline"}>
+                              {result.won ? t("plays.page.won") : t("plays.page.lost")}
+                            </Badge>
+                          )
+                        : result.won && <Badge variant="secondary">{t("plays.page.winner")}</Badge>}
                     </span>
                   </TableCell>
                   {points && <TableCell className="text-right">{result.total}</TableCell>}
@@ -220,7 +243,14 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
                   {categories.map((category) => (
                     <TableRow key={category.key}>
                       {/* A long name, such as "Nature's Spirit card", may wrap on a phone. */}
-                      <TableHead scope="row" className="font-normal whitespace-normal">
+                      <TableHead
+                        scope="row"
+                        className={
+                          category.countsTowardTotal
+                            ? "font-normal whitespace-normal"
+                            : "font-normal whitespace-normal text-muted-foreground italic"
+                        }
+                      >
                         {moduleText(`category.${category.key}`)}
                       </TableHead>
                       {ranked.map((result) => (

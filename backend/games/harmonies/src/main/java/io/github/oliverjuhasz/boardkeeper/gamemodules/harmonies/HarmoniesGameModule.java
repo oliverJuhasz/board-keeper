@@ -2,6 +2,7 @@ package io.github.oliverjuhasz.boardkeeper.gamemodules.harmonies;
 
 import io.github.oliverjuhasz.boardkeeper.gameapi.ScoreCategory;
 import io.github.oliverjuhasz.boardkeeper.gameapi.ScorePad;
+import io.github.oliverjuhasz.boardkeeper.gameapi.Solo;
 import io.github.oliverjuhasz.boardkeeper.gameapi.StandardGameModule;
 import io.github.oliverjuhasz.boardkeeper.gameapi.Variant;
 import java.util.List;
@@ -31,9 +32,9 @@ import java.util.UUID;
  *       so nothing that is entered can decide a tie, and the recorder is asked who won it.
  * </ul>
  *
- * <p>Harmonies is for one to four players. This module records Plays with two to four: in the
- * solo mode a Player earns suns instead of winning, and how a Solo Play is recorded is settled
- * with the solo styles of milestone M3.
+ * <p>Harmonies is for one to four players. In the solo mode (page 11) a Player plays for a score
+ * and earns suns for it instead of winning, so a Solo Play is recorded for score only. The suns
+ * are not recorded.
  */
 public final class HarmoniesGameModule extends StandardGameModule {
 
@@ -49,7 +50,7 @@ public final class HarmoniesGameModule extends StandardGameModule {
     public static final String NATURES_SPIRIT = "naturesSpirit";
 
     private static final ScorePad PAD = new ScorePad(
-            2,
+            1,
             4,
             // The rulebook recommends side A for the first games, so it is the default.
             List.of(new Variant.Choice(BOARD_SIDE, List.of("a", "b")), new Variant.OnOff(NATURES_SPIRIT, false)),
@@ -63,7 +64,8 @@ public final class HarmoniesGameModule extends StandardGameModule {
                     ScoreCategory.of("animals"),
                     ScoreCategory.of("naturesSpirit").onlyWhen(NATURES_SPIRIT, "true")),
             List.of(),
-            true);
+            true,
+            Solo.forScoreOnly());
 
     @Override
     public UUID id() {

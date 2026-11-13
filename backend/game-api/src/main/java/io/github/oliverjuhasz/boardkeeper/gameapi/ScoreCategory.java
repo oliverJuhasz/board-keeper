@@ -10,6 +10,7 @@ package io.github.oliverjuhasz.boardkeeper.gameapi;
  * <pre>{@code
  * ScoreCategory.of("buttons").inStepsOf(3)
  * ScoreCategory.of("designGoals").onlyWhen("family", "false")
+ * ScoreCategory.of("automa").notCounted().inSoloPlaysOnly()
  * }</pre>
  *
  * @param key the category's name within its module: lower camel case, such as {@code designGoals}
@@ -19,9 +20,17 @@ package io.github.oliverjuhasz.boardkeeper.gameapi;
  * @param step every value has to be a multiple of this: 3 for a row where each token is worth 3
  * @param onlyWhen the Variant value that puts this row on the pad; null for a row that is always
  *     on it
+ * @param soloOnly whether the row is only on the pad of a Solo Play, such as the Automa's score
+ *     in Wyrmspan
  */
 public record ScoreCategory(
-        String key, boolean countsTowardTotal, Integer min, Integer max, int step, OnlyWhen onlyWhen) {
+        String key,
+        boolean countsTowardTotal,
+        Integer min,
+        Integer max,
+        int step,
+        OnlyWhen onlyWhen,
+        boolean soloOnly) {
 
     /** The Setup that puts a row on the pad: the Variant with this key has this value. */
     public record OnlyWhen(String variant, String value) {}
@@ -33,34 +42,39 @@ public record ScoreCategory(
     }
 
     public static ScoreCategory of(String key) {
-        return new ScoreCategory(key, true, 0, null, 1, null);
+        return new ScoreCategory(key, true, 0, null, 1, null, false);
     }
 
     /** A value that is entered but not added to the total, for example because it only breaks ties. */
     public ScoreCategory notCounted() {
-        return new ScoreCategory(key, false, min, max, step, onlyWhen);
+        return new ScoreCategory(key, false, min, max, step, onlyWhen, soloOnly);
     }
 
     public ScoreCategory mayBeNegative() {
-        return new ScoreCategory(key, countsTowardTotal, null, max, step, onlyWhen);
+        return new ScoreCategory(key, countsTowardTotal, null, max, step, onlyWhen, soloOnly);
     }
 
     /** For a row that always scores something, such as Harmonies' islands: there is at least one. */
     public ScoreCategory atLeast(int lowest) {
-        return new ScoreCategory(key, countsTowardTotal, lowest, max, step, onlyWhen);
+        return new ScoreCategory(key, countsTowardTotal, lowest, max, step, onlyWhen, soloOnly);
     }
 
     public ScoreCategory atMost(int highest) {
-        return new ScoreCategory(key, countsTowardTotal, min, highest, step, onlyWhen);
+        return new ScoreCategory(key, countsTowardTotal, min, highest, step, onlyWhen, soloOnly);
     }
 
     public ScoreCategory inStepsOf(int multiple) {
-        return new ScoreCategory(key, countsTowardTotal, min, max, multiple, onlyWhen);
+        return new ScoreCategory(key, countsTowardTotal, min, max, multiple, onlyWhen, soloOnly);
     }
 
     /** Puts the row on the pad only for Plays whose Setup has this value for this Variant. */
     public ScoreCategory onlyWhen(String variant, String value) {
-        return new ScoreCategory(key, countsTowardTotal, min, max, step, new OnlyWhen(variant, value));
+        return new ScoreCategory(key, countsTowardTotal, min, max, step, new OnlyWhen(variant, value), soloOnly);
+    }
+
+    /** Puts the row on the pad of Solo Plays only. */
+    public ScoreCategory inSoloPlaysOnly() {
+        return new ScoreCategory(key, countsTowardTotal, min, max, step, onlyWhen, true);
     }
 
     /** Whether a value may be entered in this row. */

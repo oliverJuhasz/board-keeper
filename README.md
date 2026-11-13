@@ -34,16 +34,16 @@ Board Keeper is a learning project first ([ADR 0001](docs/adr/0001-learning-proj
 
 ## Status
 
-Milestones M0, M1 and M2 are done, and M3 has started. Board Keeper builds, runs as a container image, and has:
+Milestones M0 to M3 are done. Board Keeper builds, runs as a container image, and has:
 
 - the interface in English, Dutch and Hungarian
 - Accounts with sign-in, created through a first-time Setup Link and through Invites
 - Players, who exist with or without an Account
 - a catalogue of Games, each with how its Plays are recorded by default
 - recording Plays of any Game in the catalogue: competitive or Cooperative, in points or with only the winner, with Placings and shared wins
-- Game Modules that bring a Game with its own score pad, Variants and tie rules: Calico and Harmonies
+- Game Modules that bring a Game with its own score pad, Variants, tie rules and way of playing alone: Calico, Harmonies and Wyrmspan
 - the play history, filterable by "my plays", Game, Player and date, with editing and deleting Plays according to Permissions
 - Roles made of fine-grained Permissions, with pages for managing Roles and Accounts
 - password changes and Reset Links
 
-Milestone M3 is under way: Game Modules for real games. Calico and Harmonies are done; Wyrmspan comes next, and with it how a Solo Play is recorded.
+Milestone M4 comes next: statistics per Game and per Player.

@@ -239,7 +239,10 @@ function PlaySummary({ play }: { play: Play }) {
               className={
                 result.won
                   ? "flex items-center gap-1 font-medium"
-                  : "flex items-center gap-1 text-muted-foreground"
+                  : result.won === false
+                    ? "flex items-center gap-1 text-muted-foreground"
+                    : // A Solo Play for score only, which nobody wins or loses.
+                      "flex items-center gap-1"
               }
             >
               {result.won && (

@@ -223,9 +223,11 @@ test("each row of a score pad keeps to its own limits", () => {
 test("a game has its own number of players", () => {
   const row = (playerId: string) => pad(playerId, "1", "1", "3")
 
-  expect(problemsOf(calicoModule, form({ players: [row(anna)] }))).toEqual({
-    players: "validation.playersTooFew",
+  expect(problemsOf(calicoModule, form({ players: [] }))).toEqual({
+    players: "validation.playerRequired",
   })
+  // Calico can be played alone.
+  expect(problemsOf(calicoModule, form({ players: [row(anna)] }))).toEqual({})
   expect(
     problemsOf(
       calicoModule,
