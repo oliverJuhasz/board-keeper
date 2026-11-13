@@ -1,5 +1,6 @@
 package io.github.oliverjuhasz.boardkeeper.stats.internal;
 
+import io.github.oliverjuhasz.boardkeeper.BoardKeeperApplication;
 import io.github.oliverjuhasz.boardkeeper.plays.Plays;
 import java.util.List;
 import java.util.UUID;
@@ -7,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 /**
@@ -14,6 +16,8 @@ import org.springframework.stereotype.Component;
  * application starts with this module, and after the copy has been emptied to rebuild it.
  */
 @Component
+// Work for the application that serves Board Keeper, not for a command.
+@Profile("!" + BoardKeeperApplication.COMMAND_PROFILE)
 class StatsStartup implements ApplicationRunner {
 
     private static final Logger log = LoggerFactory.getLogger(StatsStartup.class);

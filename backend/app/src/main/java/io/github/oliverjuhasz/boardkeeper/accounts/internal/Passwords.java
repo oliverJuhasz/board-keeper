@@ -58,11 +58,24 @@ class Passwords {
     @Transactional
     NewResetLink createResetLink(UUID playerId, CurrentAccount creator) {
         UUID accountId = accounts.findIdByPlayer(playerId).orElseThrow(() -> Problem.notFound("accounts.notFound"));
+        return newResetLink(accountId, creator.accountId());
+    }
 
+    /**
+     * Creates a Reset Link for an Account from the command line, where no Admin creates it:
+     * see {@link ResetLinkCommand}.
+     */
+    @Transactional
+    NewResetLink createResetLinkFromCommandLine(UUID accountId) {
+        return newResetLink(accountId, null);
+    }
+
+    /** @param createdBy the Admin's Account, or null when the link was made on the command line */
+    private NewResetLink newResetLink(UUID accountId, UUID createdBy) {
         String token = LinkTokens.newToken();
         OffsetDateTime expiresAt = OffsetDateTime.now().plus(RESET_LINK_VALIDITY);
         resets.deleteByAccount(accountId);
-        resets.insert(LinkTokens.hash(token), accountId, creator.accountId(), expiresAt);
+        resets.insert(LinkTokens.hash(token), accountId, createdBy, expiresAt);
         return new NewResetLink(token, expiresAt);
     }
 
