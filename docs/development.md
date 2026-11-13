@@ -214,7 +214,7 @@ A form is described once with Zod, which gives both the checks and the TypeScrip
 
 Give the page an address in `frontend/src/router.tsx`, with `lazy` like the pages already there, not with `element`. The build then puts the page's code into a file of its own, which the browser loads the first time the page is shown. `npm run build` lists the files and their sizes.
 
-In tests, `renderApp` loads every page before a test file's first test, so a test doesn't spend its waiting time on compiling a page. It also gives each test a router of its own, made from fresh route objects (`appRoutes()`), because React Router keeps what it loaded for a page on the page's route object.
+In tests, `renderApp` loads every page before a test file's first test, so a test doesn't spend its waiting time on compiling a page. It also gives each test a router of its own, made from fresh route objects (`appRoutes()`), because React Router keeps what it loaded for a page on the page's route object. After a test follows a link, the page it came from stays on screen until the next page's code has loaded, so the test should wait for something only the next page shows. The start page and the form for a Play, for example, have the same heading.
 
 ### Building blocks for pages
 
