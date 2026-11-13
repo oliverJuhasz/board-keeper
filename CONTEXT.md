@@ -61,7 +61,7 @@ One named value recorded or calculated for each Player in a Play, such as "Eggs"
 _Avoid_: Score line, field
 
 **Tie-breaker**:
-How Players with equal totals are put in order. It is either a Score Category, whether or not it counts toward the total (civilian points in 7 Wonders Duel count, leftover food in Wingspan doesn't), or, where the Game allows it, the recorder's own choice. Players still tied share a Placing.
+How Players with equal totals are put in order. It is a Score Category, whether or not it counts toward the total (civilian points in 7 Wonders Duel count, leftover food in Wingspan doesn't). Where a Game decides a tie for first place by something that is not recorded, such as the number of cat tokens in Calico, the recorder is asked who won it. Players still tied share a Placing.
 _Avoid_: Tiebreak rule
 
 **Result**:
