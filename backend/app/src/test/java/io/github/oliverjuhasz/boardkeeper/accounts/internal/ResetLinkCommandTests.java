@@ -73,6 +73,7 @@ class ResetLinkCommandTests {
         assertThat(command.getExitCode()).isZero();
         Matcher link = LINK.matcher(output.getOut());
         assertThat(link.find()).as("a link in the log").isTrue();
+        assertThat(output.getOut()).containsPattern("until \\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2} UTC");
         // Nobody created it in the app.
         assertThat(dsl.select(PASSWORD_RESET.CREATED_BY)
                         .from(PASSWORD_RESET)

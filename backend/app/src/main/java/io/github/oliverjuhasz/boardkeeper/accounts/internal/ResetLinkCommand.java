@@ -2,6 +2,8 @@ package io.github.oliverjuhasz.boardkeeper.accounts.internal;
 
 import io.github.oliverjuhasz.boardkeeper.BoardKeeperApplication;
 import io.github.oliverjuhasz.boardkeeper.accounts.internal.Passwords.NewResetLink;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +30,10 @@ class ResetLinkCommand implements ApplicationRunner, ExitCodeGenerator {
     static final String OPTION = "reset-link-for";
 
     private static final Logger log = LoggerFactory.getLogger(ResetLinkCommand.class);
+
+    /** Such as "2026-11-14 17:21 UTC": a container's clock runs in UTC unless told otherwise. */
+    private static final DateTimeFormatter UNTIL =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm 'UTC'").withZone(ZoneOffset.UTC);
 
     private final AccountRepository accounts;
     private final Passwords passwords;
@@ -79,7 +85,7 @@ class ResetLinkCommand implements ApplicationRunner, ExitCodeGenerator {
                 It works once, until {}. Whoever opens it can
                 take over the Account, so keep it to yourself.
                 ------------------------------------------------------------------
-                """, username, link.token(), link.expiresAt());
+                """, username, link.token(), UNTIL.format(link.expiresAt()));
     }
 
     private void fail(String message, Object argument) {
