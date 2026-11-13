@@ -7,6 +7,7 @@ import static io.github.oliverjuhasz.boardkeeper.jooq.Tables.PLAY;
 import static io.github.oliverjuhasz.boardkeeper.jooq.Tables.PLAYER;
 import static io.github.oliverjuhasz.boardkeeper.jooq.Tables.ROLE;
 import static io.github.oliverjuhasz.boardkeeper.jooq.Tables.ROLE_PERMISSION;
+import static io.github.oliverjuhasz.boardkeeper.jooq.Tables.STATS_PLAY;
 
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
@@ -29,6 +30,7 @@ public class TestDatabase {
         dsl.deleteFrom(DSL.table("spring_session")).execute();
         // A Play's Results go with it.
         dsl.deleteFrom(PLAY).execute();
+        dsl.deleteFrom(STATS_PLAY).execute();
         dsl.deleteFrom(INVITE).execute();
         dsl.deleteFrom(ACCOUNT).execute();
         dsl.deleteFrom(PLAYER).execute();

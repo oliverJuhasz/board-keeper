@@ -37,7 +37,8 @@
     "playAgain": "Nog een keer",
     "playAgainWith": "{{game}} nog een keer spelen met {{players}}",
     "lastPlayed": "Laatst gespeeld: {{when}}",
-    "neverPlayed": "Nog niet gespeeld"
+    "neverPlayed": "Nog niet gespeeld",
+    "statistics": "Statistieken"
   },
   "recording": {
     "as": {
@@ -516,6 +517,31 @@
     "notValid": {
       "title": "Deze link werkt niet",
       "text": "Hij is misschien al gebruikt of verlopen. Vraag een nieuwe aan."
+    }
+  },
+  "stats": {
+    "game": {
+      "loading": "De statistieken laden",
+      "loadFailed": "De statistieken konden niet worden geladen",
+      "backToGames": "Terug naar spellen",
+      "played_one": "Eén keer gespeeld",
+      "played_other": "{{count}} keer gespeeld",
+      "record": "Een partij vastleggen",
+      "empty": "Nog geen partijen van dit spel. De statistieken beginnen bij de eerste.",
+      "players": "Spelers",
+      "player": "Speler",
+      "plays": "Partijen",
+      "wins": "Gewonnen",
+      "winsOf": "{{wins}} van {{plays}}",
+      "bestScore": "Beste score",
+      "averageScore": "Gemiddelde score",
+      "averagePlacing": "Gemiddelde plaats",
+      "padAverages": "Gemiddelden op het scoreblok",
+      "padAveragesHint": "Wat een speler gemiddeld per rij scoort.",
+      "together": "Samen gespeeld",
+      "won": "Gewonnen",
+      "solo": "Solopartijen",
+      "allPlays": "Alle partijen van {{game}}"
     }
   }
 }

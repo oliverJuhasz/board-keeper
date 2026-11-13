@@ -37,7 +37,8 @@
     "playAgain": "Újra",
     "playAgainWith": "{{game}} újra: {{players}}",
     "lastPlayed": "Utoljára játszva: {{when}}",
-    "neverPlayed": "Még nem játszottátok"
+    "neverPlayed": "Még nem játszottátok",
+    "statistics": "Statisztika"
   },
   "recording": {
     "as": {
@@ -516,6 +517,31 @@
     "notValid": {
       "title": "Ez a visszaállító hivatkozás nem működik",
       "text": "Lehet, hogy már felhasználták, vagy lejárt. Kérj egy újat."
+    }
+  },
+  "stats": {
+    "game": {
+      "loading": "A statisztika betöltése",
+      "loadFailed": "Nem sikerült betölteni a statisztikát",
+      "backToGames": "Vissza a játékokhoz",
+      "played_one": "Egyszer játszottátok",
+      "played_other": "{{count}} alkalommal játszottátok",
+      "record": "Parti rögzítése",
+      "empty": "Ezzel a játékkal még nincs parti. A statisztika az elsővel indul.",
+      "players": "Játékosok",
+      "player": "Játékos",
+      "plays": "Partik",
+      "wins": "Győzelmek",
+      "winsOf": "{{wins}}/{{plays}}",
+      "bestScore": "Legjobb pontszám",
+      "averageScore": "Átlagos pontszám",
+      "averagePlacing": "Átlagos helyezés",
+      "padAverages": "Átlagok a pontozólapon",
+      "padAveragesHint": "Egy játékos átlagosan ennyi pontot szerez soronként.",
+      "together": "Közösen játszva",
+      "won": "Nyertetek",
+      "solo": "Szólópartik",
+      "allPlays": "Összes parti: {{game}}"
     }
   }
 }

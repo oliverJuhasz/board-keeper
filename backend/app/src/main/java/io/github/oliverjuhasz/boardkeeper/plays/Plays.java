@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,12 +47,24 @@ public class Plays {
     private final Games games;
     private final GameModules gameModules;
     private final Players players;
+    private final ApplicationEventPublisher events;
 
-    Plays(PlayRepository repository, Games games, GameModules gameModules, Players players) {
+    Plays(
+            PlayRepository repository,
+            Games games,
+            GameModules gameModules,
+            Players players,
+            ApplicationEventPublisher events) {
         this.repository = repository;
         this.games = games;
         this.gameModules = gameModules;
         this.players = players;
+        this.events = events;
+    }
+
+    /** The ids of every Play, for a module that builds data of its own from all of them. */
+    public List<UUID> allIds() {
+        return repository.allIds();
     }
 
     public Optional<Play> find(UUID id) {
@@ -93,6 +106,9 @@ public class Plays {
         Scored scored = score(moduleOf(game.gameModuleId()), newPlay.playerIds(), newPlay.entry());
 
         UUID id = repository.insert(game, newPlay, scored.group(), scored.results(), recorder.playerId());
+        // Published inside the transaction. Listeners marked @ApplicationModuleListener run
+        // only once it has been committed, so they never see a Play that was rolled back.
+        events.publishEvent(new PlayRecorded(id));
         return repository.find(id).orElseThrow();
     }
 
@@ -142,6 +158,7 @@ public class Plays {
         Scored scored = score(moduleOf(play.gameModuleId()), changed.playerIds(), changed.entry());
 
         repository.update(id, changed, scored.group(), scored.results());
+        events.publishEvent(new PlayChanged(id));
         return repository.find(id).orElseThrow();
     }
 
@@ -150,6 +167,7 @@ public class Plays {
     public void delete(UUID id, CurrentAccount account) {
         changeable(id, account);
         repository.delete(id);
+        events.publishEvent(new PlayDeleted(id));
     }
 
     /** The Play, if it exists and the Account may change it. */

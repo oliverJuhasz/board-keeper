@@ -1,12 +1,15 @@
 import type { ReactNode } from "react"
 
-/** The top of a page: its title, a line about it, and optionally a button on the right. */
+/**
+ * The top of a page: its title, a line about it, and optionally a button on the right. The
+ * title is usually text, and may be a link.
+ */
 export function PageHeader({
   title,
   description,
   action,
 }: {
-  title: string
+  title: ReactNode
   description: string
   action?: ReactNode
 }) {

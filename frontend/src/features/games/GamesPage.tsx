@@ -128,25 +128,26 @@ export function GamesPage() {
                       </TableCell>
                       <TableCell>
                         <div className="relative z-10 flex items-center justify-end gap-1">
-                          {/* A Game with a module of its own is named by the module and stays
-                            while the module does: there is nothing to edit or remove. */}
-                          {!game.hasOwnModule && (can("EDIT_GAMES") || can("REMOVE_GAMES")) && (
-                            <ActionsMenu label={t("games.actions", { name: game.name })}>
-                              {can("EDIT_GAMES") && (
-                                <DropdownMenuItem onClick={() => setDialog({ kind: "edit", game })}>
-                                  {t("games.edit")}
-                                </DropdownMenuItem>
-                              )}
-                              {can("REMOVE_GAMES") && (
-                                <DropdownMenuItem
-                                  variant="destructive"
-                                  onClick={() => setDialog({ kind: "remove", game })}
-                                >
-                                  {t("games.remove")}
-                                </DropdownMenuItem>
-                              )}
-                            </ActionsMenu>
-                          )}
+                          <ActionsMenu label={t("games.actions", { name: gameName(game) })}>
+                            <DropdownMenuItem render={<Link to={`/games/${game.id}`} />}>
+                              {t("games.statistics")}
+                            </DropdownMenuItem>
+                            {/* A Game with a module of its own is named by the module and stays
+                                while the module does: there is nothing to edit or remove. */}
+                            {!game.hasOwnModule && can("EDIT_GAMES") && (
+                              <DropdownMenuItem onClick={() => setDialog({ kind: "edit", game })}>
+                                {t("games.edit")}
+                              </DropdownMenuItem>
+                            )}
+                            {!game.hasOwnModule && can("REMOVE_GAMES") && (
+                              <DropdownMenuItem
+                                variant="destructive"
+                                onClick={() => setDialog({ kind: "remove", game })}
+                              >
+                                {t("games.remove")}
+                              </DropdownMenuItem>
+                            )}
+                          </ActionsMenu>
                           {records && (
                             <ChevronRightIcon
                               aria-hidden

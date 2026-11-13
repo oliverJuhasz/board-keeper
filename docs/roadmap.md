@@ -91,7 +91,7 @@ Recording without a connection, teams, unfinished plays, game nights, importing 
 ## Settled for milestone M4
 
 - **Recording a Play takes as few steps as possible from opening Board Keeper**, because that is what it is for. The start page offers the last few Plays the signed-in Player took part in to play again: one tap opens the form with the same Game, Players and choices, so only the date and the scores are left. Below them come the Games, the most recently played first, and a tap anywhere on a Game opens its form.
-- The Games page stays the start page. Each Game's name leads to its statistics, and each Player's name on the Players page to theirs.
+- The Games page stays the start page. A tap on a Game there opens the form, so its statistics are in each Game's menu instead, and the Game's name on a Play's page leads to them too. Each Player's name on the Players page leads to theirs.
 - Solo Plays don't count toward win rates or average Placing. The pages of a Game and a Player show them in a section of their own: how many, the best and average score, and the wins against an automated opponent.
 - A Play recorded with only the winner counts in plays, wins and win rate, and is left out of score averages and average Placing.
 
