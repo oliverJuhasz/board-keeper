@@ -2,7 +2,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { CircleUserRoundIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router"
-import { api, sessionKey } from "@/api/client"
+import { api, sessionKey, type Session } from "@/api/client"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -23,9 +23,12 @@ export function AccountMenu() {
 
   const signOut = api.useMutation("delete", "/api/session", {
     onSuccess: () => {
-      // Record that nobody is signed in, which sends the app to the sign-in page. Then forget
-      // everything that was loaded for this Account.
-      queryClient.setQueryData(sessionKey, {})
+      // Record that nobody is signed in, which sends the app to the sign-in page. Whether the
+      // installation offers passkeys stays as it was. Then forget everything that was loaded
+      // for this Account.
+      queryClient.setQueryData<Session>(sessionKey, (current) => ({
+        passkeys: current?.passkeys ?? false,
+      }))
       queryClient.removeQueries({ predicate: (query) => query.queryKey[1] !== "/api/session" })
     },
   })

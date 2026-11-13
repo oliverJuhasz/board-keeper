@@ -29,6 +29,8 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/boardkeeper
       SPRING_DATASOURCE_USERNAME: boardkeeper
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      # Board Keeper's https:// address, for passkeys (see .env.example).
+      BOARDKEEPER_URL: ${BOARDKEEPER_URL:-}
     ports:
       - "${BOARD_KEEPER_PORT:-8080}:8080"
 

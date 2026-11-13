@@ -103,8 +103,12 @@ An offer from an Admin to the person behind a Player to register an Account that
 _Avoid_: Invitation code, sign-up link
 
 **Reset Link**:
-A one-time link that lets the owner of an Account choose a new password, created for them by an Admin. Board Keeper sends no email, so this is how a forgotten password is solved.
+A one-time link that lets the owner of an Account choose a new password, created for them by an Admin. Board Keeper sends no email, so this is how a forgotten password is solved. When the only Admin has forgotten theirs, a command run on Board Keeper's container creates one.
 _Avoid_: Recovery link, forgot-password link
+
+**Passkey**:
+A way to sign in to an Account with a phone, computer or security key, by fingerprint, face or PIN, instead of typing the password. An Account can have several, and keeps its password as well.
+_Avoid_: Security key (one kind of device that holds passkeys), WebAuthn credential
 
 **Disabled Account**:
 An Account that can no longer sign in. Its Player and its history stay, and it can be enabled again.
@@ -133,5 +137,6 @@ The built-in Role an Invite gives unless the Admin picks another.
 | Game | spel | játék |
 | Play | partij | parti |
 | Player | speler | játékos |
+| Passkey | passkey | passkey |
 
 The interface addresses people informally in both: "je" in Dutch, tegezés in Hungarian.

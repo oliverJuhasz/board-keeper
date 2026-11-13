@@ -145,6 +145,18 @@ test("says so when the server doesn't accept the passkey", async () => {
   ).toBeInTheDocument()
 })
 
+test("still offers passkeys after signing out", async () => {
+  browserWithPasskeys()
+  signedInWithPasskeys([])
+  server.use(http.delete("*/api/session", () => new HttpResponse(null, { status: 204 })))
+  renderApp("/")
+
+  await userEvent.click(await screen.findByRole("button", { name: "Account" }))
+  await userEvent.click(await screen.findByRole("menuitem", { name: "Sign out" }))
+
+  expect(await screen.findByRole("button", { name: "Sign in with a passkey" })).toBeInTheDocument()
+})
+
 test("offers no passkeys when the installation has none", async () => {
   browserWithPasskeys()
   server.use(

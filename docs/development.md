@@ -200,6 +200,16 @@ Rules on a request's fields are annotations such as `@Size(min = 16)` on the req
 
 **Tests.** `TestBrowser` calls the API as a browser would: it keeps cookies between requests and sends the CSRF token. `TestAccounts` creates Accounts, and `TestDatabase.empty()` clears the database between tests that make several requests. A test that only needs "someone is signed in" can use `@WithMockUser` instead.
 
+### Passkeys
+
+A passkey signs in with a phone, computer or security key instead of the password; every Account keeps its password too. Spring Security's WebAuthn support (`spring-security-webauthn`, with the WebAuthn4J library underneath) does the cryptography. The `accounts` module uses it in endpoints of its own, like signing in with a password, rather than Spring Security's ready-made filters and pages: `Passkeys` holds the logic and `PasskeyController` the endpoints.
+
+Adding a passkey and signing in with one each take two requests. The first asks the server for options with a random challenge, which wait in the session. The browser converts them (`PublicKeyCredential.parseCreationOptionsFromJSON` or `parseRequestOptionsFromJSON`), asks the device, and sends its answer back as JSON (`toJSON()`). The server checks that answer against its own challenge. Signing in with a passkey then starts the same session as a password does. Spring Security keeps the passkeys in two tables of its own, `user_entities` and `user_credentials` (V13), which jOOQ leaves out like Spring Session's.
+
+A passkey belongs to one web address, so Board Keeper offers passkeys only when `boardkeeper.url` (the `BOARDKEEPER_URL` environment variable) says where it is reached. `GET /api/session` answers whether it does (`passkeys`). While developing, the address is Vite's, `http://localhost:5173` (set in `backend/app/src/test/resources/config/application.properties`), so passkeys work through `npm run dev`, not on Spring Boot's own port. Browsers allow plain http only on `localhost`.
+
+**Tests.** `TestPhone` is a pretend phone that makes and uses passkeys with real keys, from WebAuthn4J's emulated authenticator; `PasskeyTests` shows it at work. In the frontend, the tests stand in for the browser's `PublicKeyCredential` and `navigator.credentials` (`passkeys.test.tsx`). To try passkeys in Chromium without a phone, its developer tools can add a virtual authenticator (More tools, WebAuthn).
+
 ### Forms in the frontend
 
 A form is described once with Zod, which gives both the checks and the TypeScript type, and run by React Hook Form. `frontend/src/features/session/SignInPage.tsx` is the example to copy. `TextField` draws a labelled input with its hint and error; `FormProblem` shows why the server refused a submission.
