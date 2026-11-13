@@ -3,6 +3,7 @@ package io.github.oliverjuhasz.boardkeeper.plays.internal;
 import static io.github.oliverjuhasz.boardkeeper.jooq.Tables.PLAY;
 import static io.github.oliverjuhasz.boardkeeper.jooq.Tables.PLAY_RESULT;
 import static org.jooq.impl.DSL.exists;
+import static org.jooq.impl.DSL.max;
 import static org.jooq.impl.DSL.multiset;
 import static org.jooq.impl.DSL.noCondition;
 import static org.jooq.impl.DSL.select;
@@ -13,7 +14,9 @@ import io.github.oliverjuhasz.boardkeeper.games.Game;
 import io.github.oliverjuhasz.boardkeeper.plays.NewPlay;
 import io.github.oliverjuhasz.boardkeeper.plays.Play;
 import io.github.oliverjuhasz.boardkeeper.plays.PlayHistory;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.jooq.Condition;
@@ -96,6 +99,14 @@ public class PlayRepository {
                 ? newestFirst.limit(limit)
                 : newestFirst.seek(after.playedOn(), after.id()).limit(limit);
         return page.fetch(PlayRepository::toPlay);
+    }
+
+    /** The day each Game was last played on, by the Game's id. A Game without Plays is missing. */
+    public Map<UUID, LocalDate> lastPlayedOnByGame() {
+        return dsl.select(PLAY.GAME_ID, max(PLAY.PLAYED_ON))
+                .from(PLAY)
+                .groupBy(PLAY.GAME_ID)
+                .fetchMap(row -> row.value1(), row -> row.value2());
     }
 
     /** Stores a Play with its Results and gives the id it got. */

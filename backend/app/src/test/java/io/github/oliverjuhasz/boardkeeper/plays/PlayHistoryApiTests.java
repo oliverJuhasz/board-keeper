@@ -91,6 +91,27 @@ class PlayHistoryApiTests {
     }
 
     @Test
+    void saysWhenEachGameWasLastPlayed() {
+        record(calico, "2026-03-10", anna, bence);
+        record(calico, "2026-03-14", anna, bence);
+        record(calico, "2026-03-12", anna, bence);
+        record(azul, "2026-02-01", anna, dora);
+        UUID neverPlayed = games.create("Hanabi", POINTS).id();
+
+        assertThat(member.get("/api/plays/last-played"))
+                .hasStatusOk()
+                .bodyJson()
+                .isLenientlyEqualTo("""
+                        [{"gameId": "%s", "playedOn": "2026-03-14"}, {"gameId": "%s", "playedOn": "2026-02-01"}]
+                        """.formatted(calico, azul));
+        assertThat(member.get("/api/plays/last-played"))
+                .bodyJson()
+                .extractingPath("$[*].gameId")
+                .asArray()
+                .doesNotContain(neverPlayed.toString());
+    }
+
+    @Test
     void anEmptyHistoryIsAnEmptyList() {
         assertThat(member.get("/api/plays")).hasStatusOk().bodyJson().isStrictlyEqualTo("{\"plays\": []}");
     }
