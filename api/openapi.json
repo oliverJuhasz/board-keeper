@@ -453,6 +453,11 @@
             "$ref" : "#/components/schemas/GroupEntry",
             "description" : "For a Cooperative Play: how it ended for the group"
           },
+          "id" : {
+            "description" : "Only when recording, and optional: the new Play's id, chosen by the device. A Play is recorded once per id: sending it again gives back the Play already recorded. Another Account's Play with the same id is refused with plays.idTaken. Use a UUID of version 7, which starts with the time: the history orders a day's Plays by id.",
+            "format" : "uuid",
+            "type" : "string"
+          },
           "location" : {
             "description" : "Where it was played, in your own words",
             "maxLength" : 100,

@@ -74,6 +74,48 @@ class PlaysApiTests {
     }
 
     @Test
+    void aPlayRecordedUnderAnIdIsRecordedOnceHoweverOftenItIsSent() {
+        UUID id = UUID.fromString("019a7c00-0000-7000-8000-000000000001");
+        String sent = withId(id, play("POINTS", COMPETITIVE, "2026-03-14", scored(dora, 61), scored(anna, 74)));
+
+        assertThat(member.post("/api/plays", sent)).hasStatusOk().bodyJson().extractingPath("$.id").isEqualTo(id.toString());
+        // A phone that never heard the answer sends it again.
+        assertThat(member.post("/api/plays", sent))
+                .hasStatusOk()
+                .bodyJson()
+                .isLenientlyEqualTo("{\"id\": \"%s\", \"results\": [{\"total\": 61}, {\"total\": 74}]}".formatted(id));
+        assertThat(dsl.fetchCount(PLAY)).isEqualTo(1);
+    }
+
+    @Test
+    void sendingAPlayAgainGivesBackWhatWasRecordedThen() {
+        UUID id = UUID.fromString("019a7c00-0000-7000-8000-000000000002");
+        member.post("/api/plays", withId(id, play("POINTS", COMPETITIVE, "2026-03-14", scored(dora, 61), scored(anna, 74))));
+
+        assertThat(member.post("/api/plays", withId(id, play("POINTS", COMPETITIVE, "2026-03-14", scored(dora, 1), scored(anna, 2)))))
+                .hasStatusOk()
+                .bodyJson()
+                .isLenientlyEqualTo("{\"results\": [{\"total\": 61}, {\"total\": 74}]}");
+    }
+
+    @Test
+    void anotherAccountCannotRecordUnderAPlaysId() {
+        UUID id = UUID.fromString("019a7c00-0000-7000-8000-000000000003");
+        member.post("/api/plays", withId(id, play("POINTS", COMPETITIVE, "2026-03-14", scored(dora, 61), scored(anna, 74))));
+
+        assertThat(admin.post("/api/plays", withId(id, play("POINTS", COMPETITIVE, "2026-03-14", scored(dora, 5), scored(anna, 4)))))
+                .hasStatus(409)
+                .bodyJson()
+                .isLenientlyEqualTo("{\"code\": \"plays.idTaken\"}");
+        assertThat(dsl.fetchCount(PLAY)).isEqualTo(1);
+    }
+
+    /** The same request with the id the device chose for the new Play. */
+    private static String withId(UUID id, String body) {
+        return body.replaceFirst("\\{", "{\"id\": \"%s\", ".formatted(id));
+    }
+
+    @Test
     void recordsACompetitivePlayInPointsWithItsPlacings() {
         MvcTestResult recorded = member.post(
                 "/api/plays",

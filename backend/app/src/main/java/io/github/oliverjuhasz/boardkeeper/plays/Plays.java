@@ -101,15 +101,48 @@ public class Plays {
      */
     @Transactional
     public Play record(NewPlay newPlay, CurrentAccount recorder) {
+        return record(null, newPlay, recorder);
+    }
+
+    /**
+     * Records a Play under an id the recorder's device chose. A phone that recorded a Play
+     * without a connection sends it later, and may send it again when it never heard the
+     * answer. So a Play is recorded once per id: sending it again gives back the Play already
+     * recorded, unchanged.
+     *
+     * @param id the new Play's id; null to have one made. It should be a UUID of version 7,
+     *     which starts with the time, as the ids the database makes do: the play history puts
+     *     the Plays of a day in the order of their ids.
+     * @throws Problem {@code plays.idTaken} when another Account recorded a Play with this id
+     */
+    @Transactional
+    public Play record(UUID id, NewPlay newPlay, CurrentAccount recorder) {
+        if (id != null) {
+            Optional<Play> earlier = repository.find(id);
+            if (earlier.isPresent()) {
+                return sentAgain(earlier.get(), recorder);
+            }
+        }
         Game game = games.find(newPlay.gameId()).orElseThrow(() -> Problem.notFound("games.notFound"));
         checkPlayersAndDate(newPlay);
         Scored scored = score(moduleOf(game.gameModuleId()), newPlay.playerIds(), newPlay.entry());
 
-        UUID id = repository.insert(game, newPlay, scored.group(), scored.results(), recorder.playerId());
+        Optional<UUID> recorded = repository.insert(id, game, newPlay, scored.group(), scored.results(), recorder.playerId());
+        if (recorded.isEmpty()) {
+            // The same id arrived twice at the same moment, and the other request won.
+            return sentAgain(repository.find(id).orElseThrow(), recorder);
+        }
         // Published inside the transaction. Listeners marked @ApplicationModuleListener run
         // only once it has been committed, so they never see a Play that was rolled back.
-        events.publishEvent(new PlayRecorded(id));
-        return repository.find(id).orElseThrow();
+        events.publishEvent(new PlayRecorded(recorded.get()));
+        return repository.find(recorded.get()).orElseThrow();
+    }
+
+    private static Play sentAgain(Play earlier, CurrentAccount recorder) {
+        if (!earlier.recordedBy().equals(recorder.playerId())) {
+            throw Problem.conflict("plays.idTaken");
+        }
+        return earlier;
     }
 
     /**

@@ -23,6 +23,7 @@ import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.Record;
+import org.jooq.impl.DSL;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -114,8 +115,18 @@ public class PlayRepository {
     }
 
     /** Stores a Play with its Results and gives the id it got. */
-    public UUID insert(Game game, NewPlay newPlay, Play.GroupResult group, List<Play.Result> results, UUID recordedBy) {
-        UUID id = dsl.insertInto(PLAY)
+    /**
+     * Stores a new Play with its Results.
+     *
+     * @param id the Play's id, or null to have the database make one
+     * @return the Play's id; empty when a Play with the given id exists already, in which case
+     *     nothing was stored
+     */
+    public Optional<UUID> insert(
+            UUID id, Game game, NewPlay newPlay, Play.GroupResult group, List<Play.Result> results, UUID recordedBy) {
+        Optional<UUID> inserted = dsl.insertInto(PLAY)
+                // DSL.defaultValue: the column's default, uuidv7(), when no id was given.
+                .set(PLAY.ID, id == null ? DSL.defaultValue(PLAY.ID) : DSL.val(id))
                 .set(PLAY.GAME_ID, game.id())
                 .set(PLAY.GAME_MODULE_ID, game.gameModuleId())
                 .set(PLAY.PLAYED_ON, newPlay.playedOn())
@@ -128,11 +139,13 @@ public class PlayRepository {
                 .set(PLAY.GROUP_SCORES, group == null ? null : JsonColumns.toJson(group.scores()))
                 .set(PLAY.GROUP_TOTAL, group == null ? null : group.total())
                 .set(PLAY.RECORDED_BY, recordedBy)
+                // "on conflict do nothing": a second Play with the same id is not stored, and
+                // returns no row, instead of failing the whole transaction.
+                .onConflictDoNothing()
                 .returningResult(PLAY.ID)
-                .fetchSingle()
-                .value1();
-        insertResults(id, results);
-        return id;
+                .fetchOptional(row -> row.value1());
+        inserted.ifPresent(recorded -> insertResults(recorded, results));
+        return inserted;
     }
 
     /** Replaces what was entered for a Play and what was calculated from it. Its Game and its recorder stay. */
