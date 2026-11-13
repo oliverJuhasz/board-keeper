@@ -12,10 +12,10 @@ import java.util.stream.IntStream;
 /**
  * A Game Module for a competitive Game that is scored the usual way: every Player adds up the
  * rows of a score pad, and the highest total wins. Such a module only describes its pad, in
- * {@link #scoreSheet()}; the scoring here follows from the description.
+ * {@link #scorePad()}; the scoring here follows from the description.
  *
- * <p>Equal totals are put in order by the sheet's Tie-breakers. Players who are still level
- * share a Placing. For first place only, a sheet can say that the Game decides what is left by
+ * <p>Equal totals are put in order by the pad's Tie-breakers. Players who are still level
+ * share a Placing. For first place only, a pad can say that the Game decides what is left by
  * something that is not entered: then the recorder is asked, and the Players they mark as
  * winner come first.
  *
@@ -26,14 +26,14 @@ public abstract class StandardGameModule implements GameModule {
 
     @Override
     public final Outcome score(PlayEntry entry) {
-        ScoreSheet sheet = scoreSheet();
-        checkSetup(sheet, entry.setup());
+        ScorePad pad = scorePad();
+        checkSetup(pad, entry.setup());
 
         List<PlayerEntry> players = entry.players();
-        if (players.size() < sheet.minPlayers()) {
+        if (players.size() < pad.minPlayers()) {
             throw new InvalidPlayException(Standard.TOO_FEW_PLAYERS);
         }
-        if (sheet.maxPlayers() != null && players.size() > sheet.maxPlayers()) {
+        if (pad.maxPlayers() != null && players.size() > pad.maxPlayers()) {
             throw new InvalidPlayException(Standard.TOO_MANY_PLAYERS);
         }
         if (entry.group() != null) {
@@ -41,13 +41,13 @@ public abstract class StandardGameModule implements GameModule {
         }
         return entry.recordingMode() == RecordingMode.WINNER_ONLY
                 ? byMarkedWinners(players)
-                : byPoints(sheet, entry.setup(), players);
+                : byPoints(pad, entry.setup(), players);
     }
 
-    /** Every Variant in the Setup has to be on the sheet, with a value the Variant allows. */
-    private static void checkSetup(ScoreSheet sheet, Map<String, String> setup) {
+    /** Every Variant in the Setup has to be on the pad, with a value the Variant allows. */
+    private static void checkSetup(ScorePad pad, Map<String, String> setup) {
         setup.forEach((key, value) -> {
-            boolean known = sheet.variants().stream()
+            boolean known = pad.variants().stream()
                     .anyMatch(variant -> variant.key().equals(key) && variant.allows(value));
             if (!known) {
                 throw new InvalidPlayException(Standard.NOT_RECORDED);
@@ -68,8 +68,8 @@ public abstract class StandardGameModule implements GameModule {
         return new Outcome.Competitive(results, List.of());
     }
 
-    private static Outcome byPoints(ScoreSheet sheet, Map<String, String> setup, List<PlayerEntry> players) {
-        List<ScoreCategory> categories = sheet.categoriesFor(setup);
+    private static Outcome byPoints(ScorePad pad, Map<String, String> setup, List<PlayerEntry> players) {
+        List<ScoreCategory> categories = pad.categoriesFor(setup);
         Set<String> onThePad = categories.stream().map(ScoreCategory::key).collect(Collectors.toSet());
         for (PlayerEntry player : players) {
             if (!onThePad.containsAll(player.scores().keySet())) {
@@ -96,7 +96,7 @@ public abstract class StandardGameModule implements GameModule {
         // Sorts the Player who did better first: by total, then by each Tie-breaker in turn.
         // Players it calls equal are level on everything that was entered.
         Comparator<Integer> bestFirst = Comparator.comparing((Integer player) -> totals.get(player), Comparator.reverseOrder());
-        for (TieBreaker tieBreaker : sheet.tieBreakers()) {
+        for (TieBreaker tieBreaker : pad.tieBreakers()) {
             // A Tie-breaker whose row is not on the pad for this Setup decides nothing.
             if (onThePad.contains(tieBreaker.category())) {
                 Comparator<Integer> byValue =
@@ -111,7 +111,7 @@ public abstract class StandardGameModule implements GameModule {
 
         // Marking a winner only means something for a tie the recorder may decide.
         List<Integer> marked = everyone.stream().filter(player -> players.get(player).winner()).toList();
-        boolean recorderMayDecide = sheet.recorderDecidesTies() && first.size() > 1;
+        boolean recorderMayDecide = pad.recorderDecidesTies() && first.size() > 1;
         if (!marked.isEmpty() && (!first.containsAll(marked) || (!recorderMayDecide && first.size() > 1))) {
             throw new InvalidPlayException(Standard.WINNER_NOT_TIED);
         }

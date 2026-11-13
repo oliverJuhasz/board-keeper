@@ -1,7 +1,7 @@
 package io.github.oliverjuhasz.boardkeeper.games.internal;
 
 import io.github.oliverjuhasz.boardkeeper.gameapi.GameModule;
-import io.github.oliverjuhasz.boardkeeper.gameapi.ScoreSheet;
+import io.github.oliverjuhasz.boardkeeper.gameapi.ScorePad;
 import io.github.oliverjuhasz.boardkeeper.gameapi.Variant;
 import io.github.oliverjuhasz.boardkeeper.games.GameModules;
 import io.github.oliverjuhasz.boardkeeper.language.Language;
@@ -42,7 +42,7 @@ public class GameModuleTexts {
         }
         for (GameModule module : gameModules.all()) {
             Map<String, String> fallback = read(module, Language.FALLBACK);
-            requireTextsForSheet(module, fallback.keySet());
+            requireTextsForPad(module, fallback.keySet());
             for (Language language : Language.values()) {
                 Map<String, String> own = language == Language.FALLBACK ? fallback : read(module, language);
                 warnAboutDifferences(module, language, fallback.keySet(), own.keySet());
@@ -103,29 +103,29 @@ public class GameModuleTexts {
     }
 
     /**
-     * The frontend draws a module's form from its score sheet and looks up what to call each
+     * The frontend draws a module's form from its score pad and looks up what to call each
      * part of it in the module's texts. A text missing in English would leave a blank there, so
      * the application refuses to start without it.
      */
-    private static void requireTextsForSheet(GameModule module, Set<String> english) {
+    private static void requireTextsForPad(GameModule module, Set<String> english) {
         String prefix = module.key() + ".";
-        ScoreSheet sheet = module.scoreSheet();
+        ScorePad pad = module.scorePad();
         Set<String> needed = new TreeSet<>();
         needed.add(prefix + "name");
-        for (Variant variant : sheet.variants()) {
+        for (Variant variant : pad.variants()) {
             needed.add(prefix + "variant." + variant.key());
             if (variant instanceof Variant.Choice choice) {
                 choice.options().forEach(option -> needed.add(prefix + "variant." + variant.key() + "." + option));
             }
         }
-        sheet.categories().forEach(category -> needed.add(prefix + "category." + category.key()));
-        if (sheet.recorderDecidesTies()) {
+        pad.categories().forEach(category -> needed.add(prefix + "category." + category.key()));
+        if (pad.recorderDecidesTies()) {
             needed.add(prefix + "tie");
         }
         needed.removeAll(english);
         if (!needed.isEmpty()) {
             throw new IllegalStateException(
-                    "Game Module '" + module.key() + "' has no English text for " + needed + ", which its score sheet names");
+                    "Game Module '" + module.key() + "' has no English text for " + needed + ", which its score pad names");
         }
     }
 

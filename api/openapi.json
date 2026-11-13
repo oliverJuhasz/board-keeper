@@ -142,11 +142,11 @@
           "key" : {
             "type" : "string"
           },
-          "scoreSheet" : {
-            "$ref" : "#/components/schemas/ScoreSheet"
+          "scorePad" : {
+            "$ref" : "#/components/schemas/ScorePad"
           }
         },
-        "required" : [ "id", "key", "scoreSheet" ],
+        "required" : [ "id", "key", "scorePad" ],
         "type" : "object"
       },
       "GameReference" : {
@@ -824,7 +824,7 @@
         "required" : [ "countsTowardTotal", "key", "step" ],
         "type" : "object"
       },
-      "ScoreSheet" : {
+      "ScorePad" : {
         "description" : "What is entered for a Play of the module's Game. It holds keys; what people read is in the module's texts: \"<module>.variant.<key>\", \"<module>.category.<key>\" and \"<module>.tie\".",
         "properties" : {
           "categories" : {

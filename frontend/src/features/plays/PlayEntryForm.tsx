@@ -1,9 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod"
+import { useQueryClient } from "@tanstack/react-query"
 import { XIcon } from "lucide-react"
 import { useState } from "react"
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
-import type { NewPlay, Player } from "@/api/client"
+import type { GameModule, NewPlay, Player, ScoreCategory } from "@/api/client"
+import { CheckboxField } from "@/components/CheckboxField"
 import { FormProblem } from "@/components/FormProblem"
 import { LinkButton } from "@/components/LinkButton"
 import { PageHeader } from "@/components/PageHeader"
@@ -23,19 +25,37 @@ import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { useRecordedAs } from "@/features/games/recordedAs"
 import { RecordingChoices } from "@/features/games/RecordingChoices"
+import { GENERIC } from "@/features/games/useGameModules"
 import { useGameModuleTexts } from "@/features/games/useGameModuleTexts"
 import { todayIso } from "@/lib/dates"
-import { playForm, tiedForFirst, toNewPlay, type PlayFormValues } from "./playForm"
+import {
+  categoriesOnPad,
+  entersScores,
+  fewestPlayers,
+  isCooperative,
+  newPlayerRow,
+  playFormFor,
+  SHARED,
+  toNewPlay,
+  toPreviewRequest,
+  type PlayFormValues,
+} from "./playForm"
+import { canBePreviewed, previewOptions, usePlayPreview } from "./usePlayPreview"
 
 /**
  * The form for what is entered about a Play, used both to record a new one and to edit one.
  * It only collects and checks: the page around it says what the form starts with and where
  * the result is sent.
+ *
+ * The form is drawn from the score pad of the Game Module that scores the Play: its Variants
+ * become choices, and its Score Categories the rows of a score pad. What each is called comes
+ * from the module's own texts.
  */
 export function PlayEntryForm({
   title,
   description,
   gameId,
+  module,
   players,
   initial,
   submitLabel,
@@ -47,6 +67,8 @@ export function PlayEntryForm({
   title: string
   description: string
   gameId: string
+  /** The Game Module that scores the Play. */
+  module: GameModule
   /** Every Player there is, to pick from. */
   players: Player[]
   /** What the form starts with. Only looked at when the form is first drawn. */
@@ -60,50 +82,122 @@ export function PlayEntryForm({
   onSubmit: (play: NewPlay) => void
 }) {
   const { t } = useTranslation()
+  const queryClient = useQueryClient()
   const recordedAs = useRecordedAs()
-  const gameModuleTexts = useGameModuleTexts()
+  const texts = useGameModuleTexts()
   const [changingRecording, setChangingRecording] = useState(false)
+  const [previewProblem, setPreviewProblem] = useState<unknown>()
+  const pad = module.scorePad
+  const generic = module.key === GENERIC
+  /** A text of the module, such as its name for a row of the pad. */
+  const moduleText = (name: string) => texts[`${module.key}.${name}`]
 
-  const form = useForm({ resolver: zodResolver(playForm), defaultValues: initial })
+  const form = useForm({ resolver: zodResolver(playFormFor(module)), defaultValues: initial })
   const { errors, isSubmitted } = form.formState
   // useFieldArray manages a list inside the form: rows can be added and removed, and each row
   // gets an id of its own to use as its React key.
   const rows = useFieldArray({ control: form.control, name: "players" })
-  // useWatch redraws this component whenever one of these fields changes, so the form can show
-  // and hide what depends on them.
-  const [cooperative, recordingMode, lowestScoreWins, enteredPlayers, tieWinner, groupOutcome] =
-    useWatch({
-      control: form.control,
-      name: [
-        "cooperative",
-        "recordingMode",
-        "lowestScoreWins",
-        "players",
-        "tieWinner",
-        "groupOutcome",
-      ],
-    })
+  // useWatch redraws this component whenever a field changes, so the form can show and hide
+  // what depends on the others. Every field has a starting value, so the values are complete.
+  const play = useWatch({ control: form.control }) as PlayFormValues
 
-  const points = recordingMode === "POINTS"
+  const cooperative = isCooperative(module, play)
+  const points = play.recordingMode === "POINTS"
+  const categories = entersScores(module, play) ? categoriesOnPad(pad, play.setup) : []
+  // One row fits next to each Player's name. More rows are drawn as a pad, like the paper one.
+  const drawnAsPad = categories.length > 1
+  const recording = {
+    cooperative,
+    recordingMode: play.recordingMode,
+    lowestScoreWins: play.setup.lowestScoreWins === "true",
+  }
+
   const nameOf = (playerId: string) => players.find((player) => player.id === playerId)?.name ?? ""
   const notYetAdded = players.filter(
-    (player) => !enteredPlayers.some((entered) => entered.playerId === player.id),
+    (player) => !play.players.some((entered) => entered.playerId === player.id),
   )
-  const tied =
-    !cooperative && points ? tiedForFirst({ players: enteredPlayers, lowestScoreWins }) : []
+  const full = pad.maxPlayers !== undefined && play.players.length >= pad.maxPlayers
+
+  // The server works out the totals, the Placings, and whether first place is a tie that the
+  // scores can't decide. Only then is the recorder asked who won.
+  const preview = usePlayPreview(module, play)
+  const tie = preview?.tieForRecorder ?? []
+  const tieAnswer = play.tieWinner === SHARED || tie.includes(play.tieWinner) ? play.tieWinner : ""
+
+  function placingOf(playerId: string) {
+    const placing = preview?.results.find((result) => result.playerId === playerId)?.placing
+    // The preview doesn't know the recorder's answer yet: show it as it will be recorded.
+    if (tie.includes(playerId) && tie.includes(tieAnswer)) {
+      return playerId === tieAnswer ? 1 : 2
+    }
+    return placing
+  }
+
   // Once the form has been submitted, a change is checked at once, so a message goes away as
   // soon as its cause is fixed.
   const changed = { shouldValidate: isSubmitted, shouldDirty: true }
 
-  const submit = form.handleSubmit((values) => onSubmit(toNewPlay(gameId, values)))
+  const submit = form.handleSubmit(async (values) => {
+    let tieToDecide: string[] = []
+    if (canBePreviewed(module, values)) {
+      try {
+        // Ask about exactly what is being submitted. If the form already asked while the
+        // recorder was typing, the answer is still at hand and nothing is sent.
+        const outcome = await queryClient.fetchQuery(
+          previewOptions(toPreviewRequest(module, values)),
+        )
+        tieToDecide = outcome.tieForRecorder
+      } catch (refusal) {
+        setPreviewProblem(refusal)
+        return
+      }
+      const answered = values.tieWinner === SHARED || tieToDecide.includes(values.tieWinner)
+      if (tieToDecide.length > 0 && !answered) {
+        form.setError("tieWinner", { message: "validation.tieUnanswered" })
+        return
+      }
+    }
+    setPreviewProblem(undefined)
+    onSubmit(toNewPlay(module, gameId, values, tieToDecide))
+  })
+
+  /** The message for a value in a row of the pad, with the row's own limits filled in. */
+  function scoreMessage(category: ScoreCategory, message: string | undefined) {
+    return message
+      ? t(message as "validation.scoreStep", {
+          min: category.min,
+          max: category.max,
+          step: category.step,
+        })
+      : undefined
+  }
 
   const playersError = errors.players?.root?.message ?? errors.players?.message
+  // The messages for the pad, one line each: "Buttons of Anna: Enter a multiple of 3."
+  const padProblems = drawnAsPad
+    ? rows.fields.flatMap((row, index) =>
+        categories.flatMap((category) => {
+          const message = scoreMessage(
+            category,
+            errors.players?.[index]?.scores?.[category.key]?.message,
+          )
+          return message
+            ? [
+                `${t("plays.record.valueOf", {
+                  category: moduleText(`category.${category.key}`),
+                  name: nameOf(row.playerId),
+                })}: ${message}`,
+              ]
+            : []
+        }),
+      )
+    : []
 
   return (
     <form onSubmit={submit} noValidate className="space-y-6">
       <PageHeader title={title} description={description} />
       <FieldGroup>
-        <FormProblem error={error} reasons={gameModuleTexts} />
+        <FormProblem error={error ?? previewProblem} reasons={texts} />
 
         <div className="grid gap-4 sm:grid-cols-2">
           <TextField
@@ -127,7 +221,11 @@ export function PlayEntryForm({
             <p className="text-sm">
               <span className="text-muted-foreground">{t("plays.record.recordedAs")}: </span>
               <span className="font-medium">
-                {recordedAs({ cooperative, recordingMode, lowestScoreWins })}
+                {generic
+                  ? recordedAs(recording)
+                  : points
+                    ? t("recording.points")
+                    : t("recording.winnerOnly")}
               </span>
             </p>
             {!changingRecording && (
@@ -144,17 +242,66 @@ export function PlayEntryForm({
           {changingRecording && (
             <>
               <p className="text-sm text-muted-foreground">{t("plays.record.changeHint")}</p>
-              <RecordingChoices
-                value={{ cooperative, recordingMode, lowestScoreWins }}
-                onChange={(recording) => {
-                  form.setValue("cooperative", recording.cooperative, changed)
-                  form.setValue("recordingMode", recording.recordingMode, changed)
-                  form.setValue("lowestScoreWins", recording.lowestScoreWins, changed)
-                }}
-              />
+              {generic ? (
+                // A Game without a module of its own: the recorder says what kind of Game it is.
+                <RecordingChoices
+                  value={recording}
+                  onChange={(choice) => {
+                    form.setValue("setup.cooperative", String(choice.cooperative), changed)
+                    form.setValue("recordingMode", choice.recordingMode, changed)
+                    form.setValue("setup.lowestScoreWins", String(choice.lowestScoreWins), changed)
+                  }}
+                />
+              ) : (
+                <RadioField
+                  legend={t("recording.recording")}
+                  value={play.recordingMode}
+                  onChange={(recordingMode) =>
+                    form.setValue("recordingMode", recordingMode, changed)
+                  }
+                  options={[
+                    {
+                      value: "POINTS",
+                      label: t("recording.points"),
+                      hint: t("plays.record.padHint"),
+                    },
+                    {
+                      value: "WINNER_ONLY",
+                      label: t("recording.winnerOnly"),
+                      hint: t("recording.outcomeHint"),
+                    },
+                  ]}
+                />
+              )}
             </>
           )}
         </div>
+
+        {/* The Variants of a Game with a module of its own. The Generic Module's two are the
+            recording choices above. */}
+        {!generic &&
+          pad.variants.map((variant) =>
+            variant.kind === "ON_OFF" ? (
+              <CheckboxField
+                key={variant.key}
+                label={moduleText(`variant.${variant.key}`)}
+                hint={moduleText(`variant.${variant.key}.hint`)}
+                checked={play.setup[variant.key] === "true"}
+                onChange={(on) => form.setValue(`setup.${variant.key}`, String(on), changed)}
+              />
+            ) : (
+              <RadioField
+                key={variant.key}
+                legend={moduleText(`variant.${variant.key}`)}
+                value={play.setup[variant.key]}
+                onChange={(option) => form.setValue(`setup.${variant.key}`, option, changed)}
+                options={(variant.options ?? []).map((option) => ({
+                  value: option,
+                  label: moduleText(`variant.${variant.key}.${option}`),
+                }))}
+              />
+            ),
+          )}
 
         <FieldSet>
           <FieldLegend variant="label">{t("plays.record.players")}</FieldLegend>
@@ -164,20 +311,26 @@ export function PlayEntryForm({
             <ul className="divide-y rounded-lg border">
               {rows.fields.map((row, index) => {
                 const name = nameOf(row.playerId)
-                const scoreError = errors.players?.[index]?.score
+                const only = drawnAsPad ? undefined : categories[0]
+                const scoreError = only
+                  ? scoreMessage(only, errors.players?.[index]?.scores?.[only.key]?.message)
+                  : undefined
                 return (
                   <li key={row.id} className="space-y-1 px-3 py-2">
                     <div className="flex items-center gap-3">
                       <span className="min-w-0 flex-1 truncate font-medium">{name}</span>
-                      {!cooperative && points && (
+                      {only && (
                         <Input
                           type="number"
-                          step={1}
+                          step={only.step}
                           className="w-24 text-right"
-                          placeholder={t("plays.record.score")}
-                          aria-label={t("plays.record.scoreOf", { name })}
+                          placeholder={moduleText(`category.${only.key}`)}
+                          aria-label={t("plays.record.valueOf", {
+                            category: moduleText(`category.${only.key}`),
+                            name,
+                          })}
                           aria-invalid={scoreError ? true : undefined}
-                          {...form.register(`players.${index}.score`)}
+                          {...form.register(`players.${index}.scores.${only.key}`)}
                         />
                       )}
                       {!cooperative && !points && (
@@ -214,24 +367,22 @@ export function PlayEntryForm({
                         <XIcon />
                       </Button>
                     </div>
-                    {!cooperative && points && scoreError?.message && (
-                      <FieldError className="text-right">
-                        {t(scoreError.message as "validation.required")}
-                      </FieldError>
-                    )}
+                    {scoreError && <FieldError className="text-right">{scoreError}</FieldError>}
                   </li>
                 )
               })}
             </ul>
           )}
-          {notYetAdded.length > 0 ? (
+          {full ? (
+            <FieldDescription>
+              {t("plays.record.playersFull", { max: pad.maxPlayers })}
+            </FieldDescription>
+          ) : notYetAdded.length > 0 ? (
             // Choosing a name adds that Player as a row; the list then goes back to its first line.
             <NativeSelect
               value=""
               aria-label={t("plays.record.addPlayer")}
-              onChange={(event) =>
-                rows.append({ playerId: event.target.value, score: "", won: false })
-              }
+              onChange={(event) => rows.append(newPlayerRow(pad, event.target.value))}
             >
               <NativeSelectOption value="">{t("plays.record.choosePlayer")}</NativeSelectOption>
               {notYetAdded.map((player) => (
@@ -243,21 +394,111 @@ export function PlayEntryForm({
           ) : (
             <FieldDescription>{t("plays.record.everyoneAdded")}</FieldDescription>
           )}
-          {playersError && <FieldError>{t(playersError as "validation.required")}</FieldError>}
+          {playersError && (
+            <FieldError>
+              {t(playersError as "validation.playersTooFew", {
+                min: fewestPlayers(module, play),
+                max: pad.maxPlayers,
+              })}
+            </FieldError>
+          )}
         </FieldSet>
 
-        {tied.length > 0 && (
+        {drawnAsPad && rows.fields.length > 0 && (
+          <div className="space-y-2">
+            {/* Like the paper pad: a row for each Score Category and a column for each Player.
+                It scrolls sideways if the Players don't fit. */}
+            <div className="overflow-x-auto rounded-lg border">
+              <table className="w-full text-sm" aria-label={t("plays.record.pad")}>
+                <thead>
+                  <tr>
+                    <td />
+                    {rows.fields.map((row) => (
+                      <th
+                        key={row.id}
+                        scope="col"
+                        className="max-w-24 truncate px-2 py-2 text-right font-medium"
+                      >
+                        {nameOf(row.playerId)}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {categories.map((category) => (
+                    <tr key={category.key} className="border-t">
+                      <th scope="row" className="px-3 py-1.5 text-left font-normal">
+                        {moduleText(`category.${category.key}`)}
+                      </th>
+                      {rows.fields.map((row, index) => (
+                        <td key={row.id} className="px-2 py-1.5 text-right">
+                          <Input
+                            type="number"
+                            step={category.step}
+                            className="inline-block w-20 text-right"
+                            aria-label={t("plays.record.valueOf", {
+                              category: moduleText(`category.${category.key}`),
+                              name: nameOf(row.playerId),
+                            })}
+                            aria-invalid={
+                              errors.players?.[index]?.scores?.[category.key] ? true : undefined
+                            }
+                            {...form.register(`players.${index}.scores.${category.key}`)}
+                          />
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+                {/* Worked out by the server once every row is filled in. */}
+                <tfoot>
+                  <tr className="border-t font-medium">
+                    <th scope="row" className="px-3 py-2 text-left">
+                      {t("plays.record.total")}
+                    </th>
+                    {rows.fields.map((row) => (
+                      <td key={row.id} className="px-2 py-2 pr-5 text-right tabular-nums">
+                        {preview?.results.find((result) => result.playerId === row.playerId)
+                          ?.total ?? "–"}
+                      </td>
+                    ))}
+                  </tr>
+                  <tr className="border-t text-muted-foreground">
+                    <th scope="row" className="px-3 py-2 text-left font-normal">
+                      {t("plays.record.placing")}
+                    </th>
+                    {rows.fields.map((row) => (
+                      <td key={row.id} className="px-2 py-2 pr-5 text-right tabular-nums">
+                        {placingOf(row.playerId) ?? "–"}
+                      </td>
+                    ))}
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            {padProblems.length > 0 && <FieldError errors={padProblems.map(asError)} />}
+          </div>
+        )}
+
+        {tie.length > 0 && (
           <div className="space-y-2">
             <RadioField
               legend={t("plays.record.tie.legend")}
-              value={tied.includes(tieWinner) ? tieWinner : ""}
-              onChange={(playerId) => form.setValue("tieWinner", playerId, changed)}
+              value={tieAnswer}
+              onChange={(answer) => {
+                form.setValue("tieWinner", answer, { shouldDirty: true })
+                form.clearErrors("tieWinner")
+              }}
               options={[
-                { value: "", label: t("plays.record.tie.shared") },
-                ...tied.map((playerId) => ({ value: playerId, label: nameOf(playerId) })),
+                ...tie.map((playerId) => ({ value: playerId, label: nameOf(playerId) })),
+                { value: SHARED, label: t("plays.record.tie.shared") },
               ]}
             />
-            <FieldDescription>{t("plays.record.tie.hint")}</FieldDescription>
+            {/* How this Game decides a tie, in the module's own words. */}
+            <FieldDescription>{moduleText("tie")}</FieldDescription>
+            {errors.tieWinner?.message && (
+              <FieldError>{t(errors.tieWinner.message as "validation.required")}</FieldError>
+            )}
           </div>
         )}
 
@@ -266,7 +507,7 @@ export function PlayEntryForm({
             <div className="space-y-2">
               <RadioField
                 legend={t("plays.record.outcome")}
-                value={groupOutcome}
+                value={play.groupOutcome}
                 onChange={(outcome) => form.setValue("groupOutcome", outcome, changed)}
                 options={[
                   { value: "won", label: t("plays.record.outcomeWon") },
@@ -306,4 +547,9 @@ export function PlayEntryForm({
       </FieldGroup>
     </form>
   )
+}
+
+/** A line of text in the form FieldError takes a list of. */
+function asError(message: string) {
+  return { message }
 }

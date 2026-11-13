@@ -30,7 +30,8 @@
       "title": "Remove {{name}}?",
       "description": "This can't be undone.",
       "confirm": "Remove game"
-    }
+    },
+    "ownScorePad": "Its own score pad"
   },
   "recording": {
     "as": {
@@ -82,13 +83,10 @@
       "choosePlayer": "Choose a player…",
       "everyoneAdded": "Every player is in this play already. You add new players on the Players page.",
       "removePlayer": "Remove {{name}}",
-      "score": "Score",
-      "scoreOf": "Score of {{name}}",
       "won": "Won",
       "wonBy": "{{name}} won",
       "tie": {
         "legend": "Tie for first place",
-        "hint": "Pick who won the tie, or leave the win shared.",
         "shared": "Shared win"
       },
       "outcome": "How did it end?",
@@ -96,7 +94,13 @@
       "outcomeLost": "The group lost",
       "groupScore": "Score",
       "groupScoreHint": "Optional. One score for the whole group.",
-      "submit": "Record play"
+      "submit": "Record play",
+      "padHint": "Every row of the score pad, for each player.",
+      "valueOf": "{{category}} of {{name}}",
+      "pad": "Score pad",
+      "total": "Total",
+      "placing": "Placing",
+      "playersFull": "This game is for at most {{max}} players."
     },
     "history": {
       "title": "Plays",
@@ -140,7 +144,8 @@
         "title": "Delete this play?",
         "description": "This play of {{game}} will be gone for good. This can't be undone.",
         "confirm": "Delete play"
-      }
+      },
+      "total": "Total"
     },
     "edit": {
       "title": "Edit a play",
@@ -151,6 +156,15 @@
         "text": "You don't have the permission to edit or delete it.",
         "link": "Back to the play"
       }
+    },
+    "invalid": {
+      "tooFewPlayers": "This game needs more players than that.",
+      "tooManyPlayers": "This game can't be played with that many players.",
+      "scoreMissing": "Fill in every row of the score pad for every player.",
+      "scoreNotAllowed": "One of the scores isn't possible in its row of the score pad.",
+      "winnerMissing": "Mark at least one winner.",
+      "winnerNotTied": "Only a player who is part of the tie can be given the win.",
+      "notRecorded": "Something was entered that this game doesn't record."
     }
   },
   "notFound": {
@@ -216,13 +230,18 @@
     "gameNameTooLong": "Use at most 100 characters.",
     "scoreRequired": "Enter a score.",
     "wholeNumber": "Enter a whole number.",
-    "playersTooFew": "Add at least two players.",
+    "playersTooFew": "This game needs at least {{min}} players.",
     "playerRequired": "Add at least one player.",
     "winnerRequired": "Tick at least one winner.",
     "outcomeRequired": "Say whether the group won or lost.",
     "dateInFuture": "The date can't be in the future.",
     "locationTooLong": "Use at most 100 characters.",
-    "notesTooLong": "Use at most 2000 characters."
+    "notesTooLong": "Use at most 2000 characters.",
+    "playersTooMany": "This game is for at most {{max}} players.",
+    "scoreTooLow": "Enter {{min}} or more.",
+    "scoreTooHigh": "Enter {{max}} or less.",
+    "scoreStep": "Enter a multiple of {{step}}.",
+    "tieUnanswered": "Say who won the tie, or that the win is shared."
   },
   "problems": {
     "unknown": "Something went wrong. Try again.",
@@ -272,7 +291,8 @@
     "games": {
       "nameTaken": "There is already a game with this name.",
       "notFound": "This game no longer exists.",
-      "inUse": "This game can't be removed: plays have been recorded for it."
+      "inUse": "This game can't be removed: plays have been recorded for it.",
+      "hasOwnModule": "This game comes with Board Keeper, so it can't be changed or removed."
     },
     "plays": {
       "invalidEntry": "These results don't fit together. Check them and try again.",

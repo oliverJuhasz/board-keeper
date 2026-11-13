@@ -1,10 +1,12 @@
 import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { Link, useNavigate, useParams } from "react-router"
-import { api, type Play, type Player } from "@/api/client"
+import { api, type GameModule, type Play, type Player } from "@/api/client"
 import { problemCode } from "@/api/problems"
 import { PageMessage } from "@/components/PageMessage"
 import { QueryState } from "@/components/QueryState"
+import { moduleWithId, useGameModules, useGameName } from "@/features/games/useGameModules"
+import { useGameModuleTextsQuery } from "@/features/games/useGameModuleTexts"
 import { PlayEntryForm } from "./PlayEntryForm"
 import { fromPlay } from "./playForm"
 import { playKey, playsKey } from "./playQueries"
@@ -15,6 +17,8 @@ export function EditPlayPage() {
   const { id = "" } = useParams()
   const play = api.useQuery("get", "/api/plays/{id}", { params: { path: { id } } })
   const players = api.useQuery("get", "/api/players")
+  const modules = useGameModules()
+  const texts = useGameModuleTextsQuery()
 
   if (problemCode(play.error) === "plays.notFound") {
     return (
@@ -27,7 +31,7 @@ export function EditPlayPage() {
   }
   return (
     <QueryState
-      queries={[play, players]}
+      queries={[play, players, modules, texts]}
       loading={t("plays.page.loading")}
       failed={t("plays.page.loadFailed")}
     >
@@ -48,14 +52,29 @@ export function EditPlayPage() {
             </PageMessage>
           )
         }
-        return <EditPlay play={play.data} players={players.data ?? []} />
+        // The Play is edited on the pad of the module that scored it, which need not be the
+        // module that scores its Game today.
+        const module = moduleWithId(modules.data, play.data.gameModuleId)
+        if (!module) {
+          return <PageMessage title={t("problems.plays.gameModuleMissing")} />
+        }
+        return <EditPlay play={play.data} module={module} players={players.data ?? []} />
       }}
     </QueryState>
   )
 }
 
-function EditPlay({ play, players }: { play: Play; players: Player[] }) {
+function EditPlay({
+  play,
+  module,
+  players,
+}: {
+  play: Play
+  module: GameModule
+  players: Player[]
+}) {
   const { t } = useTranslation()
+  const gameName = useGameName()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
@@ -70,10 +89,11 @@ function EditPlay({ play, players }: { play: Play; players: Player[] }) {
   return (
     <PlayEntryForm
       title={t("plays.edit.title")}
-      description={t("plays.edit.description", { game: play.game.name })}
+      description={t("plays.edit.description", { game: gameName(play.game) })}
       gameId={play.game.id}
+      module={module}
       players={players}
-      initial={fromPlay(play)}
+      initial={fromPlay(module, play)}
       submitLabel={t("plays.edit.submit")}
       cancelTo={`/plays/${play.id}`}
       pending={change.isPending}

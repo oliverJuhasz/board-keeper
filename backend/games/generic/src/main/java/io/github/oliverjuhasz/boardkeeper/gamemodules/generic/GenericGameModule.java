@@ -8,7 +8,7 @@ import io.github.oliverjuhasz.boardkeeper.gameapi.PlayerEntry;
 import io.github.oliverjuhasz.boardkeeper.gameapi.PlayerResult;
 import io.github.oliverjuhasz.boardkeeper.gameapi.RecordingMode;
 import io.github.oliverjuhasz.boardkeeper.gameapi.ScoreCategory;
-import io.github.oliverjuhasz.boardkeeper.gameapi.ScoreSheet;
+import io.github.oliverjuhasz.boardkeeper.gameapi.ScorePad;
 import io.github.oliverjuhasz.boardkeeper.gameapi.Variant;
 import java.util.Comparator;
 import java.util.List;
@@ -58,13 +58,13 @@ public final class GenericGameModule implements GameModule {
     }
 
     /**
-     * The sheet names this module's two Variants and its one Score Category. It cannot say
+     * The pad names this module's two Variants and its one Score Category. It cannot say
      * that the "cooperative" Variant turns a Play into a Cooperative one, with a result for the
      * group. No other module needs that, so the frontend knows it about this module.
      */
     @Override
-    public ScoreSheet scoreSheet() {
-        return new ScoreSheet(
+    public ScorePad scorePad() {
+        return new ScorePad(
                 1,
                 null,
                 List.of(new Variant.OnOff(COOPERATIVE, false), new Variant.OnOff(LOWEST_SCORE_WINS, false)),

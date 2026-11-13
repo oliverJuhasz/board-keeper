@@ -35,7 +35,7 @@ public interface GameModule {
      * it is for the frontend, which draws the form from it. What {@link #score} accepts has to
      * agree with it.
      */
-    ScoreSheet scoreSheet();
+    ScorePad scorePad();
 
     /**
      * Works out how a Play ended from what was entered for it.

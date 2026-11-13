@@ -2,7 +2,7 @@ package io.github.oliverjuhasz.boardkeeper.games.internal;
 
 import io.github.oliverjuhasz.boardkeeper.gameapi.GameModule;
 import io.github.oliverjuhasz.boardkeeper.gameapi.ScoreCategory;
-import io.github.oliverjuhasz.boardkeeper.gameapi.ScoreSheet;
+import io.github.oliverjuhasz.boardkeeper.gameapi.ScorePad;
 import io.github.oliverjuhasz.boardkeeper.gameapi.Variant;
 import io.github.oliverjuhasz.boardkeeper.games.GameModules;
 import io.github.oliverjuhasz.boardkeeper.language.Language;
@@ -47,20 +47,20 @@ class GameModuleController {
 
     @Schema(
             name = "GameModule",
-            requiredProperties = {"id", "key", "scoreSheet"})
-    record GameModuleResponse(UUID id, String key, ScoreSheetResponse scoreSheet) {
+            requiredProperties = {"id", "key", "scorePad"})
+    record GameModuleResponse(UUID id, String key, ScorePadResponse scorePad) {
 
         static GameModuleResponse from(GameModule module) {
-            return new GameModuleResponse(module.id(), module.key(), ScoreSheetResponse.from(module.scoreSheet()));
+            return new GameModuleResponse(module.id(), module.key(), ScorePadResponse.from(module.scorePad()));
         }
     }
 
     @Schema(
-            name = "ScoreSheet",
+            name = "ScorePad",
             description = "What is entered for a Play of the module's Game. It holds keys; what people read is in the"
                     + " module's texts: \"<module>.variant.<key>\", \"<module>.category.<key>\" and \"<module>.tie\".",
             requiredProperties = {"minPlayers", "variants", "categories", "recorderDecidesTies"})
-    record ScoreSheetResponse(
+    record ScorePadResponse(
             int minPlayers,
             @Schema(description = "Absent when there is no limit") Integer maxPlayers,
             List<VariantResponse> variants,
@@ -69,13 +69,13 @@ class GameModuleController {
                             + " cannot decide")
                     boolean recorderDecidesTies) {
 
-        static ScoreSheetResponse from(ScoreSheet sheet) {
-            return new ScoreSheetResponse(
-                    sheet.minPlayers(),
-                    sheet.maxPlayers(),
-                    sheet.variants().stream().map(VariantResponse::from).toList(),
-                    sheet.categories().stream().map(ScoreCategoryResponse::from).toList(),
-                    sheet.recorderDecidesTies());
+        static ScorePadResponse from(ScorePad pad) {
+            return new ScorePadResponse(
+                    pad.minPlayers(),
+                    pad.maxPlayers(),
+                    pad.variants().stream().map(VariantResponse::from).toList(),
+                    pad.categories().stream().map(ScoreCategoryResponse::from).toList(),
+                    pad.recorderDecidesTies());
         }
     }
 

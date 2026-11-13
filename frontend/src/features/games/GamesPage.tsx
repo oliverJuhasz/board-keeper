@@ -21,6 +21,7 @@ import {
 import { useCan } from "@/features/session/useSession"
 import { GameDialog } from "./GameDialog"
 import { useRecordedAs } from "./recordedAs"
+import { useGameName } from "./useGameModules"
 
 type OpenDialog = { kind: "add" } | { kind: "edit" | "remove"; game: Game } | undefined
 
@@ -30,6 +31,7 @@ export function GamesPage() {
   const queryClient = useQueryClient()
   const can = useCan()
   const recordedAs = useRecordedAs()
+  const gameName = useGameName()
   const [dialog, setDialog] = useState<OpenDialog>()
   const games = api.useQuery("get", "/api/games")
   const close = () => setDialog(undefined)
@@ -73,9 +75,10 @@ export function GamesPage() {
               <TableBody>
                 {games.data?.map((game) => (
                   <TableRow key={game.id}>
-                    <TableCell className="font-medium">{game.name}</TableCell>
+                    <TableCell className="font-medium">{gameName(game)}</TableCell>
                     <TableCell className="hidden text-muted-foreground sm:table-cell">
-                      {recordedAs(game)}
+                      {/* A Game with a module of its own has no recording choices to show. */}
+                      {game.hasOwnModule ? t("games.ownScorePad") : recordedAs(game)}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center justify-end gap-1">
@@ -83,12 +86,14 @@ export function GamesPage() {
                           <LinkButton
                             to={`/plays/new?game=${game.id}`}
                             size="sm"
-                            aria-label={t("plays.record.actionFor", { name: game.name })}
+                            aria-label={t("plays.record.actionFor", { name: gameName(game) })}
                           >
                             {t("plays.record.action")}
                           </LinkButton>
                         )}
-                        {(can("EDIT_GAMES") || can("REMOVE_GAMES")) && (
+                        {/* A Game with a module of its own is named by the module and stays
+                            while the module does: there is nothing to edit or remove. */}
+                        {!game.hasOwnModule && (can("EDIT_GAMES") || can("REMOVE_GAMES")) && (
                           <ActionsMenu label={t("games.actions", { name: game.name })}>
                             {can("EDIT_GAMES") && (
                               <DropdownMenuItem onClick={() => setDialog({ kind: "edit", game })}>

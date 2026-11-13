@@ -30,7 +30,7 @@ import java.util.Set;
  *     {@code tieBreakers} is decided by something that is not entered. If so, the recorder is
  *     asked who won it. If not, such a tie is a shared win.
  */
-public record ScoreSheet(
+public record ScorePad(
         int minPlayers,
         Integer maxPlayers,
         List<Variant> variants,
@@ -38,12 +38,12 @@ public record ScoreSheet(
         List<TieBreaker> tieBreakers,
         boolean recorderDecidesTies) {
 
-    public ScoreSheet {
+    public ScorePad {
         variants = List.copyOf(variants);
         categories = List.copyOf(categories);
         tieBreakers = List.copyOf(tieBreakers);
         if (minPlayers < 1 || (maxPlayers != null && maxPlayers < minPlayers)) {
-            throw new IllegalArgumentException("A score sheet is for at least one Player, and for no more than its maximum");
+            throw new IllegalArgumentException("A score pad is for at least one Player, and for no more than its maximum");
         }
 
         Set<String> variantKeys = new HashSet<>();
@@ -61,13 +61,13 @@ public record ScoreSheet(
             if (onlyWhen != null && variants.stream().noneMatch(variant ->
                     variant.key().equals(onlyWhen.variant()) && variant.allows(onlyWhen.value()))) {
                 throw new IllegalArgumentException("The Score Category '" + category.key()
-                        + "' depends on a Variant or a value that is not on the sheet");
+                        + "' depends on a Variant or a value that is not on the pad");
             }
         }
         for (TieBreaker tieBreaker : tieBreakers) {
             if (!categoryKeys.contains(tieBreaker.category())) {
                 throw new IllegalArgumentException(
-                        "The Tie-breaker '" + tieBreaker.category() + "' is not a Score Category of the sheet");
+                        "The Tie-breaker '" + tieBreaker.category() + "' is not a Score Category of the pad");
             }
         }
     }
@@ -85,7 +85,7 @@ public record ScoreSheet(
         Variant variant = variants.stream()
                 .filter(candidate -> candidate.key().equals(variantKey))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("No Variant '" + variantKey + "' on the sheet"));
+                .orElseThrow(() -> new IllegalArgumentException("No Variant '" + variantKey + "' on the pad"));
         return setup.getOrDefault(variantKey, variant.defaultValue());
     }
 }

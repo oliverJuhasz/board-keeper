@@ -3,20 +3,17 @@ import type {
   Account,
   CurrentAccount,
   Game,
-  GameModule,
   Invite,
   Play,
+  PlayPreview,
+  PlayPreviewRequest,
   Player,
   Role,
 } from "@/api/client"
+import { calicoModule, genericModule } from "./gameModules"
 import { server } from "./server"
 
 // Ready-made answers of the pretend backend, for tests to combine.
-
-export const genericModule: GameModule = {
-  id: "38b119d2-8f9f-4e20-8068-cba305c06cdd",
-  key: "generic",
-}
 
 /** An Admin, who holds every Permission. */
 export const anna: CurrentAccount = {
@@ -71,10 +68,24 @@ export function signedOut() {
 }
 
 /** A competitive Game recorded in points, where the highest score wins. */
-export const calico: Game = {
+export const azul: Game = {
   id: "0193a000-0000-7000-8000-0000000000e1",
-  name: "Calico",
+  name: "Azul",
   gameModuleId: genericModule.id,
+  moduleKey: "generic",
+  hasOwnModule: false,
+  cooperative: false,
+  recordingMode: "POINTS",
+  lowestScoreWins: false,
+}
+
+/** A Game with a Game Module of its own: it came with Board Keeper and has its own score pad. */
+export const calico: Game = {
+  id: "0193a000-0000-7000-8000-0000000000e4",
+  name: "Calico",
+  gameModuleId: calicoModule.id,
+  moduleKey: "calico",
+  hasOwnModule: true,
   cooperative: false,
   recordingMode: "POINTS",
   lowestScoreWins: false,
@@ -85,6 +96,8 @@ export const pandemic: Game = {
   id: "0193a000-0000-7000-8000-0000000000e2",
   name: "Pandemic",
   gameModuleId: genericModule.id,
+  moduleKey: "generic",
+  hasOwnModule: false,
   cooperative: true,
   recordingMode: "WINNER_ONLY",
   lowestScoreWins: false,
@@ -173,18 +186,50 @@ export function accountsAre(accounts: Account[], roles: Role[] = [adminRole, mem
   return state
 }
 
-/** What the page for recording a Play loads besides the Games: the Players and the Game Modules' texts. */
-export function playCanBeEntered(gameModuleTexts: Record<string, string> = {}) {
+/** What the page for recording a Play loads besides the Games: the Players. */
+export function playCanBeEntered() {
   server.use(
     http.get("*/api/players", () => HttpResponse.json([annaPlayer, bencePlayer, doraPlayer])),
-    http.get("*/api/game-modules/texts/:language", () => HttpResponse.json(gameModuleTexts)),
   )
 }
 
-/** A competitive Play of Calico in points, recorded by Bence: Anna won, Dora came second. */
-export const calicoPlay: Play = {
+/**
+ * Answers a request to work out how a Play would end, the way the real backend would for a
+ * Game that adds up its rows: the highest total is first, and Players level in first place
+ * are a tie for the recorder. Every request is remembered.
+ */
+export function playsCanBePreviewed() {
+  const asked: PlayPreviewRequest[] = []
+  server.use(
+    http.post("*/api/plays/preview", async ({ request }) => {
+      const body = (await request.json()) as PlayPreviewRequest
+      asked.push(body)
+      const totals = body.players.map((player) =>
+        Object.values(player.scores ?? {}).reduce((sum, value) => sum + value, 0),
+      )
+      const best = Math.max(...totals)
+      const tied = body.players.filter((_, index) => totals[index] === best)
+      const preview: PlayPreview = {
+        cooperative: false,
+        results: body.players.map((player, index) => ({
+          playerId: player.playerId,
+          total: totals[index],
+          placing: 1 + totals.filter((total) => total > totals[index]).length,
+          won: totals[index] === best,
+        })),
+        tieForRecorder: tied.length > 1 ? tied.map((player) => player.playerId) : [],
+      }
+      return HttpResponse.json(preview)
+    }),
+  )
+  return asked
+}
+
+/** A competitive Play of Azul in points, recorded by Bence: Anna won, Dora came second. */
+export const azulPlay: Play = {
   id: "0193a000-0000-7000-8000-0000000000f1",
-  game: { id: calico.id, name: calico.name },
+  game: { id: azul.id, name: azul.name },
+  gameModuleId: genericModule.id,
   playedOn: "2026-03-14",
   location: "At Dora's",
   notes: "Dora's first play.",
@@ -218,6 +263,7 @@ export const calicoPlay: Play = {
 export const pandemicPlay: Play = {
   id: "0193a000-0000-7000-8000-0000000000f2",
   game: { id: pandemic.id, name: pandemic.name },
+  gameModuleId: genericModule.id,
   playedOn: "2026-03-15",
   recordingMode: "POINTS",
   setup: { cooperative: "true", lowestScoreWins: "false" },
@@ -252,7 +298,7 @@ export function historyIs(...pages: Play[][]) {
       const next = index + 1 < pages.length ? `page-${index + 2}` : undefined
       return HttpResponse.json({ plays: pages[index] ?? [], next })
     }),
-    http.get("*/api/games", () => HttpResponse.json([calico, pandemic])),
+    http.get("*/api/games", () => HttpResponse.json([azul, pandemic])),
     http.get("*/api/players", () => HttpResponse.json([annaPlayer, bencePlayer, doraPlayer])),
   )
   return asked

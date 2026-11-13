@@ -1,7 +1,7 @@
 package io.github.oliverjuhasz.boardkeeper.gamemodules.calico;
 
 import io.github.oliverjuhasz.boardkeeper.gameapi.ScoreCategory;
-import io.github.oliverjuhasz.boardkeeper.gameapi.ScoreSheet;
+import io.github.oliverjuhasz.boardkeeper.gameapi.ScorePad;
 import io.github.oliverjuhasz.boardkeeper.gameapi.StandardGameModule;
 import io.github.oliverjuhasz.boardkeeper.gameapi.Variant;
 import java.util.List;
@@ -43,7 +43,7 @@ public final class CalicoGameModule extends StandardGameModule {
     /** The on/off Variant "family variant". */
     public static final String FAMILY = "family";
 
-    private static final ScoreSheet SHEET = new ScoreSheet(
+    private static final ScorePad PAD = new ScorePad(
             2,
             4,
             List.of(new Variant.OnOff(FAMILY, false)),
@@ -65,7 +65,7 @@ public final class CalicoGameModule extends StandardGameModule {
     }
 
     @Override
-    public ScoreSheet scoreSheet() {
-        return SHEET;
+    public ScorePad scorePad() {
+        return PAD;
     }
 }

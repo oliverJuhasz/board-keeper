@@ -104,15 +104,15 @@ class CalicoGameModuleTests {
                 .containsExactly(new PlayerResult(null, null, true), new PlayerResult(null, null, false));
     }
 
-    /** Everything the sheet names has a text in English, and Dutch and Hungarian have the same texts. */
+    /** Everything the pad names has a text in English, and Dutch and Hungarian have the same texts. */
     @Test
-    void hasATextForEverythingOnItsSheetInEveryLanguage() throws Exception {
+    void hasATextForEverythingOnItsPadInEveryLanguage() throws Exception {
         Properties english = texts("en");
         assertThat(english).containsKeys("calico.name", "calico.tie");
-        for (Variant variant : module.scoreSheet().variants()) {
+        for (Variant variant : module.scorePad().variants()) {
             assertThat(english).containsKey("calico.variant." + variant.key());
         }
-        for (ScoreCategory category : module.scoreSheet().categories()) {
+        for (ScoreCategory category : module.scorePad().categories()) {
             assertThat(english).containsKey("calico.category." + category.key());
         }
         assertThat(texts("nl").keySet()).isEqualTo(english.keySet());

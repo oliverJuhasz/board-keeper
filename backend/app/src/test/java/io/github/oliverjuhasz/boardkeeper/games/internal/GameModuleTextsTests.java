@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 import io.github.oliverjuhasz.boardkeeper.gameapi.GameModule;
 import io.github.oliverjuhasz.boardkeeper.gameapi.Outcome;
 import io.github.oliverjuhasz.boardkeeper.gameapi.PlayEntry;
-import io.github.oliverjuhasz.boardkeeper.gameapi.ScoreSheet;
+import io.github.oliverjuhasz.boardkeeper.gameapi.ScorePad;
 import io.github.oliverjuhasz.boardkeeper.games.GameModules;
 import io.github.oliverjuhasz.boardkeeper.language.Language;
 import java.util.List;
@@ -69,9 +69,9 @@ class GameModuleTextsTests {
     private record FakeModule(UUID id, String key) implements GameModule {
 
         @Override
-        public ScoreSheet scoreSheet() {
+        public ScorePad scorePad() {
             // An empty pad: nothing on it needs a text.
-            return new ScoreSheet(1, null, List.of(), List.of(), List.of(), false);
+            return new ScorePad(1, null, List.of(), List.of(), List.of(), false);
         }
 
         @Override

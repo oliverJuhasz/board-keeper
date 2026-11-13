@@ -1,9 +1,11 @@
 import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { Link, useNavigate, useSearchParams } from "react-router"
-import { api, type Game, type Player } from "@/api/client"
+import { api, type Game, type GameModule, type Player } from "@/api/client"
 import { PageMessage } from "@/components/PageMessage"
 import { QueryState } from "@/components/QueryState"
+import { moduleWithId, useGameModules, useGameName } from "@/features/games/useGameModules"
+import { useGameModuleTextsQuery } from "@/features/games/useGameModuleTexts"
 import { useCurrentAccount } from "@/features/session/useSession"
 import { PlayEntryForm } from "./PlayEntryForm"
 import { blankPlay } from "./playForm"
@@ -17,10 +19,13 @@ export function RecordPlayPage() {
   const gameId = searchParams.get("game")
   const games = api.useQuery("get", "/api/games")
   const players = api.useQuery("get", "/api/players")
+  // The form is drawn from the score pad of the Game's Game Module, in the module's words.
+  const modules = useGameModules()
+  const texts = useGameModuleTextsQuery()
 
   return (
     <QueryState
-      queries={[games, players]}
+      queries={[games, players, modules, texts]}
       loading={t("plays.record.loading")}
       failed={t("plays.record.loadFailed")}
     >
@@ -36,14 +41,28 @@ export function RecordPlayPage() {
             </PageMessage>
           )
         }
-        return <RecordPlay game={game} players={players.data ?? []} />
+        const module = moduleWithId(modules.data, game.gameModuleId)
+        if (!module) {
+          // The Game's module is not part of this build of Board Keeper.
+          return <PageMessage title={t("problems.plays.gameModuleMissing")} />
+        }
+        return <RecordPlay game={game} module={module} players={players.data ?? []} />
       }}
     </QueryState>
   )
 }
 
-function RecordPlay({ game, players }: { game: Game; players: Player[] }) {
+function RecordPlay({
+  game,
+  module,
+  players,
+}: {
+  game: Game
+  module: GameModule
+  players: Player[]
+}) {
   const { t } = useTranslation()
+  const gameName = useGameName()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const account = useCurrentAccount()
@@ -65,10 +84,11 @@ function RecordPlay({ game, players }: { game: Game; players: Player[] }) {
   return (
     <PlayEntryForm
       title={t("plays.record.title")}
-      description={t("plays.record.description", { game: game.name })}
+      description={t("plays.record.description", { game: gameName(game) })}
       gameId={game.id}
+      module={module}
       players={players}
-      initial={blankPlay(game, recorder?.id)}
+      initial={blankPlay(module, game, recorder?.id)}
       submitLabel={t("plays.record.submit")}
       cancelTo="/"
       pending={record.isPending}

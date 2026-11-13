@@ -18,8 +18,8 @@ class StandardGameModuleTests {
      * A made-up Game for two to four Players. Its pad has birds and eggs, and coins that are
      * entered but not counted. With the "night" Variant on there is a row for owls as well.
      */
-    private static ScoreSheet sheet(List<TieBreaker> tieBreakers, boolean recorderDecidesTies) {
-        return new ScoreSheet(
+    private static ScorePad birdwatch(List<TieBreaker> tieBreakers, boolean recorderDecidesTies) {
+        return new ScorePad(
                 2,
                 4,
                 List.of(new Variant.OnOff("night", false), new Variant.Choice("board", List.of("front", "back"))),
@@ -38,11 +38,11 @@ class StandardGameModuleTests {
     @Nested
     class Totals {
 
-        private final GameModule module = module(sheet(List.of(), false));
+        private final GameModule module = module(birdwatch(List.of(), false));
 
         @Test
         void addUpTheRowsThatCount() {
-            assertThat(results(module, BY_DAY, pad(10, 4, 99), pad(20, 0, 0)))
+            assertThat(results(module, BY_DAY, row(10, 4, 99), row(20, 0, 0)))
                     .containsExactly(new PlayerResult(14, 2, false), new PlayerResult(20, 1, true));
         }
 
@@ -55,14 +55,14 @@ class StandardGameModuleTests {
 
         @Test
         void equalTotalsShareAPlacingAndThePlacingAfterSkipsAhead() {
-            assertThat(results(module, BY_DAY, pad(10, 0, 0), pad(20, 0, 0), pad(10, 0, 0), pad(5, 0, 0)))
+            assertThat(results(module, BY_DAY, row(10, 0, 0), row(20, 0, 0), row(10, 0, 0), row(5, 0, 0)))
                     .extracting(PlayerResult::placing)
                     .containsExactly(2, 1, 2, 4);
         }
 
         @Test
         void everyoneLevelInFirstPlaceHasWon() {
-            assertThat(results(module, BY_DAY, pad(20, 0, 0), pad(20, 0, 5), pad(5, 0, 0)))
+            assertThat(results(module, BY_DAY, row(20, 0, 0), row(20, 0, 5), row(5, 0, 0)))
                     .containsExactly(new PlayerResult(20, 1, true), new PlayerResult(20, 1, true), new PlayerResult(5, 3, false));
         }
     }
@@ -72,45 +72,45 @@ class StandardGameModuleTests {
 
         @Test
         void putEqualTotalsInOrderFirstOneFirst() {
-            GameModule module = module(sheet(List.of(TieBreaker.most("eggs"), TieBreaker.most("coins")), false));
+            GameModule module = module(birdwatch(List.of(TieBreaker.most("eggs"), TieBreaker.most("coins")), false));
 
             // All three have 20. Eggs: 4, 4, 2. Coins decide between the first two.
-            assertThat(results(module, BY_DAY, pad(16, 4, 1), pad(16, 4, 3), pad(18, 2, 9)))
+            assertThat(results(module, BY_DAY, row(16, 4, 1), row(16, 4, 3), row(18, 2, 9)))
                     .containsExactly(new PlayerResult(20, 2, false), new PlayerResult(20, 1, true), new PlayerResult(20, 3, false));
         }
 
         @Test
         void canFavourTheFewest() {
-            GameModule module = module(sheet(List.of(TieBreaker.fewest("coins")), false));
+            GameModule module = module(birdwatch(List.of(TieBreaker.fewest("coins")), false));
 
-            assertThat(results(module, BY_DAY, pad(20, 0, 3), pad(20, 0, 1)))
+            assertThat(results(module, BY_DAY, row(20, 0, 3), row(20, 0, 1)))
                     .extracting(PlayerResult::placing)
                     .containsExactly(2, 1);
         }
 
         @Test
         void applyFurtherDownAsWell() {
-            GameModule module = module(sheet(List.of(TieBreaker.most("coins")), false));
+            GameModule module = module(birdwatch(List.of(TieBreaker.most("coins")), false));
 
-            assertThat(results(module, BY_DAY, pad(30, 0, 0), pad(20, 0, 1), pad(20, 0, 2)))
+            assertThat(results(module, BY_DAY, row(30, 0, 0), row(20, 0, 1), row(20, 0, 2)))
                     .extracting(PlayerResult::placing)
                     .containsExactly(1, 3, 2);
         }
 
         @Test
         void leaveASharedPlacingWhenTheyDecideNothing() {
-            GameModule module = module(sheet(List.of(TieBreaker.most("coins")), false));
+            GameModule module = module(birdwatch(List.of(TieBreaker.most("coins")), false));
 
-            assertThat(score(module, BY_DAY, pad(20, 0, 2), pad(20, 0, 2)))
+            assertThat(score(module, BY_DAY, row(20, 0, 2), row(20, 0, 2)))
                     .isEqualTo(new Outcome.Competitive(
                             List.of(new PlayerResult(20, 1, true), new PlayerResult(20, 1, true)), List.of()));
         }
 
         @Test
         void thatDependOnARowNotOnThePadAreSkipped() {
-            GameModule module = module(sheet(List.of(TieBreaker.most("owls"), TieBreaker.most("coins")), false));
+            GameModule module = module(birdwatch(List.of(TieBreaker.most("owls"), TieBreaker.most("coins")), false));
 
-            assertThat(results(module, BY_DAY, pad(20, 0, 1), pad(20, 0, 2)))
+            assertThat(results(module, BY_DAY, row(20, 0, 1), row(20, 0, 2)))
                     .extracting(PlayerResult::placing)
                     .containsExactly(2, 1);
         }
@@ -119,30 +119,30 @@ class StandardGameModuleTests {
     @Nested
     class ATieTheRecorderDecides {
 
-        private final GameModule module = module(sheet(List.of(TieBreaker.most("coins")), true));
+        private final GameModule module = module(birdwatch(List.of(TieBreaker.most("coins")), true));
 
         @Test
         void isOnlyATieForFirstPlaceThatTheTieBreakersLeave() {
             // Coins decide: nothing to ask.
-            assertThat(score(module, BY_DAY, pad(20, 0, 2), pad(20, 0, 1)).tieForRecorder()).isEmpty();
+            assertThat(score(module, BY_DAY, row(20, 0, 2), row(20, 0, 1)).tieForRecorder()).isEmpty();
             // Level in second place: nothing to ask either.
-            assertThat(score(module, BY_DAY, pad(30, 0, 0), pad(20, 0, 1), pad(20, 0, 1)).tieForRecorder())
+            assertThat(score(module, BY_DAY, row(30, 0, 0), row(20, 0, 1), row(20, 0, 1)).tieForRecorder())
                     .isEmpty();
             // Level in first place on everything entered: the recorder is asked about those two.
-            assertThat(score(module, BY_DAY, pad(20, 0, 1), pad(5, 0, 0), pad(20, 0, 1)).tieForRecorder())
+            assertThat(score(module, BY_DAY, row(20, 0, 1), row(5, 0, 0), row(20, 0, 1)).tieForRecorder())
                     .containsExactly(0, 2);
         }
 
         @Test
         void staysSharedUntilTheRecorderMarksAWinner() {
-            assertThat(results(module, BY_DAY, pad(20, 0, 1), pad(20, 0, 1)))
+            assertThat(results(module, BY_DAY, row(20, 0, 1), row(20, 0, 1)))
                     .extracting(PlayerResult::placing)
                     .containsExactly(1, 1);
         }
 
         @Test
         void goesToWhoeverTheRecorderMarks() {
-            Outcome.Competitive outcome = score(module, BY_DAY, pad(20, 0, 1), marked(pad(20, 0, 1)), pad(5, 0, 0));
+            Outcome.Competitive outcome = score(module, BY_DAY, row(20, 0, 1), marked(row(20, 0, 1)), row(5, 0, 0));
 
             assertThat(outcome.results())
                     .containsExactly(new PlayerResult(20, 2, false), new PlayerResult(20, 1, true), new PlayerResult(5, 3, false));
@@ -152,31 +152,31 @@ class StandardGameModuleTests {
 
         @Test
         void canGoToSomeOfThoseTied() {
-            assertThat(results(module, BY_DAY, marked(pad(20, 0, 1)), pad(20, 0, 1), marked(pad(20, 0, 1))))
+            assertThat(results(module, BY_DAY, marked(row(20, 0, 1)), row(20, 0, 1), marked(row(20, 0, 1))))
                     .extracting(PlayerResult::placing)
                     .containsExactly(1, 3, 1);
         }
 
         @Test
         void cannotGoToAPlayerWhoIsNotPartOfIt() {
-            assertRefused(Standard.WINNER_NOT_TIED, module, entry(BY_DAY, pad(20, 0, 1), pad(20, 0, 1), marked(pad(5, 0, 0))));
+            assertRefused(Standard.WINNER_NOT_TIED, module, entry(BY_DAY, row(20, 0, 1), row(20, 0, 1), marked(row(5, 0, 0))));
             // The Tie-breaker already decided this one.
-            assertRefused(Standard.WINNER_NOT_TIED, module, entry(BY_DAY, pad(20, 0, 2), marked(pad(20, 0, 1))));
+            assertRefused(Standard.WINNER_NOT_TIED, module, entry(BY_DAY, row(20, 0, 2), marked(row(20, 0, 1))));
         }
 
         @Test
-        void isNotOfferedByASheetThatSharesTheWin() {
-            GameModule sharing = module(sheet(List.of(), false));
+        void isNotOfferedByAPadThatSharesTheWin() {
+            GameModule sharing = module(birdwatch(List.of(), false));
 
-            assertThat(score(sharing, BY_DAY, pad(20, 0, 0), pad(20, 0, 0)).tieForRecorder()).isEmpty();
-            assertRefused(Standard.WINNER_NOT_TIED, sharing, entry(BY_DAY, marked(pad(20, 0, 0)), pad(20, 0, 0)));
+            assertThat(score(sharing, BY_DAY, row(20, 0, 0), row(20, 0, 0)).tieForRecorder()).isEmpty();
+            assertRefused(Standard.WINNER_NOT_TIED, sharing, entry(BY_DAY, marked(row(20, 0, 0)), row(20, 0, 0)));
         }
     }
 
     @Nested
     class WithOnlyTheWinnerRecorded {
 
-        private final GameModule module = module(sheet(List.of(), true));
+        private final GameModule module = module(birdwatch(List.of(), true));
 
         @Test
         void theMarkedPlayersHaveWonAndNobodyIsPlaced() {
@@ -195,72 +195,72 @@ class StandardGameModuleTests {
             assertRefused(
                     Standard.NOT_RECORDED,
                     module,
-                    new PlayEntry(RecordingMode.WINNER_ONLY, BY_DAY, List.of(marked(pad(1, 0, 0)), nothing), null));
+                    new PlayEntry(RecordingMode.WINNER_ONLY, BY_DAY, List.of(marked(row(1, 0, 0)), nothing), null));
         }
     }
 
     @Nested
     class Refuses {
 
-        private final GameModule module = module(sheet(List.of(), false));
+        private final GameModule module = module(birdwatch(List.of(), false));
 
         @Test
         void tooFewOrTooManyPlayers() {
-            assertRefused(Standard.TOO_FEW_PLAYERS, module, entry(BY_DAY, pad(1, 0, 0)));
+            assertRefused(Standard.TOO_FEW_PLAYERS, module, entry(BY_DAY, row(1, 0, 0)));
             assertRefused(
                     Standard.TOO_MANY_PLAYERS,
                     module,
-                    entry(BY_DAY, pad(1, 0, 0), pad(1, 0, 0), pad(1, 0, 0), pad(1, 0, 0), pad(1, 0, 0)));
+                    entry(BY_DAY, row(1, 0, 0), row(1, 0, 0), row(1, 0, 0), row(1, 0, 0), row(1, 0, 0)));
         }
 
         @Test
         void aRowLeftEmpty() {
             PlayerEntry withoutCoins = new PlayerEntry(Map.of("birds", 1, "eggs", 0), false);
-            assertRefused(Standard.SCORE_MISSING, module, entry(BY_DAY, withoutCoins, pad(1, 0, 0)));
+            assertRefused(Standard.SCORE_MISSING, module, entry(BY_DAY, withoutCoins, row(1, 0, 0)));
             // At night the owls have to be entered too.
-            assertRefused(Standard.SCORE_MISSING, module, entry(AT_NIGHT, pad(1, 0, 0), pad(1, 0, 0)));
+            assertRefused(Standard.SCORE_MISSING, module, entry(AT_NIGHT, row(1, 0, 0), row(1, 0, 0)));
         }
 
         @Test
         void aValueTheRowDoesNotAllow() {
-            assertRefused(Standard.SCORE_NOT_ALLOWED, module, entry(BY_DAY, pad(-1, 0, 0), pad(1, 0, 0)));
-            assertRefused(Standard.SCORE_NOT_ALLOWED, module, entry(BY_DAY, pad(1, 3, 0), pad(1, 0, 0)));
-            assertRefused(Standard.SCORE_NOT_ALLOWED, module, entry(BY_DAY, pad(1, 12, 0), pad(1, 0, 0)));
+            assertRefused(Standard.SCORE_NOT_ALLOWED, module, entry(BY_DAY, row(-1, 0, 0), row(1, 0, 0)));
+            assertRefused(Standard.SCORE_NOT_ALLOWED, module, entry(BY_DAY, row(1, 3, 0), row(1, 0, 0)));
+            assertRefused(Standard.SCORE_NOT_ALLOWED, module, entry(BY_DAY, row(1, 12, 0), row(1, 0, 0)));
         }
 
         @Test
         void aRowThatIsNotOnThePad() {
             // Owls by day.
-            assertRefused(Standard.NOT_RECORDED, module, entry(BY_DAY, night(1, 0, 0, 3), pad(1, 0, 0)));
+            assertRefused(Standard.NOT_RECORDED, module, entry(BY_DAY, night(1, 0, 0, 3), row(1, 0, 0)));
         }
 
         @Test
-        void aSetupThatIsNotOnTheSheet() {
-            assertRefused(Standard.NOT_RECORDED, module, entry(Map.of("weather", "rain"), pad(1, 0, 0), pad(1, 0, 0)));
-            assertRefused(Standard.NOT_RECORDED, module, entry(Map.of("board", "side"), pad(1, 0, 0), pad(1, 0, 0)));
-            assertRefused(Standard.NOT_RECORDED, module, entry(Map.of("night", "yes"), pad(1, 0, 0), pad(1, 0, 0)));
+        void aSetupThatIsNotOnThePad() {
+            assertRefused(Standard.NOT_RECORDED, module, entry(Map.of("weather", "rain"), row(1, 0, 0), row(1, 0, 0)));
+            assertRefused(Standard.NOT_RECORDED, module, entry(Map.of("board", "side"), row(1, 0, 0), row(1, 0, 0)));
+            assertRefused(Standard.NOT_RECORDED, module, entry(Map.of("night", "yes"), row(1, 0, 0), row(1, 0, 0)));
         }
 
         @Test
         void aResultForTheGroup() {
             PlayEntry entry = new PlayEntry(
-                    RecordingMode.POINTS, BY_DAY, List.of(pad(1, 0, 0), pad(1, 0, 0)), new GroupEntry(true, Map.of()));
+                    RecordingMode.POINTS, BY_DAY, List.of(row(1, 0, 0), row(1, 0, 0)), new GroupEntry(true, Map.of()));
             assertRefused(Standard.NOT_RECORDED, module, entry);
         }
     }
 
     @Nested
-    class AScoreSheet {
+    class AScorePad {
 
         @Test
         void givesAVariantItsDefaultWhenNothingWasChosen() {
-            ScoreSheet sheet = sheet(List.of(), false);
+            ScorePad pad = birdwatch(List.of(), false);
 
-            assertThat(sheet.valueOf("night", Map.of())).isEqualTo("false");
-            assertThat(sheet.valueOf("board", Map.of())).isEqualTo("front");
-            assertThat(sheet.valueOf("board", Map.of("board", "back"))).isEqualTo("back");
-            assertThat(sheet.categoriesFor(Map.of())).extracting(ScoreCategory::key).containsExactly("birds", "eggs", "coins");
-            assertThat(sheet.categoriesFor(AT_NIGHT))
+            assertThat(pad.valueOf("night", Map.of())).isEqualTo("false");
+            assertThat(pad.valueOf("board", Map.of())).isEqualTo("front");
+            assertThat(pad.valueOf("board", Map.of("board", "back"))).isEqualTo("back");
+            assertThat(pad.categoriesFor(Map.of())).extracting(ScoreCategory::key).containsExactly("birds", "eggs", "coins");
+            assertThat(pad.categoriesFor(AT_NIGHT))
                     .extracting(ScoreCategory::key)
                     .containsExactly("birds", "eggs", "owls", "coins");
         }
@@ -271,21 +271,21 @@ class StandardGameModuleTests {
             List<ScoreCategory> birds = List.of(ScoreCategory.of("birds"));
 
             assertThatIllegalArgumentException()
-                    .isThrownBy(() -> new ScoreSheet(2, 4, noVariants, birds, List.of(TieBreaker.most("eggs")), false))
+                    .isThrownBy(() -> new ScorePad(2, 4, noVariants, birds, List.of(TieBreaker.most("eggs")), false))
                     .withMessageContaining("'eggs'");
             assertThatIllegalArgumentException()
-                    .isThrownBy(() -> new ScoreSheet(
+                    .isThrownBy(() -> new ScorePad(
                             2, 4, noVariants, List.of(ScoreCategory.of("owls").onlyWhen("night", "true")), List.of(), false))
                     .withMessageContaining("'owls'");
             assertThatIllegalArgumentException()
-                    .isThrownBy(() -> new ScoreSheet(
+                    .isThrownBy(() -> new ScorePad(
                             2, 4, noVariants, List.of(ScoreCategory.of("birds"), ScoreCategory.of("birds")), List.of(), false))
                     .withMessageContaining("'birds'");
-            assertThatIllegalArgumentException().isThrownBy(() -> new ScoreSheet(3, 2, noVariants, birds, List.of(), false));
+            assertThatIllegalArgumentException().isThrownBy(() -> new ScorePad(3, 2, noVariants, birds, List.of(), false));
         }
     }
 
-    private static GameModule module(ScoreSheet sheet) {
+    private static GameModule module(ScorePad pad) {
         return new StandardGameModule() {
             @Override
             public UUID id() {
@@ -298,8 +298,8 @@ class StandardGameModuleTests {
             }
 
             @Override
-            public ScoreSheet scoreSheet() {
-                return sheet;
+            public ScorePad scorePad() {
+                return pad;
             }
         };
     }
@@ -316,12 +316,12 @@ class StandardGameModuleTests {
         return new PlayEntry(RecordingMode.POINTS, setup, Arrays.asList(players), null);
     }
 
-    /** A Player's pad by day. */
-    private static PlayerEntry pad(int birds, int eggs, int coins) {
+    /** A Player's rows by day. */
+    private static PlayerEntry row(int birds, int eggs, int coins) {
         return new PlayerEntry(Map.of("birds", birds, "eggs", eggs, "coins", coins), false);
     }
 
-    /** A Player's pad with the "night" Variant on. */
+    /** A Player's rows with the "night" Variant on. */
     private static PlayerEntry night(int birds, int eggs, int coins, int owls) {
         return new PlayerEntry(Map.of("birds", birds, "eggs", eggs, "coins", coins, "owls", owls), false);
     }

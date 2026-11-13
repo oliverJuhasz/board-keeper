@@ -8,13 +8,14 @@ import {
   annaPlayer,
   bence,
   bencePlayer,
-  calico,
-  calicoPlay,
+  azul,
+  azulPlay,
   doraPlayer,
   historyIs,
   pandemicPlay,
   playCanBeEntered,
   playIs,
+  playsCanBePreviewed,
   problem,
   signedInAs,
 } from "@/test/api"
@@ -28,22 +29,22 @@ function summaries() {
 
 test("the navigation leads to the plays, newest first, with who won", async () => {
   signedInAs(bence)
-  historyIs([pandemicPlay, calicoPlay])
+  historyIs([pandemicPlay, azulPlay])
   renderApp("/")
 
   await userEvent.click(await screen.findByRole("link", { name: "Plays" }))
 
   expect(await screen.findByRole("heading", { name: "Plays" })).toBeInTheDocument()
-  const [pandemic, calicoLine] = await waitFor(() => {
+  const [pandemic, azulLine] = await waitFor(() => {
     const lines = summaries()
     expect(lines).toHaveLength(2)
     return lines
   })
   expect(pandemic).toHaveTextContent("Pandemic15 March 2026Lost together (17): Anna, Bence")
   // The winner comes first and is marked, whatever the order they were entered in.
-  expect(calicoLine).toHaveTextContent("Calico14 March 2026Anna74Dora61")
-  expect(within(calicoLine).getByRole("img", { name: "Winner" })).toBeInTheDocument()
-  expect(within(calicoLine).getByRole("link")).toHaveAttribute("href", `/plays/${calicoPlay.id}`)
+  expect(azulLine).toHaveTextContent("Azul14 March 2026Anna74Dora61")
+  expect(within(azulLine).getByRole("img", { name: "Winner" })).toBeInTheDocument()
+  expect(within(azulLine).getByRole("link")).toHaveAttribute("href", `/plays/${azulPlay.id}`)
 })
 
 test("says so when nothing has been recorded yet, or the plays can't be loaded", async () => {
@@ -62,19 +63,19 @@ test("says so when nothing has been recorded yet, or the plays can't be loaded",
 
 test("narrows the plays by game, player and dates, and remembers that in the address", async () => {
   signedInAs(bence)
-  const asked = historyIs([calicoPlay])
+  const asked = historyIs([azulPlay])
   renderApp("/plays")
 
   await waitFor(() => expect(summaries()).toHaveLength(1))
   expect(asked[0].get("gameId")).toBeNull()
-  await userEvent.selectOptions(screen.getByLabelText("Game"), "Calico")
+  await userEvent.selectOptions(screen.getByLabelText("Game"), "Azul")
   await userEvent.selectOptions(screen.getByLabelText("Player"), "Dora")
   await userEvent.type(screen.getByLabelText("From"), "2026-03-01")
   await userEvent.type(screen.getByLabelText("Until"), "2026-03-31")
 
   await waitFor(() => {
     const last = asked.at(-1)
-    expect(last?.get("gameId")).toBe(calico.id)
+    expect(last?.get("gameId")).toBe(azul.id)
     expect(last?.getAll("playerId")).toEqual([doraPlayer.id])
     expect(last?.get("from")).toBe("2026-03-01")
     expect(last?.get("to")).toBe("2026-03-31")
@@ -88,7 +89,7 @@ test("narrows the plays by game, player and dates, and remembers that in the add
 
 test('"My plays" asks for the plays the signed-in player took part in', async () => {
   signedInAs(bence)
-  const asked = historyIs([calicoPlay])
+  const asked = historyIs([azulPlay])
   renderApp("/plays")
 
   await userEvent.click(await screen.findByRole("checkbox", { name: "My plays" }))
@@ -104,18 +105,18 @@ test('"My plays" asks for the plays the signed-in player took part in', async ()
 test("starts from the filters in the address, and says when nothing matches them", async () => {
   signedInAs(bence)
   const asked = historyIs([])
-  renderApp(`/plays?game=${calico.id}&mine=1`)
+  renderApp(`/plays?game=${azul.id}&mine=1`)
 
   expect(await screen.findByText("No plays match these filters.")).toBeInTheDocument()
-  expect(asked[0].get("gameId")).toBe(calico.id)
+  expect(asked[0].get("gameId")).toBe(azul.id)
   expect(asked[0].getAll("playerId")).toEqual([bencePlayer.id])
   expect(screen.getByRole("checkbox", { name: "My plays" })).toBeChecked()
-  await waitFor(() => expect(screen.getByLabelText("Game")).toHaveValue(calico.id))
+  await waitFor(() => expect(screen.getByLabelText("Game")).toHaveValue(azul.id))
 })
 
 test('"Show more" adds the next page of plays below the first', async () => {
   signedInAs(bence)
-  const asked = historyIs([calicoPlay], [pandemicPlay])
+  const asked = historyIs([azulPlay], [pandemicPlay])
   renderApp("/plays")
 
   await userEvent.click(await screen.findByRole("button", { name: "Show more" }))
@@ -128,25 +129,26 @@ test('"Show more" adds the next page of plays below the first', async () => {
 
 test("a play can be edited by someone who may change it", async () => {
   signedInAs(bence)
-  playIs(calicoPlay)
+  playIs(azulPlay)
   playCanBeEntered()
+  playsCanBePreviewed()
   const sent: NewPlay[] = []
   const changed: Play = {
-    ...calicoPlay,
+    ...azulPlay,
     location: "At Anna's",
     results: [
-      { ...calicoPlay.results[0], scores: { total: 80 }, total: 80, placing: 1, won: true },
-      { ...calicoPlay.results[1], placing: 2, won: false },
+      { ...azulPlay.results[0], scores: { total: 80 }, total: 80, placing: 1, won: true },
+      { ...azulPlay.results[1], placing: 2, won: false },
     ],
   }
   server.use(
-    http.put(`*/api/plays/${calicoPlay.id}`, async ({ request }) => {
+    http.put(`*/api/plays/${azulPlay.id}`, async ({ request }) => {
       sent.push((await request.json()) as NewPlay)
       playIs(changed)
       return HttpResponse.json(changed)
     }),
   )
-  renderApp(`/plays/${calicoPlay.id}`)
+  renderApp(`/plays/${azulPlay.id}`)
 
   await userEvent.click(await screen.findByRole("button", { name: "Actions for this play" }))
   await userEvent.click(await screen.findByRole("menuitem", { name: "Edit" }))
@@ -169,7 +171,7 @@ test("a play can be edited by someone who may change it", async () => {
   expect(await screen.findByText("14 March 2026 · At Anna's")).toBeInTheDocument()
   expect(sent).toEqual([
     {
-      gameId: calico.id,
+      gameId: azul.id,
       playedOn: "2026-03-14",
       location: "At Anna's",
       notes: "Dora's first play.",
@@ -185,16 +187,16 @@ test("a play can be edited by someone who may change it", async () => {
 
 test("a play can be deleted after an 'are you sure?'", async () => {
   signedInAs(bence)
-  playIs(calicoPlay)
+  playIs(azulPlay)
   historyIs([])
   let deleted = false
   server.use(
-    http.delete(`*/api/plays/${calicoPlay.id}`, () => {
+    http.delete(`*/api/plays/${azulPlay.id}`, () => {
       deleted = true
       return new HttpResponse(null, { status: 204 })
     }),
   )
-  renderApp(`/plays/${calicoPlay.id}`)
+  renderApp(`/plays/${azulPlay.id}`)
 
   await userEvent.click(await screen.findByRole("button", { name: "Actions for this play" }))
   await userEvent.click(await screen.findByRole("menuitem", { name: "Delete" }))
@@ -209,12 +211,12 @@ test("a play can be deleted after an 'are you sure?'", async () => {
 
 test("someone who may not change a play is offered neither, and can't open its edit page", async () => {
   signedInAs(anna)
-  const play = { ...calicoPlay, canChange: false }
+  const play = { ...azulPlay, canChange: false }
   playIs(play)
   playCanBeEntered()
   const { unmount } = renderApp(`/plays/${play.id}`)
 
-  await screen.findByRole("heading", { name: "Calico" })
+  await screen.findByRole("heading", { name: "Azul" })
   expect(screen.queryByRole("button", { name: "Actions for this play" })).not.toBeInTheDocument()
   unmount()
 

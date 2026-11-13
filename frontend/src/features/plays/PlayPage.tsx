@@ -2,7 +2,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Link, useNavigate, useParams } from "react-router"
-import { api, type Play, type Result } from "@/api/client"
+import { api, type GameModule, type Play, type Result } from "@/api/client"
 import { problemCode } from "@/api/problems"
 import { ActionsMenu } from "@/components/ActionsMenu"
 import { ConfirmDialog } from "@/components/ConfirmDialog"
@@ -21,6 +21,8 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { useRecordedAs } from "@/features/games/recordedAs"
+import { GENERIC, moduleWithId, useGameModules, useGameName } from "@/features/games/useGameModules"
+import { useGameModuleTexts, useGameModuleTextsQuery } from "@/features/games/useGameModuleTexts"
 import { useCan } from "@/features/session/useSession"
 import { formatDateTime, formatDay } from "@/lib/dates"
 import { playKey, playsKey } from "./playQueries"
@@ -31,6 +33,8 @@ export function PlayPage() {
   // The ":id" part of the address.
   const { id = "" } = useParams()
   const play = api.useQuery("get", "/api/plays/{id}", { params: { path: { id } } })
+  const modules = useGameModules()
+  const texts = useGameModuleTextsQuery()
 
   if (problemCode(play.error) === "plays.notFound") {
     return (
@@ -43,17 +47,30 @@ export function PlayPage() {
   }
   return (
     <QueryState
-      queries={[play]}
+      queries={[play, modules, texts]}
       loading={t("plays.page.loading")}
       failed={t("plays.page.loadFailed")}
     >
-      {() => play.data && <PlayDetails play={play.data} />}
+      {() =>
+        play.data && (
+          <PlayDetails
+            play={play.data}
+            module={moduleWithId(modules.data, play.data.gameModuleId)}
+          />
+        )
+      }
     </QueryState>
   )
 }
 
-function PlayDetails({ play }: { play: Play }) {
+/**
+ * @param module the Game Module that scored the Play, for the names of its Score Categories
+ *     and Variants. Undefined when it is not part of this build: the totals are shown anyway.
+ */
+function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
   const { t } = useTranslation()
+  const gameName = useGameName()
+  const texts = useGameModuleTexts()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const can = useCan()
@@ -69,13 +86,38 @@ function PlayDetails({ play }: { play: Play }) {
       queryClient.removeQueries({ queryKey: playsKey })
     },
   })
-  // "Lowest score wins" is a Variant of the Generic Module, kept in the Play's Setup.
-  const lowestScoreWins = play.setup.lowestScoreWins === "true"
+  const moduleText = (name: string) => (module ? texts[`${module.key}.${name}`] : undefined)
+  // The rows of the pad that were filled in. With one row, the total says it all.
+  const filledIn = (module?.scorePad.categories ?? []).filter((category) =>
+    play.results.some((result) => result.scores[category.key] !== undefined),
+  )
+  const categories = filledIn.length > 1 ? filledIn : []
+
+  // How the Play was recorded, in a few words. For a Game without a module of its own those
+  // are its recording choices, where "lowest score wins" is a Variant kept in the Setup. For
+  // any other Game they are the Variants that were chosen.
+  const variantsChosen = (module?.scorePad.variants ?? []).flatMap((variant) => {
+    const value = play.setup[variant.key] ?? variant.defaultValue
+    if (variant.kind === "ON_OFF") {
+      return value === "true" ? [moduleText(`variant.${variant.key}`)] : []
+    }
+    return [
+      `${moduleText(`variant.${variant.key}`)}: ${moduleText(`variant.${variant.key}.${value}`)}`,
+    ]
+  })
+  const howRecorded =
+    module?.key === GENERIC
+      ? recordedAs({
+          cooperative: play.cooperative,
+          recordingMode: play.recordingMode,
+          lowestScoreWins: play.setup.lowestScoreWins === "true",
+        })
+      : [points ? t("recording.points") : t("recording.winnerOnly"), ...variantsChosen].join(", ")
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title={play.game.name}
+        title={gameName(play.game)}
         description={[formatDay(play.playedOn), play.location].filter(Boolean).join(" · ")}
         action={
           <div className="flex items-center gap-1">
@@ -127,7 +169,16 @@ function PlayDetails({ play }: { play: Play }) {
             <TableRow>
               {points && <TableHead className="w-20">{t("plays.page.placing")}</TableHead>}
               <TableHead>{t("plays.page.player")}</TableHead>
-              {points && <TableHead className="text-right">{t("plays.page.score")}</TableHead>}
+              {categories.map((category) => (
+                <TableHead key={category.key} className="text-right">
+                  {moduleText(`category.${category.key}`)}
+                </TableHead>
+              ))}
+              {points && (
+                <TableHead className="text-right">
+                  {categories.length > 0 ? t("plays.page.total") : t("plays.page.score")}
+                </TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -144,6 +195,11 @@ function PlayDetails({ play }: { play: Play }) {
                       {result.won && <Badge variant="secondary">{t("plays.page.winner")}</Badge>}
                     </span>
                   </TableCell>
+                  {categories.map((category) => (
+                    <TableCell key={category.key} className="text-right text-muted-foreground">
+                      {result.scores[category.key]}
+                    </TableCell>
+                  ))}
                   {points && <TableCell className="text-right">{result.total}</TableCell>}
                 </TableRow>
               ))}
@@ -160,11 +216,7 @@ function PlayDetails({ play }: { play: Play }) {
       )}
 
       <p className="text-sm text-muted-foreground">
-        {recordedAs({
-          cooperative: play.cooperative,
-          recordingMode: play.recordingMode,
-          lowestScoreWins,
-        })}
+        {howRecorded}
         {". "}
         {t("plays.page.recordedBy", {
           name: play.recordedBy.name,
@@ -175,7 +227,7 @@ function PlayDetails({ play }: { play: Play }) {
       {deleting && (
         <ConfirmDialog
           title={t("plays.page.deleteDialog.title")}
-          description={t("plays.page.deleteDialog.description", { game: play.game.name })}
+          description={t("plays.page.deleteDialog.description", { game: gameName(play.game) })}
           confirm={t("plays.page.deleteDialog.confirm")}
           onConfirm={() => remove.mutate({ params: { path: { id: play.id } } })}
           pending={remove.isPending}

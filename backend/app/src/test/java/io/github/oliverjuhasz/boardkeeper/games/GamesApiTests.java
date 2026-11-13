@@ -51,13 +51,13 @@ class GamesApiTests {
     }
 
     @Test
-    void listsTheInstalledGameModulesWithTheirScoreSheets() {
+    void listsTheInstalledGameModulesWithTheirScorePads() {
         assertThat(member.get("/api/game-modules"))
                 .hasStatusOk()
                 .bodyJson()
                 .isLenientlyEqualTo("""
                         [{"id": "%s", "key": "calico",
-                          "scoreSheet": {
+                          "scorePad": {
                             "minPlayers": 2, "maxPlayers": 4,
                             "variants": [{"key": "family", "kind": "ON_OFF", "defaultValue": "false"}],
                             "categories": [
@@ -67,7 +67,7 @@ class GamesApiTests {
                               {"key": "buttons", "countsTowardTotal": true, "min": 0, "step": 3}],
                             "recorderDecidesTies": true}},
                          {"id": "%s", "key": "generic",
-                          "scoreSheet": {
+                          "scorePad": {
                             "minPlayers": 1,
                             "variants": [{"key": "cooperative", "kind": "ON_OFF"}, {"key": "lowestScoreWins", "kind": "ON_OFF"}],
                             "categories": [{"key": "total", "countsTowardTotal": true, "step": 1}],

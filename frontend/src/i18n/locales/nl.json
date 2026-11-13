@@ -30,7 +30,8 @@
       "title": "{{name}} verwijderen?",
       "description": "Dit kan niet ongedaan worden gemaakt.",
       "confirm": "Spel verwijderen"
-    }
+    },
+    "ownScorePad": "Eigen scoreblok"
   },
   "recording": {
     "as": {
@@ -82,13 +83,10 @@
       "choosePlayer": "Kies een speler…",
       "everyoneAdded": "Alle spelers doen al mee aan deze partij. Nieuwe spelers voeg je toe op de pagina Spelers.",
       "removePlayer": "{{name}} verwijderen",
-      "score": "Score",
-      "scoreOf": "Score van {{name}}",
       "won": "Gewonnen",
       "wonBy": "{{name}} heeft gewonnen",
       "tie": {
         "legend": "Gelijkspel om de eerste plaats",
-        "hint": "Kies wie het gelijkspel won, of laat de winst gedeeld.",
         "shared": "Gedeelde winst"
       },
       "outcome": "Hoe liep het af?",
@@ -96,7 +94,13 @@
       "outcomeLost": "De groep heeft verloren",
       "groupScore": "Score",
       "groupScoreHint": "Optioneel. Eén score voor de hele groep.",
-      "submit": "Partij vastleggen"
+      "submit": "Partij vastleggen",
+      "padHint": "Elke regel van het scoreblok, voor iedere speler.",
+      "valueOf": "{{category}} van {{name}}",
+      "pad": "Scoreblok",
+      "total": "Totaal",
+      "placing": "Plaats",
+      "playersFull": "Dit spel is voor hoogstens {{max}} spelers."
     },
     "history": {
       "title": "Partijen",
@@ -140,7 +144,8 @@
         "title": "Deze partij verwijderen?",
         "description": "Deze partij {{game}} is dan voorgoed weg. Dit kan niet ongedaan worden gemaakt.",
         "confirm": "Partij verwijderen"
-      }
+      },
+      "total": "Totaal"
     },
     "edit": {
       "title": "Een partij bewerken",
@@ -151,6 +156,15 @@
         "text": "Je hebt niet de bevoegdheid om hem te bewerken of te verwijderen.",
         "link": "Terug naar de partij"
       }
+    },
+    "invalid": {
+      "tooFewPlayers": "Dit spel heeft meer spelers nodig.",
+      "tooManyPlayers": "Dit spel kan niet met zoveel spelers worden gespeeld.",
+      "scoreMissing": "Vul voor elke speler elke regel van het scoreblok in.",
+      "scoreNotAllowed": "Een van de scores kan niet op zijn regel van het scoreblok.",
+      "winnerMissing": "Geef minstens één winnaar aan.",
+      "winnerNotTied": "Alleen een speler die bij het gelijkspel hoort, kan de winst krijgen.",
+      "notRecorded": "Er is iets ingevuld dat dit spel niet vastlegt."
     }
   },
   "notFound": {
@@ -216,13 +230,18 @@
     "gameNameTooLong": "Gebruik hoogstens 100 tekens.",
     "scoreRequired": "Vul een score in.",
     "wholeNumber": "Vul een geheel getal in.",
-    "playersTooFew": "Voeg minstens twee spelers toe.",
+    "playersTooFew": "Dit spel heeft minstens {{min}} spelers nodig.",
     "playerRequired": "Voeg minstens één speler toe.",
     "winnerRequired": "Vink minstens één winnaar aan.",
     "outcomeRequired": "Geef aan of de groep gewonnen of verloren heeft.",
     "dateInFuture": "De datum kan niet in de toekomst liggen.",
     "locationTooLong": "Gebruik hoogstens 100 tekens.",
-    "notesTooLong": "Gebruik hoogstens 2000 tekens."
+    "notesTooLong": "Gebruik hoogstens 2000 tekens.",
+    "playersTooMany": "Dit spel is voor hoogstens {{max}} spelers.",
+    "scoreTooLow": "Vul {{min}} of meer in.",
+    "scoreTooHigh": "Vul {{max}} of minder in.",
+    "scoreStep": "Vul een veelvoud van {{step}} in.",
+    "tieUnanswered": "Geef aan wie het gelijkspel won, of dat de winst gedeeld is."
   },
   "problems": {
     "unknown": "Er ging iets mis. Probeer het opnieuw.",
@@ -272,7 +291,8 @@
     "games": {
       "nameTaken": "Er is al een spel met deze naam.",
       "notFound": "Dit spel bestaat niet meer.",
-      "inUse": "Dit spel kan niet worden verwijderd: er zijn partijen voor vastgelegd."
+      "inUse": "Dit spel kan niet worden verwijderd: er zijn partijen voor vastgelegd.",
+      "hasOwnModule": "Dit spel hoort bij Board Keeper en kan daarom niet worden gewijzigd of verwijderd."
     },
     "plays": {
       "invalidEntry": "Deze resultaten kloppen niet met elkaar. Kijk ze na en probeer het opnieuw.",
