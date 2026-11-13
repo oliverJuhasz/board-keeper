@@ -37,3 +37,22 @@ export function todayIso() {
   const day = String(now.getDate()).padStart(2, "0")
   return `${now.getFullYear()}-${month}-${day}`
 }
+
+/**
+ * A day said the way people say it when it is recent: "today", "yesterday", "3 days ago". A day
+ * longer ago is written out, as formatDay does.
+ */
+export function formatRecentDay(isoDay: string) {
+  // Both days as midnight UTC, so the difference is a whole number of days wherever one is.
+  const daysAgo = Math.round(
+    (Date.parse(`${todayIso()}T00:00:00Z`) - Date.parse(`${isoDay}T00:00:00Z`)) / 86_400_000,
+  )
+  if (daysAgo >= 0 && daysAgo < 7) {
+    // "auto" says "yesterday" instead of "1 day ago", and does so in every language.
+    return new Intl.RelativeTimeFormat(locales[currentLanguage()], { numeric: "auto" }).format(
+      -daysAgo,
+      "day",
+    )
+  }
+  return formatDay(isoDay)
+}

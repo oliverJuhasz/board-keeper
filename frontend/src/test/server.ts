@@ -12,4 +12,8 @@ import { gameModules, gameModuleTexts } from "./gameModules"
 export const server = setupServer(
   http.get("*/api/game-modules", () => HttpResponse.json(gameModules)),
   http.get("*/api/game-modules/texts/:language", () => HttpResponse.json(gameModuleTexts)),
+  // The start page asks when each Game was last played, and for recent Plays to play again.
+  // Unless a test says otherwise, nothing has been played yet.
+  http.get("*/api/plays/last-played", () => HttpResponse.json([])),
+  http.get("*/api/plays", () => HttpResponse.json({ plays: [] })),
 )

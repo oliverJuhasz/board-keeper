@@ -31,7 +31,13 @@
       "description": "Dit kan niet ongedaan worden gemaakt.",
       "confirm": "Spel verwijderen"
     },
-    "ownScorePad": "Eigen scoreblok"
+    "ownScorePad": "Eigen scoreblok",
+    "startTitle": "Een partij vastleggen",
+    "startDescription": "Kies een spel, of speel nog een keer met dezelfde spelers.",
+    "playAgain": "Nog een keer",
+    "playAgainWith": "{{game}} nog een keer spelen met {{players}}",
+    "lastPlayed": "Laatst gespeeld: {{when}}",
+    "neverPlayed": "Nog niet gespeeld"
   },
   "recording": {
     "as": {

@@ -1,23 +1,34 @@
 import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { Link, useNavigate, useSearchParams } from "react-router"
-import { api, type Game, type GameModule, type Player } from "@/api/client"
+import { api, type Game, type GameModule, type Play, type Player } from "@/api/client"
 import { PageMessage } from "@/components/PageMessage"
 import { QueryState } from "@/components/QueryState"
 import { moduleWithId, useGameModules, useGameName } from "@/features/games/useGameModules"
 import { useGameModuleTextsQuery } from "@/features/games/useGameModuleTexts"
 import { useCurrentAccount } from "@/features/session/useSession"
 import { PlayEntryForm } from "./PlayEntryForm"
-import { blankPlay } from "./playForm"
+import { blankPlay, playAgain } from "./playForm"
 import { playKey, playsKey } from "./playQueries"
 
-/** Records a Play of the Game named in the address: /plays/new?game=<id>. */
+/**
+ * Records a Play of the Game named in the address: /plays/new?game=<id>. With &again=<id> of
+ * an earlier Play, the form starts with that Play's Players and choices.
+ */
 export function RecordPlayPage() {
   const { t } = useTranslation()
   // The part of the address after the "?".
   const [searchParams] = useSearchParams()
   const gameId = searchParams.get("game")
+  const againId = searchParams.get("again")
   const games = api.useQuery("get", "/api/games")
+  // The Play to play again, if there is one. A query that isn't "enabled" is never sent.
+  const previous = api.useQuery(
+    "get",
+    "/api/plays/{id}",
+    { params: { path: { id: againId ?? "" } } },
+    { enabled: againId !== null },
+  )
   const players = api.useQuery("get", "/api/players")
   // The form is drawn from the score pad of the Game's Game Module, in the module's words.
   const modules = useGameModules()
@@ -25,7 +36,14 @@ export function RecordPlayPage() {
 
   return (
     <QueryState
-      queries={[games, players, modules, texts]}
+      queries={[
+        games,
+        players,
+        modules,
+        texts,
+        // Wait for the Play to play again. If it can't be loaded, the form simply starts empty.
+        { isPending: againId !== null && previous.isPending, isError: false },
+      ]}
       loading={t("plays.record.loading")}
       failed={t("plays.record.loadFailed")}
     >
@@ -46,7 +64,14 @@ export function RecordPlayPage() {
           // The Game's module is not part of this build of Board Keeper.
           return <PageMessage title={t("problems.plays.gameModuleMissing")} />
         }
-        return <RecordPlay game={game} module={module} players={players.data ?? []} />
+        return (
+          <RecordPlay
+            game={game}
+            module={module}
+            players={players.data ?? []}
+            previous={previous.data?.game.id === game.id ? previous.data : undefined}
+          />
+        )
       }}
     </QueryState>
   )
@@ -56,10 +81,13 @@ function RecordPlay({
   game,
   module,
   players,
+  previous,
 }: {
   game: Game
   module: GameModule
   players: Player[]
+  /** The Play to play again, whose Players and choices the form starts with. */
+  previous?: Play
 }) {
   const { t } = useTranslation()
   const gameName = useGameName()
@@ -88,7 +116,16 @@ function RecordPlay({
       gameId={game.id}
       module={module}
       players={players}
-      initial={blankPlay(module, game, recorder?.id)}
+      initial={
+        previous
+          ? playAgain(
+              module,
+              game,
+              previous,
+              players.map((player) => player.id),
+            )
+          : blankPlay(module, game, recorder?.id)
+      }
       submitLabel={t("plays.record.submit")}
       cancelTo="/"
       pending={record.isPending}

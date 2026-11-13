@@ -88,11 +88,16 @@ Recording without a connection, teams, unfinished plays, game nights, importing 
 - What a module describes is called the Score Pad, after the rulebooks; it is in the glossary.
 - **The form asks who won a tie only when the scores can't say.** A Game Module names its Tie-breakers. Where a Tie-breaker is something that was entered, such as the money each Player has left in a Game where money decides a tie, the module decides the tie itself and the form does not ask. The form asks only when the Game decides a tie by something that isn't recorded, such as who played the fewest cards, and only if the Players are still tied after the Tie-breakers the module can work out. The Generic Module records nothing but totals, so with it the form always asks.
 
+## Settled for milestone M4
+
+- **Recording a Play takes as few steps as possible from opening Board Keeper**, because that is what it is for. The start page offers the last few Plays the signed-in Player took part in to play again: one tap opens the form with the same Game, Players and choices, so only the date and the scores are left. Below them come the Games, the most recently played first, and a tap anywhere on a Game opens its form.
+- The Games page stays the start page. Each Game's name leads to its statistics, and each Player's name on the Players page to theirs.
+- Solo Plays don't count toward win rates or average Placing. The pages of a Game and a Player show them in a section of their own: how many, the best and average score, and the wins against an automated opponent.
+- A Play recorded with only the winner counts in plays, wins and win rate, and is left out of score averages and average Placing.
+
 ## Details to settle when a milestone starts
 
-- **M4:** how statistics count Solo Plays: a win rate leaves out those played for score only, which are neither won nor lost.
 - **M6:** a Variant that is a number in a range, such as an adversary's level. The contract has on/off and choice Variants so far.
-- **M4:** whether the play history or a statistics overview becomes the start page.
 - **M5:** how a sole Admin who has forgotten their password gets back in. Today that needs a second Admin to create a Reset Link. The self-hosting guide needs an answer for when there is none.
 - **M5:** splitting the frontend's JavaScript by page. It has grown to about 250 kB compressed, all loaded up front.
 - **M3 and M6:** each game's exact scoring and tie-break rules, taken from its official rulebook. Online summaries disagree, for example on the order of Calico's tie-breakers and on Spirit Island's score formula.
