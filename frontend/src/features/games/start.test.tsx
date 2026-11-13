@@ -112,8 +112,10 @@ test("a tap on a game opens the form for a play of it", async () => {
 
   await userEvent.click(await screen.findByRole("link", { name: "Record a play of Calico" }))
 
-  expect(await screen.findByRole("heading", { name: "Record a play" })).toBeInTheDocument()
-  expect(screen.getByText("Who played Calico, and how it ended.")).toBeInTheDocument()
+  // The start page has the same heading, and stays until the form's code has loaded: wait for
+  // what only the form says.
+  expect(await screen.findByText("Who played Calico, and how it ended.")).toBeInTheDocument()
+  expect(screen.getByRole("heading", { name: "Record a play" })).toBeInTheDocument()
 })
 
 test("offers my recent plays to play again, each game and group of players once", async () => {

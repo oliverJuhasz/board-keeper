@@ -53,8 +53,10 @@ test("a game's row leads to recording a play of it", async () => {
 
   await userEvent.click(await screen.findByRole("link", { name: "Record a play of Azul" }))
 
-  expect(await screen.findByRole("heading", { name: "Record a play" })).toBeInTheDocument()
-  expect(screen.getByText("Who played Azul, and how it ended.")).toBeInTheDocument()
+  // The start page has the same heading, and stays until the form's code has loaded: wait for
+  // what only the form says.
+  expect(await screen.findByText("Who played Azul, and how it ended.")).toBeInTheDocument()
+  expect(screen.getByRole("heading", { name: "Record a play" })).toBeInTheDocument()
   expect(screen.getByText("Points, highest wins")).toBeInTheDocument()
 })
 
