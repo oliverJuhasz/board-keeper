@@ -201,7 +201,8 @@
     "setupNeeded": {
       "title": "Board Keeper is nog niet ingesteld",
       "text": "Open de installatielink uit het serverlog om de eerste beheerder aan te maken."
-    }
+    },
+    "withPasskey": "Inloggen met een passkey"
   },
   "setup": {
     "title": "Board Keeper instellen",
@@ -263,7 +264,8 @@
     "network": "De server is niet bereikbaar. Controleer je verbinding en probeer het opnieuw.",
     "session": {
       "badCredentials": "Verkeerde gebruikersnaam of verkeerd wachtwoord.",
-      "accountDisabled": "Dit account is uitgeschakeld."
+      "accountDisabled": "Dit account is uitgeschakeld.",
+      "passkeyNotAccepted": "Deze passkey werd niet geaccepteerd. Probeer het nog eens, of log in met je wachtwoord."
     },
     "setup": {
       "wrongLink": "Deze installatielink is niet geldig. Gebruik de nieuwste link uit het serverlog.",
@@ -316,6 +318,11 @@
       "gameModuleMissing": "Deze versie van Board Keeper kan de score van dit spel niet berekenen.",
       "notFound": "Deze partij bestaat niet meer.",
       "gameCannotChange": "Een partij kan niet naar een ander spel worden verplaatst."
+    },
+    "passkeys": {
+      "notAdded": "De passkey kon niet worden toegevoegd. Probeer het nog eens.",
+      "notFound": "Deze passkey bestaat niet meer.",
+      "unavailable": "Deze Board Keeper biedt geen passkeys."
     }
   },
   "nav": {
@@ -427,6 +434,31 @@
       "new": "Nieuw wachtwoord",
       "submit": "Wachtwoord wijzigen",
       "changed": "Je wachtwoord is gewijzigd. Andere apparaten zijn uitgelogd."
+    },
+    "passkeys": {
+      "title": "Passkeys",
+      "description": "Log in met je telefoon, computer of beveiligingssleutel, met je vingerafdruk, gezicht of pincode, in plaats van je wachtwoord te typen. Je wachtwoord blijft ook werken.",
+      "loading": "Je passkeys laden",
+      "loadFailed": "Je passkeys konden niet worden geladen",
+      "none": "Je hebt nog geen passkeys.",
+      "added": "Toegevoegd op {{date}}",
+      "lastUsed": "laatst gebruikt op {{date}}",
+      "neverUsed": "nog niet gebruikt",
+      "remove": "{{label}} verwijderen",
+      "add": "Passkey toevoegen",
+      "notInThisBrowser": "Deze browser kan geen passkeys maken.",
+      "addDialog": {
+        "title": "Passkey toevoegen",
+        "description": "Je apparaat vraagt je om te bevestigen met je vingerafdruk, gezicht of pincode.",
+        "label": "Naam",
+        "labelHint": "Om je passkeys uit elkaar te houden, zoals \"Mijn telefoon\".",
+        "submit": "Passkey toevoegen"
+      },
+      "removeDialog": {
+        "title": "De passkey \"{{label}}\" verwijderen?",
+        "description": "Je kunt er dan niet meer mee inloggen. Je wachtwoord en je andere passkeys blijven werken. Je apparaat toont hem misschien nog, tot je hem daar ook verwijdert.",
+        "confirm": "Passkey verwijderen"
+      }
     }
   },
   "accounts": {

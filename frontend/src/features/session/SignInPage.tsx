@@ -1,5 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useQueryClient } from "@tanstack/react-query"
+import { KeyRoundIcon } from "lucide-react"
+import { useCallback } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { z } from "zod"
@@ -17,6 +19,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { required } from "./accountRules"
+import { usePasskeySignIn } from "./passkeys"
 
 // What the form holds and the rules it must meet. Zod checks them, and TypeScript takes the
 // form's type from the same description.
@@ -42,6 +45,10 @@ export function SignInPage() {
     // Store the answer as "who is signed in". RedirectIfSignedIn, around this page, then moves on.
     onSuccess: (session) => queryClient.setQueryData(sessionKey, session),
   })
+  // useCallback keeps the same function from one drawing of the page to the next, so the hook
+  // doesn't start its passkey suggestions over every time.
+  const staySignedIn = useCallback(() => form.getValues("staySignedIn"), [form])
+  const passkey = usePasskeySignIn(staySignedIn)
 
   if (setup.data?.required) {
     return (
@@ -55,10 +62,11 @@ export function SignInPage() {
     <form onSubmit={form.handleSubmit((values) => signIn.mutate({ body: values }))} noValidate>
       <FieldGroup>
         <h1 className="font-heading text-xl font-semibold">{t("signIn.title")}</h1>
-        <FormProblem error={signIn.error} />
+        <FormProblem error={signIn.error ?? passkey.error} />
         <TextField
           label={t("signIn.username")}
-          autoComplete="username"
+          // "webauthn" lets the browser suggest this site's passkeys here, next to usernames.
+          autoComplete={passkey.offered ? "username webauthn" : "username"}
           autoCapitalize="none"
           autoFocus
           error={form.formState.errors.username}
@@ -92,6 +100,17 @@ export function SignInPage() {
         <Button type="submit" disabled={signIn.isPending}>
           {t("signIn.submit")}
         </Button>
+        {passkey.offered && (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={passkey.pending}
+            onClick={() => void passkey.signIn()}
+          >
+            <KeyRoundIcon />
+            {t("signIn.withPasskey")}
+          </Button>
+        )}
       </FieldGroup>
     </form>
   )

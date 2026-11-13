@@ -17,7 +17,7 @@ export function useChangeLanguage() {
     void setLanguage(language)
     if (session.data?.account) {
       queryClient.setQueryData<Session>(sessionKey, (current) =>
-        current?.account ? { account: { ...current.account, language } } : current,
+        current?.account ? { ...current, account: { ...current.account, language } } : current,
       )
       saveOnAccount.mutate({ body: { language } })
     }

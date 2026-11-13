@@ -19,6 +19,9 @@ export const playerName = z
   .min(1, "validation.required")
   .max(50, "validation.nameTooLong")
 
+/** The name of a passkey, such as "My phone" (Passkeys.MAX_LABEL_LENGTH). */
+export const passkeyLabel = playerName
+
 export const gameName = z
   .string()
   .trim()
