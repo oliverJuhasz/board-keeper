@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next"
 import { Navigate, useLocation } from "react-router"
 import { PageMessage } from "@/components/PageMessage"
 import { Button } from "@/components/ui/button"
+import { AppLoading } from "@/routes/AppLoading"
 import { useSession } from "./useSession"
 
 /**
@@ -15,7 +16,7 @@ export function RequireSignedIn({ children }: { children: ReactNode }) {
   const location = useLocation()
 
   if (session.isPending) {
-    return <p className="p-8 text-center text-muted-foreground">{t("app.loading")}</p>
+    return <AppLoading />
   }
   if (session.isError) {
     return (

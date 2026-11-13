@@ -95,10 +95,13 @@ Recording without a connection, teams, unfinished plays, game nights, importing 
 - Solo Plays don't count toward win rates or average Placing. The pages of a Game and a Player show them in a section of their own: how many, the best and average score, and the wins against an automated opponent.
 - A Play recorded with only the winner counts in plays, wins and win rate, and is left out of score averages and average Placing.
 
+## Settled for milestone M5
+
+- **A sole Admin who has forgotten their password** gets back in with a command run on the container. It writes a one-time Reset Link for the Account to the log, the way the first-time setup link is written, and does not start the web server. Only someone who can run commands on the container can use it.
+- **The frontend's code is split by page**, before the app can be installed on a phone. Each page is loaded the first time it is needed, so the first load stops growing with every new page, and after an update a browser downloads only the files that changed. The first load today is still about 270 kB compressed: most of it is the libraries the start page needs, such as React, the router and the form libraries, and the start page leads straight to the form for a Play.
+
 ## Details to settle when a milestone starts
 
 - **M6:** a Variant that is a number in a range, such as an adversary's level. The contract has on/off and choice Variants so far.
-- **M5:** how a sole Admin who has forgotten their password gets back in. Today that needs a second Admin to create a Reset Link. The self-hosting guide needs an answer for when there is none.
-- **M5:** splitting the frontend's JavaScript by page. It has grown to about 250 kB compressed, all loaded up front.
 - **M3 and M6:** each game's exact scoring and tie-break rules, taken from its official rulebook. Online summaries disagree, for example on the order of Calico's tie-breakers and on Spirit Island's score formula.
 - **M6:** which edition of 7 Wonders the module covers, because the first and second editions differ. Any team rules in Cities stay unsupported while teams are out of scope.
