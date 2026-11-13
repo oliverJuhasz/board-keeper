@@ -146,7 +146,8 @@
         "description": "Ez a parti ({{game}}) végleg eltűnik. Ezt nem lehet visszavonni.",
         "confirm": "Parti törlése"
       },
-      "total": "Összesen"
+      "total": "Összesen",
+      "pad": "Pontozólap"
     },
     "edit": {
       "title": "Parti szerkesztése",

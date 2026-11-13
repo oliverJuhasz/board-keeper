@@ -16,11 +16,17 @@ export function AppLayout() {
     <div className="min-h-svh">
       <header className="border-b">
         <div className="mx-auto flex h-14 max-w-3xl items-center justify-between gap-2 px-4">
-          <div className="flex items-center gap-5">
-            <Link to="/" className="font-heading text-lg font-semibold">
+          {/* The name stays on one line on a phone 360 pixels wide or more. Below that there
+              is no room for it beside the menu, so it may wrap. "min-[360px]:" is Tailwind's way
+              to give a breakpoint of its own where the standard ones ("sm:" at 640) don't fit. */}
+          <div className="flex items-center gap-4 sm:gap-5">
+            <Link
+              to="/"
+              className="font-heading text-lg font-semibold min-[360px]:shrink-0 min-[360px]:whitespace-nowrap"
+            >
               Board Keeper
             </Link>
-            <nav className="flex gap-4 text-sm font-medium">
+            <nav className="flex gap-3 text-sm font-medium sm:gap-4">
               <NavLink to="/" end className={navLink}>
                 {t("nav.games")}
               </NavLink>

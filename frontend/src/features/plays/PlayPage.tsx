@@ -92,6 +92,9 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
     play.results.some((result) => result.scores[category.key] !== undefined),
   )
   const categories = filledIn.length > 1 ? filledIn : []
+  // Best first: by Placing, or winners first when nobody was placed. Players who share a
+  // Placing stay in the order they were entered.
+  const ranked = play.results.toSorted((a, b) => orderOf(a) - orderOf(b))
 
   // How the Play was recorded, in a few words. For a Game without a module of its own those
   // are its recording choices, where "lowest score wins" is a Variant kept in the Setup. For
@@ -164,29 +167,21 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
           </div>
         </section>
       ) : (
-        <Table aria-label={t("plays.page.results")}>
-          <TableHeader>
-            <TableRow>
-              {points && <TableHead className="w-20">{t("plays.page.placing")}</TableHead>}
-              <TableHead>{t("plays.page.player")}</TableHead>
-              {categories.map((category) => (
-                <TableHead key={category.key} className="text-right">
-                  {moduleText(`category.${category.key}`)}
-                </TableHead>
-              ))}
-              {points && (
-                <TableHead className="text-right">
-                  {categories.length > 0 ? t("plays.page.total") : t("plays.page.score")}
-                </TableHead>
-              )}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {/* Best first: by Placing, or winners first when nobody was placed. Players who
-                share a Placing stay in the order they were entered. */}
-            {play.results
-              .toSorted((a, b) => orderOf(a) - orderOf(b))
-              .map((result) => (
+        <>
+          <Table aria-label={t("plays.page.results")}>
+            <TableHeader>
+              <TableRow>
+                {points && <TableHead className="w-20">{t("plays.page.placing")}</TableHead>}
+                <TableHead>{t("plays.page.player")}</TableHead>
+                {points && (
+                  <TableHead className="text-right">
+                    {categories.length > 0 ? t("plays.page.total") : t("plays.page.score")}
+                  </TableHead>
+                )}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {ranked.map((result) => (
                 <TableRow key={result.player.id}>
                   {points && <TableCell>{result.placing}</TableCell>}
                   <TableCell className="font-medium">
@@ -195,16 +190,62 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
                       {result.won && <Badge variant="secondary">{t("plays.page.winner")}</Badge>}
                     </span>
                   </TableCell>
-                  {categories.map((category) => (
-                    <TableCell key={category.key} className="text-right text-muted-foreground">
-                      {result.scores[category.key]}
-                    </TableCell>
-                  ))}
                   {points && <TableCell className="text-right">{result.total}</TableCell>}
                 </TableRow>
               ))}
-          </TableBody>
-        </Table>
+            </TableBody>
+          </Table>
+
+          {/* The score pad as it was filled in, laid out like the paper one and the form: a row
+              for each Score Category and a column for each Player. A Game can have many rows,
+              and they fit this way round, where a column for each would not. */}
+          {categories.length > 0 && (
+            <section className="space-y-2">
+              <h2 className="text-sm font-medium">{t("plays.page.pad")}</h2>
+              <Table aria-label={t("plays.page.pad")}>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead />
+                    {ranked.map((result) => (
+                      <TableHead
+                        key={result.player.id}
+                        className="max-w-16 truncate text-right sm:max-w-28"
+                      >
+                        {result.player.name}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {categories.map((category) => (
+                    <TableRow key={category.key}>
+                      {/* A long name, such as "Nature's Spirit card", may wrap on a phone. */}
+                      <TableHead scope="row" className="font-normal whitespace-normal">
+                        {moduleText(`category.${category.key}`)}
+                      </TableHead>
+                      {ranked.map((result) => (
+                        <TableCell
+                          key={result.player.id}
+                          className="text-right text-muted-foreground tabular-nums"
+                        >
+                          {result.scores[category.key]}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                  <TableRow className="font-medium">
+                    <TableHead scope="row">{t("plays.page.total")}</TableHead>
+                    {ranked.map((result) => (
+                      <TableCell key={result.player.id} className="text-right tabular-nums">
+                        {result.total}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </section>
+          )}
+        </>
       )}
 
       {play.notes && (
