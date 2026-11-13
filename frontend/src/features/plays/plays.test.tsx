@@ -113,12 +113,59 @@ test("a player can be taken out again, and is then on offer again", async () => 
     within(screen.getByLabelText("Add a player"))
       .getAllByRole("option")
       .map((option) => option.textContent)
-  expect(offered()).toEqual(["Choose a player…", "Dora"])
+  expect(offered()).toEqual(["Choose a player…", "Dora", "Add a new player…"])
 
   await userEvent.click(screen.getByRole("button", { name: "Remove Anna" }))
 
   expect(screen.queryByLabelText("Score of Anna")).not.toBeInTheDocument()
-  expect(offered()).toEqual(["Choose a player…", "Anna", "Dora"])
+  expect(offered()).toEqual(["Choose a player…", "Anna", "Dora", "Add a new player…"])
+})
+
+test("someone who has never played can be added without leaving the form", async () => {
+  signedInAs(bence)
+  gamesAre([azul])
+  playCanBeEntered()
+  playsCanBePreviewed()
+  const sent = playsCanBeRecorded()
+  const eszter = { id: "0193a000-0000-7000-8000-0000000000b9", name: "Eszter" }
+  server.use(http.post("*/api/players", () => HttpResponse.json(eszter)))
+  renderApp(`/plays/new?game=${azul.id}`)
+
+  await addPlayer("Add a new player…")
+  const dialog = await screen.findByRole("dialog", { name: "Add a player" })
+  await userEvent.type(within(dialog).getByLabelText("Name"), "Eszter")
+  await userEvent.click(within(dialog).getByRole("button", { name: "Add player" }))
+
+  // She is in the play at once, and adding her did not submit the play's own form.
+  expect(await screen.findByLabelText("Score of Eszter")).toBeInTheDocument()
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+  expect(screen.queryByText("Enter a score.")).not.toBeInTheDocument()
+  expect(sent).toEqual([])
+
+  await userEvent.type(screen.getByLabelText("Score of Bence"), "48")
+  await userEvent.type(screen.getByLabelText("Score of Eszter"), "61")
+  await submit()
+
+  await screen.findByRole("heading", { name: "Azul" })
+  expect(sent[0].players).toEqual([
+    { playerId: bencePlayer.id, scores: { total: 48 }, winner: false },
+    { playerId: eszter.id, scores: { total: 61 }, winner: false },
+  ])
+})
+
+test("someone who may not create players is not offered to add one", async () => {
+  signedInAs({ ...bence, permissions: ["CREATE_PLAYS"] })
+  gamesAre([azul])
+  playCanBeEntered()
+  renderApp(`/plays/new?game=${azul.id}`)
+
+  const list = await screen.findByLabelText("Add a player")
+  expect(within(list).queryByRole("option", { name: "Add a new player…" })).not.toBeInTheDocument()
+  // With everyone in the play, there is nothing left to offer.
+  await addPlayer("Anna")
+  await addPlayer("Dora")
+  expect(screen.queryByLabelText("Add a player")).not.toBeInTheDocument()
+  expect(screen.getByText("Every player is in this play already.")).toBeInTheDocument()
 })
 
 test("asks who won a tie for first place, and takes no answer for granted", async () => {
