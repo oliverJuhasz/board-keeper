@@ -71,7 +71,18 @@ class GamesApiTests {
                             "minPlayers": 1,
                             "variants": [{"key": "cooperative", "kind": "ON_OFF"}, {"key": "lowestScoreWins", "kind": "ON_OFF"}],
                             "categories": [{"key": "total", "countsTowardTotal": true, "step": 1}],
-                            "recorderDecidesTies": true}}]
+                            "recorderDecidesTies": true}},
+                         {"key": "harmonies",
+                          "scorePad": {
+                            "variants": [{"key": "boardSide", "kind": "CHOICE", "options": ["a", "b"], "defaultValue": "a"},
+                                         {"key": "naturesSpirit", "kind": "ON_OFF", "defaultValue": "false"}],
+                            "categories": [
+                              {"key": "trees"}, {"key": "mountains"}, {"key": "fields", "step": 5},
+                              {"key": "buildings", "step": 5},
+                              {"key": "river", "onlyWhen": {"variant": "boardSide", "value": "a"}},
+                              {"key": "islands", "min": 5, "step": 5, "onlyWhen": {"variant": "boardSide", "value": "b"}},
+                              {"key": "animals"},
+                              {"key": "naturesSpirit", "onlyWhen": {"variant": "naturesSpirit", "value": "true"}}]}}]
                         """.formatted(CALICO_MODULE_ID, GENERIC_MODULE_ID));
     }
 
@@ -83,12 +94,13 @@ class GamesApiTests {
                 .hasStatusOk()
                 .bodyJson()
                 .isLenientlyEqualTo("""
-                        [{"name": "Calico", "gameModuleId": "%s", "moduleKey": "calico", "hasOwnModule": true}]
+                        [{"name": "Calico", "gameModuleId": "%s", "moduleKey": "calico", "hasOwnModule": true},
+                         {"name": "Harmonies", "moduleKey": "harmonies", "hasOwnModule": true}]
                         """.formatted(CALICO_MODULE_ID));
 
         // Bringing the catalogue in step again changes nothing.
         games.addGamesOfModules();
-        assertThat(games.all()).hasSize(1);
+        assertThat(games.all()).hasSize(2);
     }
 
     @Test
@@ -121,7 +133,8 @@ class GamesApiTests {
                 .bodyJson()
                 .isLenientlyEqualTo("""
                         [{"name": "Azul", "moduleKey": "generic", "hasOwnModule": false},
-                         {"id": "%s", "name": "calico", "moduleKey": "calico", "hasOwnModule": true}]
+                         {"id": "%s", "name": "calico", "moduleKey": "calico", "hasOwnModule": true},
+                         {"name": "Harmonies", "moduleKey": "harmonies", "hasOwnModule": true}]
                         """.formatted(byHand));
     }
 

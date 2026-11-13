@@ -146,7 +146,8 @@
         "description": "Deze partij {{game}} is dan voorgoed weg. Dit kan niet ongedaan worden gemaakt.",
         "confirm": "Partij verwijderen"
       },
-      "total": "Totaal"
+      "total": "Totaal",
+      "pad": "Scoreblok"
     },
     "edit": {
       "title": "Een partij bewerken",

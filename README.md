@@ -41,9 +41,9 @@ Milestones M0, M1 and M2 are done, and M3 has started. Board Keeper builds, runs
 - Players, who exist with or without an Account
 - a catalogue of Games, each with how its Plays are recorded by default
 - recording Plays of any Game in the catalogue: competitive or Cooperative, in points or with only the winner, with Placings and shared wins
-- Game Modules that bring a Game with its own score pad, Variants and tie rules; Calico is the first
+- Game Modules that bring a Game with its own score pad, Variants and tie rules: Calico and Harmonies
 - the play history, filterable by "my plays", Game, Player and date, with editing and deleting Plays according to Permissions
 - Roles made of fine-grained Permissions, with pages for managing Roles and Accounts
 - password changes and Reset Links
 
-Milestone M3 is under way: Game Modules for real games. Calico is done; Wyrmspan and Harmonies come next, and with them how a Solo Play is recorded.
+Milestone M3 is under way: Game Modules for real games. Calico and Harmonies are done; Wyrmspan comes next, and with it how a Solo Play is recorded.

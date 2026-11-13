@@ -45,6 +45,11 @@ public record ScoreCategory(
         return new ScoreCategory(key, countsTowardTotal, null, max, step, onlyWhen);
     }
 
+    /** For a row that always scores something, such as Harmonies' islands: there is at least one. */
+    public ScoreCategory atLeast(int lowest) {
+        return new ScoreCategory(key, countsTowardTotal, lowest, max, step, onlyWhen);
+    }
+
     public ScoreCategory atMost(int highest) {
         return new ScoreCategory(key, countsTowardTotal, min, highest, step, onlyWhen);
     }

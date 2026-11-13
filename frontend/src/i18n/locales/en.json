@@ -146,7 +146,8 @@
         "description": "This play of {{game}} will be gone for good. This can't be undone.",
         "confirm": "Delete play"
       },
-      "total": "Total"
+      "total": "Total",
+      "pad": "Score pad"
     },
     "edit": {
       "title": "Edit a play",

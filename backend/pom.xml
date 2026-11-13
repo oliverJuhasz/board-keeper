@@ -22,6 +22,7 @@
         <module>game-api</module>
         <module>games/generic</module>
         <module>games/calico</module>
+        <module>games/harmonies</module>
         <module>app</module>
     </modules>
 
@@ -75,6 +76,11 @@
             <dependency>
                 <groupId>io.github.oliverjuhasz.boardkeeper</groupId>
                 <artifactId>game-calico</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.oliverjuhasz.boardkeeper</groupId>
+                <artifactId>game-harmonies</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

@@ -242,11 +242,20 @@ test("a play's page shows every row of the pad", async () => {
   renderApp(`/plays/${calicoPlay.id}`)
 
   expect(await screen.findByRole("heading", { name: "Calico" })).toBeInTheDocument()
-  const rows = within(screen.getByRole("table", { name: "Results" })).getAllByRole("row")
-  expect(rows.map((row) => row.textContent)).toEqual([
-    "PlacingPlayerDesign goalsCatsButtonsTotal",
-    "1BenceWinner28232172",
-    "2Anna21191858",
+  const results = within(screen.getByRole("table", { name: "Results" })).getAllByRole("row")
+  expect(results.map((row) => row.textContent)).toEqual([
+    "PlacingPlayerTotal",
+    "1BenceWinner72",
+    "2Anna58",
+  ])
+  // The pad as it was filled in: a row for each category, a column for each player.
+  const pad = within(screen.getByRole("table", { name: "Score pad" })).getAllByRole("row")
+  expect(pad.map((row) => row.textContent)).toEqual([
+    "BenceAnna",
+    "Design goals2821",
+    "Cats2319",
+    "Buttons2118",
+    "Total7258",
   ])
   expect(screen.getByText(/^Points\. Recorded by Bence/)).toBeInTheDocument()
 })
@@ -265,7 +274,8 @@ test("a play's page names the variants it was played with", async () => {
   renderApp(`/plays/${family.id}`)
 
   expect(await screen.findByText(/^Points, Family variant\. Recorded by/)).toBeInTheDocument()
-  expect(screen.queryByRole("columnheader", { name: "Design goals" })).not.toBeInTheDocument()
+  expect(screen.getByRole("rowheader", { name: "Cats" })).toBeInTheDocument()
+  expect(screen.queryByRole("rowheader", { name: "Design goals" })).not.toBeInTheDocument()
 })
 
 test("a play from before the module arrived is edited as it was recorded", async () => {
