@@ -1,19 +1,15 @@
-import { currentLanguage, type LanguageCode } from "@/i18n"
-
-// Which regional conventions each language's dates follow. English uses the British ones
-// (17 November 2026), which put the day first, as Dutch and Hungarian readers expect.
-const locales: Record<LanguageCode, string> = { en: "en-GB", nl: "nl-NL", hu: "hu-HU" }
+import { formattingLocale } from "./locale"
 
 /** A date written out the way the current language does, such as "17 November 2026". */
 export function formatDate(isoDate: string) {
-  return new Intl.DateTimeFormat(locales[currentLanguage()], { dateStyle: "long" }).format(
+  return new Intl.DateTimeFormat(formattingLocale(), { dateStyle: "long" }).format(
     new Date(isoDate),
   )
 }
 
 /** A date with its time, such as "17 November 2026 at 14:30". */
 export function formatDateTime(isoDate: string) {
-  return new Intl.DateTimeFormat(locales[currentLanguage()], {
+  return new Intl.DateTimeFormat(formattingLocale(), {
     dateStyle: "long",
     timeStyle: "short",
   }).format(new Date(isoDate))
@@ -24,7 +20,7 @@ export function formatDateTime(isoDate: string) {
  * formatDate, it shows the same day in every time zone: a day on its own is not a moment.
  */
 export function formatDay(isoDay: string) {
-  return new Intl.DateTimeFormat(locales[currentLanguage()], {
+  return new Intl.DateTimeFormat(formattingLocale(), {
     dateStyle: "long",
     timeZone: "UTC",
   }).format(new Date(isoDay))
@@ -49,7 +45,7 @@ export function formatRecentDay(isoDay: string) {
   )
   if (daysAgo >= 0 && daysAgo < 7) {
     // "auto" says "yesterday" instead of "1 day ago", and does so in every language.
-    return new Intl.RelativeTimeFormat(locales[currentLanguage()], { numeric: "auto" }).format(
+    return new Intl.RelativeTimeFormat(formattingLocale(), { numeric: "auto" }).format(
       -daysAgo,
       "day",
     )

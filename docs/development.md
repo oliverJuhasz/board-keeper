@@ -126,6 +126,21 @@ The other way to page, "skip the first 50 rows" (`offset`), gets slower the furt
 
 In the frontend, `PlaysPage.tsx` uses TanStack Query's `useInfiniteQuery`, which keeps the pages fetched so far and fetches the next one on "Show more". The filters are kept in the page's address (`/plays?game=…&mine=1`) with React Router's `useSearchParams`, so a filtered list can be bookmarked and survives a reload.
 
+### How statistics keep up with the Plays
+
+The `stats` module works out statistics from a copy of the Plays in tables of its own, `stats_play` and `stats_result`, and never reads the `plays` module's tables (ADR 0011). It keeps the copy up to date from events:
+
+1. `Plays.record`, `change` and `delete` publish `PlayRecorded`, `PlayChanged` and `PlayDeleted` with Spring's `ApplicationEventPublisher`. An event carries only the Play's id.
+2. Spring Modulith stores each event in the `event_publication` table, in the same transaction as the Play. If that transaction is rolled back, the event goes with it.
+3. Once the transaction is committed, `StatsUpdater`'s methods marked `@ApplicationModuleListener` run, on a thread of their own and in a new transaction. Each asks `Plays.find` for the Play as it is now and copies it, or removes the copy when the Play is gone. Then Spring Modulith deletes the event.
+4. An event left behind, because the application stopped before its listener finished or the listener failed, is handed to the listener again at the next start (`spring.modulith.events.republish-outstanding-events-on-restart`).
+
+So a listener can see an event twice, and two listeners can run at once. Copying the Play as it is, rather than applying what the event says changed, gives the same result however often it runs; a PostgreSQL advisory lock stops two listeners for the same Play from overtaking each other. The statistics are a moment behind a Play that was just saved.
+
+**Rebuilding the copy.** When `stats_play` is empty and Plays exist, `StatsStartup` fills it from every Play at startup. That happens the first time the application starts with the module, and whenever the copy is emptied on purpose: to change the shape of the statistics tables, add a migration that changes them and empties `stats_play` (its results go with it).
+
+**Testing.** Because the listeners run on other threads, a test that records a Play and then reads statistics waits for them with Awaitility, which retries an assertion until it holds: see `StatsApiTests`.
+
 ### Changing the database
 
 1. Add a file to `backend/app/src/main/resources/db/migration`, named `V<next number>__<what_it_does>.sql`, with two underscores after the number. Never edit a migration that has been applied to a real database.

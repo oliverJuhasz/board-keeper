@@ -103,9 +103,11 @@ test("a game with its own module is listed under the module's name and can't be 
   const row = await screen.findByRole("row", { name: /Calico/ })
   expect(within(row).getByText("Its own score pad")).toBeInTheDocument()
   expect(within(row).getByRole("link", { name: "Record a play of Calico" })).toBeInTheDocument()
-  expect(screen.queryByRole("button", { name: "Actions for Calico" })).not.toBeInTheDocument()
-  // A game someone added by hand still has its menu.
-  expect(screen.getByRole("button", { name: "Actions for Azul" })).toBeInTheDocument()
+  // Its menu leads to its statistics, and has nothing to edit or remove.
+  await userEvent.click(within(row).getByRole("button", { name: "Actions for Calico" }))
+  expect(await screen.findByRole("menuitem", { name: "Statistics" })).toBeInTheDocument()
+  expect(screen.queryByRole("menuitem", { name: "Edit" })).not.toBeInTheDocument()
+  expect(screen.queryByRole("menuitem", { name: "Remove" })).not.toBeInTheDocument()
 })
 
 test("the form is the game's score pad, and the server adds it up", async () => {

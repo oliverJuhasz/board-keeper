@@ -21,8 +21,8 @@ create index event_publication_by_completion_date_idx on event_publication (comp
 -- It is filled from the events of the plays module. There are no foreign keys to
 -- the tables of other modules on purpose: this copy belongs to the stats module alone.
 --
--- To rebuild it, for example after changing its shape, empty both tables. They are filled
--- again from all Plays when the application next starts.
+-- To rebuild it, for example after changing its shape, empty stats_play (the results go with
+-- it). It is filled again from all Plays when the application next starts.
 create table stats_play (
     play_id        uuid    primary key,
     game_id        uuid    not null,

@@ -4,6 +4,7 @@ import { GamesPage } from "./features/games/GamesPage"
 import { RolesPage } from "./features/roles/RolesPage"
 import { ResetPasswordPage } from "./features/session/ResetPasswordPage"
 import { SettingsPage } from "./features/settings/SettingsPage"
+import { GameStatsPage } from "./features/stats/GameStatsPage"
 import { PlayersPage } from "./features/players/PlayersPage"
 import { EditPlayPage } from "./features/plays/EditPlayPage"
 import { PlayPage } from "./features/plays/PlayPage"
@@ -46,6 +47,7 @@ export const routes: RouteObject[] = [
     ),
     children: [
       { index: true, element: <GamesPage /> },
+      { path: "games/:id", element: <GameStatsPage /> },
       { path: "players", element: <PlayersPage /> },
       { path: "plays", element: <PlaysPage /> },
       { path: "plays/new", element: <RecordPlayPage /> },

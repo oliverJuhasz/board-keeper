@@ -133,7 +133,16 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={gameName(play.game)}
+        title={
+          // The Game's name leads to its statistics. The faint underline shows that it is a
+          // link, also on a phone, where nothing changes under a finger before the tap.
+          <Link
+            to={`/games/${play.game.id}`}
+            className="underline decoration-muted-foreground/40 underline-offset-4 hover:decoration-foreground"
+          >
+            {gameName(play.game)}
+          </Link>
+        }
         description={[formatDay(play.playedOn), play.location].filter(Boolean).join(" · ")}
         action={
           <div className="flex items-center gap-1">
