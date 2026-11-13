@@ -28,7 +28,9 @@ public class InvalidPlayException extends RuntimeException {
         /** A Player was marked as the winner of a tie they are not part of. */
         WINNER_NOT_TIED("winnerNotTied"),
         /** Something was entered that this kind of Play does not record. */
-        NOT_RECORDED("notRecorded");
+        NOT_RECORDED("notRecorded"),
+        /** A Solo Play for score only was recorded without its scores. */
+        SCORES_NEEDED("scoresNeeded");
 
         private final String reason;
 

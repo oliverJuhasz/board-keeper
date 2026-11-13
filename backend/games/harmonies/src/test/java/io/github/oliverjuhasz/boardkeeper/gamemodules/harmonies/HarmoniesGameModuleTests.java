@@ -94,11 +94,18 @@ class HarmoniesGameModuleTests {
     }
 
     @Test
-    void isRecordedForTwoToFourPlayers() {
+    void isRecordedForOneToFourPlayers() {
         PlayerEntry anyone = sideA(1, 1, 5, 5, 2, 4);
 
-        assertRefused("tooFewPlayers", entry(SIDE_A, anyone));
+        assertRefused("tooFewPlayers", entry(SIDE_A));
         assertRefused("tooManyPlayers", entry(SIDE_A, anyone, anyone, anyone, anyone, anyone));
+    }
+
+    /** In the solo mode on page 11 a Player earns suns for their score instead of winning. */
+    @Test
+    void aSoloPlayIsRecordedForScoreOnly() {
+        assertThat(results(WITH_SPIRITS, with(sideA(4, 10, 10, 10, 19, 63), "naturesSpirit", 14)))
+                .containsExactly(new PlayerResult(130, null, null));
     }
 
     /** Everything the pad names has a text in English, and Dutch and Hungarian have the same texts. */

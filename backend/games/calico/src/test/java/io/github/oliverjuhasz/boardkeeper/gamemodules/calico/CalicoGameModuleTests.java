@@ -85,11 +85,18 @@ class CalicoGameModuleTests {
     }
 
     @Test
-    void isRecordedForTwoToFourPlayers() {
-        assertRefused("tooFewPlayers", entry(STANDARD, pad(28, 23, 21)));
+    void isRecordedForOneToFourPlayers() {
+        assertRefused("tooFewPlayers", entry(STANDARD));
         assertRefused(
                 "tooManyPlayers",
                 entry(STANDARD, pad(1, 1, 3), pad(1, 1, 3), pad(1, 1, 3), pad(1, 1, 3), pad(1, 1, 3)));
+    }
+
+    /** The solo mode on page 8 of the rulebook is played for a score, which nobody wins or loses. */
+    @Test
+    void aSoloPlayIsRecordedForScoreOnly() {
+        assertThat(results(STANDARD, pad(28, 23, 21))).containsExactly(new PlayerResult(72, null, null));
+        assertThat(results(FAMILY, family(23, 21))).containsExactly(new PlayerResult(44, null, null));
     }
 
     @Test

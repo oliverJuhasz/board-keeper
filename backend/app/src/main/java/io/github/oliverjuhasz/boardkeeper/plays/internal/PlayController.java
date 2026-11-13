@@ -343,14 +343,16 @@ class PlayController {
     @Schema(
             name = "Result",
             description = "What one Player got in a Play",
-            requiredProperties = {"player", "scores", "markedWinner", "won"})
+            requiredProperties = {"player", "scores", "markedWinner"})
     record ResultResponse(
             NamedReference player,
             @Schema(description = "As entered: the value for each Score Category") Map<String, Integer> scores,
             @Schema(description = "As entered: whether the recorder marked the Player as a winner") boolean markedWinner,
             @Schema(description = "Absent when no scores were recorded for the Player") Integer total,
-            @Schema(description = "Absent in a Cooperative Play, and when only the winner was recorded") Integer placing,
-            boolean won) {}
+            @Schema(description = "Absent in a Cooperative Play and a Solo Play, and when only the winner was recorded")
+                    Integer placing,
+            @Schema(description = "Absent in a Solo Play recorded for score only, which nobody wins or loses")
+                    Boolean won) {}
 
     @Schema(
             name = "GroupResult",
@@ -373,8 +375,12 @@ class PlayController {
 
     @Schema(
             name = "PreviewResult",
-            requiredProperties = {"playerId", "won"})
-    record PreviewResultResponse(UUID playerId, Integer total, Integer placing, boolean won) {}
+            requiredProperties = {"playerId"})
+    record PreviewResultResponse(
+            UUID playerId,
+            Integer total,
+            Integer placing,
+            @Schema(description = "Absent in a Solo Play recorded for score only") Boolean won) {}
 
     @Schema(
             name = "GameReference",

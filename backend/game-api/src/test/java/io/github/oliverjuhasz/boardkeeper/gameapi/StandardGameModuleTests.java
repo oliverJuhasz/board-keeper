@@ -19,8 +19,14 @@ class StandardGameModuleTests {
      * entered but not counted. With the "night" Variant on there is a row for owls as well.
      */
     private static ScorePad birdwatch(List<TieBreaker> tieBreakers, boolean recorderDecidesTies) {
+        return birdwatch(2, tieBreakers, recorderDecidesTies, null);
+    }
+
+    /** The made-up Game, for this many Players or more, and played alone like this, if at all. */
+    private static ScorePad birdwatch(
+            int minPlayers, List<TieBreaker> tieBreakers, boolean recorderDecidesTies, Solo solo) {
         return new ScorePad(
-                2,
+                minPlayers,
                 4,
                 List.of(new Variant.OnOff("night", false), new Variant.Choice("board", List.of("front", "back"))),
                 List.of(
@@ -29,7 +35,8 @@ class StandardGameModuleTests {
                         ScoreCategory.of("owls").onlyWhen("night", "true"),
                         ScoreCategory.of("coins").notCounted()),
                 tieBreakers,
-                recorderDecidesTies);
+                recorderDecidesTies,
+                solo);
     }
 
     private static final Map<String, String> BY_DAY = Map.of();
@@ -250,6 +257,114 @@ class StandardGameModuleTests {
     }
 
     @Nested
+    class ASoloPlay {
+
+        /** The made-up Game, played alone for a score, or against a robot whose score is entered. */
+        private final GameModule forScore = module(birdwatch(1, List.of(), true, Solo.forScoreOnly()));
+
+        private final GameModule againstRobot = module(new ScorePad(
+                        1,
+                        4,
+                        List.of(new Variant.Choice("robotLevel", List.of("easy", "hard")).inSoloPlaysOnly()),
+                        List.of(ScoreCategory.of("birds"), ScoreCategory.of("robot").notCounted().inSoloPlaysOnly()),
+                        List.of(),
+                        true,
+                        Solo.againstOpponent("robot", true)));
+
+        @Test
+        void forScoreOnlyHasATotalButNoWinnerAndNoPlacing() {
+            assertThat(score(forScore, BY_DAY, row(30, 4, 2)))
+                    .isEqualTo(new Outcome.Competitive(List.of(new PlayerResult(34, null, null)), List.of()));
+        }
+
+        @Test
+        void forScoreOnlyNeedsTheScores() {
+            PlayEntry onlyTheWinner =
+                    new PlayEntry(RecordingMode.WINNER_ONLY, BY_DAY, List.of(new PlayerEntry(Map.of(), true)), null);
+            assertRefused(Standard.SCORES_NEEDED, forScore, onlyTheWinner);
+            assertRefused(Standard.NOT_RECORDED, forScore, entry(BY_DAY, marked(row(30, 4, 2))));
+        }
+
+        @Test
+        void isNotPossibleForAGameThatIsNotPlayedAlone() {
+            // A pad for one Player or more without a way to record Solo Plays: one is still too few.
+            assertRefused(Standard.TOO_FEW_PLAYERS, module(birdwatch(1, List.of(), false, null)), entry(BY_DAY, row(30, 4, 2)));
+        }
+
+        @Test
+        void againstAnOpponentIsWonByBeatingItsScore() {
+            assertThat(score(againstRobot, Map.of(), robotPad(50, 42)).results())
+                    .containsExactly(new PlayerResult(50, null, true));
+            assertThat(score(againstRobot, Map.of(), robotPad(40, 42)).results())
+                    .containsExactly(new PlayerResult(40, null, false));
+        }
+
+        @Test
+        void againstAnOpponentCanBeWonOnATie() {
+            assertThat(score(againstRobot, Map.of(), robotPad(42, 42)).results())
+                    .containsExactly(new PlayerResult(42, null, true));
+
+            GameModule tieLoses = module(new ScorePad(
+                            1,
+                            4,
+                            List.of(),
+                            List.of(ScoreCategory.of("birds"), ScoreCategory.of("robot").notCounted().inSoloPlaysOnly()),
+                            List.of(),
+                            true,
+                            Solo.againstOpponent("robot", false)));
+            assertThat(score(tieLoses, Map.of(), robotPad(42, 42)).results())
+                    .containsExactly(new PlayerResult(42, null, false));
+        }
+
+        @Test
+        void againstAnOpponentCanBeRecordedWithOnlyWhetherItWasWon() {
+            PlayEntry lost =
+                    new PlayEntry(RecordingMode.WINNER_ONLY, Map.of(), List.of(new PlayerEntry(Map.of(), false)), null);
+            assertThat(againstRobot.score(lost))
+                    .isEqualTo(new Outcome.Competitive(List.of(new PlayerResult(null, null, false)), List.of()));
+        }
+
+        @Test
+        void hasPartsThatOtherPlaysDoNotHave() {
+            Map<String, String> hard = Map.of("robotLevel", "hard");
+            assertThat(score(againstRobot, hard, robotPad(50, 42)).results()).hasSize(1);
+            // The opponent's score is needed alone, and not with two Players...
+            assertRefused(Standard.SCORE_MISSING, againstRobot, entry(hard, new PlayerEntry(Map.of("birds", 50), false)));
+            assertRefused(Standard.NOT_RECORDED, againstRobot, entry(Map.of(), robotPad(50, 42), robotPad(40, 42)));
+            // ...and neither is the opponent's level.
+            PlayerEntry birds = new PlayerEntry(Map.of("birds", 50), false);
+            assertRefused(Standard.NOT_RECORDED, againstRobot, entry(hard, birds, birds));
+            assertThat(score(againstRobot, Map.of(), birds, birds).results()).hasSize(2);
+        }
+
+        @Test
+        void describesItselfConsistently() {
+            List<Variant> noVariants = List.of();
+            List<ScoreCategory> birds = List.of(ScoreCategory.of("birds"));
+            // Solo Plays need a pad for one Player or more.
+            assertThatIllegalArgumentException()
+                    .isThrownBy(() -> new ScorePad(2, 4, noVariants, birds, List.of(), false, Solo.forScoreOnly()));
+            // The opponent's score is a row of its own, for Solo Plays only, which doesn't count.
+            assertThatIllegalArgumentException()
+                    .isThrownBy(() -> new ScorePad(1, 4, noVariants, birds, List.of(), false, Solo.againstOpponent("robot", true)))
+                    .withMessageContaining("'robot'");
+            List<ScoreCategory> countedRobot = List.of(ScoreCategory.of("birds"), ScoreCategory.of("robot").inSoloPlaysOnly());
+            assertThatIllegalArgumentException()
+                    .isThrownBy(() -> new ScorePad(
+                            1, 4, noVariants, countedRobot, List.of(), false, Solo.againstOpponent("robot", true)));
+            // Parts for Solo Plays only need a way to record them.
+            assertThatIllegalArgumentException()
+                    .isThrownBy(() -> new ScorePad(
+                            1, 4, List.of(new Variant.OnOff("hard", false).inSoloPlaysOnly()), birds, List.of(), false));
+        }
+
+        /** The Player's birds, and the robot's score. */
+        private static PlayerEntry robotPad(int birds, int robot) {
+            return new PlayerEntry(Map.of("birds", birds, "robot", robot), false);
+        }
+    }
+
+    @Nested
     class AScorePad {
 
         @Test
@@ -259,8 +374,10 @@ class StandardGameModuleTests {
             assertThat(pad.valueOf("night", Map.of())).isEqualTo("false");
             assertThat(pad.valueOf("board", Map.of())).isEqualTo("front");
             assertThat(pad.valueOf("board", Map.of("board", "back"))).isEqualTo("back");
-            assertThat(pad.categoriesFor(Map.of())).extracting(ScoreCategory::key).containsExactly("birds", "eggs", "coins");
-            assertThat(pad.categoriesFor(AT_NIGHT))
+            assertThat(pad.categoriesFor(Map.of(), false))
+                    .extracting(ScoreCategory::key)
+                    .containsExactly("birds", "eggs", "coins");
+            assertThat(pad.categoriesFor(AT_NIGHT, false))
                     .extracting(ScoreCategory::key)
                     .containsExactly("birds", "eggs", "owls", "coins");
         }

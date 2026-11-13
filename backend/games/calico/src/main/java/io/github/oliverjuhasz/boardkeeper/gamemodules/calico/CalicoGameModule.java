@@ -2,6 +2,7 @@ package io.github.oliverjuhasz.boardkeeper.gamemodules.calico;
 
 import io.github.oliverjuhasz.boardkeeper.gameapi.ScoreCategory;
 import io.github.oliverjuhasz.boardkeeper.gameapi.ScorePad;
+import io.github.oliverjuhasz.boardkeeper.gameapi.Solo;
 import io.github.oliverjuhasz.boardkeeper.gameapi.StandardGameModule;
 import io.github.oliverjuhasz.boardkeeper.gameapi.Variant;
 import java.util.List;
@@ -30,8 +31,9 @@ import java.util.UUID;
  * <p>The rulebook's other options change nothing about the scoring and are not recorded: the
  * beginner setup, and the lower variance variant for two players.
  *
- * <p>Calico is for one to four players. This module records Plays with two to four: how a Solo
- * Play is recorded is settled with the solo styles of milestone M3.
+ * <p>Calico is for one to four players. The rulebook's solo mode (page 8) is scored like any
+ * other game, and gives no winner, so a Solo Play is recorded for score only. The scenarios on
+ * pages 12 and 13, which are passed or not, are not recorded.
  */
 public final class CalicoGameModule extends StandardGameModule {
 
@@ -44,7 +46,7 @@ public final class CalicoGameModule extends StandardGameModule {
     public static final String FAMILY = "family";
 
     private static final ScorePad PAD = new ScorePad(
-            2,
+            1,
             4,
             List.of(new Variant.OnOff(FAMILY, false)),
             List.of(
@@ -52,7 +54,8 @@ public final class CalicoGameModule extends StandardGameModule {
                     ScoreCategory.of("cats"),
                     ScoreCategory.of("buttons").inStepsOf(3)),
             List.of(),
-            true);
+            true,
+            Solo.forScoreOnly());
 
     @Override
     public UUID id() {

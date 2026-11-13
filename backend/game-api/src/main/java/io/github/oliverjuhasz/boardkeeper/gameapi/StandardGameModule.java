@@ -21,38 +21,116 @@ import java.util.stream.IntStream;
  *
  * <p>When only the winner is recorded, nothing is entered on the pad: the Players the recorder
  * marked have won, and nobody gets a Placing.
+ *
+ * <p>A Play with one Player is a Solo Play, which the pad's {@link Solo} describes. Played for
+ * score only, it has a total but no winner. Played against an automated opponent, the Player
+ * wins by beating the opponent's score. A Solo Play has no Placing.
  */
 public abstract class StandardGameModule implements GameModule {
 
     @Override
     public final Outcome score(PlayEntry entry) {
         ScorePad pad = scorePad();
-        checkSetup(pad, entry.setup());
-
         List<PlayerEntry> players = entry.players();
-        if (players.size() < pad.minPlayers()) {
+        boolean soloPlay = players.size() == 1;
+        if (players.size() < pad.minPlayers() || (soloPlay && pad.solo() == null)) {
             throw new InvalidPlayException(Standard.TOO_FEW_PLAYERS);
         }
         if (pad.maxPlayers() != null && players.size() > pad.maxPlayers()) {
             throw new InvalidPlayException(Standard.TOO_MANY_PLAYERS);
         }
+        checkSetup(pad, entry.setup(), soloPlay);
         if (entry.group() != null) {
             throw new InvalidPlayException(Standard.NOT_RECORDED);
         }
-        return entry.recordingMode() == RecordingMode.WINNER_ONLY
-                ? byMarkedWinners(players)
-                : byPoints(pad, entry.setup(), players);
+        boolean points = entry.recordingMode() == RecordingMode.POINTS;
+        if (soloPlay) {
+            return solo(pad, entry.setup(), players.getFirst(), points);
+        }
+        return points ? byPoints(pad, entry.setup(), players) : byMarkedWinners(players);
     }
 
-    /** Every Variant in the Setup has to be on the pad, with a value the Variant allows. */
-    private static void checkSetup(ScorePad pad, Map<String, String> setup) {
+    /**
+     * Every Variant in the Setup has to be on the pad, with a value the Variant allows. A
+     * Variant for Solo Plays only belongs in the Setup of a Solo Play only.
+     */
+    private static void checkSetup(ScorePad pad, Map<String, String> setup, boolean soloPlay) {
         setup.forEach((key, value) -> {
             boolean known = pad.variants().stream()
-                    .anyMatch(variant -> variant.key().equals(key) && variant.allows(value));
+                    .anyMatch(variant -> variant.key().equals(key)
+                            && variant.allows(value)
+                            && (soloPlay || !variant.soloOnly()));
             if (!known) {
                 throw new InvalidPlayException(Standard.NOT_RECORDED);
             }
         });
+    }
+
+    /**
+     * Checks that every Player has a value the row allows in every row on the pad, and nothing
+     * in a row that isn't on it.
+     */
+    private static void checkPad(List<ScoreCategory> categories, List<PlayerEntry> players) {
+        Set<String> onThePad = categories.stream().map(ScoreCategory::key).collect(Collectors.toSet());
+        for (PlayerEntry player : players) {
+            if (!onThePad.containsAll(player.scores().keySet())) {
+                throw new InvalidPlayException(Standard.NOT_RECORDED);
+            }
+            for (ScoreCategory category : categories) {
+                Integer value = player.scores().get(category.key());
+                if (value == null) {
+                    throw new InvalidPlayException(Standard.SCORE_MISSING);
+                }
+                if (!category.allows(value)) {
+                    throw new InvalidPlayException(Standard.SCORE_NOT_ALLOWED);
+                }
+            }
+        }
+    }
+
+    /** The sum of the rows that count toward the total. */
+    private static int totalOf(List<ScoreCategory> categories, PlayerEntry player) {
+        return categories.stream()
+                .filter(ScoreCategory::countsTowardTotal)
+                .mapToInt(category -> player.scores().get(category.key()))
+                .sum();
+    }
+
+    private static Outcome solo(ScorePad pad, Map<String, String> setup, PlayerEntry player, boolean points) {
+        // A switch over a sealed interface: the compiler checks that both kinds are handled.
+        PlayerResult result = switch (pad.solo()) {
+            case Solo.ForScoreOnly forScoreOnly -> {
+                // There is nothing to record but the score, and nobody to win against.
+                if (!points) {
+                    throw new InvalidPlayException(Standard.SCORES_NEEDED);
+                }
+                if (player.winner()) {
+                    throw new InvalidPlayException(Standard.NOT_RECORDED);
+                }
+                List<ScoreCategory> categories = pad.categoriesFor(setup, true);
+                checkPad(categories, List.of(player));
+                yield new PlayerResult(totalOf(categories, player), null, null);
+            }
+            case Solo.AgainstOpponent against -> {
+                if (!points) {
+                    // Only whether the Player beat the opponent: marked as winner, or not.
+                    if (!player.scores().isEmpty()) {
+                        throw new InvalidPlayException(Standard.NOT_RECORDED);
+                    }
+                    yield new PlayerResult(null, null, player.winner());
+                }
+                // With the scores, they say who won, so there is nothing for the recorder to mark.
+                if (player.winner()) {
+                    throw new InvalidPlayException(Standard.NOT_RECORDED);
+                }
+                List<ScoreCategory> categories = pad.categoriesFor(setup, true);
+                checkPad(categories, List.of(player));
+                int total = totalOf(categories, player);
+                int opponent = player.scores().get(against.opponentCategory());
+                yield new PlayerResult(total, null, total > opponent || (total == opponent && against.tieWins()));
+            }
+        };
+        return new Outcome.Competitive(List.of(result), List.of());
     }
 
     private static Outcome byMarkedWinners(List<PlayerEntry> players) {
@@ -69,29 +147,10 @@ public abstract class StandardGameModule implements GameModule {
     }
 
     private static Outcome byPoints(ScorePad pad, Map<String, String> setup, List<PlayerEntry> players) {
-        List<ScoreCategory> categories = pad.categoriesFor(setup);
+        List<ScoreCategory> categories = pad.categoriesFor(setup, false);
+        checkPad(categories, players);
         Set<String> onThePad = categories.stream().map(ScoreCategory::key).collect(Collectors.toSet());
-        for (PlayerEntry player : players) {
-            if (!onThePad.containsAll(player.scores().keySet())) {
-                throw new InvalidPlayException(Standard.NOT_RECORDED);
-            }
-            for (ScoreCategory category : categories) {
-                Integer value = player.scores().get(category.key());
-                if (value == null) {
-                    throw new InvalidPlayException(Standard.SCORE_MISSING);
-                }
-                if (!category.allows(value)) {
-                    throw new InvalidPlayException(Standard.SCORE_NOT_ALLOWED);
-                }
-            }
-        }
-
-        List<Integer> totals = players.stream()
-                .map(player -> categories.stream()
-                        .filter(ScoreCategory::countsTowardTotal)
-                        .mapToInt(category -> player.scores().get(category.key()))
-                        .sum())
-                .toList();
+        List<Integer> totals = players.stream().map(player -> totalOf(categories, player)).toList();
 
         // Sorts the Player who did better first: by total, then by each Tie-breaker in turn.
         // Players it calls equal are level on everything that was entered.
