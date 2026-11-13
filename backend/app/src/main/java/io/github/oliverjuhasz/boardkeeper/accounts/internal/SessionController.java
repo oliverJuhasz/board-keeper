@@ -60,7 +60,7 @@ class SessionController {
             @AuthenticationPrincipal CurrentAccount account, @Parameter(hidden = true) CsrfToken csrfToken) {
         // Asking for the token's value is what makes Spring Security send the cookie.
         csrfToken.getToken();
-        return account == null ? SessionResponse.signedOut() : responses.of(account);
+        return account == null ? responses.signedOut() : responses.of(account);
     }
 
     @PostMapping
@@ -97,13 +97,10 @@ class SessionController {
                             requiredMode = Schema.RequiredMode.REQUIRED)
                     boolean staySignedIn) {}
 
-    @Schema(name = "Session")
-    record SessionResponse(@Schema(description = "The signed-in Account. Absent when nobody is signed in.") AccountResponse account) {
-
-        static SessionResponse signedOut() {
-            return new SessionResponse(null);
-        }
-    }
+    @Schema(name = "Session", requiredProperties = "passkeys")
+    record SessionResponse(
+            @Schema(description = "The signed-in Account. Absent when nobody is signed in.") AccountResponse account,
+            @Schema(description = "Whether this installation offers passkeys") boolean passkeys) {}
 
     @Schema(
             name = "CurrentAccount",

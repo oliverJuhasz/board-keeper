@@ -416,6 +416,22 @@
         "required" : [ "invite", "token" ],
         "type" : "object"
       },
+      "NewPasskey" : {
+        "properties" : {
+          "credential" : {
+            "$ref" : "#/components/schemas/WebAuthnJson",
+            "description" : "What credential.toJSON() returns"
+          },
+          "label" : {
+            "description" : "A name to recognise it by, such as \"My phone\"",
+            "maxLength" : 50,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [ "credential", "label" ],
+        "type" : "object"
+      },
       "NewPasswordRequest" : {
         "properties" : {
           "password" : {
@@ -501,6 +517,42 @@
           }
         },
         "required" : [ "value", "variant" ],
+        "type" : "object"
+      },
+      "Passkey" : {
+        "properties" : {
+          "created" : {
+            "description" : "When it was added",
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "string"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "lastUsed" : {
+            "description" : "When it was last used to sign in. Absent when it never was.",
+            "format" : "date-time",
+            "type" : "string"
+          }
+        },
+        "required" : [ "id", "label" ],
+        "type" : "object"
+      },
+      "PasskeySignIn" : {
+        "properties" : {
+          "credential" : {
+            "$ref" : "#/components/schemas/WebAuthnJson",
+            "description" : "What credential.toJSON() returns"
+          },
+          "staySignedIn" : {
+            "description" : "Stay signed in on this device for 90 days after the last visit",
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "credential", "staySignedIn" ],
         "type" : "object"
       },
       "PasswordChangeRequest" : {
@@ -1136,8 +1188,13 @@
           "account" : {
             "$ref" : "#/components/schemas/CurrentAccount",
             "description" : "The signed-in Account. Absent when nobody is signed in."
+          },
+          "passkeys" : {
+            "description" : "Whether this installation offers passkeys",
+            "type" : "boolean"
           }
         },
+        "required" : [ "passkeys" ],
         "type" : "object"
       },
       "SetupRequest" : {
@@ -1295,6 +1352,11 @@
         },
         "required" : [ "defaultValue", "key", "kind", "soloOnly" ],
         "type" : "object"
+      },
+      "WebAuthnJson" : {
+        "additionalProperties" : true,
+        "description" : "WebAuthn options or a credential, in the JSON form of WebAuthn Level 3",
+        "type" : "object"
       }
     }
   },
@@ -1334,6 +1396,137 @@
         },
         "summary" : "Choose the language of the interface",
         "tags" : [ "Own Account" ]
+      }
+    },
+    "/api/account/passkeys" : {
+      "get" : {
+        "description" : "The most recently added first.",
+        "operationId" : "listOwnPasskeys",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/Passkey"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "List your own passkeys",
+        "tags" : [ "Passkeys" ]
+      },
+      "post" : {
+        "description" : "With the browser's answer to the options from POST /api/account/passkeys/options. The options are good for one try.",
+        "operationId" : "addPasskey",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/NewPasskey"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Passkey"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Add a passkey",
+        "tags" : [ "Passkeys" ]
+      }
+    },
+    "/api/account/passkeys/options" : {
+      "post" : {
+        "description" : "Answers the options for navigator.credentials.create(). Send what it returns to POST /api/account/passkeys. The code passkeys.unavailable means this installation offers no passkeys.",
+        "operationId" : "startAddingPasskey",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/WebAuthnJson"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Start adding a passkey",
+        "tags" : [ "Passkeys" ]
+      }
+    },
+    "/api/account/passkeys/{id}" : {
+      "delete" : {
+        "operationId" : "removePasskey",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Remove one of your own passkeys",
+        "tags" : [ "Passkeys" ]
       }
     },
     "/api/account/password" : {
@@ -2741,6 +2934,76 @@
         },
         "summary" : "Sign in",
         "tags" : [ "Session" ]
+      }
+    },
+    "/api/session/passkey" : {
+      "post" : {
+        "description" : "Open to everyone. With the browser's answer to the options from POST /api/session/passkey/options.",
+        "operationId" : "signInWithPasskey",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PasskeySignIn"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Session"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Sign in with a passkey",
+        "tags" : [ "Passkeys" ]
+      }
+    },
+    "/api/session/passkey/options" : {
+      "post" : {
+        "description" : "Open to everyone. Answers the options for navigator.credentials.get(). Send what it returns to POST /api/session/passkey.",
+        "operationId" : "startPasskeySignIn",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/WebAuthnJson"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Start signing in with a passkey",
+        "tags" : [ "Passkeys" ]
       }
     },
     "/api/setup" : {
