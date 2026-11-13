@@ -18,6 +18,7 @@ backend/
     generic/         the Generic Module, for Games without a module of their own
     calico/          the Game Module for Calico
     harmonies/       the Game Module for Harmonies
+    wyrmspan/        the Game Module for Wyrmspan
   app/               the Spring Boot application
 frontend/            the React app
 deploy/              an example Docker Compose setup
@@ -244,7 +245,7 @@ This writes `frontend/src/components/ui/dialog.tsx`. Run `npm run format` afterw
 
 ### Adding a Game Module
 
-`backend/games/calico` is the example to copy; `backend/games/harmonies` shows a Variant that is a choice, and rows that a Variant swaps. A module has three parts: an identity, a description of its Game's score pad, and its texts.
+`backend/games/calico` is the example to copy; `backend/games/harmonies` shows a Variant that is a choice, and rows that a Variant swaps; `backend/games/wyrmspan` shows a Game played alone against an automated opponent. A module has three parts: an identity, a description of its Game's score pad, and its texts.
 
 1. Copy `backend/games/calico` to `backend/games/<key>` and rename the artifact to `game-<key>`.
 2. Give the module a newly generated UUID. It is stored with every Play, so it never changes afterwards ([ADR 0012](adr/0012-game-module-uuid-and-key.md)).
@@ -266,6 +267,8 @@ This writes `frontend/src/components/ui/dialog.tsx`. Run `npm run format` afterw
 8. Register it in three places: as a `<module>` and under `<dependencyManagement>` in `backend/pom.xml`, and as a `runtime` dependency in `backend/app/pom.xml`.
 
 Nothing else changes. When the application next starts, the Game is in the catalogue, and the frontend draws its form from the description.
+
+**Solo Plays.** Give the score pad a `Solo` if the Game can be played alone, and make its minimum one Player. `Solo.forScoreOnly()` records a total and nothing else: such a Play has no Placing and is neither won nor lost. `Solo.againstOpponent(row, tieWins)` adds a row for the opponent's score, which must be marked `notCounted()` and `inSoloPlaysOnly()`; the Player wins by beating it. Variants that only apply when playing alone, such as the Automa's level, are marked `inSoloPlaysOnly()` too, and the form shows them only for a Play of one.
 
 **Ties.** List as `tieBreakers` the Tie-breakers that can be worked out from what is entered. Set `recorderDecidesTies` when the Game decides what is left by something that is not on the pad; the form then asks the recorder who won, and shows `<key>.tie` as the explanation. Calico is such a Game: its first Tie-breaker is the number of cat tokens, and the pad only has the cats' points.
 
