@@ -252,7 +252,7 @@ class ModuleGamePlaysApiTests {
     private UUID calicoFromItsModule() {
         games.addGamesOfModules();
         return games.all().stream()
-                .filter(games::hasOwnModule)
+                .filter(game -> games.moduleKeyOf(game).filter("calico"::equals).isPresent())
                 .findFirst()
                 .orElseThrow()
                 .id();

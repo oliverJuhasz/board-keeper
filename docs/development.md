@@ -17,6 +17,7 @@ backend/
   games/             the Game Modules, one folder each
     generic/         the Generic Module, for Games without a module of their own
     calico/          the Game Module for Calico
+    harmonies/       the Game Module for Harmonies
   app/               the Spring Boot application
 frontend/            the React app
 deploy/              an example Docker Compose setup
@@ -243,7 +244,7 @@ This writes `frontend/src/components/ui/dialog.tsx`. Run `npm run format` afterw
 
 ### Adding a Game Module
 
-`backend/games/calico` is the example to copy. A module has three parts: an identity, a description of its Game's score pad, and its texts.
+`backend/games/calico` is the example to copy; `backend/games/harmonies` shows a Variant that is a choice, and rows that a Variant swaps. A module has three parts: an identity, a description of its Game's score pad, and its texts.
 
 1. Copy `backend/games/calico` to `backend/games/<key>` and rename the artifact to `game-<key>`.
 2. Give the module a newly generated UUID. It is stored with every Play, so it never changes afterwards ([ADR 0012](adr/0012-game-module-uuid-and-key.md)).

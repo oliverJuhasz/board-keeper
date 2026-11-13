@@ -39,6 +39,11 @@
             <artifactId>game-calico</artifactId>
             <scope>runtime</scope>
         </dependency>
+        <dependency>
+            <groupId>io.github.oliverjuhasz.boardkeeper</groupId>
+            <artifactId>game-harmonies</artifactId>
+            <scope>runtime</scope>
+        </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
