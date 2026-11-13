@@ -189,7 +189,12 @@
   "app": {
     "loading": "Betöltés…",
     "unreachable": "A Board Keeper nem érhető el",
-    "tryAgain": "Újra"
+    "tryAgain": "Újra",
+    "update": {
+      "available": "Elkészült a Board Keeper új verziója.",
+      "reload": "Újratöltés",
+      "later": "Később"
+    }
   },
   "signIn": {
     "title": "Bejelentkezés",

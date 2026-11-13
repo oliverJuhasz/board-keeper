@@ -45,6 +45,7 @@ Milestones M0 to M4 are done. Board Keeper builds, runs as a container image, an
 - a start page that gets to recording a Play in one or two taps: recent Plays to play again, and the most recently played Games first
 - the play history, filterable by "my plays", Game, Player and date, with editing and deleting Plays according to Permissions
 - statistics per Game and per Player: wins and win rates, best and average scores, average Placings, averages per row of a score pad, and Cooperative and Solo Plays on their own
+- installing Board Keeper as an app on a phone's home screen, with a notice when a new version is ready
 - Roles made of fine-grained Permissions, with pages for managing Roles and Accounts
 - password changes and Reset Links
 
