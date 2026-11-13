@@ -190,6 +190,57 @@
         "required" : [ "cooperative", "lowestScoreWins", "name", "recordingMode" ],
         "type" : "object"
       },
+      "GameStats" : {
+        "properties" : {
+          "categoryAverages" : {
+            "additionalProperties" : {
+              "format" : "double",
+              "type" : "number"
+            },
+            "description" : "In the Plays in which Players played against each other: the average of each Score Category, by the category's key. Only Plays scored by the Game Module of today count. Averages are not rounded.",
+            "type" : "object"
+          },
+          "cooperative" : {
+            "$ref" : "#/components/schemas/GroupStats",
+            "description" : "How the group did in the Cooperative Plays. Absent when there are none."
+          },
+          "gameId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "gameModuleId" : {
+            "description" : "The Game Module that scores the Game today. The keys in \"categoryAverages\" are its Score Categories.",
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "lastPlayedOn" : {
+            "description" : "The day of the latest Play. Absent when there is none.",
+            "format" : "date",
+            "type" : "string"
+          },
+          "players" : {
+            "description" : "One for each Player who played the Game against others, the most wins first",
+            "items" : {
+              "$ref" : "#/components/schemas/PlayerStats"
+            },
+            "type" : "array"
+          },
+          "plays" : {
+            "description" : "How many times the Game was played, Cooperative and Solo Plays included",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "solo" : {
+            "description" : "One for each Player who played the Game on their own, the most Plays first",
+            "items" : {
+              "$ref" : "#/components/schemas/SoloStats"
+            },
+            "type" : "array"
+          }
+        },
+        "required" : [ "categoryAverages", "gameId", "gameModuleId", "players", "plays", "solo" ],
+        "type" : "object"
+      },
       "GroupEntry" : {
         "properties" : {
           "scores" : {
@@ -227,6 +278,30 @@
           }
         },
         "required" : [ "scores", "won" ],
+        "type" : "object"
+      },
+      "GroupStats" : {
+        "description" : "How the group did in the Cooperative Plays",
+        "properties" : {
+          "averageScore" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "bestScore" : {
+            "description" : "The highest score of the group. Absent when no score was recorded.",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "plays" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "wins" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "plays", "wins" ],
         "type" : "object"
       },
       "Invite" : {
@@ -619,6 +694,44 @@
         "required" : [ "name" ],
         "type" : "object"
       },
+      "PlayerStats" : {
+        "description" : "How a Player did in the Plays in which they played against others",
+        "properties" : {
+          "averagePlacing" : {
+            "description" : "The average Placing, of the Plays recorded with scores. 1 is first.",
+            "format" : "double",
+            "type" : "number"
+          },
+          "averageScore" : {
+            "description" : "The average total, of the Plays recorded with scores",
+            "format" : "double",
+            "type" : "number"
+          },
+          "bestScore" : {
+            "description" : "The best total: the highest, or the lowest when the lowest score wins. Absent when no score was recorded.",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "playerId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "plays" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "wins" : {
+            "description" : "The Plays the Player won, shared wins included",
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "name", "playerId", "plays", "wins" ],
+        "type" : "object"
+      },
       "PreviewResult" : {
         "properties" : {
           "placing" : {
@@ -965,6 +1078,43 @@
           }
         },
         "required" : [ "kind" ],
+        "type" : "object"
+      },
+      "SoloStats" : {
+        "description" : "How a Player did in the Solo Plays",
+        "properties" : {
+          "averageScore" : {
+            "format" : "double",
+            "type" : "number"
+          },
+          "bestScore" : {
+            "description" : "The best total: the highest, or the lowest when the lowest score wins. Absent when no score was recorded.",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "playerId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "plays" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "playsAgainstOpponent" : {
+            "description" : "The Solo Plays against an automated opponent, which are won or lost. The others were played for a score only.",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "wins" : {
+            "description" : "The Solo Plays won against the Game's automated opponent",
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "name", "playerId", "plays", "playsAgainstOpponent", "wins" ],
         "type" : "object"
       },
       "Variant" : {
@@ -2507,6 +2657,45 @@
         },
         "summary" : "Create the first Admin and sign in as it",
         "tags" : [ "Setup" ]
+      }
+    },
+    "/api/stats/games/{gameId}" : {
+      "get" : {
+        "description" : "Worked out from the statistics' own copy of the Plays, which catches up with a Play a moment after it is recorded, changed or deleted. Solo Plays have a section of their own and don't count anywhere else. A Play recorded with only the winner counts in plays and wins, and not in scores or Placings.",
+        "operationId" : "getGameStats",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "gameId",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/GameStats"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Statistics of a Game",
+        "tags" : [ "Statistics" ]
       }
     }
   },

@@ -99,6 +99,12 @@
             <groupId>org.springframework.modulith</groupId>
             <artifactId>spring-modulith-starter-core</artifactId>
         </dependency>
+        <!-- Stores every event a module publishes in the database until its listeners have
+             handled it, so none is lost when the application stops halfway (ADR 0011). -->
+        <dependency>
+            <groupId>org.springframework.modulith</groupId>
+            <artifactId>spring-modulith-starter-jdbc</artifactId>
+        </dependency>
         <!-- Publishes the OpenAPI description at /v3/api-docs and Swagger UI at /swagger-ui.html. -->
         <dependency>
             <groupId>org.springdoc</groupId>
@@ -265,8 +271,9 @@
                                     <inputSchema>public</inputSchema>
                                     <!-- Don't write the schema name into generated SQL. -->
                                     <outputSchemaToDefault>true</outputSchemaToDefault>
-                                    <!-- Flyway's bookkeeping table and Spring Session's tables are not part of the model. -->
-                                    <excludes>flyway_schema_history | spring_session.*</excludes>
+                                    <!-- Flyway's bookkeeping table, Spring Session's tables and Spring Modulith's event
+                                         registry are not part of the model. -->
+                                    <excludes>flyway_schema_history | spring_session.* | event_publication</excludes>
                                 </database>
                                 <target>
                                     <packageName>io.github.oliverjuhasz.boardkeeper.jooq</packageName>

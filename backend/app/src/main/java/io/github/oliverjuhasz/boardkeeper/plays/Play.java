@@ -33,6 +33,11 @@ public record Play(
         UUID recordedBy,
         Instant recordedAt) {
 
+    /** A Solo Play: one Player on their own, in a Game that isn't played cooperatively. */
+    public boolean solo() {
+        return !cooperative && results.size() == 1;
+    }
+
     /**
      * What one Player got in a Play.
      *

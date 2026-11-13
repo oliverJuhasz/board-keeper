@@ -31,6 +31,7 @@ class TableOwnershipTests {
             "games", Set.of("Game"),
             "players", Set.of("Player"),
             "plays", Set.of("Play", "PlayResult"),
+            "stats", Set.of("StatsPlay", "StatsResult"),
             "accounts", Set.of("Account", "AccountRole", "Role", "RolePermission", "Invite", "PasswordReset"));
 
     private static final String ROOT = "io.github.oliverjuhasz.boardkeeper";

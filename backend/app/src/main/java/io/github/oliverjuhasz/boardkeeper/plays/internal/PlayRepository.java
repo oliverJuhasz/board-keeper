@@ -101,6 +101,10 @@ public class PlayRepository {
         return page.fetch(PlayRepository::toPlay);
     }
 
+    public List<UUID> allIds() {
+        return dsl.select(PLAY.ID).from(PLAY).fetch(row -> row.value1());
+    }
+
     /** The day each Game was last played on, by the Game's id. A Game without Plays is missing. */
     public Map<UUID, LocalDate> lastPlayedOnByGame() {
         return dsl.select(PLAY.GAME_ID, max(PLAY.PLAYED_ON))
