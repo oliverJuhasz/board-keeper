@@ -5,6 +5,7 @@ import { expect, test } from "vitest"
 import type { NewPlay, Play } from "@/api/client"
 import { todayIso } from "@/lib/dates"
 import {
+  aNewPlayId,
   annaPlayer,
   azul,
   bence,
@@ -126,6 +127,7 @@ test("the form is the game's score pad, and the server adds it up", async () => 
   await screen.findByRole("heading", { name: "Calico" })
   expect(sent).toEqual([
     {
+      id: aNewPlayId,
       gameId: calico.id,
       playedOn: todayIso(),
       recordingMode: "POINTS",

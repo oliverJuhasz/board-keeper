@@ -4,7 +4,11 @@
   },
   "common": {
     "reloadToRetry": "Laad de pagina opnieuw om het nog eens te proberen.",
-    "cancel": "Annuleren"
+    "cancel": "Annuleren",
+    "offline": {
+      "title": "Nog niet geladen",
+      "text": "Er is geen verbinding. Dit laadt vanzelf zodra die er is."
+    }
   },
   "games": {
     "title": "Spellen",
@@ -110,7 +114,8 @@
       "placing": "Plaats",
       "playersFull": "Dit spel is voor hoogstens {{max}} spelers.",
       "lost": "Verloren",
-      "soloResult": "Uitslag"
+      "soloResult": "Uitslag",
+      "offline": "Je bent offline. Deze partij wordt op dit apparaat bewaard en verstuurd zodra er verbinding is. De totalen en plaatsen worden dan uitgerekend."
     },
     "history": {
       "title": "Partijen",
@@ -179,6 +184,18 @@
       "winnerNotTied": "Alleen een speler die bij het gelijkspel hoort, kan de winst krijgen.",
       "notRecorded": "Er is iets ingevuld dat dit spel niet vastlegt.",
       "scoresNeeded": "Een solopartij van dit spel wordt met de scores vastgelegd."
+    },
+    "waiting": {
+      "title": "Nog niet verstuurd",
+      "description": "Vastgelegd op dit apparaat. Ze worden verstuurd zodra Board Keeper bereikbaar is.",
+      "waiting": "Wacht op verbinding",
+      "open": "Openen",
+      "remove": "De partij {{game}} van {{date}} verwijderen",
+      "removeDialog": {
+        "title": "Deze partij verwijderen?",
+        "description": "Hij is nooit verstuurd, dus hij is dan voorgoed weg.",
+        "confirm": "Partij verwijderen"
+      }
     }
   },
   "notFound": {
@@ -194,7 +211,8 @@
       "available": "Er is een nieuwe versie van Board Keeper klaar.",
       "reload": "Herladen",
       "later": "Later"
-    }
+    },
+    "offline": "Je bent offline. Partijen die je vastlegt, worden op dit apparaat bewaard en verstuurd zodra er verbinding is."
   },
   "signIn": {
     "title": "Inloggen",
@@ -322,7 +340,9 @@
       "dateInFuture": "De datum kan niet in de toekomst liggen.",
       "gameModuleMissing": "Deze versie van Board Keeper kan de score van dit spel niet berekenen.",
       "notFound": "Deze partij bestaat niet meer.",
-      "gameCannotChange": "Een partij kan niet naar een ander spel worden verplaatst."
+      "gameCannotChange": "Een partij kan niet naar een ander spel worden verplaatst.",
+      "tieUndecided": "Spelers staan gelijk op de eerste plaats, en de scores beslissen niet wie er won. Open hem om te kiezen.",
+      "idTaken": "Deze partij kon niet onder zijn id worden vastgelegd. Open hem en leg hem opnieuw vast."
     },
     "passkeys": {
       "notAdded": "De passkey kon niet worden toegevoegd. Probeer het nog eens.",

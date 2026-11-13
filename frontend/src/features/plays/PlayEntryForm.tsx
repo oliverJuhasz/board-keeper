@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useQueryClient } from "@tanstack/react-query"
+import { onlineManager, useQueryClient } from "@tanstack/react-query"
 import { XIcon } from "lucide-react"
 import { useState } from "react"
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form"
@@ -45,6 +45,8 @@ import {
   type PlayFormValues,
 } from "./playForm"
 import { canBePreviewed, previewOptions, usePlayPreview } from "./usePlayPreview"
+import { useOnline } from "@/lib/online"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 /** What the list of Players to add holds for "someone new", where the others have their id. */
 const NEW_PLAYER = "new"
@@ -70,6 +72,7 @@ export function PlayEntryForm({
   pending,
   error,
   onSubmit,
+  onUnreachable,
 }: {
   title: string
   description: string
@@ -87,6 +90,13 @@ export function PlayEntryForm({
   /** Why the server refused the last submission, if it did. */
   error: unknown
   onSubmit: (play: NewPlay) => void
+  /**
+   * Called instead of onSubmit when Board Keeper can't be reached, for a page that keeps the
+   * Play on the device to send later. The form then neither shows totals nor asks about a tie:
+   * the server works those out once the Play is sent. Without it, the form says it can't reach
+   * the server, as for any other failure.
+   */
+  onUnreachable?: (play: NewPlay) => void
 }) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
@@ -95,6 +105,7 @@ export function PlayEntryForm({
   const texts = useGameModuleTexts()
   const [changingRecording, setChangingRecording] = useState(false)
   const [previewProblem, setPreviewProblem] = useState<unknown>()
+  const online = useOnline()
   const pad = module.scorePad
   const generic = module.key === GENERIC
   /** A text of the module, such as its name for a row of the pad. */
@@ -159,16 +170,28 @@ export function PlayEntryForm({
   const changed = { shouldValidate: isSubmitted, shouldDirty: true }
 
   const submit = form.handleSubmit(async (values) => {
+    // Without a connection there is nobody to ask how the Play ends: keep it as it is.
+    if (onUnreachable && !onlineManager.isOnline()) {
+      onUnreachable(toNewPlay(module, gameId, values))
+      return
+    }
     let tieToDecide: string[] = []
     if (canBePreviewed(module, values)) {
       try {
         // Ask about exactly what is being submitted. If the form already asked while the
-        // recorder was typing, the answer is still at hand and nothing is sent.
-        const outcome = await queryClient.fetchQuery(
-          previewOptions(toPreviewRequest(module, values)),
-        )
+        // recorder was typing, the answer is still at hand and nothing is sent. Once is enough:
+        // when the server can't be reached, the Play is kept for later straight away.
+        const outcome = await queryClient.fetchQuery({
+          ...previewOptions(toPreviewRequest(module, values)),
+          retry: false,
+        })
         tieToDecide = outcome.tieForRecorder
       } catch (refusal) {
+        // fetch() fails with a TypeError when there is no answer at all.
+        if (onUnreachable && refusal instanceof TypeError) {
+          onUnreachable(toNewPlay(module, gameId, values))
+          return
+        }
         setPreviewProblem(refusal)
         return
       }
@@ -218,6 +241,11 @@ export function PlayEntryForm({
     <form onSubmit={submit} noValidate className="space-y-6">
       <PageHeader title={title} description={description} />
       <FieldGroup>
+        {onUnreachable && !online && (
+          <Alert>
+            <AlertDescription>{t("plays.record.offline")}</AlertDescription>
+          </Alert>
+        )}
         <FormProblem error={error ?? previewProblem} reasons={texts} />
 
         <div className="grid gap-4 sm:grid-cols-2">

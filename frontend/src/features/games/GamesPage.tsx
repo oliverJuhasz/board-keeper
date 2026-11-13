@@ -19,6 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { PlayAgain } from "@/features/plays/PlayAgain"
+import { WaitingPlays } from "@/features/plays/WaitingPlays"
 import { useCan } from "@/features/session/useSession"
 import { formatRecentDay } from "@/lib/dates"
 import { GameDialog } from "./GameDialog"
@@ -77,8 +78,14 @@ export function GamesPage() {
         }
       />
 
+      {/* Plays recorded on this device without a connection, not sent yet. They show whatever
+          else could be loaded. */}
+      {records && <WaitingPlays />}
+
       <QueryState
-        queries={[games, lastPlayed]}
+        // Without a connection, when the device hasn't kept when each Game was last played, the
+        // Games are shown in the catalogue's order rather than not at all.
+        queries={lastPlayed.fetchStatus === "paused" ? [games] : [games, lastPlayed]}
         loading={t("games.loading")}
         failed={t("games.loadFailed")}
       >

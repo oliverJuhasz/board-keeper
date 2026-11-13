@@ -5,12 +5,13 @@ import { expect, test } from "vitest"
 import type { NewPlay, Play } from "@/api/client"
 import { todayIso } from "@/lib/dates"
 import {
+  aNewPlayId,
   anna,
   annaPlayer,
-  bence,
-  bencePlayer,
   azul,
   azulPlay,
+  bence,
+  bencePlayer,
   doraPlayer,
   gamesAre,
   pandemic,
@@ -90,6 +91,7 @@ test("records a competitive play in points and then shows it", async () => {
   expect(await screen.findByRole("heading", { name: "Azul" })).toBeInTheDocument()
   expect(sent).toEqual([
     {
+      id: aNewPlayId,
       gameId: azul.id,
       playedOn: todayIso(),
       location: "At Dora's",
@@ -288,6 +290,7 @@ test("records only the winner for a game that is recorded that way", async () =>
   await screen.findByRole("heading", { name: "Azul" })
   expect(sent).toEqual([
     {
+      id: aNewPlayId,
       gameId: azul.id,
       playedOn: todayIso(),
       recordingMode: "WINNER_ONLY",
@@ -320,6 +323,7 @@ test("records a cooperative play as won or lost by the group", async () => {
   await screen.findByRole("heading", { name: "Pandemic" })
   expect(sent).toEqual([
     {
+      id: aNewPlayId,
       gameId: pandemic.id,
       playedOn: todayIso(),
       recordingMode: "WINNER_ONLY",
