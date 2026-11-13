@@ -220,6 +220,19 @@ A form is described once with Zod, which gives both the checks and the TypeScrip
 - `useWatch` to redraw when a field changes that others depend on, such as the Recording Mode;
 - Zod's `superRefine` for rules that involve several fields, such as "a competitive Play needs two Players".
 
+### The installable app
+
+Board Keeper can be installed as an app, on a phone's home screen for example. `vite-plugin-pwa` (configured in `frontend/vite.config.ts`) adds two files to the build:
+
+- `manifest.webmanifest`, the app's name, colours and icons, which a browser reads to offer "Install" or "Add to Home Screen". Spring Boot serves it as `application/manifest+json` (`FrontendResourceConfiguration`).
+- `sw.js`, a service worker: a script the browser runs apart from the page. It keeps every file of the build on the device and serves them from there, so the app opens without waiting for the network, and opens at all without one (it then says it can't reach Board Keeper). Calls to `/api` always go to the server. Workbox, Google's service worker library, does the work.
+
+**Updates.** A browser looks for a new `sw.js` whenever a page of the app is opened, and an open app asks every hour too. A new version is fetched in the background, but the app goes on with the old one until the person presses Reload in the notice (`frontend/src/routes/UpdateNotice.tsx`), so nothing they are doing is lost. `index.html` and `sw.js` are served with "check with the server on every use"; the files under `assets/` carry a hash of their content in their names and are cached for good.
+
+**Icons.** `frontend/public/` holds the icons in the favicon's design: `icon-192.png` and `icon-512.png` with rounded corners; `icon-maskable-512.png`, which fills the square and keeps the pips in the middle circle of 80%, for Android to cut into its own shape; and `apple-touch-icon.png` (180 by 180, no transparency) for an iPhone's home screen. To change the design, draw all four again at these sizes.
+
+**Trying it.** The service worker is part of the production build only: `npm run dev` has none, so changes show at once. Build the frontend, then the backend, and open Spring Boot's own port (8080); a browser allows service workers on `localhost` and on https addresses. In Chromium's developer tools, the Application tab shows the manifest, the service worker and the files it keeps, and can go offline or skip waiting.
+
 ### Adding a page
 
 Give the page an address in `frontend/src/router.tsx`, with `lazy` like the pages already there, not with `element`. The build then puts the page's code into a file of its own, which the browser loads the first time the page is shown. `npm run build` lists the files and their sizes.

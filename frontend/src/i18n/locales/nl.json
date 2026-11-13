@@ -189,7 +189,12 @@
   "app": {
     "loading": "Laden…",
     "unreachable": "Board Keeper is niet bereikbaar",
-    "tryAgain": "Opnieuw proberen"
+    "tryAgain": "Opnieuw proberen",
+    "update": {
+      "available": "Er is een nieuwe versie van Board Keeper klaar.",
+      "reload": "Herladen",
+      "later": "Later"
+    }
   },
   "signIn": {
     "title": "Inloggen",

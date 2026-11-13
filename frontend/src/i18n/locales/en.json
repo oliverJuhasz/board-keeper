@@ -189,7 +189,12 @@
   "app": {
     "loading": "Loading…",
     "unreachable": "Couldn't reach Board Keeper",
-    "tryAgain": "Try again"
+    "tryAgain": "Try again",
+    "update": {
+      "available": "A new version of Board Keeper is ready.",
+      "reload": "Reload",
+      "later": "Later"
+    }
   },
   "signIn": {
     "title": "Sign in",

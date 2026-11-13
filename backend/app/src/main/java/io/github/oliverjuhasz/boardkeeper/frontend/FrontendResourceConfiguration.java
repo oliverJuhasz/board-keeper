@@ -3,6 +3,11 @@ package io.github.oliverjuhasz.boardkeeper.frontend;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
+import org.springframework.boot.web.server.MimeMappings;
+import org.springframework.boot.web.server.WebServerFactoryCustomizer;
+import org.springframework.boot.web.server.servlet.ConfigurableServletWebServerFactory;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 import org.springframework.http.CacheControl;
@@ -14,6 +19,16 @@ import org.springframework.web.servlet.resource.PathResourceResolver;
 class FrontendResourceConfiguration implements WebMvcConfigurer {
 
     private static final String FRONTEND = "classpath:/static/";
+
+    /**
+     * The type of manifest.webmanifest, the file that makes the frontend installable as an app.
+     * A file's type comes from the web server's list of extensions, which lacks this one: without
+     * it, the manifest would go out as a plain download (application/octet-stream).
+     */
+    @Bean
+    WebServerFactoryCustomizer<ConfigurableServletWebServerFactory> webManifestType() {
+        return server -> server.addMimeMappings(new MimeMappings(Map.of("webmanifest", "application/manifest+json")));
+    }
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
