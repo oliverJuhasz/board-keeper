@@ -43,9 +43,16 @@ class SecurityConfiguration {
             SignInSessions sessions)
             throws Exception {
         http.authorizeHttpRequests(requests -> requests
-                        // Open to everyone: asking who is signed in, signing in, the first-time setup,
-                        // and the pages behind an Invite's link and a Reset Link.
-                        .requestMatchers("/api/session", "/api/setup", "/api/registration/*", "/api/password-reset/*")
+                        // Open to everyone: asking who is signed in, signing in with a password or a
+                        // passkey, the first-time setup, and the pages behind an Invite's link and a
+                        // Reset Link.
+                        .requestMatchers(
+                                "/api/session",
+                                "/api/session/passkey",
+                                "/api/session/passkey/options",
+                                "/api/setup",
+                                "/api/registration/*",
+                                "/api/password-reset/*")
                         .permitAll()
                         // The pages shown before signing in need the Game Modules' texts too.
                         .requestMatchers(HttpMethod.GET, "/api/game-modules/texts/*")

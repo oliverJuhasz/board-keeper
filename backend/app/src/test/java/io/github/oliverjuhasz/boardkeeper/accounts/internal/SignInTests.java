@@ -47,7 +47,7 @@ class SignInTests {
 
     @Test
     void nobodyIsSignedInAtFirst() {
-        assertThat(browser.get("/api/session")).hasStatusOk().bodyJson().isStrictlyEqualTo("{}");
+        assertThat(browser.get("/api/session")).hasStatusOk().bodyJson().isStrictlyEqualTo("{\"passkeys\": true}");
         assertThat(browser.cookie("XSRF-TOKEN")).isNotNull();
     }
 
@@ -90,7 +90,7 @@ class SignInTests {
                 .bodyJson()
                 .isLenientlyEqualTo("{\"code\": \"session.badCredentials\"}");
 
-        assertThat(browser.get("/api/session")).bodyJson().isStrictlyEqualTo("{}");
+        assertThat(browser.get("/api/session")).bodyJson().isStrictlyEqualTo("{\"passkeys\": true}");
     }
 
     @Test
@@ -106,7 +106,7 @@ class SignInTests {
 
         assertThat(browser.delete("/api/session")).hasStatus(204);
 
-        assertThat(browser.get("/api/session")).bodyJson().isStrictlyEqualTo("{}");
+        assertThat(browser.get("/api/session")).bodyJson().isStrictlyEqualTo("{\"passkeys\": true}");
         assertThat(browser.get("/api/games")).hasStatus(401);
     }
 
@@ -144,7 +144,7 @@ class SignInTests {
         accounts.disable(dora);
 
         assertThat(browser.get("/api/games")).hasStatus(401);
-        assertThat(browser.get("/api/session")).bodyJson().isStrictlyEqualTo("{}");
+        assertThat(browser.get("/api/session")).bodyJson().isStrictlyEqualTo("{\"passkeys\": true}");
     }
 
     @Test

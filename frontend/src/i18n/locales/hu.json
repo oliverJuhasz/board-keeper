@@ -201,7 +201,8 @@
     "setupNeeded": {
       "title": "A Board Keeper még nincs beállítva",
       "text": "Az első adminisztrátor létrehozásához nyisd meg a szerver naplójában található beállítási hivatkozást."
-    }
+    },
+    "withPasskey": "Bejelentkezés passkeyjel"
   },
   "setup": {
     "title": "A Board Keeper beállítása",
@@ -263,7 +264,8 @@
     "network": "A szerver nem érhető el. Ellenőrizd a kapcsolatot, és próbáld újra.",
     "session": {
       "badCredentials": "Hibás felhasználónév vagy jelszó.",
-      "accountDisabled": "Ezt a fiókot letiltották."
+      "accountDisabled": "Ezt a fiókot letiltották.",
+      "passkeyNotAccepted": "Ezt a passkeyt nem fogadtuk el. Próbáld újra, vagy jelentkezz be a jelszavaddal."
     },
     "setup": {
       "wrongLink": "Ez a beállítási hivatkozás nem érvényes. Használd a szerver naplójában található legújabb hivatkozást.",
@@ -316,6 +318,11 @@
       "gameModuleMissing": "A Board Keeper ezen verziója nem tudja pontozni ezt a játékot.",
       "notFound": "Ez a parti már nem létezik.",
       "gameCannotChange": "Egy partit nem lehet másik játékhoz áthelyezni."
+    },
+    "passkeys": {
+      "notAdded": "Nem sikerült hozzáadni a passkeyt. Próbáld újra.",
+      "notFound": "Ez a passkey már nem létezik.",
+      "unavailable": "Ez a Board Keeper nem kínál passkeyt."
     }
   },
   "nav": {
@@ -427,6 +434,31 @@
       "new": "Új jelszó",
       "submit": "Jelszó módosítása",
       "changed": "A jelszavad megváltozott. A többi eszközön kijelentkeztettünk."
+    },
+    "passkeys": {
+      "title": "Passkeyek",
+      "description": "Jelentkezz be a telefonoddal, a számítógépeddel vagy biztonsági kulccsal, ujjlenyomattal, arccal vagy PIN-kóddal, a jelszó begépelése helyett. A jelszavad továbbra is működik.",
+      "loading": "A passkeyjeid betöltése",
+      "loadFailed": "Nem sikerült betölteni a passkeyjeidet",
+      "none": "Még nincs passkeyed.",
+      "added": "Hozzáadva: {{date}}",
+      "lastUsed": "utoljára használva: {{date}}",
+      "neverUsed": "még nem használtad",
+      "remove": "{{label}} törlése",
+      "add": "Passkey hozzáadása",
+      "notInThisBrowser": "Ez a böngésző nem tud passkeyt készíteni.",
+      "addDialog": {
+        "title": "Passkey hozzáadása",
+        "description": "Az eszközöd megkér, hogy erősítsd meg ujjlenyomattal, arccal vagy PIN-kóddal.",
+        "label": "Név",
+        "labelHint": "Hogy meg tudd különböztetni a passkeyjeidet, például \"Telefonom\".",
+        "submit": "Passkey hozzáadása"
+      },
+      "removeDialog": {
+        "title": "Törlöd a(z) \"{{label}}\" passkeyt?",
+        "description": "Többé nem tudsz vele bejelentkezni. A jelszavad és a többi passkeyed továbbra is működik. Az eszközöd talán még mutatja, amíg ott is nem törlöd.",
+        "confirm": "Passkey törlése"
+      }
     }
   },
   "accounts": {

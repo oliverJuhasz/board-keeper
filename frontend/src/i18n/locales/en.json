@@ -201,7 +201,8 @@
     "setupNeeded": {
       "title": "Board Keeper isn't set up yet",
       "text": "To create the first admin, open the setup link from the server's log."
-    }
+    },
+    "withPasskey": "Sign in with a passkey"
   },
   "setup": {
     "title": "Set up Board Keeper",
@@ -263,7 +264,8 @@
     "network": "Couldn't reach the server. Check your connection and try again.",
     "session": {
       "badCredentials": "Wrong username or password.",
-      "accountDisabled": "This account has been disabled."
+      "accountDisabled": "This account has been disabled.",
+      "passkeyNotAccepted": "This passkey wasn't accepted. Try again, or sign in with your password."
     },
     "setup": {
       "wrongLink": "This setup link is not valid. Use the newest link from the server's log.",
@@ -316,6 +318,11 @@
       "gameModuleMissing": "This version of Board Keeper can't score this game.",
       "notFound": "This play no longer exists.",
       "gameCannotChange": "A play can't be moved to another game."
+    },
+    "passkeys": {
+      "notAdded": "The passkey couldn't be added. Please try again.",
+      "notFound": "This passkey no longer exists.",
+      "unavailable": "This Board Keeper doesn't offer passkeys."
     }
   },
   "nav": {
@@ -427,6 +434,31 @@
       "new": "New password",
       "submit": "Change password",
       "changed": "Your password has been changed. Other devices have been signed out."
+    },
+    "passkeys": {
+      "title": "Passkeys",
+      "description": "Sign in with your phone, computer or security key, by fingerprint, face or PIN, instead of typing your password. Your password keeps working too.",
+      "loading": "Loading your passkeys",
+      "loadFailed": "Couldn't load your passkeys",
+      "none": "You have no passkeys yet.",
+      "added": "Added {{date}}",
+      "lastUsed": "last used {{date}}",
+      "neverUsed": "not used yet",
+      "remove": "Remove {{label}}",
+      "add": "Add a passkey",
+      "notInThisBrowser": "This browser can't make passkeys.",
+      "addDialog": {
+        "title": "Add a passkey",
+        "description": "Your device will ask you to confirm with your fingerprint, face or PIN.",
+        "label": "Name",
+        "labelHint": "To tell your passkeys apart, such as \"My phone\".",
+        "submit": "Add passkey"
+      },
+      "removeDialog": {
+        "title": "Remove the passkey \"{{label}}\"?",
+        "description": "It won't sign you in any more. Your password and your other passkeys keep working. Your device may still list it until you delete it there too.",
+        "confirm": "Remove passkey"
+      }
     }
   },
   "accounts": {

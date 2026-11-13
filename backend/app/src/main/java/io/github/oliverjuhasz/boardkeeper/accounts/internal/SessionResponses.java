@@ -17,11 +17,17 @@ class SessionResponses {
     private final CurrentAccounts currentAccounts;
     private final AccountRepository accounts;
     private final Players players;
+    private final Passkeys passkeys;
 
-    SessionResponses(CurrentAccounts currentAccounts, AccountRepository accounts, Players players) {
+    SessionResponses(CurrentAccounts currentAccounts, AccountRepository accounts, Players players, Passkeys passkeys) {
         this.currentAccounts = currentAccounts;
         this.accounts = accounts;
         this.players = players;
+        this.passkeys = passkeys;
+    }
+
+    SessionResponse signedOut() {
+        return new SessionResponse(null, passkeys.available());
     }
 
     @Transactional(readOnly = true)
@@ -33,6 +39,6 @@ class SessionResponses {
     SessionResponse of(CurrentAccount account) {
         Player player = players.find(account.playerId()).orElseThrow();
         Language language = accounts.find(account.accountId()).orElseThrow().language();
-        return new SessionResponse(AccountResponse.of(account, player, language));
+        return new SessionResponse(AccountResponse.of(account, player, language), passkeys.available());
     }
 }

@@ -28,6 +28,8 @@ public class TestDatabase {
 
     public void empty() {
         dsl.deleteFrom(DSL.table("spring_session")).execute();
+        // Spring Security's passkey tables, which jOOQ has no classes for. A passkey goes with its user.
+        dsl.deleteFrom(DSL.table("user_entities")).execute();
         // A Play's Results go with it.
         dsl.deleteFrom(PLAY).execute();
         dsl.deleteFrom(STATS_PLAY).execute();

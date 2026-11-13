@@ -10,13 +10,17 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { FieldGroup } from "@/components/ui/field"
 import { newPassword, required } from "@/features/session/accountRules"
+import { useSession } from "@/features/session/useSession"
 import { LanguageSelect } from "@/i18n/LanguageSelect"
+import { PasskeysCard } from "./PasskeysCard"
 
 const passwordForm = z.object({ currentPassword: required, newPassword })
 
-/** What someone can change about their own Account: the language and the password. */
+/** What someone can change about their own Account: the language, the password and passkeys. */
 export function SettingsPage() {
   const { t } = useTranslation()
+  // Only an installation whose address is set offers passkeys.
+  const passkeys = useSession().data?.passkeys === true
   const form = useForm({
     resolver: zodResolver(passwordForm),
     defaultValues: { currentPassword: "", newPassword: "" },
@@ -77,6 +81,8 @@ export function SettingsPage() {
           </form>
         </CardContent>
       </Card>
+
+      {passkeys && <PasskeysCard />}
     </div>
   )
 }

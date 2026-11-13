@@ -67,6 +67,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
+        <!-- Passkeys: Spring Security's WebAuthn support, which checks what a phone or a security
+             key signs. It brings the WebAuthn4J library, which does the cryptography. -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-webauthn</artifactId>
+        </dependency>
         <!-- Keeps signed-in sessions in PostgreSQL instead of in memory (ADR 0013). -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -125,6 +131,13 @@
         <dependency>
             <groupId>org.springframework.modulith</groupId>
             <artifactId>spring-modulith-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- A pretend authenticator, which creates and uses passkeys the way a phone does. -->
+        <dependency>
+            <groupId>com.webauthn4j</groupId>
+            <artifactId>webauthn4j-test</artifactId>
+            <version>${webauthn4j.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -271,9 +284,10 @@
                                     <inputSchema>public</inputSchema>
                                     <!-- Don't write the schema name into generated SQL. -->
                                     <outputSchemaToDefault>true</outputSchemaToDefault>
-                                    <!-- Flyway's bookkeeping table, Spring Session's tables and Spring Modulith's event
-                                         registry are not part of the model. -->
-                                    <excludes>flyway_schema_history | spring_session.* | event_publication</excludes>
+                                    <!-- Flyway's bookkeeping table, Spring Session's tables, Spring Modulith's event
+                                         registry and Spring Security's passkey tables are not part
+                                         of the model: those libraries use them themselves. -->
+                                    <excludes>flyway_schema_history | spring_session.* | event_publication | user_entities | user_credentials</excludes>
                                 </database>
                                 <target>
                                     <packageName>io.github.oliverjuhasz.boardkeeper.jooq</packageName>
