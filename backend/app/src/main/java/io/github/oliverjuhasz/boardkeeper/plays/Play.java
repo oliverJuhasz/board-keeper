@@ -12,7 +12,10 @@ import java.util.UUID;
  * entered and what the Game Module calculated from that when the Play was recorded (ADR 0010).
  *
  * @param gameModuleId the Game Module that scored this Play
- * @param setup the Setup: the value chosen for each Variant, by the Variant's key
+ * @param setup the Setup: the value chosen for each Variant and whether each Expansion was played
+ *     with, by their keys
+ * @param victoryType how the Play was won, by the key of one of its Game Module's Victory Types;
+ *     null for a Game that is won in one way only
  * @param cooperative whether the Players won or lost together
  * @param group how it ended for the group, which only a Cooperative Play has; otherwise null
  * @param results one per Player, in the order the recorder entered them
@@ -27,6 +30,7 @@ public record Play(
         String notes,
         RecordingMode recordingMode,
         Map<String, String> setup,
+        String victoryType,
         boolean cooperative,
         GroupResult group,
         List<Result> results,

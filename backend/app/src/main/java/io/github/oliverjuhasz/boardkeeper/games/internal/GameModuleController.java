@@ -1,10 +1,12 @@
 package io.github.oliverjuhasz.boardkeeper.games.internal;
 
 import io.github.oliverjuhasz.boardkeeper.gameapi.GameModule;
+import io.github.oliverjuhasz.boardkeeper.gameapi.OnlyWhen;
 import io.github.oliverjuhasz.boardkeeper.gameapi.ScoreCategory;
 import io.github.oliverjuhasz.boardkeeper.gameapi.ScorePad;
 import io.github.oliverjuhasz.boardkeeper.gameapi.Solo;
 import io.github.oliverjuhasz.boardkeeper.gameapi.Variant;
+import io.github.oliverjuhasz.boardkeeper.gameapi.VictoryType;
 import io.github.oliverjuhasz.boardkeeper.games.GameModules;
 import io.github.oliverjuhasz.boardkeeper.language.Language;
 import io.swagger.v3.oas.annotations.Operation;
@@ -59,27 +61,59 @@ class GameModuleController {
     @Schema(
             name = "ScorePad",
             description = "What is entered for a Play of the module's Game. It holds keys; what people read is in the"
-                    + " module's texts: \"<module>.variant.<key>\", \"<module>.category.<key>\" and \"<module>.tie\".",
-            requiredProperties = {"minPlayers", "variants", "categories", "recorderDecidesTies"})
+                    + " module's texts: \"<module>.expansion.<key>\", \"<module>.variant.<key>\","
+                    + " \"<module>.category.<key>\", \"<module>.victoryType.<key>\" and \"<module>.tie\".",
+            requiredProperties = {"minPlayers", "expansions", "variants", "categories", "recorderDecidesTies", "victoryTypes"})
     record ScorePadResponse(
             int minPlayers,
             @Schema(description = "Absent when there is no limit") Integer maxPlayers,
+            @Schema(description = "The Expansions a Play can be played with, in the order to offer them")
+                    List<ExpansionResponse> expansions,
             List<VariantResponse> variants,
             @Schema(description = "The rows of the score pad, in its order") List<ScoreCategoryResponse> categories,
             @Schema(description = "Whether the recorder is asked who won a tie for first place that the scores"
                             + " cannot decide")
                     boolean recorderDecidesTies,
             @Schema(description = "How a Solo Play is recorded. Absent for a Game that is not played alone.")
-                    SoloResponse solo) {
+                    SoloResponse solo,
+            @Schema(description = "The ways a Play can be won, the usual one first. Empty for a Game that is won in"
+                            + " one way only.")
+                    List<VictoryTypeResponse> victoryTypes) {
 
         static ScorePadResponse from(ScorePad pad) {
             return new ScorePadResponse(
                     pad.minPlayers(),
                     pad.maxPlayers(),
+                    pad.expansions().stream().map(expansion -> new ExpansionResponse(expansion.key())).toList(),
                     pad.variants().stream().map(VariantResponse::from).toList(),
                     pad.categories().stream().map(ScoreCategoryResponse::from).toList(),
                     pad.recorderDecidesTies(),
-                    SoloResponse.from(pad.solo()));
+                    SoloResponse.from(pad.solo()),
+                    pad.victoryTypes().stream().map(VictoryTypeResponse::from).toList());
+        }
+    }
+
+    @Schema(
+            name = "Expansion",
+            description = "In a Play's Setup, \"true\" when it was played with, and \"false\" or absent when not",
+            requiredProperties = {"key"})
+    record ExpansionResponse(String key) {}
+
+    @Schema(
+            name = "VictoryType",
+            requiredProperties = {"key", "onPoints"})
+    record VictoryTypeResponse(
+            String key,
+            @Schema(description = "Whether the score pad decides the winner. If not, the Play ended outright: it is"
+                            + " recorded with WINNER_ONLY and has one winner.")
+                    boolean onPoints,
+            @Schema(description = "This way of winning is possible only when the Setup has this value. Absent when"
+                            + " it always is.")
+                    OnlyWhenResponse onlyWhen) {
+
+        static VictoryTypeResponse from(VictoryType victoryType) {
+            return new VictoryTypeResponse(
+                    victoryType.key(), victoryType.onPoints(), OnlyWhenResponse.from(victoryType.onlyWhen()));
         }
     }
 
@@ -149,8 +183,8 @@ class GameModuleController {
             @Schema(description = "The lowest value allowed. Absent when there is none.") Integer min,
             @Schema(description = "The highest value allowed. Absent when there is none.") Integer max,
             @Schema(description = "Every value is a multiple of this") int step,
-            @Schema(description = "The row is on the pad only when the Setup has this value for this Variant. Absent"
-                            + " for a row that is always on it.")
+            @Schema(description = "The row is on the pad only when the Setup has this value. Absent for a row that"
+                            + " is always on it.")
                     OnlyWhenResponse onlyWhen,
             @Schema(description = "Whether the row is on the pad of a Solo Play only") boolean soloOnly) {
 
@@ -161,15 +195,22 @@ class GameModuleController {
                     category.min(),
                     category.max(),
                     category.step(),
-                    category.onlyWhen() == null
-                            ? null
-                            : new OnlyWhenResponse(category.onlyWhen().variant(), category.onlyWhen().value()),
+                    OnlyWhenResponse.from(category.onlyWhen()),
                     category.soloOnly());
         }
     }
 
     @Schema(
             name = "OnlyWhen",
-            requiredProperties = {"variant", "value"})
-    record OnlyWhenResponse(String variant, String value) {}
+            description = "A condition on a Play's Setup",
+            requiredProperties = {"key", "value"})
+    record OnlyWhenResponse(
+            @Schema(description = "The key of a Variant or an Expansion") String key,
+            @Schema(description = "The value it has to have. For an Expansion, \"true\" when it is played with.")
+                    String value) {
+
+        static OnlyWhenResponse from(OnlyWhen onlyWhen) {
+            return onlyWhen == null ? null : new OnlyWhenResponse(onlyWhen.key(), onlyWhen.value());
+        }
+    }
 }

@@ -156,6 +156,29 @@ class StatsApiTests {
     }
 
     @Test
+    void countsHowThePlaysOfAGameWereWon() {
+        UUID duel = gameOfModule("seven-wonders-duel");
+        String outright = """
+                {"gameId": "%s", "playedOn": "2026-03-14", "recordingMode": "WINNER_ONLY", "setup": {},
+                 "victoryType": "%s", "players": [{"playerId": "%s", "winner": true}, {"playerId": "%s", "winner": false}]}
+                """;
+        member.post("/api/plays", outright.formatted(duel, "militarySupremacy", anna, dora));
+        member.post("/api/plays", outright.formatted(duel, "civilian", dora, anna));
+        member.post("/api/plays", outright.formatted(duel, "militarySupremacy", dora, anna));
+
+        eventually(() -> assertThat(member.get(statsOf(duel)))
+                .bodyJson()
+                .isLenientlyEqualTo("""
+                        {"plays": 3,
+                         "players": [{"name": "Dora", "plays": 3, "wins": 2}, {"name": "Anna", "plays": 3, "wins": 1}],
+                         "victoryTypes": [{"key": "militarySupremacy", "plays": 2}, {"key": "civilian", "plays": 1}]}
+                        """));
+        // A Game won in one way only has none.
+        UUID calico = gameOfModule("calico");
+        assertThat(member.get(statsOf(calico))).bodyJson().isLenientlyEqualTo("{\"victoryTypes\": []}");
+    }
+
+    @Test
     void cooperativePlaysAreCountedForTheGroup() {
         UUID pandemic = games.create("Pandemic", new RecordingDefaults(true, RecordingMode.POINTS, false)).id();
         String cooperative = """
