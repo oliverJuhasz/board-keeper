@@ -72,6 +72,18 @@ class GamesApiTests {
                             "variants": [{"key": "cooperative", "kind": "ON_OFF"}, {"key": "lowestScoreWins", "kind": "ON_OFF"}],
                             "categories": [{"key": "total", "countsTowardTotal": true, "step": 1}],
                             "recorderDecidesTies": true}},
+                         {"key": "hadara",
+                          "scorePad": {
+                            "minPlayers": 1, "maxPlayers": 5,
+                            "solo": {"kind": "AGAINST_OPPONENT", "opponentCategory": "npc", "tieWins": true},
+                            "variants": [{"key": "npcLevel", "kind": "CHOICE",
+                                          "options": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "godMode"],
+                                          "defaultValue": "1", "soloOnly": true}],
+                            "categories": [
+                              {"key": "colonies"}, {"key": "statues"}, {"key": "silverMedals"},
+                              {"key": "goldMedals", "step": 7}, {"key": "cards"}, {"key": "remainingCoins"},
+                              {"key": "npc", "countsTowardTotal": false, "soloOnly": true}],
+                            "recorderDecidesTies": true}},
                          {"key": "harmonies",
                           "scorePad": {
                             "variants": [{"key": "boardSide", "kind": "CHOICE", "options": ["a", "b"], "defaultValue": "a"},
@@ -107,13 +119,14 @@ class GamesApiTests {
                 .bodyJson()
                 .isLenientlyEqualTo("""
                         [{"name": "Calico", "gameModuleId": "%s", "moduleKey": "calico", "hasOwnModule": true},
+                         {"name": "Hadara", "moduleKey": "hadara", "hasOwnModule": true},
                          {"name": "Harmonies", "moduleKey": "harmonies", "hasOwnModule": true},
                          {"name": "Wyrmspan", "moduleKey": "wyrmspan", "hasOwnModule": true}]
                         """.formatted(CALICO_MODULE_ID));
 
         // Bringing the catalogue in step again changes nothing.
         games.addGamesOfModules();
-        assertThat(games.all()).hasSize(3);
+        assertThat(games.all()).hasSize(4);
     }
 
     @Test
@@ -147,6 +160,7 @@ class GamesApiTests {
                 .isLenientlyEqualTo("""
                         [{"name": "Azul", "moduleKey": "generic", "hasOwnModule": false},
                          {"id": "%s", "name": "calico", "moduleKey": "calico", "hasOwnModule": true},
+                         {"name": "Hadara", "moduleKey": "hadara", "hasOwnModule": true},
                          {"name": "Harmonies", "moduleKey": "harmonies", "hasOwnModule": true},
                          {"name": "Wyrmspan", "moduleKey": "wyrmspan", "hasOwnModule": true}]
                         """.formatted(byHand));

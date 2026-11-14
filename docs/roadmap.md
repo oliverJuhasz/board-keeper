@@ -26,13 +26,14 @@ Terms are defined in [`CONTEXT.md`](../CONTEXT.md). The reasons behind the bigge
   - a page per Game: plays, wins and win rate per Player, best and average score, average Placing, averages per Score Category
   - a page per Player: plays, wins, win rate, most-played Games
 - The interface in English (default), Dutch and Hungarian.
-- An installable PWA that works online only.
+- An installable PWA. New Plays can be recorded without a connection and are sent later.
+- Each Game's rulebooks, uploaded by an Admin and readable by every signed-in Player.
 - A container image built by CI, an example compose file and a self-hosting guide.
 - The API's description and Swagger UI, open to everyone who can reach a running installation.
 
 ### Deliberately not in v1
 
-Recording without a connection, teams, unfinished plays, game nights, importing games from BoardGameGeek, signing in through an outside provider (such as Google), groups or tenants, and Game Modules loaded at runtime.
+Changing Plays without a connection, teams, unfinished plays, game nights, importing games from BoardGameGeek, signing in through an outside provider (such as Google), groups or tenants, and Game Modules loaded at runtime.
 
 ### Later
 
@@ -53,7 +54,7 @@ Recording without a connection, teams, unfinished plays, game nights, importing 
 | **M3** | The module contract with real games | `StandardGameModule`, Setup, Tie-breakers, solo styles; Calico, then Wyrmspan, then Harmonies | Designing a plug-in interface |
 | **M4** | Statistics | Events from `plays`, statistics' own tables, the per-Game and per-Player pages | Spring Modulith events |
 | **M5** | Passkeys, PWA, self-hosting guide | Passkey registration and sign-in, installing and updating the app, the guide | Spring Security passkeys; service workers |
-| **M6** | More games | 7 Wonders Duel with Pantheon and Agora (Victory Types); Spirit Island with its expansions (Player Setup, number Variants); 7 Wonders with Leaders and Cities (Player Setup, negative Score Categories); screens for Recalculation | Stretching the module contract |
+| **M6** | More games | Hadara; rulebooks for each Game; 7 Wonders Duel with Pantheon and Agora (Expansions, Victory Types); 7 Wonders with Leaders and Cities (Player Setup, negative Score Categories); Spirit Island without its expansions (number Variants, a calculated group score); screens for Recalculation | Stretching the module contract |
 
 ## Settled for milestone M2
 
@@ -104,8 +105,17 @@ Recording without a connection, teams, unfinished plays, game nights, importing 
 - **Installing the app on a phone** uses vite-plugin-pwa, which generates the service worker (the script that keeps the app's files on the phone). A new version is announced with a Reload button; the app never reloads by itself, so a half-filled form is never lost.
 - **New Plays can be recorded offline**, and are sent once there is a connection. Existing Plays can't be changed offline, so two devices never change the same Play differently. The phone gives each Play it records its UUID, and the server records a Play with a given UUID only once, so sending again after a lost answer does no harm. Offline, the form has no totals, Placings or tie questions, because the server works those out; a Play the server refuses when it is sent waits on the phone, marked for attention, until it is corrected. New Players can't be added offline. Plays wait until the Account that recorded them is signed in.
 
+## Settled for milestone M6
+
+- **The order of work** is Hadara, then the rulebooks, then 7 Wonders Duel, 7 Wonders and Spirit Island, and last the screens for Recalculation.
+- **Rulebooks are uploaded, not shipped.** The publishers' rulebooks are copyrighted and may only be used privately, so they stay out of the repository and the container image. An Admin uploads a Game's rulebooks (Markdown files with their pictures) in Board Keeper, which keeps them in its database, and every signed-in Player can read them from the Game's page. This works for Games without a module of their own, too.
+- **Spirit Island is played without its expansions** for now: the base game's Spirits, adversaries and scenarios.
+- **7 Wonders is the second edition** (2020), with the Leaders and Cities expansions of that edition.
+- Hadara is scored from the publisher's rulebook (page 10) and its solo rules (pages 2 and 3): Colonies, Statues, Silver medals, Gold medals, Cards and Remaining coins add up, and a tie goes to the most coins left over, then is shared. The leftover coins are not on the score pad, so the form asks who won a tie. A Solo Play is played against the NPC: its score is a row of the score pad, and the Play is won by beating it. A tie is won too: the solo rules follow the normal rules, and the NPC never has coins, so it can't win a tie. The NPC's level (1 to 11, or God mode) is a Variant of Solo Plays only. Which side of the setup cards was used changes nothing about the scoring and is not recorded.
+
 ## Details to settle when a milestone starts
 
 - **M6:** a Variant that is a number in a range, such as an adversary's level. The contract has on/off and choice Variants so far.
 - **M3 and M6:** each game's exact scoring and tie-break rules, taken from its official rulebook. Online summaries disagree, for example on the order of Calico's tie-breakers and on Spirit Island's score formula.
-- **M6:** which edition of 7 Wonders the module covers, because the first and second editions differ. Any team rules in Cities stay unsupported while teams are out of scope.
+- **M6:** how Spirit Island's score rounds "+1 per X living Dahan and −1 per X Blight" (X is the number of players), for example 7 Dahan with 2 players. The rulebook (page 23) doesn't say, and no ruling was found online.
+- **M6:** Cities' team play stays unsupported while teams are out of scope.

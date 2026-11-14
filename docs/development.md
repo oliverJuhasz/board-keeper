@@ -17,6 +17,7 @@ backend/
   games/             the Game Modules, one folder each
     generic/         the Generic Module, for Games without a module of their own
     calico/          the Game Module for Calico
+    hadara/          the Game Module for Hadara
     harmonies/       the Game Module for Harmonies
     wyrmspan/        the Game Module for Wyrmspan
   app/               the Spring Boot application
@@ -263,7 +264,7 @@ New pages are put together from these, in `frontend/src/components/`. `frontend/
 | `LinkDialog` | Creating a one-time link and showing it to copy |
 | `LinkButton` | A link to another page that looks like a button |
 | `QuietLink` | A link in text or a table, such as a name that leads to its statistics, with a faint underline |
-| `TextField`, `TextAreaField`, `CheckboxField`, `RadioField` | A labelled input, text box, checkbox or set of choices, with hint and error |
+| `TextField`, `TextAreaField`, `CheckboxField`, `RadioField`, `SelectField` | A labelled input, text box, checkbox, set of a few choices, or drop-down of many, with hint and error |
 | `FormProblem` | Why the server refused a submission |
 | `PageMessage` | A page that only has something to say |
 
@@ -303,7 +304,7 @@ This writes `frontend/src/components/ui/dialog.tsx`. Run `npm run format` afterw
 
 ### Adding a Game Module
 
-`backend/games/calico` is the example to copy; `backend/games/harmonies` shows a Variant that is a choice, and rows that a Variant swaps; `backend/games/wyrmspan` shows a Game played alone against an automated opponent. A module has three parts: an identity, a description of its Game's score pad, and its texts.
+`backend/games/calico` is the example to copy; `backend/games/harmonies` shows a Variant that is a choice, and rows that a Variant swaps; `backend/games/wyrmspan` shows a Game played alone against an automated opponent; `backend/games/hadara` shows a choice with many options, which the form offers as a drop-down instead of radio buttons once there are more than five. A module has three parts: an identity, a description of its Game's score pad, and its texts.
 
 1. Copy `backend/games/calico` to `backend/games/<key>` and rename the artifact to `game-<key>`.
 2. Give the module a newly generated UUID. It is stored with every Play, so it never changes afterwards ([ADR 0012](adr/0012-game-module-uuid-and-key.md)).

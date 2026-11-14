@@ -24,6 +24,7 @@
         <module>games/calico</module>
         <module>games/harmonies</module>
         <module>games/wyrmspan</module>
+        <module>games/hadara</module>
         <module>app</module>
     </modules>
 
@@ -102,6 +103,11 @@
             <dependency>
                 <groupId>io.github.oliverjuhasz.boardkeeper</groupId>
                 <artifactId>game-wyrmspan</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.oliverjuhasz.boardkeeper</groupId>
+                <artifactId>game-hadara</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

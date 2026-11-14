@@ -14,7 +14,7 @@ import {
   signedInAs,
   wyrmspan,
 } from "@/test/api"
-import { calicoModule, wyrmspanModule } from "@/test/gameModules"
+import { calicoModule, gameModuleTexts, genericModule, wyrmspanModule } from "@/test/gameModules"
 import { renderApp } from "@/test/renderApp"
 import { server } from "@/test/server"
 
@@ -192,6 +192,47 @@ test("a solo play against the Automa records its level and its score, and is won
       },
     ],
   })
+})
+
+test("a Variant with many options is picked from a drop-down", async () => {
+  // As if the Automa had six levels, as Hadara's NPC has twelve.
+  const levels = ["1", "2", "3", "4", "5", "6"]
+  const manyLevels = structuredClone(wyrmspanModule)
+  manyLevels.scorePad.variants[0].options = levels
+  server.use(
+    http.get("*/api/game-modules", () =>
+      HttpResponse.json([calicoModule, genericModule, manyLevels]),
+    ),
+    http.get("*/api/game-modules/texts/:language", () =>
+      HttpResponse.json({
+        ...gameModuleTexts,
+        ...Object.fromEntries(
+          levels.map((level) => [`wyrmspan.variant.automaLevel.${level}`, `Level ${level}`]),
+        ),
+      }),
+    ),
+  )
+  signedInAs(bence)
+  gamesAre([wyrmspan])
+  playCanBeEntered()
+  automaCanBePreviewed()
+  const sent = playsCanBeRecorded(soloPlay({}))
+  renderApp(`/plays/new?game=${wyrmspan.id}`)
+
+  const level = await screen.findByRole("combobox", { name: "Automa level" })
+  expect(screen.queryByRole("radio", { name: "Level 1" })).not.toBeInTheDocument()
+  expect(
+    within(level)
+      .getAllByRole("option")
+      .map((option) => option.textContent),
+  ).toEqual(levels.map((value) => `Level ${value}`))
+  await userEvent.selectOptions(level, "Level 5")
+  await fillWyrmspan("Bence", "12", "40", "9")
+  await userEvent.type(screen.getByLabelText("The Automa's score of Bence"), "61")
+  await userEvent.click(screen.getByRole("button", { name: "Record play" }))
+
+  await screen.findByRole("heading", { name: "Wyrmspan" })
+  expect(sent[0]).toMatchObject({ setup: { automaLevel: "5" } })
 })
 
 test("the Automa is not part of a play with more players", async () => {
