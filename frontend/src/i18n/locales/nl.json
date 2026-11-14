@@ -268,7 +268,8 @@
     "signOut": "Uitloggen",
     "settings": "Instellingen",
     "accounts": "Accounts",
-    "roles": "Rollen"
+    "roles": "Rollen",
+    "sourceCode": "Broncode"
   },
   "password": {
     "show": "Wachtwoord tonen",

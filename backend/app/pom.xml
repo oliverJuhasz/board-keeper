@@ -365,6 +365,24 @@
                 </configuration>
             </plugin>
 
+            <!--
+              Records the commit the build is made from in git.properties, for the "Source code" link
+              (ADR 0016). Spring Boot reads that file into a GitProperties bean. Only the commit is
+              recorded: by default the plugin would also write who built it, on which machine, and their
+              e-mail address, into a jar that is published. Building from a copy without Git still works,
+              and the link then points to the newest code.
+            -->
+            <plugin>
+                <groupId>io.github.git-commit-id</groupId>
+                <artifactId>git-commit-id-maven-plugin</artifactId>
+                <configuration>
+                    <verbose>false</verbose>
+                    <failOnNoGitDirectory>false</failOnNoGitDirectory>
+                    <includeOnlyProperties>
+                        <includeOnlyProperty>^git\.commit\.id$</includeOnlyProperty>
+                    </includeOnlyProperties>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

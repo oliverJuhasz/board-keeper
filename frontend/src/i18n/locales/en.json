@@ -268,7 +268,8 @@
     "signOut": "Sign out",
     "settings": "Settings",
     "accounts": "Accounts",
-    "roles": "Roles"
+    "roles": "Roles",
+    "sourceCode": "Source code"
   },
   "password": {
     "show": "Show password",
