@@ -3,6 +3,7 @@ import tailwindcss from "@tailwindcss/vite"
 import react from "@vitejs/plugin-react"
 import { VitePWA } from "vite-plugin-pwa"
 import { defineConfig } from "vitest/config"
+import { thirdPartyLicenses } from "./vite-plugins/thirdPartyLicenses.ts"
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -51,12 +52,35 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,svg,png,webmanifest}"],
         // Any page address is the single-page app's index.html, which React Router reads...
         navigateFallback: "/index.html",
-        // ...except the server's own addresses, which must always reach the server.
-        navigateFallbackDenylist: [/^\/api\//, /^\/actuator/, /^\/swagger-ui/, /^\/v3\//],
+        // ...except the server's own addresses, which must always reach the server, and files,
+        // such as third-party-licenses.txt: an address whose last part has a dot in it is a file,
+        // as the server sees it too (FrontendResourceConfiguration). Workbox tests these against
+        // the path and the query together, so the last pattern looks only before any "?".
+        navigateFallbackDenylist: [
+          /^\/api\//,
+          /^\/actuator/,
+          /^\/swagger-ui/,
+          /^\/v3\//,
+          /^[^?]*\.[^/?]*(\?|$)/,
+        ],
         // Throw away the files of older versions once a new one is in use.
         cleanupOutdatedCaches: true,
       },
     }),
+    // Lists the licences of the packages in the build, in third-party-licenses.txt. It finds the
+    // packages the JavaScript imports by itself; the others are named here.
+    thirdPartyLicenses([
+      // Imported by src/index.css.
+      "tailwindcss",
+      "tw-animate-css",
+      "shadcn",
+      "@fontsource-variable/geist",
+      // In the service worker, which vite-plugin-pwa builds apart.
+      "workbox-core",
+      "workbox-precaching",
+      "workbox-routing",
+      "workbox-strategies",
+    ]),
   ],
   resolve: {
     // "@/..." means "src/...". Keep in step with "paths" in tsconfig.app.json.

@@ -52,3 +52,15 @@ Milestones M0 to M6 are done, which are all the milestones planned for v1. Board
 - password changes and Reset Links
 
 What might come after v1 is listed under Later in the [roadmap](docs/roadmap.md).
+
+## Licence
+
+Copyright (C) 2026 Oliver Juhasz
+
+Board Keeper is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. It is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See [`LICENSE`](LICENSE) for the full terms.
+
+In short: anyone may use, change and share Board Keeper, also for money. Whoever shares a copy, or runs a changed copy for others, must offer its source code under the same licence. The "Source code" link in the account menu makes that offer for the running version ([ADR 0016](docs/adr/0016-agpl-licence.md)).
+
+The web app includes libraries under licences of their own, listed in `third-party-licenses.txt` beside it (`/third-party-licenses.txt` on a running installation). The backend's libraries keep their licence files inside their own jars.
+
+Board Keeper is not affiliated with the publishers of the games it scores. The names of the games, and names from them such as those of Spirits and Wonders, belong to their owners and are used only to say which game a module scores.

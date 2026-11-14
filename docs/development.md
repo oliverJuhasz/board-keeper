@@ -352,6 +352,14 @@ Nothing else changes. When the application next starts, the Game is in the catal
 
 **Reasons for refusing an entry.** `StandardGameModule` refuses what is wrong in the same way for every Game, such as too few Players or a value a row doesn't allow. Those are the `Standard` reasons of `InvalidPlayException`, and the frontend has their texts, under `plays.invalid` in its translation files. A module only writes texts for reasons of its own.
 
+### The licence
+
+Board Keeper is under the AGPL, version 3 or later ([ADR 0016](adr/0016-agpl-licence.md)). Two parts of the build come from that.
+
+**The "Source code" link.** The AGPL asks whoever runs a changed copy for others to offer them its source, so the account menu links to the commit the running version was built from. While the backend is built, `git-commit-id-maven-plugin` writes that commit into `git.properties`; Spring Boot reads the file into a `GitProperties` bean, and `GET /api/about` puts the commit into the `boardkeeper.source.url` setting. The plugin records nothing but the commit, because by default it would also write who built the jar, on which machine, and their e-mail address, into a jar that gets published. A build from a copy without Git links to the newest code.
+
+**The licences of the libraries.** The libraries' licences ask for their notices to go along with every copy, and minifying the web app throws away the comments that held them. A small Vite plugin, `frontend/vite-plugins/thirdPartyLicenses.ts`, writes the licence of every package in the build into `third-party-licenses.txt`. It finds the packages the JavaScript imports by itself; a package that reaches the browser another way, such as through a stylesheet, is named in `vite.config.ts`, so add it there. The backend's libraries go into the jar, and the image, as their own unchanged jars, with whatever licence files they carry.
+
 ## Continuous integration
 
 `.github/workflows/ci.yml` runs on every push. It checks and tests the frontend, builds it, builds and tests the backend, and builds the container image. On `main` it also publishes the image to GitHub Container Registry as `ghcr.io/oliverjuhasz/board-keeper`, tagged `latest` and `sha-<commit>`.

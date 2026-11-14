@@ -1,6 +1,13 @@
 import { http, HttpResponse } from "msw"
 import { setupServer } from "msw/node"
+import type { About } from "@/api/client"
 import { gameModules, gameModuleTexts } from "./gameModules"
+
+/** What the backend says about the running version. */
+export const about: About = {
+  sourceCode:
+    "https://github.com/oliverJuhasz/board-keeper/tree/1221b004748ae4f76d42d91dcdba7abb5890b2b7",
+}
 
 /**
  * A stand-in for the backend in tests. Mock Service Worker (MSW) catches the requests the
@@ -16,4 +23,6 @@ export const server = setupServer(
   // Unless a test says otherwise, nothing has been played yet.
   http.get("*/api/plays/last-played", () => HttpResponse.json([])),
   http.get("*/api/plays", () => HttpResponse.json({ plays: [] })),
+  // Where the source code of the running version is, for the account menu.
+  http.get("*/api/about", () => HttpResponse.json(about)),
 )

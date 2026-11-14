@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd"
+         child.project.url.inherit.append.path="false">
     <modelVersion>4.0.0</modelVersion>
 
     <!-- Inheriting from Spring Boot's parent gives every module tested, matching versions
@@ -17,6 +18,27 @@
     <version>0.1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Board Keeper</name>
+    <url>https://github.com/oliverJuhasz/board-keeper</url>
+
+    <!-- Board Keeper's own licence (ADR 0016). Spring Boot's parent names its own licence, developers
+         and repository, and Maven would pass them on to every module unless they are given here. -->
+    <licenses>
+        <license>
+            <name>AGPL-3.0-or-later</name>
+            <url>https://www.gnu.org/licenses/agpl-3.0.html</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <id>oliverJuhasz</id>
+            <name>Oliver Juhasz</name>
+            <url>https://github.com/oliverJuhasz</url>
+        </developer>
+    </developers>
+    <scm child.scm.url.inherit.append.path="false">
+        <url>https://github.com/oliverJuhasz/board-keeper</url>
+    </scm>
 
     <modules>
         <module>game-api</module>

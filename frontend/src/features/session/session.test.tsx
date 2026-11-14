@@ -4,7 +4,7 @@ import { http, HttpResponse } from "msw"
 import { expect, test } from "vitest"
 import { anna, bence, gamesAre, problem, signedInAs, signedOut } from "@/test/api"
 import { renderApp } from "@/test/renderApp"
-import { server } from "@/test/server"
+import { about, server } from "@/test/server"
 
 const PASSWORD = "correct horse battery staple"
 
@@ -199,4 +199,16 @@ test("the account menu shows a member only what a member can use", async () => {
   expect(await screen.findByRole("menuitem", { name: "Settings" })).toBeInTheDocument()
   expect(screen.queryByRole("menuitem", { name: "Accounts" })).not.toBeInTheDocument()
   expect(screen.queryByRole("menuitem", { name: "Roles" })).not.toBeInTheDocument()
+})
+
+test("the account menu links to the source code of the running version", async () => {
+  signedInAs(bence)
+  gamesAre([])
+  renderApp("/")
+
+  await userEvent.click(await screen.findByRole("button", { name: "Account" }))
+
+  const link = await screen.findByRole("menuitem", { name: "Source code" })
+  expect(link).toHaveAttribute("href", about.sourceCode)
+  expect(link).toHaveAttribute("target", "_blank")
 })

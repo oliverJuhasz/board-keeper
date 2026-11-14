@@ -21,13 +21,18 @@ class FrontendResourceConfiguration implements WebMvcConfigurer {
     private static final String FRONTEND = "classpath:/static/";
 
     /**
-     * The type of manifest.webmanifest, the file that makes the frontend installable as an app.
-     * A file's type comes from the web server's list of extensions, which lacks this one: without
-     * it, the manifest would go out as a plain download (application/octet-stream).
+     * Types the web server's list of extensions lacks or gets wrong. A file's type comes from that list.
+     * <ul>
+     *   <li>manifest.webmanifest makes the frontend installable as an app. Without its type it would
+     *       go out as a plain download (application/octet-stream).</li>
+     *   <li>third-party-licenses.txt holds names with letters outside ASCII. Without a character set,
+     *       a browser would read it as an older Western European encoding and garble them.</li>
+     * </ul>
      */
     @Bean
-    WebServerFactoryCustomizer<ConfigurableServletWebServerFactory> webManifestType() {
-        return server -> server.addMimeMappings(new MimeMappings(Map.of("webmanifest", "application/manifest+json")));
+    WebServerFactoryCustomizer<ConfigurableServletWebServerFactory> fileTypes() {
+        return server -> server.addMimeMappings(new MimeMappings(
+                Map.of("webmanifest", "application/manifest+json", "txt", "text/plain;charset=UTF-8")));
     }
 
     @Override

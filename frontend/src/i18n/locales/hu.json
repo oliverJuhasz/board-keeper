@@ -268,7 +268,8 @@
     "signOut": "Kijelentkezés",
     "settings": "Beállítások",
     "accounts": "Fiókok",
-    "roles": "Szerepkörök"
+    "roles": "Szerepkörök",
+    "sourceCode": "Forráskód"
   },
   "password": {
     "show": "Jelszó megjelenítése",

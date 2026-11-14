@@ -1,6 +1,16 @@
 {
   "components" : {
     "schemas" : {
+      "About" : {
+        "properties" : {
+          "sourceCode" : {
+            "description" : "Where the source code of the running version is",
+            "type" : "string"
+          }
+        },
+        "required" : [ "sourceCode" ],
+        "type" : "object"
+      },
       "Account" : {
         "properties" : {
           "disabled" : {
@@ -1563,11 +1573,45 @@
     }
   },
   "info" : {
+    "license" : {
+      "identifier" : "AGPL-3.0-or-later",
+      "name" : "AGPL-3.0-or-later"
+    },
     "title" : "Board Keeper API",
     "version" : "1"
   },
   "openapi" : "3.1.0",
   "paths" : {
+    "/api/about" : {
+      "get" : {
+        "description" : "Where the source code of the running version is. Signed-in Accounts only, because the exact version is of no use to anyone else.",
+        "operationId" : "getAbout",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/About"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "About the running version",
+        "tags" : [ "About" ]
+      }
+    },
     "/api/account/language" : {
       "put" : {
         "operationId" : "setOwnLanguage",

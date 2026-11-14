@@ -103,6 +103,10 @@ The logs show what happened, newest last:
 docker compose logs --tail 100 app
 ```
 
+## If you change Board Keeper's code
+
+Board Keeper is under the GNU Affero General Public License. Running it unchanged asks nothing of you. If you change its code and let others use your copy, the licence asks you to offer them your changed source. The "Source code" link in the account menu points to Board Keeper's own repository; point it at yours with the `BOARDKEEPER_SOURCE_URL` environment variable of the `app` container, where `{commit}` stands for the commit your build was made from, such as `https://example.org/you/board-keeper/tree/{commit}`.
+
 ## Settings
 
 | In `.env` | What it is |
