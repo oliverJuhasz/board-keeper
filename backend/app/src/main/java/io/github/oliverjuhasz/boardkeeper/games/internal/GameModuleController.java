@@ -62,8 +62,17 @@ class GameModuleController {
             name = "ScorePad",
             description = "What is entered for a Play of the module's Game. It holds keys; what people read is in the"
                     + " module's texts: \"<module>.expansion.<key>\", \"<module>.variant.<key>\","
-                    + " \"<module>.category.<key>\", \"<module>.victoryType.<key>\" and \"<module>.tie\".",
-            requiredProperties = {"minPlayers", "expansions", "variants", "categories", "recorderDecidesTies", "victoryTypes"})
+                    + " \"<module>.category.<key>\", \"<module>.victoryType.<key>\", \"<module>.playerSetup.<key>\","
+                    + " \"<module>.playerSetup.<key>.<option>\" and \"<module>.tie\".",
+            requiredProperties = {
+                "minPlayers",
+                "expansions",
+                "variants",
+                "categories",
+                "recorderDecidesTies",
+                "victoryTypes",
+                "playerSetup"
+            })
     record ScorePadResponse(
             int minPlayers,
             @Schema(description = "Absent when there is no limit") Integer maxPlayers,
@@ -78,7 +87,10 @@ class GameModuleController {
                     SoloResponse solo,
             @Schema(description = "The ways a Play can be won, the usual one first. Empty for a Game that is won in"
                             + " one way only.")
-                    List<VictoryTypeResponse> victoryTypes) {
+                    List<VictoryTypeResponse> victoryTypes,
+            @Schema(description = "The choices made for each Player, such as their Wonder, in the order to offer them."
+                            + " Empty for a Game without Player Setup.")
+                    List<PlayerSetupChoiceResponse> playerSetup) {
 
         static ScorePadResponse from(ScorePad pad) {
             return new ScorePadResponse(
@@ -89,9 +101,21 @@ class GameModuleController {
                     pad.categories().stream().map(ScoreCategoryResponse::from).toList(),
                     pad.recorderDecidesTies(),
                     SoloResponse.from(pad.solo()),
-                    pad.victoryTypes().stream().map(VictoryTypeResponse::from).toList());
+                    pad.victoryTypes().stream().map(VictoryTypeResponse::from).toList(),
+                    pad.playerSetup().stream()
+                            .map(choice -> new PlayerSetupChoiceResponse(choice.key(), choice.options(), choice.oncePerPlay()))
+                            .toList());
         }
     }
+
+    @Schema(
+            name = "PlayerSetupChoice",
+            description = "Something chosen for each Player, such as their Wonder. It may be left out for a Player.",
+            requiredProperties = {"key", "options", "oncePerPlay"})
+    record PlayerSetupChoiceResponse(
+            String key,
+            @Schema(description = "The keys of the options, in the order to offer them") List<String> options,
+            @Schema(description = "Whether no two Players of a Play can have the same option") boolean oncePerPlay) {}
 
     @Schema(
             name = "Expansion",

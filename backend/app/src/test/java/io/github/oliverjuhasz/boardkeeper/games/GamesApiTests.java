@@ -96,6 +96,22 @@ class GamesApiTests {
                               {"key": "animals"},
                               {"key": "naturesSpirit", "onlyWhen": {"key": "naturesSpirit", "value": "true"}}],
                             "expansions": [], "victoryTypes": []}},
+                         {"key": "seven-wonders",
+                          "scorePad": {
+                            "minPlayers": 3, "maxPlayers": 7,
+                            "expansions": [{"key": "leaders"}, {"key": "cities"}],
+                            "categories": [
+                              {"key": "wonder", "min": 0}, {"key": "treasury"}, {"key": "military"},
+                              {"key": "civilian"}, {"key": "commercial"}, {"key": "scientific"}, {"key": "guilds"},
+                              {"key": "cities", "onlyWhen": {"key": "cities", "value": "true"}},
+                              {"key": "leaders", "onlyWhen": {"key": "leaders", "value": "true"}}],
+                            "recorderDecidesTies": true,
+                            "victoryTypes": [],
+                            "playerSetup": [
+                              {"key": "wonder", "oncePerPlay": true,
+                               "options": ["alexandria", "babylon", "ephesus", "giza", "halicarnassus", "olympia", "rhodes",
+                                           "roma", "abuSimbel", "byzantium", "petra", "mannekenPis"]},
+                              {"key": "side", "oncePerPlay": false, "options": ["day", "night"]}]}},
                          {"key": "seven-wonders-duel",
                           "scorePad": {
                             "minPlayers": 2, "maxPlayers": 2,
@@ -139,7 +155,8 @@ class GamesApiTests {
                 .hasStatusOk()
                 .bodyJson()
                 .isLenientlyEqualTo("""
-                        [{"name": "7 Wonders Duel", "moduleKey": "seven-wonders-duel", "hasOwnModule": true},
+                        [{"name": "7 Wonders", "moduleKey": "seven-wonders", "hasOwnModule": true},
+                         {"name": "7 Wonders Duel", "moduleKey": "seven-wonders-duel", "hasOwnModule": true},
                          {"name": "Calico", "gameModuleId": "%s", "moduleKey": "calico", "hasOwnModule": true},
                          {"name": "Hadara", "moduleKey": "hadara", "hasOwnModule": true},
                          {"name": "Harmonies", "moduleKey": "harmonies", "hasOwnModule": true},
@@ -148,7 +165,7 @@ class GamesApiTests {
 
         // Bringing the catalogue in step again changes nothing.
         games.addGamesOfModules();
-        assertThat(games.all()).hasSize(5);
+        assertThat(games.all()).hasSize(6);
     }
 
     @Test
@@ -184,7 +201,8 @@ class GamesApiTests {
         assertThat(member.get("/api/games"))
                 .bodyJson()
                 .isLenientlyEqualTo("""
-                        [{"name": "7 Wonders Duel", "moduleKey": "seven-wonders-duel", "hasOwnModule": true},
+                        [{"name": "7 Wonders", "moduleKey": "seven-wonders", "hasOwnModule": true},
+                         {"name": "7 Wonders Duel", "moduleKey": "seven-wonders-duel", "hasOwnModule": true},
                          {"name": "Azul", "moduleKey": "generic", "hasOwnModule": false},
                          {"id": "%s", "name": "calico", "moduleKey": "calico", "hasOwnModule": true},
                          {"name": "Hadara", "moduleKey": "hadara", "hasOwnModule": true},
