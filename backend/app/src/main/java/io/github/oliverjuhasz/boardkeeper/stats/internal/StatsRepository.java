@@ -61,6 +61,7 @@ class StatsRepository {
                 .set(STATS_PLAY.SOLO, play.solo())
                 .set(STATS_PLAY.GROUP_WON, play.group() == null ? null : play.group().won())
                 .set(STATS_PLAY.GROUP_TOTAL, play.group() == null ? null : play.group().total())
+                .set(STATS_PLAY.VICTORY_TYPE, play.victoryType())
                 .execute();
         var results = dsl.insertInto(
                 STATS_RESULT,
@@ -126,6 +127,22 @@ class StatsRepository {
                         row.value6(),
                         toDouble(row.value7()),
                         toDouble(row.value8())));
+    }
+
+    /**
+     * How many Plays of a Game were won in each way, counting the Plays the given Game Module
+     * scored, whose Victory Types are its own. The most first.
+     */
+    List<VictoryTypeCount> victoryTypes(UUID gameId, UUID gameModuleId) {
+        return dsl.select(STATS_PLAY.VICTORY_TYPE, count())
+                .from(STATS_PLAY)
+                .where(
+                        STATS_PLAY.GAME_ID.eq(gameId),
+                        STATS_PLAY.GAME_MODULE_ID.eq(gameModuleId),
+                        STATS_PLAY.VICTORY_TYPE.isNotNull())
+                .groupBy(STATS_PLAY.VICTORY_TYPE)
+                .orderBy(count().desc(), STATS_PLAY.VICTORY_TYPE)
+                .fetch(row -> new VictoryTypeCount(row.value1(), row.value2()));
     }
 
     /** How the group did in the Cooperative Plays of a Game. Null when there are none. */
@@ -259,6 +276,8 @@ class StatsRepository {
             Double averagePlacing) {}
 
     record GroupTally(int plays, int wins, Integer highestScore, Double averageScore) {}
+
+    record VictoryTypeCount(String victoryType, int plays) {}
 
     /**
      * @param plays every Play the Player took part in

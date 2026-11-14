@@ -103,6 +103,16 @@
         "required" : [ "disabled" ],
         "type" : "object"
       },
+      "Expansion" : {
+        "description" : "In a Play's Setup, \"true\" when it was played with, and \"false\" or absent when not",
+        "properties" : {
+          "key" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "key" ],
+        "type" : "object"
+      },
       "FieldProblem" : {
         "description" : "For the code request.invalid: the fields that broke a rule",
         "properties" : {
@@ -256,9 +266,16 @@
               "$ref" : "#/components/schemas/SoloStats"
             },
             "type" : "array"
+          },
+          "victoryTypes" : {
+            "description" : "For a Game that can be won in more than one way: how many Plays were won in each way, the most first. Only Plays scored by the Game Module of today count. Empty for other Games.",
+            "items" : {
+              "$ref" : "#/components/schemas/VictoryTypeStats"
+            },
+            "type" : "array"
           }
         },
-        "required" : [ "categoryAverages", "gameId", "gameModuleId", "players", "plays", "solo" ],
+        "required" : [ "categoryAverages", "gameId", "gameModuleId", "players", "plays", "solo", "victoryTypes" ],
         "type" : "object"
       },
       "GroupEntry" : {
@@ -491,8 +508,12 @@
             "additionalProperties" : {
               "type" : "string"
             },
-            "description" : "The Setup: the value chosen for each Variant, by the Variant's key. The keys are the Game Module's. The Generic Module has the on/off Variants \"cooperative\" and \"lowestScoreWins\", each \"true\" or \"false\".",
+            "description" : "The Setup: the value chosen for each Variant, and whether each Expansion was played with, by their keys. The keys are the Game Module's. An on/off Variant and an Expansion are \"true\" or \"false\". The Generic Module has the on/off Variants \"cooperative\" and \"lowestScoreWins\".",
             "type" : "object"
+          },
+          "victoryType" : {
+            "description" : "How the Play was won: the key of one of the Game Module's Victory Types. Only for a Game that can be won in more than one way, and not for a Solo Play. A Victory Type not on points is recorded with WINNER_ONLY and one winner.",
+            "type" : "string"
           }
         },
         "required" : [ "gameId", "playedOn", "players", "recordingMode", "setup" ],
@@ -513,15 +534,18 @@
         "type" : "object"
       },
       "OnlyWhen" : {
+        "description" : "A condition on a Play's Setup",
         "properties" : {
-          "value" : {
+          "key" : {
+            "description" : "The key of a Variant or an Expansion",
             "type" : "string"
           },
-          "variant" : {
+          "value" : {
+            "description" : "The value it has to have. For an Expansion, \"true\" when it is played with.",
             "type" : "string"
           }
         },
-        "required" : [ "value", "variant" ],
+        "required" : [ "key", "value" ],
         "type" : "object"
       },
       "Passkey" : {
@@ -645,6 +669,10 @@
               "type" : "string"
             },
             "type" : "object"
+          },
+          "victoryType" : {
+            "description" : "How the Play was won: the key of one of its Game Module's Victory Types. Absent for a Game that is won in one way only.",
+            "type" : "string"
           }
         },
         "required" : [ "canChange", "cooperative", "game", "gameModuleId", "id", "playedOn", "recordedAt", "recordedBy", "recordingMode", "results", "setup" ],
@@ -720,6 +748,10 @@
               "type" : "string"
             },
             "type" : "object"
+          },
+          "victoryType" : {
+            "description" : "As in NewPlay",
+            "type" : "string"
           }
         },
         "required" : [ "gameModuleId", "players", "recordingMode", "setup" ],
@@ -1136,7 +1168,7 @@
           },
           "onlyWhen" : {
             "$ref" : "#/components/schemas/OnlyWhen",
-            "description" : "The row is on the pad only when the Setup has this value for this Variant. Absent for a row that is always on it."
+            "description" : "The row is on the pad only when the Setup has this value. Absent for a row that is always on it."
           },
           "soloOnly" : {
             "description" : "Whether the row is on the pad of a Solo Play only",
@@ -1152,12 +1184,19 @@
         "type" : "object"
       },
       "ScorePad" : {
-        "description" : "What is entered for a Play of the module's Game. It holds keys; what people read is in the module's texts: \"<module>.variant.<key>\", \"<module>.category.<key>\" and \"<module>.tie\".",
+        "description" : "What is entered for a Play of the module's Game. It holds keys; what people read is in the module's texts: \"<module>.expansion.<key>\", \"<module>.variant.<key>\", \"<module>.category.<key>\", \"<module>.victoryType.<key>\" and \"<module>.tie\".",
         "properties" : {
           "categories" : {
             "description" : "The rows of the score pad, in its order",
             "items" : {
               "$ref" : "#/components/schemas/ScoreCategory"
+            },
+            "type" : "array"
+          },
+          "expansions" : {
+            "description" : "The Expansions a Play can be played with, in the order to offer them",
+            "items" : {
+              "$ref" : "#/components/schemas/Expansion"
             },
             "type" : "array"
           },
@@ -1183,9 +1222,16 @@
               "$ref" : "#/components/schemas/Variant"
             },
             "type" : "array"
+          },
+          "victoryTypes" : {
+            "description" : "The ways a Play can be won, the usual one first. Empty for a Game that is won in one way only.",
+            "items" : {
+              "$ref" : "#/components/schemas/VictoryType"
+            },
+            "type" : "array"
           }
         },
-        "required" : [ "categories", "minPlayers", "recorderDecidesTies", "variants" ],
+        "required" : [ "categories", "expansions", "minPlayers", "recorderDecidesTies", "variants", "victoryTypes" ],
         "type" : "object"
       },
       "Session" : {
@@ -1356,6 +1402,37 @@
           }
         },
         "required" : [ "defaultValue", "key", "kind", "soloOnly" ],
+        "type" : "object"
+      },
+      "VictoryType" : {
+        "properties" : {
+          "key" : {
+            "type" : "string"
+          },
+          "onPoints" : {
+            "description" : "Whether the score pad decides the winner. If not, the Play ended outright: it is recorded with WINNER_ONLY and has one winner.",
+            "type" : "boolean"
+          },
+          "onlyWhen" : {
+            "$ref" : "#/components/schemas/OnlyWhen",
+            "description" : "This way of winning is possible only when the Setup has this value. Absent when it always is."
+          }
+        },
+        "required" : [ "key", "onPoints" ],
+        "type" : "object"
+      },
+      "VictoryTypeStats" : {
+        "properties" : {
+          "key" : {
+            "description" : "The key of one of the Game Module's Victory Types",
+            "type" : "string"
+          },
+          "plays" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "key", "plays" ],
         "type" : "object"
       },
       "WebAuthnJson" : {

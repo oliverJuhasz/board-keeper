@@ -317,6 +317,85 @@ class ModuleGamePlaysApiTests {
         assertThat(member.post("/api/plays", withLevel.replace("{\"automaLevel\": \"2\"}", "{}"))).hasStatusOk();
     }
 
+    @Test
+    void aPlayOfAGameWonInSeveralWaysSaysHowItWasWon() {
+        UUID duel = gameOfModule("seven-wonders-duel");
+        String pad = """
+                {"civilian": %d, "scientific": 8, "commercial": 5, "grandTemples": 12, "divinities": 9, "wonders": 15,
+                 "progressTokens": 4, "coins": 3, "military": 2}""";
+
+        MvcTestResult recorded = member.post("/api/plays", """
+                {"gameId": "%s", "playedOn": "2026-03-14", "recordingMode": "POINTS",
+                 "setup": {"pantheon": "true"}, "victoryType": "civilian",
+                 "players": [{"playerId": "%s", "winner": false, "scores": %s},
+                             {"playerId": "%s", "winner": false, "scores": %s}]}
+                """.formatted(duel, anna, pad.formatted(20), bence, pad.formatted(23)));
+
+        // Level on points, and the blue cards decide.
+        assertThat(recorded)
+                .hasStatusOk()
+                .bodyJson()
+                .isLenientlyEqualTo("""
+                        {"setup": {"pantheon": "true"}, "victoryType": "civilian",
+                         "results": [{"total": 78, "placing": 2, "won": false}, {"total": 81, "placing": 1, "won": true}]}
+                        """);
+        assertThat(member.get("/api/plays/" + idOf(recorded)))
+                .bodyJson()
+                .extractingPath("$.victoryType")
+                .isEqualTo("civilian");
+    }
+
+    @Test
+    void aPlayWonOutrightHasOneWinnerAndNoScores() {
+        UUID duel = gameOfModule("seven-wonders-duel");
+        String outright = """
+                {"gameId": "%s", "playedOn": "2026-03-14", "recordingMode": "WINNER_ONLY",
+                 "setup": %s, "victoryType": "%s",
+                 "players": [{"playerId": "%s", "winner": true}, {"playerId": "%s", "winner": %s}]}
+                """;
+
+        assertThat(member.post("/api/plays", outright.formatted(duel, "{}", "militarySupremacy", anna, dora, false)))
+                .hasStatusOk()
+                .bodyJson()
+                .isLenientlyEqualTo("""
+                        {"victoryType": "militarySupremacy",
+                         "results": [{"won": true, "markedWinner": true}, {"won": false}]}
+                        """);
+        assertThat(member.post("/api/plays", outright.formatted(duel, "{}", "militarySupremacy", anna, dora, true)))
+                .hasStatus(422)
+                .bodyJson()
+                .isLenientlyEqualTo("{\"code\": \"plays.invalidEntry\", \"reason\": \"plays.invalid.oneWinnerOnly\"}");
+        // Political supremacy comes with Agora.
+        assertThat(member.post("/api/plays", outright.formatted(duel, "{}", "politicalSupremacy", anna, dora, false)))
+                .hasStatus(422)
+                .bodyJson()
+                .isLenientlyEqualTo("{\"reason\": \"plays.invalid.notRecorded\"}");
+        assertThat(member.post(
+                        "/api/plays", outright.formatted(duel, "{\"agora\": \"true\"}", "politicalSupremacy", anna, dora, false)))
+                .hasStatusOk();
+    }
+
+    @Test
+    void aPlayOfAGameWonInSeveralWaysCannotLeaveOutHowItWasWon() {
+        UUID duel = gameOfModule("seven-wonders-duel");
+
+        assertThat(member.post("/api/plays", """
+                        {"gameId": "%s", "playedOn": "2026-03-14", "recordingMode": "WINNER_ONLY", "setup": {},
+                         "players": [{"playerId": "%s", "winner": true}, {"playerId": "%s", "winner": false}]}
+                        """.formatted(duel, anna, dora)))
+                .hasStatus(422)
+                .bodyJson()
+                .isLenientlyEqualTo("{\"reason\": \"plays.invalid.victoryTypeMissing\"}");
+        // The preview says the same.
+        assertThat(member.post("/api/plays/preview", """
+                        {"gameModuleId": "%s", "recordingMode": "WINNER_ONLY", "setup": {}, "victoryType": "scientificSupremacy",
+                         "players": [{"playerId": "%s", "winner": true}, {"playerId": "%s", "winner": false}]}
+                        """.formatted("9e74ba91-e100-4b33-85d8-2d021f61eb38", anna, dora)))
+                .hasStatusOk()
+                .bodyJson()
+                .isLenientlyEqualTo("{\"results\": [{\"won\": true}, {\"won\": false}]}");
+    }
+
     /** The Game that appears in the catalogue for the Calico module. */
     private UUID calicoFromItsModule() {
         return gameOfModule("calico");

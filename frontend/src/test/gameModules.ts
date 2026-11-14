@@ -8,6 +8,8 @@ export const genericModule: GameModule = {
   key: "generic",
   scorePad: {
     minPlayers: 1,
+    expansions: [],
+    victoryTypes: [],
     variants: [
       { key: "cooperative", kind: "ON_OFF", defaultValue: "false", soloOnly: false },
       { key: "lowestScoreWins", kind: "ON_OFF", defaultValue: "false", soloOnly: false },
@@ -23,6 +25,8 @@ export const calicoModule: GameModule = {
   scorePad: {
     minPlayers: 1,
     maxPlayers: 4,
+    expansions: [],
+    victoryTypes: [],
     variants: [{ key: "family", kind: "ON_OFF", defaultValue: "false", soloOnly: false }],
     categories: [
       {
@@ -30,7 +34,7 @@ export const calicoModule: GameModule = {
         countsTowardTotal: true,
         min: 0,
         step: 1,
-        onlyWhen: { variant: "family", value: "false" },
+        onlyWhen: { key: "family", value: "false" },
         soloOnly: false,
       },
       { key: "cats", countsTowardTotal: true, min: 0, step: 1, soloOnly: false },
@@ -48,6 +52,8 @@ export const wyrmspanModule: GameModule = {
   scorePad: {
     minPlayers: 1,
     maxPlayers: 5,
+    expansions: [],
+    victoryTypes: [],
     variants: [
       {
         key: "automaLevel",
@@ -69,7 +75,41 @@ export const wyrmspanModule: GameModule = {
   },
 }
 
-export const gameModules = [calicoModule, genericModule, wyrmspanModule]
+/**
+ * Won on points or outright by a supremacy, and played with or without two Expansions: a part
+ * of 7 Wonders Duel's pad. Agora adds a row and a way to win.
+ */
+export const duelModule: GameModule = {
+  id: "9e74ba91-e100-4b33-85d8-2d021f61eb38",
+  key: "seven-wonders-duel",
+  scorePad: {
+    minPlayers: 2,
+    maxPlayers: 2,
+    expansions: [{ key: "pantheon" }, { key: "agora" }],
+    variants: [],
+    categories: [
+      { key: "civilian", countsTowardTotal: true, min: 0, step: 1, soloOnly: false },
+      { key: "wonders", countsTowardTotal: true, min: 0, step: 1, soloOnly: false },
+      {
+        key: "senate",
+        countsTowardTotal: true,
+        min: 0,
+        step: 1,
+        onlyWhen: { key: "agora", value: "true" },
+        soloOnly: false,
+      },
+    ],
+    recorderDecidesTies: false,
+    victoryTypes: [
+      { key: "civilian", onPoints: true },
+      { key: "militarySupremacy", onPoints: false },
+      { key: "scientificSupremacy", onPoints: false },
+      { key: "politicalSupremacy", onPoints: false, onlyWhen: { key: "agora", value: "true" } },
+    ],
+  },
+}
+
+export const gameModules = [calicoModule, genericModule, duelModule, wyrmspanModule]
 
 export const gameModuleTexts: Record<string, string> = {
   "generic.name": "Generic",
@@ -83,6 +123,16 @@ export const gameModuleTexts: Record<string, string> = {
   "calico.category.cats": "Cats",
   "calico.category.buttons": "Buttons",
   "calico.tie": "The player with the most cat tokens wins the tie.",
+  "seven-wonders-duel.name": "7 Wonders Duel",
+  "seven-wonders-duel.expansion.pantheon": "Pantheon",
+  "seven-wonders-duel.expansion.agora": "Agora",
+  "seven-wonders-duel.category.civilian": "Civilian Buildings (blue)",
+  "seven-wonders-duel.category.wonders": "Wonders",
+  "seven-wonders-duel.category.senate": "Senate",
+  "seven-wonders-duel.victoryType.civilian": "Civilian victory (on points)",
+  "seven-wonders-duel.victoryType.militarySupremacy": "Military supremacy",
+  "seven-wonders-duel.victoryType.scientificSupremacy": "Scientific supremacy",
+  "seven-wonders-duel.victoryType.politicalSupremacy": "Political supremacy",
   "wyrmspan.name": "Wyrmspan",
   "wyrmspan.variant.automaLevel": "Automa level",
   "wyrmspan.variant.automaLevel.1": "Level 1",

@@ -204,6 +204,7 @@ class PlayController {
                         play.notes(),
                         play.recordingMode(),
                         play.setup(),
+                        play.victoryType(),
                         play.cooperative(),
                         play.group() == null
                                 ? null
@@ -245,10 +246,16 @@ class PlayController {
             @NotNull RecordingMode recordingMode,
             @NotNull
                     @Schema(
-                            description = "The Setup: the value chosen for each Variant, by the Variant's key. The keys"
-                                    + " are the Game Module's. The Generic Module has the on/off Variants"
-                                    + " \"cooperative\" and \"lowestScoreWins\", each \"true\" or \"false\".")
+                            description = "The Setup: the value chosen for each Variant, and whether each Expansion was"
+                                    + " played with, by their keys. The keys are the Game Module's. An on/off Variant"
+                                    + " and an Expansion are \"true\" or \"false\". The Generic Module has the on/off"
+                                    + " Variants \"cooperative\" and \"lowestScoreWins\".")
                     Map<String, @NotNull String> setup,
+            @Schema(
+                            description = "How the Play was won: the key of one of the Game Module's Victory Types. Only"
+                                    + " for a Game that can be won in more than one way, and not for a Solo Play. A"
+                                    + " Victory Type not on points is recorded with WINNER_ONLY and one winner.")
+                    String victoryType,
             @NotEmpty
                     @Size(max = Plays.MAX_PLAYERS)
                     @Schema(description = "Who played, in the order you want them listed")
@@ -262,7 +269,7 @@ class PlayController {
                     location,
                     notes,
                     players.stream().map(PlayerEntryRequest::playerId).toList(),
-                    entryOf(recordingMode, setup, players, group));
+                    entryOf(recordingMode, setup, victoryType, players, group));
         }
     }
 
@@ -274,23 +281,29 @@ class PlayController {
             @NotNull UUID gameModuleId,
             @NotNull RecordingMode recordingMode,
             @NotNull Map<String, @NotNull String> setup,
+            @Schema(description = "As in NewPlay") String victoryType,
             @NotNull @Size(max = Plays.MAX_PLAYERS) List<@NotNull @Valid PlayerEntryRequest> players,
             @Valid GroupEntryRequest group) {
 
         PlayEntry toEntry() {
-            return entryOf(recordingMode, setup, players, group);
+            return entryOf(recordingMode, setup, victoryType, players, group);
         }
     }
 
     private static PlayEntry entryOf(
-            RecordingMode recordingMode, Map<String, String> setup, List<PlayerEntryRequest> players, GroupEntryRequest group) {
+            RecordingMode recordingMode,
+            Map<String, String> setup,
+            String victoryType,
+            List<PlayerEntryRequest> players,
+            GroupEntryRequest group) {
         return new PlayEntry(
                 recordingMode,
                 setup,
                 players.stream()
                         .map(player -> new PlayerEntry(orEmpty(player.scores()), player.winner()))
                         .toList(),
-                group == null ? null : new GroupEntry(group.won(), orEmpty(group.scores())));
+                group == null ? null : new GroupEntry(group.won(), orEmpty(group.scores())),
+                victoryType == null || victoryType.isBlank() ? null : victoryType);
     }
 
     @Schema(
@@ -341,6 +354,9 @@ class PlayController {
             String notes,
             RecordingMode recordingMode,
             Map<String, String> setup,
+            @Schema(description = "How the Play was won: the key of one of its Game Module's Victory Types. Absent"
+                            + " for a Game that is won in one way only.")
+                    String victoryType,
             @Schema(description = "Whether the Players won or lost together") boolean cooperative,
             @Schema(description = "For a Cooperative Play: how it ended for the group") GroupResultResponse group,
             @Schema(description = "One per Player, in the order they were entered") List<ResultResponse> results,

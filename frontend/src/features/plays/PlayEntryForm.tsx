@@ -42,7 +42,11 @@ import {
   soloOf,
   toNewPlay,
   toPreviewRequest,
+  recordingModeOf,
   variantsFor,
+  victoryTypeOf,
+  victoryTypesFor,
+  wonOutright,
   type PlayFormValues,
 } from "./playForm"
 import { canBePreviewed, previewOptions, usePlayPreview } from "./usePlayPreview"
@@ -125,7 +129,12 @@ export function PlayEntryForm({
   const play = useWatch({ control: form.control }) as PlayFormValues
 
   const cooperative = isCooperative(module, play)
-  const points = play.recordingMode === "POINTS"
+  // How the Play could be won, and was. Won outright, as by a supremacy, nobody counted points:
+  // the recorder ticks the winner, as when only the winner is recorded.
+  const victoryTypes = victoryTypesFor(module, play)
+  const victoryType = victoryTypeOf(module, play)
+  const outright = wonOutright(module, play)
+  const points = recordingModeOf(module, play) === "POINTS"
   // A Play of one, of a Game that can be played alone: for score only, or against an opponent.
   const solo = soloOf(module, play)
   const categories = entersScores(module, play)
@@ -283,7 +292,8 @@ export function PlayEntryForm({
                       : t("recording.winnerOnly")}
               </span>
             </p>
-            {!changingRecording && (
+            {/* A Play won outright has nothing to choose: only its winner is recorded. */}
+            {!changingRecording && !outright && (
               <Button
                 type="button"
                 variant="outline"
@@ -294,7 +304,7 @@ export function PlayEntryForm({
               </Button>
             )}
           </div>
-          {changingRecording && (
+          {changingRecording && !outright && (
             <>
               <p className="text-sm text-muted-foreground">{t("plays.record.changeHint")}</p>
               {generic ? (
@@ -339,6 +349,21 @@ export function PlayEntryForm({
           )}
         </div>
 
+        {/* The Expansions the Play was played with. Each can add rows to the pad, or ways to win. */}
+        {pad.expansions.length > 0 && (
+          <FieldSet>
+            <FieldLegend variant="label">{t("plays.record.expansions")}</FieldLegend>
+            {pad.expansions.map((expansion) => (
+              <CheckboxField
+                key={expansion.key}
+                label={moduleText(`expansion.${expansion.key}`)}
+                checked={play.setup[expansion.key] === "true"}
+                onChange={(on) => form.setValue(`setup.${expansion.key}`, String(on), changed)}
+              />
+            ))}
+          </FieldSet>
+        )}
+
         {/* The Variants of a Game with a module of its own. The Generic Module's two are the
             recording choices above. */}
         {!generic &&
@@ -376,6 +401,21 @@ export function PlayEntryForm({
               />
             ),
           )}
+
+        {victoryTypes.length > 0 && (
+          <div className="space-y-2">
+            <RadioField
+              legend={t("plays.record.victoryType")}
+              value={victoryType?.key ?? ""}
+              onChange={(key) => form.setValue("victoryType", key, changed)}
+              options={victoryTypes.map((option) => ({
+                value: option.key,
+                label: moduleText(`victoryType.${option.key}`),
+              }))}
+            />
+            {outright && <FieldDescription>{t("plays.record.outrightHint")}</FieldDescription>}
+          </div>
+        )}
 
         <FieldSet>
           <FieldLegend variant="label">{t("plays.record.players")}</FieldLegend>

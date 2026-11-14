@@ -19,6 +19,7 @@ backend/
     calico/          the Game Module for Calico
     hadara/          the Game Module for Hadara
     harmonies/       the Game Module for Harmonies
+    seven-wonders-duel/  the Game Module for 7 Wonders Duel, with Pantheon and Agora
     wyrmspan/        the Game Module for Wyrmspan
   app/               the Spring Boot application
 frontend/            the React app
@@ -304,21 +305,23 @@ This writes `frontend/src/components/ui/dialog.tsx`. Run `npm run format` afterw
 
 ### Adding a Game Module
 
-`backend/games/calico` is the example to copy; `backend/games/harmonies` shows a Variant that is a choice, and rows that a Variant swaps; `backend/games/wyrmspan` shows a Game played alone against an automated opponent; `backend/games/hadara` shows a choice with many options, which the form offers as a drop-down instead of radio buttons once there are more than five. A module has three parts: an identity, a description of its Game's score pad, and its texts.
+`backend/games/calico` is the example to copy; `backend/games/harmonies` shows a Variant that is a choice, and rows that a Variant swaps; `backend/games/wyrmspan` shows a Game played alone against an automated opponent; `backend/games/hadara` shows a choice with many options, which the form offers as a drop-down instead of radio buttons once there are more than five; `backend/games/seven-wonders-duel` shows Expansions and a Game that can be won in more than one way. A module has three parts: an identity, a description of its Game's score pad, and its texts.
 
 1. Copy `backend/games/calico` to `backend/games/<key>` and rename the artifact to `game-<key>`.
 2. Give the module a newly generated UUID. It is stored with every Play, so it never changes afterwards ([ADR 0012](adr/0012-game-module-uuid-and-key.md)).
 3. Name the module's class in its `META-INF/services` file.
-4. Describe the Game in `scorePad()`: how many can play, its Variants, the rows of its score pad as Score Categories, and its Tie-breakers. Take all of it from the Game's official rulebook, and say in the class's Javadoc where each rule comes from.
+4. Describe the Game in `scorePad()`: how many can play, its Expansions and Variants, the rows of its score pad as Score Categories, its Tie-breakers, and the ways it can be won, if there is more than one. Take all of it from the Game's official rulebook, and say in the class's Javadoc where each rule comes from.
 5. Extend `StandardGameModule` if the Game is scored the usual way: every Player adds up the rows of the pad and the highest total wins. The scoring then follows from the description, and there is no `score` to write. A Game that works differently implements `GameModule` itself, as the Generic Module does. Its `score` must depend on the entry alone, because a Recalculation runs it again over the stored entry.
 6. Add `i18n/<key>_en.properties`, and the same for `nl` and `hu`. English needs a text for everything the score pad names, or the application refuses to start:
 
    | Text | For |
    |---|---|
    | `<key>.name` | the Game, as the catalogue lists it |
+   | `<key>.expansion.<expansion>` | an Expansion |
    | `<key>.variant.<variant>` | a Variant; `<key>.variant.<variant>.hint` adds a line under it, and is optional |
    | `<key>.variant.<variant>.<option>` | each option of a Variant that is a choice |
    | `<key>.category.<category>` | a row of the score pad |
+   | `<key>.victoryType.<victoryType>` | a way to win the Game |
    | `<key>.tie` | how the Game decides a tie, when the recorder is asked who won one |
    | `<key>.invalid.<reason>` | a reason of the module's own for refusing an entry |
 
@@ -328,6 +331,10 @@ This writes `frontend/src/components/ui/dialog.tsx`. Run `npm run format` afterw
 Nothing else changes. When the application next starts, the Game is in the catalogue, and the frontend draws its form from the description.
 
 **Solo Plays.** Give the score pad a `Solo` if the Game can be played alone, and make its minimum one Player. `Solo.forScoreOnly()` records a total and nothing else: such a Play has no Placing and is neither won nor lost. `Solo.againstOpponent(row, tieWins)` adds a row for the opponent's score, which must be marked `notCounted()` and `inSoloPlaysOnly()`; the Player wins by beating it. Variants that only apply when playing alone, such as the Automa's level, are marked `inSoloPlaysOnly()` too, and the form shows them only for a Play of one.
+
+**Expansions.** List the Expansions a Play can be played with. In a Play's Setup each is `"true"` or `"false"` under its key, next to the Variants, and the form offers them as checkboxes. What an Expansion changes is said where it applies: a row that an Expansion adds is `onlyWhen("pantheon", Expansion.WITH)`, and a row it takes away is `onlyWhen("pantheon", Expansion.WITHOUT)`. `onlyWhen` names a Variant or an Expansion alike.
+
+**Ways to win.** A Game that can be won in more than one way lists its Victory Types, the usual one first. `VictoryType.onPoints(key)` is decided by the score pad. `VictoryType.outright(key)` ends the Play before anyone counts points, such as a supremacy in 7 Wonders Duel: the form then takes the pad away and asks for the one winner, and the Play is recorded like one with only the winner. A Victory Type can depend on the Setup through `onlyWhen`, as political supremacy depends on Agora. A Play of such a Game always says how it was won, except a Solo Play, which has no Victory Type. A Game's statistics count its Plays by Victory Type.
 
 **Ties.** List as `tieBreakers` the Tie-breakers that can be worked out from what is entered. Set `recorderDecidesTies` when the Game decides what is left by something that is not on the pad; the form then asks the recorder who won, and shows `<key>.tie` as the explanation. Calico is such a Game: its first Tie-breaker is the number of cat tokens, and the pad only has the cats' points.
 

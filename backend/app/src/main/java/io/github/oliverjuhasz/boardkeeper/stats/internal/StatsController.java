@@ -101,7 +101,10 @@ class StatsController {
                 group == null
                         ? null
                         : new GroupStatsResponse(group.plays(), group.wins(), group.highestScore(), group.averageScore()),
-                soloStats);
+                soloStats,
+                repository.victoryTypes(gameId, game.gameModuleId()).stream()
+                        .map(won -> new VictoryTypeStatsResponse(won.victoryType(), won.plays()))
+                        .toList());
     }
 
     @GetMapping("/players/{playerId}")
@@ -191,7 +194,7 @@ class StatsController {
 
     @Schema(
             name = "GameStats",
-            requiredProperties = {"gameId", "gameModuleId", "plays", "players", "categoryAverages", "solo"})
+            requiredProperties = {"gameId", "gameModuleId", "plays", "players", "categoryAverages", "solo", "victoryTypes"})
     record GameStatsResponse(
             UUID gameId,
             @Schema(description = "The Game Module that scores the Game today. The keys in \"categoryAverages\" are"
@@ -208,7 +211,17 @@ class StatsController {
             @Schema(description = "How the group did in the Cooperative Plays. Absent when there are none.")
                     GroupStatsResponse cooperative,
             @Schema(description = "One for each Player who played the Game on their own, the most Plays first")
-                    List<SoloStatsResponse> solo) {}
+                    List<SoloStatsResponse> solo,
+            @Schema(description = "For a Game that can be won in more than one way: how many Plays were won in each"
+                            + " way, the most first. Only Plays scored by the Game Module of today count. Empty for"
+                            + " other Games.")
+                    List<VictoryTypeStatsResponse> victoryTypes) {}
+
+    @Schema(
+            name = "VictoryTypeStats",
+            requiredProperties = {"key", "plays"})
+    record VictoryTypeStatsResponse(
+            @Schema(description = "The key of one of the Game Module's Victory Types") String key, int plays) {}
 
     @Schema(
             name = "PlayerStats",

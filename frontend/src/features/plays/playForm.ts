@@ -7,6 +7,7 @@ import type {
   PlayPreviewRequest,
   ScoreCategory,
   ScorePad,
+  VictoryType,
 } from "@/api/client"
 import { GENERIC } from "@/features/games/useGameModules"
 import { todayIso } from "@/lib/dates"
@@ -31,8 +32,13 @@ const fields = z.object({
   location: z.string().trim().max(100, "validation.locationTooLong"),
   notes: z.string().trim().max(2000, "validation.notesTooLong"),
   recordingMode: z.enum(["POINTS", "WINNER_ONLY"]),
-  /** The Setup: what was chosen for each Variant on the pad, by the Variant's key. */
+  /**
+   * The Setup: what was chosen for each Variant on the pad, and whether each Expansion was
+   * played with ("true" or "false"), by their keys.
+   */
   setup: z.record(z.string(), z.string()),
+  /** How the Play was won: a Victory Type's key. Empty for a Game won in one way only. */
+  victoryType: z.string(),
   players: z.array(
     z.object({
       playerId: z.string(),
@@ -93,19 +99,79 @@ export function variantsFor(module: GameModule, play: Pick<PlayFormValues, "play
   return module.scorePad.variants.filter((variant) => solo || !variant.soloOnly)
 }
 
-/** Whether the Players' scores are entered: in a competitive Play recorded in points. */
-export function entersScores(
+/**
+ * The ways a Play with these choices can be won, the usual one first. Empty for a Game that is
+ * won in one way only, and for a Solo Play.
+ */
+export function victoryTypesFor(
   module: GameModule,
-  play: Pick<PlayFormValues, "setup" | "recordingMode">,
-) {
-  return !isCooperative(module, play) && play.recordingMode === "POINTS"
+  play: Pick<PlayFormValues, "setup" | "players">,
+): VictoryType[] {
+  if (soloOf(module, play) !== undefined) {
+    return []
+  }
+  const pad = module.scorePad
+  return pad.victoryTypes.filter((victoryType) => holds(pad, play.setup, victoryType.onlyWhen))
 }
 
-/** What the Setup holds for a Variant: what was chosen, or else the Variant's default. */
-function chosen(pad: ScorePad, setup: Record<string, string>, variantKey: string) {
-  return (
-    setup[variantKey] ?? pad.variants.find((variant) => variant.key === variantKey)?.defaultValue
-  )
+/**
+ * How the Play was won, if the Game can be won in more than one way. A way that the Setup no
+ * longer allows, such as political supremacy once Agora is taken off, gives way to the usual one.
+ */
+export function victoryTypeOf(
+  module: GameModule,
+  play: Pick<PlayFormValues, "setup" | "players" | "victoryType">,
+): VictoryType | undefined {
+  const possible = victoryTypesFor(module, play)
+  return possible.find((victoryType) => victoryType.key === play.victoryType) ?? possible[0]
+}
+
+/**
+ * Whether the Play ended outright, such as by a supremacy in 7 Wonders Duel. Nobody counted
+ * points then: the recorder ticks the one winner, as when only the winner is recorded.
+ */
+export function wonOutright(
+  module: GameModule,
+  play: Pick<PlayFormValues, "setup" | "players" | "victoryType">,
+) {
+  return victoryTypeOf(module, play)?.onPoints === false
+}
+
+/** How the Play is recorded: a Play won outright has only its winner. */
+export function recordingModeOf(module: GameModule, play: PlayFormValues) {
+  return wonOutright(module, play) ? "WINNER_ONLY" : play.recordingMode
+}
+
+/** Whether the Players' scores are entered: in a competitive Play recorded in points. */
+export function entersScores(module: GameModule, play: PlayFormValues) {
+  return !isCooperative(module, play) && recordingModeOf(module, play) === "POINTS"
+}
+
+/**
+ * What the Setup holds for a Variant or an Expansion: what was chosen, or else the Variant's
+ * default. An Expansion that wasn't chosen wasn't played with.
+ */
+function chosen(pad: ScorePad, setup: Record<string, string>, key: string) {
+  if (pad.expansions.some((expansion) => expansion.key === key)) {
+    return setup[key] ?? "false"
+  }
+  return setup[key] ?? pad.variants.find((variant) => variant.key === key)?.defaultValue
+}
+
+/** Whether a Setup meets a condition of the pad. No condition is always met. */
+function holds(pad: ScorePad, setup: Record<string, string>, onlyWhen?: ScoreCategory["onlyWhen"]) {
+  return !onlyWhen || chosen(pad, setup, onlyWhen.key) === onlyWhen.value
+}
+
+/**
+ * The Setup to start a form with, or to send: a value for every Expansion and Variant of the
+ * pad, taken from `from` where it has one.
+ */
+function setupFrom(pad: ScorePad, from: Record<string, string>) {
+  return Object.fromEntries([
+    ...pad.expansions.map((expansion) => [expansion.key, from[expansion.key] ?? "false"]),
+    ...pad.variants.map((variant) => [variant.key, from[variant.key] ?? variant.defaultValue]),
+  ])
 }
 
 /**
@@ -114,10 +180,7 @@ function chosen(pad: ScorePad, setup: Record<string, string>, variantKey: string
  */
 export function categoriesOnPad(pad: ScorePad, setup: Record<string, string>, solo = false) {
   return pad.categories.filter(
-    (category) =>
-      (solo || !category.soloOnly) &&
-      (!category.onlyWhen ||
-        chosen(pad, setup, category.onlyWhen.variant) === category.onlyWhen.value),
+    (category) => (solo || !category.soloOnly) && holds(pad, setup, category.onlyWhen),
   )
 }
 
@@ -153,7 +216,7 @@ function scoreProblem(category: ScoreCategory, typed: string) {
 export function entryProblems(module: GameModule, play: PlayFormValues) {
   const problems: { path: (string | number)[]; message: string }[] = []
   const pad = module.scorePad
-  const points = play.recordingMode === "POINTS"
+  const points = recordingModeOf(module, play) === "POINTS"
 
   const fewest = fewestPlayers(module, play)
   if (play.players.length < fewest) {
@@ -187,6 +250,11 @@ export function entryProblems(module: GameModule, play: PlayFormValues) {
     ) {
       // Against an automated opponent, an unticked "won" is a loss. Otherwise someone won.
       problems.push({ path: ["players"], message: "validation.winnerRequired" })
+    } else if (
+      wonOutright(module, play) &&
+      play.players.filter((player) => player.won).length > 1
+    ) {
+      problems.push({ path: ["players"], message: "validation.oneWinnerOnly" })
     }
     return problems
   }
@@ -220,20 +288,25 @@ export function newPlayerRow(pad: ScorePad, playerId: string) {
  */
 function entryOf(module: GameModule, play: PlayFormValues, tie: string[]) {
   const cooperative = isCooperative(module, play)
-  const points = play.recordingMode === "POINTS"
+  const recordingMode = recordingModeOf(module, play)
+  const points = recordingMode === "POINTS"
   const solo = soloOf(module, play) !== undefined
   const categories = entersScores(module, play)
     ? categoriesOnPad(module.scorePad, play.setup, solo)
     : []
 
-  // Every Variant that applies is sent, chosen or not, so a stored Setup says all there is.
-  // Those for Solo Plays only are left out of other Plays.
-  const setup = Object.fromEntries(
-    variantsFor(module, play).map((variant) => [
+  // Every Expansion and Variant that applies is sent, chosen or not, so a stored Setup says
+  // all there is. Variants for Solo Plays only are left out of other Plays.
+  const setup = Object.fromEntries([
+    ...module.scorePad.expansions.map((expansion) => [
+      expansion.key,
+      chosen(module.scorePad, play.setup, expansion.key) ?? "false",
+    ]),
+    ...variantsFor(module, play).map((variant) => [
       variant.key,
       chosen(module.scorePad, play.setup, variant.key) ?? variant.defaultValue,
     ]),
-  )
+  ])
   if (module.key === GENERIC && !entersScores(module, play)) {
     // "The lowest score wins" means nothing without scores to compare.
     setup.lowestScoreWins = "false"
@@ -252,8 +325,9 @@ function entryOf(module: GameModule, play: PlayFormValues, tie: string[]) {
   }
 
   return {
-    recordingMode: play.recordingMode,
+    recordingMode,
     setup,
+    victoryType: victoryTypeOf(module, play)?.key,
     players: play.players.map((player) => ({
       playerId: player.playerId,
       scores:
@@ -303,9 +377,7 @@ export function toPreviewRequest(module: GameModule, play: PlayFormValues): Play
  * its own brings its own recording choices.
  */
 export function blankPlay(module: GameModule, game: Game, firstPlayerId?: string): PlayFormValues {
-  const setup = Object.fromEntries(
-    module.scorePad.variants.map((variant) => [variant.key, variant.defaultValue]),
-  )
+  const setup = setupFrom(module.scorePad, {})
   if (module.key === GENERIC) {
     setup.cooperative = String(game.cooperative)
     setup.lowestScoreWins = String(game.lowestScoreWins)
@@ -316,6 +388,8 @@ export function blankPlay(module: GameModule, game: Game, firstPlayerId?: string
     notes: "",
     recordingMode: module.key === GENERIC ? game.recordingMode : "POINTS",
     setup,
+    // The usual way of winning, such as on points.
+    victoryType: module.scorePad.victoryTypes[0]?.key ?? "",
     players: firstPlayerId ? [newPlayerRow(module.scorePad, firstPlayerId)] : [],
     tieWinner: "",
     groupOutcome: "",
@@ -336,12 +410,8 @@ export function fromPlay(module: GameModule, play: Play): PlayFormValues {
     location: play.location ?? "",
     notes: play.notes ?? "",
     recordingMode: play.recordingMode,
-    setup: Object.fromEntries(
-      module.scorePad.variants.map((variant) => [
-        variant.key,
-        play.setup[variant.key] ?? variant.defaultValue,
-      ]),
-    ),
+    setup: setupFrom(module.scorePad, play.setup),
+    victoryType: play.victoryType ?? module.scorePad.victoryTypes[0]?.key ?? "",
     players: play.results.map((result) => ({
       playerId: result.player.id,
       scores: Object.fromEntries(
@@ -371,12 +441,8 @@ export function fromNewPlay(module: GameModule, play: NewPlay): PlayFormValues {
     location: play.location ?? "",
     notes: play.notes ?? "",
     recordingMode: play.recordingMode,
-    setup: Object.fromEntries(
-      module.scorePad.variants.map((variant) => [
-        variant.key,
-        play.setup[variant.key] ?? variant.defaultValue,
-      ]),
-    ),
+    setup: setupFrom(module.scorePad, play.setup),
+    victoryType: play.victoryType ?? module.scorePad.victoryTypes[0]?.key ?? "",
     players: play.players.map((player) => ({
       playerId: player.playerId,
       scores: Object.fromEntries(
@@ -411,14 +477,8 @@ export function playAgain(
   return {
     ...blank,
     recordingMode: sameModule ? previous.recordingMode : blank.recordingMode,
-    setup: sameModule
-      ? Object.fromEntries(
-          module.scorePad.variants.map((variant) => [
-            variant.key,
-            previous.setup[variant.key] ?? variant.defaultValue,
-          ]),
-        )
-      : blank.setup,
+    // The same Expansions and Variants. How it will be won is anyone's guess: the usual way.
+    setup: sameModule ? setupFrom(module.scorePad, previous.setup) : blank.setup,
     players: previous.results
       .map((result) => result.player.id)
       .filter((playerId) => playerIds.includes(playerId))

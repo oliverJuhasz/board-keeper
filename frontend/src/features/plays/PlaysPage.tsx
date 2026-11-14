@@ -11,6 +11,7 @@ import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { useGameName } from "@/features/games/useGameModules"
+import { useGameModuleTexts } from "@/features/games/useGameModuleTexts"
 import { useCurrentAccount } from "@/features/session/useSession"
 import { formatDay } from "@/lib/dates"
 
@@ -211,6 +212,13 @@ function FilterField({ label, children }: { label: string; children: (id: string
 function PlaySummary({ play }: { play: Play }) {
   const { t } = useTranslation()
   const gameName = useGameName()
+  const texts = useGameModuleTexts()
+  // How it was won, for a Game that can be won in more than one way. The Victory Type is one of
+  // its module's, and so is its text.
+  const victoryType =
+    play.victoryType && play.game.moduleKey
+      ? texts[`${play.game.moduleKey}.victoryType.${play.victoryType}`]
+      : undefined
   // Best first: by Placing, or winners first when nobody was placed.
   const results = play.results.toSorted(
     (a, b) => (a.placing ?? (a.won ? 0 : 1)) - (b.placing ?? (b.won ? 0 : 1)),
@@ -219,7 +227,10 @@ function PlaySummary({ play }: { play: Play }) {
   return (
     <Link to={`/plays/${play.id}`} className="block space-y-1 px-3 py-2.5 hover:bg-muted/50">
       <div className="flex items-baseline justify-between gap-3">
-        <span className="font-medium">{gameName(play.game)}</span>
+        <span>
+          <span className="font-medium">{gameName(play.game)}</span>
+          {victoryType && <span className="text-sm text-muted-foreground"> · {victoryType}</span>}
+        </span>
         <span className="shrink-0 text-sm text-muted-foreground">{formatDay(play.playedOn)}</span>
       </div>
       {play.group ? (

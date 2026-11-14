@@ -112,6 +112,7 @@ public class GameModuleTexts {
         ScorePad pad = module.scorePad();
         Set<String> needed = new TreeSet<>();
         needed.add(prefix + "name");
+        pad.expansions().forEach(expansion -> needed.add(prefix + "expansion." + expansion.key()));
         for (Variant variant : pad.variants()) {
             needed.add(prefix + "variant." + variant.key());
             if (variant instanceof Variant.Choice choice) {
@@ -119,6 +120,7 @@ public class GameModuleTexts {
             }
         }
         pad.categories().forEach(category -> needed.add(prefix + "category." + category.key()));
+        pad.victoryTypes().forEach(victoryType -> needed.add(prefix + "victoryType." + victoryType.key()));
         if (pad.recorderDecidesTies()) {
             needed.add(prefix + "tie");
         }

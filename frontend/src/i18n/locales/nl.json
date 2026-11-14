@@ -115,7 +115,10 @@
       "playersFull": "Dit spel is voor hoogstens {{max}} spelers.",
       "lost": "Verloren",
       "soloResult": "Uitslag",
-      "offline": "Je bent offline. Deze partij wordt op dit apparaat bewaard en verstuurd zodra er verbinding is. De totalen en plaatsen worden dan uitgerekend."
+      "offline": "Je bent offline. Deze partij wordt op dit apparaat bewaard en verstuurd zodra er verbinding is. De totalen en plaatsen worden dan uitgerekend.",
+      "expansions": "Uitbreidingen",
+      "victoryType": "Hoe is er gewonnen?",
+      "outrightHint": "Het spel stopte meteen en niemand telde punten: vink aan wie won."
     },
     "history": {
       "title": "Partijen",
@@ -163,7 +166,8 @@
       "total": "Totaal",
       "pad": "Scoreblok",
       "won": "Gewonnen",
-      "lost": "Verloren"
+      "lost": "Verloren",
+      "victoryType": "Gewonnen door: {{how}}"
     },
     "edit": {
       "title": "Een partij bewerken",
@@ -183,7 +187,9 @@
       "winnerMissing": "Geef minstens één winnaar aan.",
       "winnerNotTied": "Alleen een speler die bij het gelijkspel hoort, kan de winst krijgen.",
       "notRecorded": "Er is iets ingevuld dat dit spel niet vastlegt.",
-      "scoresNeeded": "Een solopartij van dit spel wordt met de scores vastgelegd."
+      "scoresNeeded": "Een solopartij van dit spel wordt met de scores vastgelegd.",
+      "victoryTypeMissing": "Geef aan hoe de partij gewonnen is.",
+      "oneWinnerOnly": "Een partij die zo gewonnen is, heeft één winnaar."
     },
     "waiting": {
       "title": "Nog niet verstuurd",
@@ -280,7 +286,8 @@
     "scoreTooHigh": "Vul {{max}} of minder in.",
     "scoreStep": "Vul een veelvoud van {{step}} in.",
     "tieUnanswered": "Geef aan wie het gelijkspel won, of dat de winst gedeeld is.",
-    "soloScoresOnly": "Een solopartij van dit spel wordt met de scores vastgelegd. Kies Punten."
+    "soloScoresOnly": "Een solopartij van dit spel wordt met de scores vastgelegd. Kies Punten.",
+    "oneWinnerOnly": "Zo kan maar één speler winnen."
   },
   "problems": {
     "unknown": "Er ging iets mis. Probeer het opnieuw.",
@@ -588,7 +595,8 @@
       "wins": "Gewonnen",
       "bestScore": "Beste score",
       "averageScore": "Gemiddelde score",
-      "averagePlacing": "Gemiddelde plaats"
+      "averagePlacing": "Gemiddelde plaats",
+      "victoryType": "Gewonnen door"
     },
     "game": {
       "played_one": "Eén keer gespeeld",
@@ -601,7 +609,8 @@
       "players": "Spelers",
       "padAverages": "Gemiddelden op het scoreblok",
       "padAveragesHint": "Wat een speler gemiddeld per rij scoort.",
-      "allPlays": "Alle partijen van {{game}}"
+      "allPlays": "Alle partijen van {{game}}",
+      "victoryTypes": "Hoe er gewonnen werd"
     },
     "player": {
       "played_one": "Eén keer gespeeld",

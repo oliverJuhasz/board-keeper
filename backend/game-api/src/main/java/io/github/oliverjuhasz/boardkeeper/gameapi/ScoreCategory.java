@@ -18,8 +18,8 @@ package io.github.oliverjuhasz.boardkeeper.gameapi;
  * @param min the lowest value allowed; null when there is none
  * @param max the highest value allowed; null when there is none
  * @param step every value has to be a multiple of this: 3 for a row where each token is worth 3
- * @param onlyWhen the Variant value that puts this row on the pad; null for a row that is always
- *     on it
+ * @param onlyWhen the Setup that puts this row on the pad: a Variant's or an Expansion's value;
+ *     null for a row that is always on it
  * @param soloOnly whether the row is only on the pad of a Solo Play, such as the Automa's score
  *     in Wyrmspan
  */
@@ -31,9 +31,6 @@ public record ScoreCategory(
         int step,
         OnlyWhen onlyWhen,
         boolean soloOnly) {
-
-    /** The Setup that puts a row on the pad: the Variant with this key has this value. */
-    public record OnlyWhen(String variant, String value) {}
 
     public ScoreCategory {
         if (step < 1) {
@@ -67,9 +64,12 @@ public record ScoreCategory(
         return new ScoreCategory(key, countsTowardTotal, min, max, multiple, onlyWhen, soloOnly);
     }
 
-    /** Puts the row on the pad only for Plays whose Setup has this value for this Variant. */
-    public ScoreCategory onlyWhen(String variant, String value) {
-        return new ScoreCategory(key, countsTowardTotal, min, max, step, new OnlyWhen(variant, value), soloOnly);
+    /**
+     * Puts the row on the pad only for Plays whose Setup has this value for this Variant or
+     * Expansion. For an Expansion, the value is {@link Expansion#WITH} or {@link Expansion#WITHOUT}.
+     */
+    public ScoreCategory onlyWhen(String setupKey, String value) {
+        return new ScoreCategory(key, countsTowardTotal, min, max, step, new OnlyWhen(setupKey, value), soloOnly);
     }
 
     /** Puts the row on the pad of Solo Plays only. */

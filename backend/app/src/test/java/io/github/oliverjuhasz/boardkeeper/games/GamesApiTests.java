@@ -62,7 +62,7 @@ class GamesApiTests {
                             "variants": [{"key": "family", "kind": "ON_OFF", "defaultValue": "false"}],
                             "categories": [
                               {"key": "designGoals", "countsTowardTotal": true, "min": 0, "step": 1,
-                               "onlyWhen": {"variant": "family", "value": "false"}},
+                               "onlyWhen": {"key": "family", "value": "false"}},
                               {"key": "cats", "countsTowardTotal": true, "min": 0, "step": 1},
                               {"key": "buttons", "countsTowardTotal": true, "min": 0, "step": 3}],
                             "recorderDecidesTies": true}},
@@ -91,10 +91,31 @@ class GamesApiTests {
                             "categories": [
                               {"key": "trees"}, {"key": "mountains"}, {"key": "fields", "step": 5},
                               {"key": "buildings", "step": 5},
-                              {"key": "river", "onlyWhen": {"variant": "boardSide", "value": "a"}},
-                              {"key": "islands", "min": 5, "step": 5, "onlyWhen": {"variant": "boardSide", "value": "b"}},
+                              {"key": "river", "onlyWhen": {"key": "boardSide", "value": "a"}},
+                              {"key": "islands", "min": 5, "step": 5, "onlyWhen": {"key": "boardSide", "value": "b"}},
                               {"key": "animals"},
-                              {"key": "naturesSpirit", "onlyWhen": {"variant": "naturesSpirit", "value": "true"}}]}},
+                              {"key": "naturesSpirit", "onlyWhen": {"key": "naturesSpirit", "value": "true"}}],
+                            "expansions": [], "victoryTypes": []}},
+                         {"key": "seven-wonders-duel",
+                          "scorePad": {
+                            "minPlayers": 2, "maxPlayers": 2,
+                            "expansions": [{"key": "pantheon"}, {"key": "agora"}],
+                            "variants": [],
+                            "categories": [
+                              {"key": "civilian"}, {"key": "scientific"}, {"key": "commercial"},
+                              {"key": "guilds", "onlyWhen": {"key": "pantheon", "value": "false"}},
+                              {"key": "grandTemples", "max": 21, "onlyWhen": {"key": "pantheon", "value": "true"}},
+                              {"key": "divinities", "onlyWhen": {"key": "pantheon", "value": "true"}},
+                              {"key": "wonders"}, {"key": "progressTokens"}, {"key": "coins"},
+                              {"key": "military", "max": 10},
+                              {"key": "senate", "onlyWhen": {"key": "agora", "value": "true"}}],
+                            "recorderDecidesTies": false,
+                            "victoryTypes": [
+                              {"key": "civilian", "onPoints": true},
+                              {"key": "militarySupremacy", "onPoints": false},
+                              {"key": "scientificSupremacy", "onPoints": false},
+                              {"key": "politicalSupremacy", "onPoints": false,
+                               "onlyWhen": {"key": "agora", "value": "true"}}]}},
                          {"key": "wyrmspan",
                           "scorePad": {
                             "minPlayers": 1, "maxPlayers": 5,
@@ -118,7 +139,8 @@ class GamesApiTests {
                 .hasStatusOk()
                 .bodyJson()
                 .isLenientlyEqualTo("""
-                        [{"name": "Calico", "gameModuleId": "%s", "moduleKey": "calico", "hasOwnModule": true},
+                        [{"name": "7 Wonders Duel", "moduleKey": "seven-wonders-duel", "hasOwnModule": true},
+                         {"name": "Calico", "gameModuleId": "%s", "moduleKey": "calico", "hasOwnModule": true},
                          {"name": "Hadara", "moduleKey": "hadara", "hasOwnModule": true},
                          {"name": "Harmonies", "moduleKey": "harmonies", "hasOwnModule": true},
                          {"name": "Wyrmspan", "moduleKey": "wyrmspan", "hasOwnModule": true}]
@@ -126,13 +148,17 @@ class GamesApiTests {
 
         // Bringing the catalogue in step again changes nothing.
         games.addGamesOfModules();
-        assertThat(games.all()).hasSize(4);
+        assertThat(games.all()).hasSize(5);
     }
 
     @Test
     void aGameWithAModuleOfItsOwnCanBeNeitherEditedNorRemoved() {
         games.addGamesOfModules();
-        UUID calico = games.all().getFirst().id();
+        UUID calico = games.all().stream()
+                .filter(game -> game.name().equals("Calico"))
+                .findFirst()
+                .orElseThrow()
+                .id();
 
         assertThat(admin.put("/api/games/" + calico, game("Calico 2", false, "POINTS", false)))
                 .hasStatus(409)
@@ -158,7 +184,8 @@ class GamesApiTests {
         assertThat(member.get("/api/games"))
                 .bodyJson()
                 .isLenientlyEqualTo("""
-                        [{"name": "Azul", "moduleKey": "generic", "hasOwnModule": false},
+                        [{"name": "7 Wonders Duel", "moduleKey": "seven-wonders-duel", "hasOwnModule": true},
+                         {"name": "Azul", "moduleKey": "generic", "hasOwnModule": false},
                          {"id": "%s", "name": "calico", "moduleKey": "calico", "hasOwnModule": true},
                          {"name": "Hadara", "moduleKey": "hadara", "hasOwnModule": true},
                          {"name": "Harmonies", "moduleKey": "harmonies", "hasOwnModule": true},

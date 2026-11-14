@@ -364,6 +364,197 @@ class StandardGameModuleTests {
         }
     }
 
+    /**
+     * The made-up Game with an Expansion, Hawks, that adds a row for hawks. It is usually won on
+     * points, but a Player who gathers a full flock wins outright, and with Hawks, so does one
+     * whose hawks strike.
+     */
+    private static ScorePad birdwatchWithHawks() {
+        return new ScorePad(
+                2,
+                4,
+                List.of(new Variant.OnOff("night", false)),
+                List.of(ScoreCategory.of("birds"), ScoreCategory.of("hawks").onlyWhen("hawks", Expansion.WITH)),
+                List.of(),
+                false,
+                null,
+                List.of(new Expansion("hawks")),
+                List.of(
+                        VictoryType.onPoints("points"),
+                        VictoryType.outright("flock"),
+                        VictoryType.outright("strike").onlyWhen("hawks", Expansion.WITH)));
+    }
+
+    private static final Map<String, String> WITH_HAWKS = Map.of("hawks", "true");
+
+    @Nested
+    class Expansions {
+
+        private final GameModule module = module(birdwatchWithHawks());
+
+        @Test
+        void areInTheSetupAndCanAddRows() {
+            assertThat(module.score(victory("points", WITH_HAWKS, hawks(10, 5), hawks(12, 0))))
+                    .isEqualTo(new Outcome.Competitive(
+                            List.of(new PlayerResult(15, 1, true), new PlayerResult(12, 2, false)), List.of()));
+        }
+
+        @Test
+        void areNotPlayedWithUnlessChosen() {
+            ScorePad pad = birdwatchWithHawks();
+
+            assertThat(pad.valueOf("hawks", Map.of())).isEqualTo("false");
+            assertThat(pad.categoriesFor(Map.of(), false)).extracting(ScoreCategory::key).containsExactly("birds");
+            assertThat(pad.categoriesFor(WITH_HAWKS, false))
+                    .extracting(ScoreCategory::key)
+                    .containsExactly("birds", "hawks");
+            assertRefused(Standard.NOT_RECORDED, module, victory("points", Map.of(), hawks(10, 5), hawks(12, 0)));
+        }
+
+        @Test
+        void areTrueOrFalse() {
+            assertRefused(
+                    Standard.NOT_RECORDED,
+                    module,
+                    victory("points", Map.of("hawks", "maybe"), birds(10), birds(12)));
+            assertRefused(
+                    Standard.NOT_RECORDED,
+                    module,
+                    victory("points", Map.of("eagles", "true"), birds(10), birds(12)));
+        }
+    }
+
+    @Nested
+    class VictoryTypes {
+
+        private final GameModule module = module(birdwatchWithHawks());
+
+        @Test
+        void onPointsScoreThePad() {
+            assertThat(results(victory("points", Map.of(), birds(10), birds(12))))
+                    .containsExactly(new PlayerResult(10, 2, false), new PlayerResult(12, 1, true));
+        }
+
+        @Test
+        void outrightHaveOneMarkedWinnerAndNoScores() {
+            assertThat(results(outright("flock", Map.of(), winner(), loser())))
+                    .containsExactly(new PlayerResult(null, null, true), new PlayerResult(null, null, false));
+            assertRefused(Standard.ONE_WINNER_ONLY, module, outright("flock", Map.of(), winner(), winner()));
+            assertRefused(Standard.WINNER_MISSING, module, outright("flock", Map.of(), loser(), loser()));
+            // Nobody counted points.
+            assertRefused(Standard.NOT_RECORDED, module, victory("flock", Map.of(), birds(10), birds(12)));
+            assertRefused(
+                    Standard.NOT_RECORDED,
+                    module,
+                    outright("flock", Map.of(), marked(birds(10)), birds(12)));
+        }
+
+        @Test
+        void areNeededAndMustBeOnThePad() {
+            assertRefused(Standard.VICTORY_TYPE_MISSING, module, victory(null, Map.of(), birds(10), birds(12)));
+            assertRefused(Standard.NOT_RECORDED, module, victory("luck", Map.of(), birds(10), birds(12)));
+        }
+
+        @Test
+        void canDependOnAnExpansion() {
+            ScorePad pad = birdwatchWithHawks();
+
+            assertThat(pad.victoryTypesFor(Map.of())).extracting(VictoryType::key).containsExactly("points", "flock");
+            assertThat(pad.victoryTypesFor(WITH_HAWKS))
+                    .extracting(VictoryType::key)
+                    .containsExactly("points", "flock", "strike");
+            assertRefused(Standard.NOT_RECORDED, module, outright("strike", Map.of(), winner(), loser()));
+            assertThat(results(outright("strike", WITH_HAWKS, winner(), loser()))).hasSize(2);
+        }
+
+        @Test
+        void areNotRecordedForAGameWonInOneWayOnly() {
+            GameModule oneWay = module(birdwatch(List.of(), false));
+
+            assertRefused(
+                    Standard.NOT_RECORDED,
+                    oneWay,
+                    new PlayEntry(RecordingMode.POINTS, Map.of(), List.of(row(1, 0, 0), row(2, 0, 0)), null, "points"));
+        }
+
+        @Test
+        void areNotRecordedForASoloPlay() {
+            GameModule alone = module(new ScorePad(
+                    1,
+                    4,
+                    List.of(),
+                    List.of(ScoreCategory.of("birds")),
+                    List.of(),
+                    false,
+                    Solo.forScoreOnly(),
+                    List.of(),
+                    List.of(VictoryType.onPoints("points"), VictoryType.outright("flock"))));
+
+            assertThat(alone.score(victory(null, Map.of(), birds(10)))).isInstanceOf(Outcome.Competitive.class);
+            assertRefused(Standard.NOT_RECORDED, alone, victory("points", Map.of(), birds(10)));
+        }
+
+        @Test
+        void haveToFitThePad() {
+            List<Variant> noVariants = List.of();
+            List<ScoreCategory> birds = List.of(ScoreCategory.of("birds"));
+            List<Expansion> hawks = List.of(new Expansion("hawks"));
+
+            // One way of winning is no choice.
+            assertThatIllegalArgumentException()
+                    .isThrownBy(() -> new ScorePad(
+                            2, 4, noVariants, birds, List.of(), false, null, hawks, List.of(VictoryType.onPoints("points"))));
+            // The usual way has to be possible with any Setup.
+            assertThatIllegalArgumentException()
+                    .isThrownBy(() -> new ScorePad(2, 4, noVariants, birds, List.of(), false, null, hawks, List.of(
+                            VictoryType.outright("strike").onlyWhen("hawks", "true"), VictoryType.onPoints("points"))));
+            // A condition names a Variant or an Expansion of the pad, with a value it can have.
+            assertThatIllegalArgumentException()
+                    .isThrownBy(() -> new ScorePad(2, 4, noVariants, birds, List.of(), false, null, hawks, List.of(
+                            VictoryType.onPoints("points"), VictoryType.outright("strike").onlyWhen("eagles", "true"))))
+                    .withMessageContaining("'strike'");
+            assertThatIllegalArgumentException()
+                    .isThrownBy(() -> new ScorePad(2, 4, noVariants, List.of(
+                            ScoreCategory.of("hawks").onlyWhen("hawks", "maybe")), List.of(), false, null, hawks, List.of()))
+                    .withMessageContaining("'hawks'");
+            // Variants and Expansions share the Setup.
+            assertThatIllegalArgumentException()
+                    .isThrownBy(() -> new ScorePad(
+                            2, 4, List.of(new Variant.OnOff("hawks", false)), birds, List.of(), false, null, hawks, List.of()))
+                    .withMessageContaining("'hawks'");
+        }
+
+        private List<PlayerResult> results(PlayEntry entry) {
+            return ((Outcome.Competitive) module.score(entry)).results();
+        }
+    }
+
+    /** An entry with scores, won this way. */
+    private static PlayEntry victory(String victoryType, Map<String, String> setup, PlayerEntry... players) {
+        return new PlayEntry(RecordingMode.POINTS, setup, Arrays.asList(players), null, victoryType);
+    }
+
+    /** An entry with only the winner, won this way. */
+    private static PlayEntry outright(String victoryType, Map<String, String> setup, PlayerEntry... players) {
+        return new PlayEntry(RecordingMode.WINNER_ONLY, setup, Arrays.asList(players), null, victoryType);
+    }
+
+    private static PlayerEntry birds(int birds) {
+        return new PlayerEntry(Map.of("birds", birds), false);
+    }
+
+    private static PlayerEntry hawks(int birds, int hawks) {
+        return new PlayerEntry(Map.of("birds", birds, "hawks", hawks), false);
+    }
+
+    private static PlayerEntry winner() {
+        return new PlayerEntry(Map.of(), true);
+    }
+
+    private static PlayerEntry loser() {
+        return new PlayerEntry(Map.of(), false);
+    }
+
     @Nested
     class AScorePad {
 

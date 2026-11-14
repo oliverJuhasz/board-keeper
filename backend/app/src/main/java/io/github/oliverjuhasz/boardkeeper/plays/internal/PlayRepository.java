@@ -134,6 +134,7 @@ public class PlayRepository {
                 .set(PLAY.NOTES, newPlay.notes())
                 .set(PLAY.RECORDING_MODE, newPlay.entry().recordingMode().name())
                 .set(PLAY.SETUP, JsonColumns.toJson(newPlay.entry().setup()))
+                .set(PLAY.VICTORY_TYPE, newPlay.entry().victoryType())
                 .set(PLAY.COOPERATIVE, group != null)
                 .set(PLAY.GROUP_WON, group == null ? null : group.won())
                 .set(PLAY.GROUP_SCORES, group == null ? null : JsonColumns.toJson(group.scores()))
@@ -156,6 +157,7 @@ public class PlayRepository {
                 .set(PLAY.NOTES, changed.notes())
                 .set(PLAY.RECORDING_MODE, changed.entry().recordingMode().name())
                 .set(PLAY.SETUP, JsonColumns.toJson(changed.entry().setup()))
+                .set(PLAY.VICTORY_TYPE, changed.entry().victoryType())
                 .set(PLAY.COOPERATIVE, group != null)
                 .set(PLAY.GROUP_WON, group == null ? null : group.won())
                 .set(PLAY.GROUP_SCORES, group == null ? null : JsonColumns.toJson(group.scores()))
@@ -214,6 +216,7 @@ public class PlayRepository {
                 row.get(PLAY.NOTES),
                 RecordingMode.valueOf(row.get(PLAY.RECORDING_MODE)),
                 JsonColumns.toSetup(row.get(PLAY.SETUP)),
+                row.get(PLAY.VICTORY_TYPE),
                 cooperative,
                 group,
                 row.get(RESULTS),
