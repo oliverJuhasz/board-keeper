@@ -3,7 +3,7 @@ import { Fragment, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Link, useNavigate, useParams } from "react-router"
 import { api, type GameModule, type Play, type Result } from "@/api/client"
-import { problemCode } from "@/api/problems"
+import { explainProblem, problemCode } from "@/api/problems"
 import { ActionsMenu } from "@/components/ActionsMenu"
 import { ConfirmDialog } from "@/components/ConfirmDialog"
 import { LinkButton } from "@/components/LinkButton"
@@ -11,6 +11,7 @@ import { PageHeader } from "@/components/PageHeader"
 import { PageMessage } from "@/components/PageMessage"
 import { QueryState } from "@/components/QueryState"
 import { QuietLink } from "@/components/QuietLink"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import {
@@ -85,6 +86,17 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
       void navigate("/plays")
       queryClient.removeQueries({ queryKey: playKey(play.id) })
       queryClient.removeQueries({ queryKey: playsKey })
+    },
+  })
+  // Runs the Game Module over what was entered again, as after a fix to its scoring (ADR 0010).
+  const recalculate = api.useMutation("post", "/api/plays/{id}/recalculation", {
+    onSuccess: (answer) => {
+      queryClient.setQueryData(playKey(play.id), answer.play)
+      // The history and the statistics may still show the Results from before.
+      queryClient.removeQueries({ queryKey: playsKey })
+      void queryClient.invalidateQueries({
+        predicate: (query) => String(query.queryKey[1]).startsWith("/api/stats"),
+      })
     },
   })
   const moduleText = (name: string) => (module ? texts[`${module.key}.${name}`] : undefined)
@@ -171,6 +183,11 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
                 <DropdownMenuItem render={<Link to={`/plays/${play.id}/edit`} />}>
                   {t("plays.page.edit")}
                 </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => recalculate.mutate({ params: { path: { id: play.id } } })}
+                >
+                  {t("plays.page.recalculate")}
+                </DropdownMenuItem>
                 <DropdownMenuItem variant="destructive" onClick={() => setDeleting(true)}>
                   {t("plays.page.delete")}
                 </DropdownMenuItem>
@@ -179,6 +196,25 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
           </div>
         }
       />
+
+      {recalculate.isSuccess && (
+        <Alert>
+          <AlertDescription>
+            {recalculate.data.changed
+              ? t("plays.page.recalculated.changed")
+              : t("plays.page.recalculated.same")}
+          </AlertDescription>
+        </Alert>
+      )}
+      {recalculate.isError && (
+        <Alert variant="destructive">
+          <AlertDescription>
+            {t("plays.page.recalculated.refused", {
+              reason: explainProblem(t, recalculate.error, texts),
+            })}
+          </AlertDescription>
+        </Alert>
+      )}
 
       {play.group ? (
         <section className="space-y-3">

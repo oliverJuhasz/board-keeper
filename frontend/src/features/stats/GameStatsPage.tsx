@@ -1,12 +1,23 @@
 import { useTranslation } from "react-i18next"
 import { Link, useParams } from "react-router"
-import { api, type Game, type GameModule, type GameStats } from "@/api/client"
-import { problemCode } from "@/api/problems"
+import { useQueryClient } from "@tanstack/react-query"
+import {
+  api,
+  type Game,
+  type GameModule,
+  type GameRecalculation,
+  type GameStats,
+} from "@/api/client"
+import { explainProblem, problemCode } from "@/api/problems"
+import { ActionsMenu } from "@/components/ActionsMenu"
+import { FormProblem } from "@/components/FormProblem"
 import { LinkButton } from "@/components/LinkButton"
 import { PageHeader } from "@/components/PageHeader"
 import { PageMessage } from "@/components/PageMessage"
 import { QueryState } from "@/components/QueryState"
 import { QuietLink } from "@/components/QuietLink"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import {
   Table,
   TableBody,
@@ -17,7 +28,9 @@ import {
 } from "@/components/ui/table"
 import { moduleWithId, useGameModules, useGameName } from "@/features/games/useGameModules"
 import { useGameModuleTexts, useGameModuleTextsQuery } from "@/features/games/useGameModuleTexts"
+import { playsKey } from "@/features/plays/playQueries"
 import { useCan } from "@/features/session/useSession"
+import { formatDay } from "@/lib/dates"
 import { formatAverage } from "@/lib/numbers"
 import { NumberCell, ResultsTable, SoloTable } from "./StatsTables"
 import { usePlayedDescription } from "./usePlayedDescription"
@@ -83,6 +96,17 @@ function GameStatsDetails({
   const gameName = useGameName()
   const can = useCan()
   const playedDescription = usePlayedDescription("game")
+  const queryClient = useQueryClient()
+  const recalculate = api.useMutation("post", "/api/plays/recalculation", {
+    onSuccess: () => {
+      // The statistics and the history may still show the Results from before. The statistics
+      // catch up a moment after the Plays change.
+      queryClient.removeQueries({ queryKey: playsKey })
+      void queryClient.invalidateQueries({
+        predicate: (query) => String(query.queryKey[1]).startsWith("/api/stats"),
+      })
+    },
+  })
   const playerLink = (playerId: string, name: string) => (
     <QuietLink to={`/players/${playerId}`}>{name}</QuietLink>
   )
@@ -93,11 +117,25 @@ function GameStatsDetails({
         title={gameName(game)}
         description={playedDescription(stats, t("games.neverPlayed"))}
         action={
-          can("CREATE_PLAYS") && (
-            <LinkButton to={`/plays/new?game=${game.id}`}>{t("stats.game.record")}</LinkButton>
-          )
+          <div className="flex items-center gap-1">
+            {can("CREATE_PLAYS") && (
+              <LinkButton to={`/plays/new?game=${game.id}`}>{t("stats.game.record")}</LinkButton>
+            )}
+            {/* For Admins only: running the Game Module over every Play of the Game again. */}
+            {can("RECALCULATE_PLAYS") && (
+              <ActionsMenu label={t("stats.game.actions")}>
+                <DropdownMenuItem
+                  onClick={() => recalculate.mutate({ params: { query: { gameId: game.id } } })}
+                >
+                  {t("stats.game.recalculate")}
+                </DropdownMenuItem>
+              </ActionsMenu>
+            )}
+          </div>
         }
       />
+      {recalculate.data && <RecalculationReport report={recalculate.data} />}
+      {recalculate.isError && <FormProblem error={recalculate.error} />}
 
       {stats.plays === 0 ? (
         <p className="text-muted-foreground">{t("stats.game.empty")}</p>
@@ -173,6 +211,46 @@ function VictoryTypes({
         </TableBody>
       </Table>
     </section>
+  )
+}
+
+/**
+ * What recalculating every Play of the Game did: how many Plays got new Results, and which the
+ * Game Module refuses now, with why. Those kept the Results they had.
+ */
+function RecalculationReport({ report }: { report: GameRecalculation }) {
+  const { t } = useTranslation()
+  const texts = useGameModuleTexts()
+
+  return (
+    <Alert>
+      <AlertDescription className="space-y-2">
+        <p>
+          {t("stats.game.recalculated", { count: report.plays })}{" "}
+          {report.changed === 0
+            ? t("stats.game.nothingChanged")
+            : t("stats.game.changed", { count: report.changed })}
+        </p>
+        {report.refused.length > 0 && (
+          <>
+            <p>{t("stats.game.refused", { count: report.refused.length })}</p>
+            <ul className="list-disc pl-5">
+              {report.refused.map((refused) => (
+                <li key={refused.playId}>
+                  <QuietLink to={`/plays/${refused.playId}`}>
+                    {formatDay(refused.playedOn)}
+                  </QuietLink>
+                  {": "}
+                  {/* The reason is the name of a text: a Game Module's own, one of the
+                      frontend's, or a problem's code. */}
+                  {explainProblem(t, { code: refused.reason, reason: refused.reason }, texts)}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </AlertDescription>
+    </Alert>
   )
 }
 

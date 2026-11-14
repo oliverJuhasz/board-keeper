@@ -74,7 +74,7 @@
           },
           "permissions" : {
             "items" : {
-              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "REMOVE_GAMES", "CREATE_PLAYS", "CHANGE_PLAYS_RECORDED", "CHANGE_PLAYS_TAKEN_PART_IN", "CHANGE_ANY_PLAY", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES" ],
+              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "REMOVE_GAMES", "CREATE_PLAYS", "CHANGE_PLAYS_RECORDED", "CHANGE_PLAYS_TAKEN_PART_IN", "CHANGE_ANY_PLAY", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES", "RECALCULATE_PLAYS" ],
               "type" : "string"
             },
             "type" : "array",
@@ -177,6 +177,29 @@
           }
         },
         "required" : [ "id", "key", "scorePad" ],
+        "type" : "object"
+      },
+      "GameRecalculation" : {
+        "properties" : {
+          "changed" : {
+            "description" : "How many of them got different Results",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "plays" : {
+            "description" : "How many Plays the Game has",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "refused" : {
+            "description" : "The Plays the Game Module refuses now, which kept their Results",
+            "items" : {
+              "$ref" : "#/components/schemas/RefusedPlay"
+            },
+            "type" : "array"
+          }
+        },
+        "required" : [ "changed", "plays", "refused" ],
         "type" : "object"
       },
       "GameReference" : {
@@ -1038,6 +1061,38 @@
         },
         "required" : [ "status" ]
       },
+      "Recalculation" : {
+        "properties" : {
+          "changed" : {
+            "description" : "Whether the Results came out different from those stored",
+            "type" : "boolean"
+          },
+          "play" : {
+            "$ref" : "#/components/schemas/Play",
+            "description" : "The Play as it is now"
+          }
+        },
+        "required" : [ "changed", "play" ],
+        "type" : "object"
+      },
+      "RefusedPlay" : {
+        "properties" : {
+          "playId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "playedOn" : {
+            "format" : "date",
+            "type" : "string"
+          },
+          "reason" : {
+            "description" : "Why, as the name of a text: under \"problems\" in the frontend's texts, or a Game Module's own such as \"<module>.invalid.<reason>\"",
+            "type" : "string"
+          }
+        },
+        "required" : [ "playId", "playedOn", "reason" ],
+        "type" : "object"
+      },
       "Registration" : {
         "properties" : {
           "expiresAt" : {
@@ -1140,7 +1195,7 @@
           },
           "permissions" : {
             "items" : {
-              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "REMOVE_GAMES", "CREATE_PLAYS", "CHANGE_PLAYS_RECORDED", "CHANGE_PLAYS_TAKEN_PART_IN", "CHANGE_ANY_PLAY", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES" ],
+              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "REMOVE_GAMES", "CREATE_PLAYS", "CHANGE_PLAYS_RECORDED", "CHANGE_PLAYS_TAKEN_PART_IN", "CHANGE_ANY_PLAY", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES", "RECALCULATE_PLAYS" ],
               "type" : "string"
             },
             "type" : "array",
@@ -1159,7 +1214,7 @@
           },
           "permissions" : {
             "items" : {
-              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "REMOVE_GAMES", "CREATE_PLAYS", "CHANGE_PLAYS_RECORDED", "CHANGE_PLAYS_TAKEN_PART_IN", "CHANGE_ANY_PLAY", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES" ],
+              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "REMOVE_GAMES", "CREATE_PLAYS", "CHANGE_PLAYS_RECORDED", "CHANGE_PLAYS_TAKEN_PART_IN", "CHANGE_ANY_PLAY", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES", "RECALCULATE_PLAYS" ],
               "type" : "string"
             },
             "type" : "array",
@@ -2609,6 +2664,45 @@
         "tags" : [ "Plays" ]
       }
     },
+    "/api/plays/recalculation" : {
+      "post" : {
+        "description" : "Recalculates each Play of the Game as for a single Play. The Plays the module refuses now keep their Results, and are listed with the reason. For Admins only.",
+        "operationId" : "recalculateGame",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "gameId",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/GameRecalculation"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Recalculate every Play of a Game",
+        "tags" : [ "Plays" ]
+      }
+    },
     "/api/plays/{id}" : {
       "delete" : {
         "description" : "For good. Who may do this depends on the Play: see \"canChange\".",
@@ -2721,6 +2815,45 @@
           }
         },
         "summary" : "Change a Play",
+        "tags" : [ "Plays" ]
+      }
+    },
+    "/api/plays/{id}/recalculation" : {
+      "post" : {
+        "description" : "Runs the Game Module that scored the Play over what was entered for it again, and keeps the new Results if they differ, for example after a fix to the module's scoring. A Play the module refuses now keeps its Results: plays.invalidEntry. Who may do this depends on the Play: see \"canChange\".",
+        "operationId" : "recalculatePlay",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Recalculation"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Recalculate a Play",
         "tags" : [ "Plays" ]
       }
     },

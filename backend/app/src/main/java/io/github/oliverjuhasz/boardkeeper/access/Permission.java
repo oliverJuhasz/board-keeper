@@ -32,7 +32,12 @@ public enum Permission {
     /** See the Accounts, give and take their Roles, and disable them. */
     MANAGE_ACCOUNTS(true),
     /** Create, change and delete Roles. */
-    MANAGE_ROLES(true);
+    MANAGE_ROLES(true),
+    /**
+     * Recalculate every Play of a Game at once (ADR 0010). One Play can be recalculated by
+     * whoever may change it.
+     */
+    RECALCULATE_PLAYS(true);
 
     private final boolean adminOnly;
 

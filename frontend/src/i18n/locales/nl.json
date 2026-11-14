@@ -168,7 +168,13 @@
       "pad": "Scoreblok",
       "won": "Gewonnen",
       "lost": "Verloren",
-      "victoryType": "Gewonnen door: {{how}}"
+      "victoryType": "Gewonnen door: {{how}}",
+      "recalculate": "Opnieuw berekenen",
+      "recalculated": {
+        "changed": "Opnieuw berekend: de uitslag is veranderd.",
+        "same": "Opnieuw berekend: de uitslag is hetzelfde.",
+        "refused": "Deze partij houdt haar uitslag, want de regels van het spel weigeren haar nu: {{reason}}"
+      }
     },
     "edit": {
       "title": "Een partij bewerken",
@@ -575,6 +581,10 @@
     "REMOVE_GAMES": {
       "name": "Spellen verwijderen",
       "hint": "Alleen spellen zonder partijen."
+    },
+    "RECALCULATE_PLAYS": {
+      "name": "Alle partijen van een spel opnieuw berekenen",
+      "hint": "De uitslag van alle partijen van een spel opnieuw berekenen, nadat de puntentelling van het spel veranderd is."
     }
   },
   "resetPassword": {
@@ -614,7 +624,16 @@
       "padAverages": "Gemiddelden op het scoreblok",
       "padAveragesHint": "Wat een speler gemiddeld per rij scoort.",
       "allPlays": "Alle partijen van {{game}}",
-      "victoryTypes": "Hoe er gewonnen werd"
+      "victoryTypes": "Hoe er gewonnen werd",
+      "actions": "Acties voor dit spel",
+      "recalculate": "Alle partijen opnieuw berekenen",
+      "recalculated_one": "De ene partij van dit spel is opnieuw berekend.",
+      "recalculated_other": "De {{count}} partijen van dit spel zijn opnieuw berekend.",
+      "nothingChanged": "Geen uitslag is veranderd.",
+      "changed_one": "1 partij kreeg een nieuwe uitslag.",
+      "changed_other": "{{count}} partijen kregen een nieuwe uitslag.",
+      "refused_one": "Deze partij houdt haar uitslag, want de regels van het spel weigeren haar nu:",
+      "refused_other": "Deze {{count}} partijen houden hun uitslag, want de regels van het spel weigeren ze nu:"
     },
     "player": {
       "played_one": "Eén keer gespeeld",
