@@ -34,7 +34,7 @@ Board Keeper is a learning project first ([ADR 0001](docs/adr/0001-learning-proj
 
 ## Status
 
-Milestones M0 to M5 are done. Board Keeper builds, runs as a container image, and has:
+Milestones M0 to M6 are done, which are all the milestones planned for v1. Board Keeper builds, runs as a container image, and has:
 
 - the interface in English, Dutch and Hungarian
 - Accounts with sign-in by password or passkey, created through a first-time Setup Link and through Invites
@@ -44,10 +44,11 @@ Milestones M0 to M5 are done. Board Keeper builds, runs as a container image, an
 - Game Modules that bring a Game with its own score pad, Expansions, Variants, choices for each Player, tie rules, ways to win and way of playing alone: 7 Wonders (with Leaders and Cities), 7 Wonders Duel (with Pantheon and Agora), Calico, Hadara, Harmonies, Spirit Island and Wyrmspan
 - a start page that gets to recording a Play in one or two taps: recent Plays to play again, and the most recently played Games first
 - the play history, filterable by "my plays", Game, Player and date, with editing and deleting Plays according to Permissions
+- Recalculation: scoring a Play again with its Game Module as it is now, or, for an Admin, every Play of a Game at once
 - statistics per Game and per Player: wins and win rates, best and average scores, average Placings, averages per row of a score pad, and Cooperative and Solo Plays on their own
 - installing Board Keeper as an app on a phone's home screen, with a notice when a new version is ready
 - recording Plays without a connection: they wait on the device and are sent once Board Keeper can be reached
 - Roles made of fine-grained Permissions, with pages for managing Roles and Accounts
 - password changes and Reset Links
 
-Milestone M6 comes next: more games, with 7 Wonders Duel, Spirit Island and 7 Wonders.
+What might come after v1 is listed under Later in the [roadmap](docs/roadmap.md).
