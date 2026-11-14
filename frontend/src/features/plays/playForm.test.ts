@@ -38,6 +38,7 @@ function form(overrides: Partial<PlayFormValues>): PlayFormValues {
     tieWinner: "",
     groupOutcome: "",
     groupScore: "",
+    groupScores: {},
     ...overrides,
   }
 }

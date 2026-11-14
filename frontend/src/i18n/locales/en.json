@@ -190,7 +190,8 @@
       "scoresNeeded": "A solo play of this game is recorded with its scores.",
       "victoryTypeMissing": "Say how the play was won.",
       "oneWinnerOnly": "A play won this way has one winner.",
-      "chosenTwice": "Two players were given the same choice where each one exists only once, such as a Wonder."
+      "chosenTwice": "Two players were given the same choice where each one exists only once, such as a Wonder.",
+      "groupResultMissing": "Say whether the group won or lost."
     },
     "waiting": {
       "title": "Not sent yet",

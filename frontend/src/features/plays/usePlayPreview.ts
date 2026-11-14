@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react"
 import { api, type GameModule, type PlayPreview, type PlayPreviewRequest } from "@/api/client"
-import { entersScores, entryProblems, toPreviewRequest, type PlayFormValues } from "./playForm"
+import {
+  entersScores,
+  entryProblems,
+  groupRowsOf,
+  toPreviewRequest,
+  type PlayFormValues,
+} from "./playForm"
 
 /**
  * How to ask the server how a Play would end. The answer depends on the request alone, so it
@@ -10,9 +16,15 @@ export function previewOptions(body: PlayPreviewRequest) {
   return api.queryOptions("post", "/api/plays/preview", { body }, { staleTime: Infinity })
 }
 
-/** Whether there is anything to work out: scores are entered, and all of them are in. */
+/**
+ * Whether there is anything to work out: the Players' scores or the group's rows are entered,
+ * and all of them are in.
+ */
 export function canBePreviewed(module: GameModule, play: PlayFormValues) {
-  return entersScores(module, play) && entryProblems(module, play).length === 0
+  return (
+    (entersScores(module, play) || groupRowsOf(module, play).length > 0) &&
+    entryProblems(module, play).length === 0
+  )
 }
 
 /**

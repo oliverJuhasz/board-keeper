@@ -17,6 +17,8 @@ export const genericModule: GameModule = {
     ],
     categories: [{ key: "total", countsTowardTotal: true, step: 1, soloOnly: false }],
     recorderDecidesTies: true,
+    cooperative: false,
+    usualRecordingMode: "POINTS",
   },
 }
 
@@ -43,6 +45,8 @@ export const calicoModule: GameModule = {
       { key: "buttons", countsTowardTotal: true, min: 0, step: 3, soloOnly: false },
     ],
     recorderDecidesTies: true,
+    cooperative: false,
+    usualRecordingMode: "POINTS",
     solo: { kind: "FOR_SCORE_ONLY" },
   },
 }
@@ -74,6 +78,8 @@ export const wyrmspanModule: GameModule = {
       { key: "automa", countsTowardTotal: false, min: 0, step: 1, soloOnly: true },
     ],
     recorderDecidesTies: true,
+    cooperative: false,
+    usualRecordingMode: "POINTS",
     solo: { kind: "AGAINST_OPPONENT", opponentCategory: "automa", tieWins: true },
   },
 }
@@ -103,6 +109,8 @@ export const duelModule: GameModule = {
       },
     ],
     recorderDecidesTies: false,
+    cooperative: false,
+    usualRecordingMode: "POINTS",
     playerSetup: [],
     victoryTypes: [
       { key: "civilian", onPoints: true },
@@ -127,10 +135,70 @@ export const sevenWondersModule: GameModule = {
       { key: "military", countsTowardTotal: true, step: 1, soloOnly: false },
     ],
     recorderDecidesTies: true,
+    cooperative: false,
+    usualRecordingMode: "POINTS",
     victoryTypes: [],
     playerSetup: [
       { key: "wonder", options: ["babylon", "giza", "rhodes"], oncePerPlay: true },
       { key: "side", options: ["day", "night"], oncePerPlay: false },
+    ],
+  },
+}
+
+/**
+ * Won or lost together, with an Adversary whose level is chosen once there is one, and a score
+ * worked out from the group's rows: part of Spirit Island.
+ */
+export const spiritIslandModule: GameModule = {
+  id: "d17ecfcd-9564-4576-a5c8-589e82c10cc4",
+  key: "spirit-island",
+  scorePad: {
+    minPlayers: 1,
+    maxPlayers: 4,
+    expansions: [],
+    variants: [
+      {
+        key: "adversary",
+        kind: "CHOICE",
+        options: ["none", "england", "sweden"],
+        defaultValue: "none",
+        soloOnly: false,
+      },
+      {
+        key: "englandLevel",
+        kind: "RANGE",
+        min: 0,
+        max: 6,
+        defaultValue: "0",
+        soloOnly: false,
+        onlyWhen: { key: "adversary", value: "england" },
+      },
+      {
+        key: "swedenLevel",
+        kind: "RANGE",
+        min: 0,
+        max: 6,
+        defaultValue: "0",
+        soloOnly: false,
+        onlyWhen: { key: "adversary", value: "sweden" },
+      },
+      { key: "thematicMap", kind: "ON_OFF", defaultValue: "false", soloOnly: false },
+    ],
+    categories: [
+      { key: "invaderCards", countsTowardTotal: true, min: 0, step: 1, soloOnly: false },
+      { key: "dahan", countsTowardTotal: true, min: 0, step: 1, soloOnly: false },
+      { key: "blight", countsTowardTotal: true, min: 0, step: 1, soloOnly: false },
+    ],
+    recorderDecidesTies: false,
+    cooperative: true,
+    usualRecordingMode: "WINNER_ONLY",
+    victoryTypes: [],
+    playerSetup: [
+      {
+        key: "spirit",
+        options: ["thunderspeaker", "oceansHungryGrasp", "riverSurgesInSunlight"],
+        oncePerPlay: true,
+      },
     ],
   },
 }
@@ -140,6 +208,7 @@ export const gameModules = [
   genericModule,
   duelModule,
   sevenWondersModule,
+  spiritIslandModule,
   wyrmspanModule,
 ]
 
@@ -176,6 +245,25 @@ export const gameModuleTexts: Record<string, string> = {
   "seven-wonders.category.wonder": "Wonder",
   "seven-wonders.category.military": "Military",
   "seven-wonders.tie": "The player with the most coins wins the tie.",
+  "spirit-island.name": "Spirit Island",
+  "spirit-island.variant.adversary": "Adversary",
+  "spirit-island.variant.adversary.none": "No adversary",
+  "spirit-island.variant.adversary.england": "England",
+  "spirit-island.variant.adversary.sweden": "Sweden",
+  "spirit-island.variant.englandLevel": "Level of England",
+  "spirit-island.variant.englandLevel.0": "Base level",
+  "spirit-island.variant.swedenLevel": "Level of Sweden",
+  "spirit-island.variant.swedenLevel.0": "Base level",
+  "spirit-island.variant.thematicMap": "Thematic map",
+  "spirit-island.category.invaderCards": "Invader cards",
+  "spirit-island.category.invaderCards.won": "Invader cards left in the deck",
+  "spirit-island.category.invaderCards.lost": "Invader cards no longer in the deck",
+  "spirit-island.category.dahan": "Living Dahan",
+  "spirit-island.category.blight": "Blight on the island",
+  "spirit-island.playerSetup.spirit": "Spirit",
+  "spirit-island.playerSetup.spirit.thunderspeaker": "Thunderspeaker",
+  "spirit-island.playerSetup.spirit.oceansHungryGrasp": "Ocean's Hungry Grasp",
+  "spirit-island.playerSetup.spirit.riverSurgesInSunlight": "River Surges in Sunlight",
   "wyrmspan.name": "Wyrmspan",
   "wyrmspan.variant.automaLevel": "Automa level",
   "wyrmspan.variant.automaLevel.1": "Level 1",

@@ -58,7 +58,13 @@ const fields = z.object({
    */
   tieWinner: z.string(),
   groupOutcome: z.enum(["", "won", "lost"]),
+  /** The group's score, for a cooperative Play with the Generic Module. */
   groupScore: z.string().trim(),
+  /**
+   * What was typed in each of the group's rows, by the Score Category's key: for a Game with a
+   * cooperative module of its own, which works out the group's score from them.
+   */
+  groupScores: z.record(z.string(), z.string().trim()),
 })
 
 export type PlayFormValues = z.infer<typeof fields>
@@ -84,9 +90,28 @@ export function playFormFor(module: GameModule) {
   })
 }
 
-/** Whether the Play is won or lost by the group. Only the Generic Module has such Plays. */
+/**
+ * Whether the Play is won or lost by the group: always, for a Game whose module is
+ * cooperative, such as Spirit Island; with the Generic Module, when its "cooperative" Variant is on.
+ */
 export function isCooperative(module: GameModule, play: Pick<PlayFormValues, "setup">) {
-  return module.key === GENERIC && play.setup.cooperative === "true"
+  return (
+    module.scorePad.cooperative || (module.key === GENERIC && play.setup.cooperative === "true")
+  )
+}
+
+/**
+ * The group's rows of the score pad, filled in for a cooperative Play in points of a Game with a
+ * module of its own. The module works out the group's score from them. Empty otherwise: with the
+ * Generic Module, the group's score is typed in as it is.
+ */
+export function groupRowsOf(
+  module: GameModule,
+  play: Pick<PlayFormValues, "setup" | "recordingMode">,
+) {
+  return module.scorePad.cooperative && play.recordingMode === "POINTS"
+    ? categoriesOnPad(module.scorePad, play.setup)
+    : []
 }
 
 /**
@@ -98,10 +123,16 @@ export function soloOf(module: GameModule, play: Pick<PlayFormValues, "players">
   return play.players.length === 1 ? module.scorePad.solo : undefined
 }
 
-/** The Variants to choose from: those for Solo Plays only are left out of other Plays. */
-export function variantsFor(module: GameModule, play: Pick<PlayFormValues, "players">) {
+/**
+ * The Variants to choose from: those for Solo Plays only are left out of other Plays, and those
+ * that depend on the Setup, such as an adversary's level, are left out until it holds.
+ */
+export function variantsFor(module: GameModule, play: Pick<PlayFormValues, "players" | "setup">) {
   const solo = soloOf(module, play) !== undefined
-  return module.scorePad.variants.filter((variant) => solo || !variant.soloOnly)
+  return module.scorePad.variants.filter(
+    (variant) =>
+      (solo || !variant.soloOnly) && holds(module.scorePad, play.setup, variant.onlyWhen),
+  )
 }
 
 /**
@@ -251,7 +282,14 @@ export function entryProblems(module: GameModule, play: PlayFormValues) {
     if (play.groupOutcome === "") {
       problems.push({ path: ["groupOutcome"], message: "validation.outcomeRequired" })
     }
-    if (points && play.groupScore !== "" && !WHOLE_NUMBER.test(play.groupScore)) {
+    if (module.scorePad.cooperative) {
+      for (const category of groupRowsOf(module, play)) {
+        const message = scoreProblem(category, (play.groupScores[category.key] ?? "").trim())
+        if (message) {
+          problems.push({ path: ["groupScores", category.key], message })
+        }
+      }
+    } else if (points && play.groupScore !== "" && !WHOLE_NUMBER.test(play.groupScore)) {
       problems.push({ path: ["groupScore"], message: "validation.wholeNumber" })
     }
     return problems
@@ -375,7 +413,18 @@ function entryOf(module: GameModule, play: PlayFormValues, tie: string[]) {
     group: cooperative
       ? {
           won: play.groupOutcome === "won",
-          scores: points && play.groupScore !== "" ? { total: Number(play.groupScore) } : undefined,
+          scores: module.scorePad.cooperative
+            ? groupRowsOf(module, play).length > 0
+              ? Object.fromEntries(
+                  groupRowsOf(module, play).map((category) => [
+                    category.key,
+                    Number(play.groupScores[category.key]),
+                  ]),
+                )
+              : undefined
+            : points && play.groupScore !== ""
+              ? { total: Number(play.groupScore) }
+              : undefined,
         }
       : undefined,
   }
@@ -420,7 +469,8 @@ export function blankPlay(module: GameModule, game: Game, firstPlayerId?: string
     playedOn: todayIso(),
     location: "",
     notes: "",
-    recordingMode: module.key === GENERIC ? game.recordingMode : "POINTS",
+    // A module says how its Plays usually start: Spirit Island's with only won or lost.
+    recordingMode: module.key === GENERIC ? game.recordingMode : module.scorePad.usualRecordingMode,
     setup,
     // The usual way of winning, such as on points.
     victoryType: module.scorePad.victoryTypes[0]?.key ?? "",
@@ -428,7 +478,17 @@ export function blankPlay(module: GameModule, game: Game, firstPlayerId?: string
     tieWinner: "",
     groupOutcome: "",
     groupScore: "",
+    groupScores: groupScoresFrom(module.scorePad, undefined),
   }
+}
+
+/** The group's rows as the form holds them: every row of a cooperative pad, empty where not filled in. */
+function groupScoresFrom(pad: ScorePad, from: Record<string, number> | undefined) {
+  return pad.cooperative
+    ? Object.fromEntries(
+        pad.categories.map((category) => [category.key, from?.[category.key]?.toString() ?? ""]),
+      )
+    : {}
 }
 
 /**
@@ -463,6 +523,7 @@ export function fromPlay(module: GameModule, play: Play): PlayFormValues {
     tieWinner: markedWinners.length === 1 ? markedWinners[0].player.id : SHARED,
     groupOutcome: play.group ? (play.group.won ? "won" : "lost") : "",
     groupScore: play.group?.scores.total?.toString() ?? "",
+    groupScores: groupScoresFrom(module.scorePad, play.group?.scores),
   }
 }
 
@@ -492,6 +553,7 @@ export function fromNewPlay(module: GameModule, play: NewPlay): PlayFormValues {
     tieWinner: "",
     groupOutcome: play.group ? (play.group.won ? "won" : "lost") : "",
     groupScore: play.group?.scores?.total?.toString() ?? "",
+    groupScores: groupScoresFrom(module.scorePad, play.group?.scores),
   }
 }
 
