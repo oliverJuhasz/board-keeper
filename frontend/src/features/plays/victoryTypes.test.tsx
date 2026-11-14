@@ -35,8 +35,8 @@ function duelPlay(overrides: Partial<Play> = {}): Play {
     victoryType: "militarySupremacy",
     cooperative: false,
     results: [
-      { player: bencePlayer, scores: {}, markedWinner: true, won: true },
-      { player: doraPlayer, scores: {}, markedWinner: false, won: false },
+      { player: bencePlayer, scores: {}, setup: {}, markedWinner: true, won: true },
+      { player: doraPlayer, scores: {}, setup: {}, markedWinner: false, won: false },
     ],
     recordedBy: bencePlayer,
     recordedAt: "2026-03-14T12:00:00Z",

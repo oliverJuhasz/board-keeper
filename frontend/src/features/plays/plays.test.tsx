@@ -99,8 +99,8 @@ test("records a competitive play in points and then shows it", async () => {
       recordingMode: "POINTS",
       setup: { cooperative: "false", lowestScoreWins: "false" },
       players: [
-        { playerId: bencePlayer.id, scores: { total: 48 }, winner: false },
-        { playerId: doraPlayer.id, scores: { total: 61 }, winner: false },
+        { playerId: bencePlayer.id, scores: { total: 48 }, winner: false, setup: {} },
+        { playerId: doraPlayer.id, scores: { total: 61 }, winner: false, setup: {} },
       ],
     },
   ])
@@ -152,8 +152,8 @@ test("someone who has never played can be added without leaving the form", async
 
   await screen.findByRole("heading", { name: "Azul" })
   expect(sent[0].players).toEqual([
-    { playerId: bencePlayer.id, scores: { total: 48 }, winner: false },
-    { playerId: eszter.id, scores: { total: 61 }, winner: false },
+    { playerId: bencePlayer.id, scores: { total: 48 }, winner: false, setup: {} },
+    { playerId: eszter.id, scores: { total: 61 }, winner: false, setup: {} },
   ])
 })
 
@@ -296,8 +296,8 @@ test("records only the winner for a game that is recorded that way", async () =>
       recordingMode: "WINNER_ONLY",
       setup: { cooperative: "false", lowestScoreWins: "false" },
       players: [
-        { playerId: bencePlayer.id, winner: false },
-        { playerId: annaPlayer.id, winner: true },
+        { playerId: bencePlayer.id, winner: false, setup: {} },
+        { playerId: annaPlayer.id, winner: true, setup: {} },
       ],
     },
   ])
@@ -329,8 +329,8 @@ test("records a cooperative play as won or lost by the group", async () => {
       recordingMode: "WINNER_ONLY",
       setup: { cooperative: "true", lowestScoreWins: "false" },
       players: [
-        { playerId: annaPlayer.id, winner: false },
-        { playerId: bencePlayer.id, winner: false },
+        { playerId: annaPlayer.id, winner: false, setup: {} },
+        { playerId: bencePlayer.id, winner: false, setup: {} },
       ],
       group: { won: true },
     },
@@ -356,7 +356,7 @@ test("how a play is recorded can be changed for that one play", async () => {
   expect(sent[0]).toMatchObject({
     recordingMode: "POINTS",
     setup: { cooperative: "true", lowestScoreWins: "false" },
-    players: [{ playerId: annaPlayer.id, winner: false }],
+    players: [{ playerId: annaPlayer.id, winner: false, setup: {} }],
     group: { won: false, scores: { total: 17 } },
   })
 })
@@ -442,8 +442,8 @@ test("shows only who won when that is all that was recorded", async () => {
     recordingMode: "WINNER_ONLY",
     // Entered with the winner last, and shown with the winner first.
     results: [
-      { player: annaPlayer, scores: {}, markedWinner: false, won: false },
-      { player: doraPlayer, scores: {}, markedWinner: true, won: true },
+      { player: annaPlayer, scores: {}, setup: {}, markedWinner: false, won: false },
+      { player: doraPlayer, scores: {}, setup: {}, markedWinner: true, won: true },
     ],
   }
   playIs(play)

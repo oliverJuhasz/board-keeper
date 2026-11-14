@@ -35,6 +35,7 @@ function soloPlay(overrides: Partial<Play>): Play {
       {
         player: bencePlayer,
         scores: { dragonGuild: 12, printedDragons: 40, eggs: 9, automa: 55 },
+        setup: {},
         markedWinner: false,
         total: 61,
         won: true,
@@ -109,6 +110,7 @@ test("a solo play for score only has a total, but no placing and no winner", asy
         {
           player: bencePlayer,
           scores: { designGoals: 28, cats: 23, buttons: 21 },
+          setup: {},
           markedWinner: false,
           total: 72,
         },
@@ -306,6 +308,7 @@ test("a play of more players doesn't name the Automa's level", async () => {
       {
         player: { id: "0193a000-0000-7000-8000-0000000000b1", name: "Anna" },
         scores: { dragonGuild: 5, printedDragons: 30, eggs: 2 },
+        setup: {},
         markedWinner: false,
         total: 37,
         placing: 2,

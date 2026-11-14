@@ -135,6 +135,12 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
           ...expansionsPlayed,
           ...variantsChosen,
         ].join(", ")
+  /** A Player's Player Setup in a few words, such as "Babylon · Night". */
+  const setupOf = (result: Play["results"][number]) =>
+    (module?.scorePad.playerSetup ?? [])
+      .filter((choice) => result.setup[choice.key])
+      .map((choice) => moduleText(`playerSetup.${choice.key}.${result.setup[choice.key]}`))
+      .join(" · ")
   // How it was won, for a Game that can be won in more than one way.
   const victoryType = play.victoryType ? moduleText(`victoryType.${play.victoryType}`) : undefined
 
@@ -185,7 +191,9 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
             <h2 className="text-sm font-medium">{t("plays.page.players")}</h2>
             <ul className="text-muted-foreground">
               {play.results.map((result) => (
-                <li key={result.player.id}>{result.player.name}</li>
+                <li key={result.player.id}>
+                  {[result.player.name, setupOf(result)].filter(Boolean).join(" · ")}
+                </li>
               ))}
             </ul>
           </div>
@@ -226,6 +234,11 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
                           )
                         : result.won && <Badge variant="secondary">{t("plays.page.winner")}</Badge>}
                     </span>
+                    {setupOf(result) && (
+                      <span className="block text-sm font-normal text-muted-foreground">
+                        {setupOf(result)}
+                      </span>
+                    )}
                   </TableCell>
                   {points && <TableCell className="text-right">{result.total}</TableCell>}
                 </TableRow>

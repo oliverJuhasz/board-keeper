@@ -178,8 +178,8 @@ test("a play can be edited by someone who may change it", async () => {
       recordingMode: "POINTS",
       setup: { cooperative: "false", lowestScoreWins: "false" },
       players: [
-        { playerId: doraPlayer.id, scores: { total: 80 }, winner: false },
-        { playerId: annaPlayer.id, scores: { total: 74 }, winner: false },
+        { playerId: doraPlayer.id, scores: { total: 80 }, winner: false, setup: {} },
+        { playerId: annaPlayer.id, scores: { total: 74 }, winner: false, setup: {} },
       ],
     },
   ])

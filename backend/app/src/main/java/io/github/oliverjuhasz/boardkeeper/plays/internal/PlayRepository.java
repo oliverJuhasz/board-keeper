@@ -37,6 +37,7 @@ public class PlayRepository {
     private static final Field<List<Play.Result>> RESULTS = multiset(select(
                             PLAY_RESULT.PLAYER_ID,
                             PLAY_RESULT.SCORES,
+                            PLAY_RESULT.PLAYER_SETUP,
                             PLAY_RESULT.MARKED_WINNER,
                             PLAY_RESULT.TOTAL,
                             PLAY_RESULT.PLACING,
@@ -47,10 +48,11 @@ public class PlayRepository {
             .convertFrom(rows -> rows.map(row -> new Play.Result(
                     row.value1(),
                     JsonColumns.toScores(row.value2()),
-                    row.value3(),
+                    JsonColumns.toSetup(row.value3()),
                     row.value4(),
                     row.value5(),
-                    row.value6())));
+                    row.value6(),
+                    row.value7())));
 
     private final DSLContext dsl;
 
@@ -182,6 +184,7 @@ public class PlayRepository {
                 PLAY_RESULT.PLAYER_ID,
                 PLAY_RESULT.ENTRY_ORDER,
                 PLAY_RESULT.SCORES,
+                PLAY_RESULT.PLAYER_SETUP,
                 PLAY_RESULT.MARKED_WINNER,
                 PLAY_RESULT.TOTAL,
                 PLAY_RESULT.PLACING,
@@ -193,6 +196,7 @@ public class PlayRepository {
                     result.playerId(),
                     i,
                     JsonColumns.toJson(result.scores()),
+                    JsonColumns.toJson(result.setup()),
                     result.markedWinner(),
                     result.total(),
                     result.placing(),

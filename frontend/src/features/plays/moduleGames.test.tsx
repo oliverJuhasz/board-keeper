@@ -38,6 +38,7 @@ const calicoPlay: Play = {
     {
       player: bencePlayer,
       scores: { designGoals: 28, cats: 23, buttons: 21 },
+      setup: {},
       markedWinner: false,
       total: 72,
       placing: 1,
@@ -46,6 +47,7 @@ const calicoPlay: Play = {
     {
       player: annaPlayer,
       scores: { designGoals: 21, cats: 19, buttons: 18 },
+      setup: {},
       markedWinner: false,
       total: 58,
       placing: 2,
@@ -137,11 +139,13 @@ test("the form is the game's score pad, and the server adds it up", async () => 
           playerId: bencePlayer.id,
           scores: { designGoals: 28, cats: 23, buttons: 21 },
           winner: false,
+          setup: {},
         },
         {
           playerId: annaPlayer.id,
           scores: { designGoals: 21, cats: 19, buttons: 18 },
           winner: false,
+          setup: {},
         },
       ],
     },
@@ -235,8 +239,8 @@ test("only the winner can be recorded for a game with its own module, too", asyn
     recordingMode: "WINNER_ONLY",
     setup: { family: "false" },
     players: [
-      { playerId: bencePlayer.id, winner: false },
-      { playerId: doraPlayer.id, winner: true },
+      { playerId: bencePlayer.id, winner: false, setup: {} },
+      { playerId: doraPlayer.id, winner: true, setup: {} },
     ],
   })
   expect(asked).toEqual([])

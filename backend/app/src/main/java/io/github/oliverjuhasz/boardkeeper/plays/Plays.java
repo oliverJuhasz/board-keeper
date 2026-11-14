@@ -263,6 +263,7 @@ public class Plays {
                     results.add(new Play.Result(
                             playerIds.get(i),
                             entered.scores(),
+                            entered.setup(),
                             entered.winner(),
                             calculated.total(),
                             calculated.placing(),
@@ -277,7 +278,13 @@ public class Plays {
                 for (int i = 0; i < playerIds.size(); i++) {
                     PlayerEntry entered = entry.players().get(i);
                     results.add(new Play.Result(
-                            playerIds.get(i), entered.scores(), entered.winner(), null, null, cooperative.won()));
+                            playerIds.get(i),
+                            entered.scores(),
+                            entered.setup(),
+                            entered.winner(),
+                            null,
+                            null,
+                            cooperative.won()));
                 }
             }
         }

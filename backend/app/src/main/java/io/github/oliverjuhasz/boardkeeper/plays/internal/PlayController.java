@@ -214,6 +214,7 @@ class PlayController {
                                 .map(result -> new ResultResponse(
                                         NamedReference.to(playersById.get(result.playerId())),
                                         result.scores(),
+                                        result.setup(),
                                         result.markedWinner(),
                                         result.total(),
                                         result.placing(),
@@ -300,7 +301,7 @@ class PlayController {
                 recordingMode,
                 setup,
                 players.stream()
-                        .map(player -> new PlayerEntry(orEmpty(player.scores()), player.winner()))
+                        .map(player -> new PlayerEntry(orEmpty(player.scores()), player.winner(), orEmpty(player.setup())))
                         .toList(),
                 group == null ? null : new GroupEntry(group.won(), orEmpty(group.scores())),
                 victoryType == null || victoryType.isBlank() ? null : victoryType);
@@ -318,7 +319,12 @@ class PlayController {
             @Schema(
                             description = "Whether you mark this Player as a winner. With Recording Mode WINNER_ONLY that"
                                     + " is the Result. With POINTS it decides a tie for first place.")
-                    boolean winner) {}
+                    boolean winner,
+            @Schema(
+                            description = "The Player Setup, such as their Wonder: the option chosen for each of the Game"
+                                    + " Module's Player Setup choices, by the choice's key. Leave out a choice nobody"
+                                    + " made.")
+                    Map<String, @NotNull String> setup) {}
 
     @Schema(
             name = "GroupEntry",
@@ -375,10 +381,13 @@ class PlayController {
     @Schema(
             name = "Result",
             description = "What one Player got in a Play",
-            requiredProperties = {"player", "scores", "markedWinner"})
+            requiredProperties = {"player", "scores", "setup", "markedWinner"})
     record ResultResponse(
             NamedReference player,
             @Schema(description = "As entered: the value for each Score Category") Map<String, Integer> scores,
+            @Schema(description = "As entered: the Player Setup, the option chosen for each of the Game Module's"
+                            + " Player Setup choices")
+                    Map<String, String> setup,
             @Schema(description = "As entered: whether the recorder marked the Player as a winner") boolean markedWinner,
             @Schema(description = "Absent when no scores were recorded for the Player") Integer total,
             @Schema(description = "Absent in a Cooperative Play and a Solo Play, and when only the winner was recorded")

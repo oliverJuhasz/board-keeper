@@ -65,6 +65,7 @@ const calicoPlay: Play = {
     {
       player: doraPlayer,
       scores: { cats: 20, buttons: 9 },
+      setup: {},
       markedWinner: false,
       total: 29,
       placing: 2,
@@ -73,6 +74,7 @@ const calicoPlay: Play = {
     {
       player: bencePlayer,
       scores: { cats: 25, buttons: 12 },
+      setup: {},
       markedWinner: false,
       total: 37,
       placing: 1,

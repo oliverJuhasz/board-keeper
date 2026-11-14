@@ -189,7 +189,8 @@
       "notRecorded": "Something was entered that this game doesn't record.",
       "scoresNeeded": "A solo play of this game is recorded with its scores.",
       "victoryTypeMissing": "Say how the play was won.",
-      "oneWinnerOnly": "A play won this way has one winner."
+      "oneWinnerOnly": "A play won this way has one winner.",
+      "chosenTwice": "Two players were given the same choice where each one exists only once, such as a Wonder."
     },
     "waiting": {
       "title": "Not sent yet",
@@ -287,7 +288,8 @@
     "scoreStep": "Enter a multiple of {{step}}.",
     "tieUnanswered": "Say who won the tie, or that the win is shared.",
     "soloScoresOnly": "A solo play of this game is recorded with its scores. Choose Points.",
-    "oneWinnerOnly": "Only one player can win this way."
+    "oneWinnerOnly": "Only one player can win this way.",
+    "chosenTwice": "Another player has this {{choice}} already."
   },
   "problems": {
     "unknown": "Something went wrong. Try again.",

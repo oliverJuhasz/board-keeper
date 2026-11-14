@@ -18,6 +18,8 @@ import java.util.Set;
  *       for each option of a choice;
  *   <li>{@code <module>.category.<key>} for a Score Category;
  *   <li>{@code <module>.victoryType.<key>} for a Victory Type;
+ *   <li>{@code <module>.playerSetup.<key>} for a Player Setup choice, and
+ *       {@code <module>.playerSetup.<key>.<option>} for each of its options;
  *   <li>{@code <module>.tie}, when {@code recorderDecidesTies} is set: how the Game decides a
  *       tie, for the recorder who is asked to say who won it.
  * </ul>
@@ -36,6 +38,8 @@ import java.util.Set;
  * @param expansions the Expansions a Play can be played with, in the order to offer them
  * @param victoryTypes the ways a Play can be won, in the order to offer them, the usual one
  *     first; empty for a Game that is won in one way only. A Solo Play has no Victory Type.
+ * @param playerSetup the choices made for each Player, such as their Wonder, in the order to
+ *     offer them; empty for a Game without Player Setup
  */
 public record ScorePad(
         int minPlayers,
@@ -46,7 +50,8 @@ public record ScorePad(
         boolean recorderDecidesTies,
         Solo solo,
         List<Expansion> expansions,
-        List<VictoryType> victoryTypes) {
+        List<VictoryType> victoryTypes,
+        List<PlayerSetupChoice> playerSetup) {
 
     public ScorePad {
         variants = List.copyOf(variants);
@@ -54,6 +59,7 @@ public record ScorePad(
         tieBreakers = List.copyOf(tieBreakers);
         expansions = List.copyOf(expansions);
         victoryTypes = List.copyOf(victoryTypes);
+        playerSetup = List.copyOf(playerSetup);
         if (minPlayers < 1 || (maxPlayers != null && maxPlayers < minPlayers)) {
             throw new IllegalArgumentException("A score pad is for at least one Player, and for no more than its maximum");
         }
@@ -115,6 +121,27 @@ public record ScorePad(
         if (!victoryTypes.isEmpty() && victoryTypes.getFirst().onlyWhen() != null) {
             throw new IllegalArgumentException("The first Victory Type is the usual one, so it has to be always possible");
         }
+        Set<String> choiceKeys = new HashSet<>();
+        for (PlayerSetupChoice choice : playerSetup) {
+            if (!choiceKeys.add(choice.key())) {
+                throw new IllegalArgumentException("Two Player Setup choices have the key '" + choice.key() + "'");
+            }
+        }
+    }
+
+    /** A score pad without Player Setup. */
+    public ScorePad(
+            int minPlayers,
+            Integer maxPlayers,
+            List<Variant> variants,
+            List<ScoreCategory> categories,
+            List<TieBreaker> tieBreakers,
+            boolean recorderDecidesTies,
+            Solo solo,
+            List<Expansion> expansions,
+            List<VictoryType> victoryTypes) {
+        this(minPlayers, maxPlayers, variants, categories, tieBreakers, recorderDecidesTies, solo, expansions,
+                victoryTypes, List.of());
     }
 
     /** A score pad for a Game that is not played alone. */
@@ -137,7 +164,8 @@ public record ScorePad(
             List<TieBreaker> tieBreakers,
             boolean recorderDecidesTies,
             Solo solo) {
-        this(minPlayers, maxPlayers, variants, categories, tieBreakers, recorderDecidesTies, solo, List.of(), List.of());
+        this(minPlayers, maxPlayers, variants, categories, tieBreakers, recorderDecidesTies, solo, List.of(), List.of(),
+                List.of());
     }
 
     /** Whether a condition names a Variant or an Expansion of the pad, with a value it can have. */

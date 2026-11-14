@@ -10,6 +10,7 @@ export const genericModule: GameModule = {
     minPlayers: 1,
     expansions: [],
     victoryTypes: [],
+    playerSetup: [],
     variants: [
       { key: "cooperative", kind: "ON_OFF", defaultValue: "false", soloOnly: false },
       { key: "lowestScoreWins", kind: "ON_OFF", defaultValue: "false", soloOnly: false },
@@ -27,6 +28,7 @@ export const calicoModule: GameModule = {
     maxPlayers: 4,
     expansions: [],
     victoryTypes: [],
+    playerSetup: [],
     variants: [{ key: "family", kind: "ON_OFF", defaultValue: "false", soloOnly: false }],
     categories: [
       {
@@ -54,6 +56,7 @@ export const wyrmspanModule: GameModule = {
     maxPlayers: 5,
     expansions: [],
     victoryTypes: [],
+    playerSetup: [],
     variants: [
       {
         key: "automaLevel",
@@ -100,6 +103,7 @@ export const duelModule: GameModule = {
       },
     ],
     recorderDecidesTies: false,
+    playerSetup: [],
     victoryTypes: [
       { key: "civilian", onPoints: true },
       { key: "militarySupremacy", onPoints: false },
@@ -109,7 +113,35 @@ export const duelModule: GameModule = {
   },
 }
 
-export const gameModules = [calicoModule, genericModule, duelModule, wyrmspanModule]
+/** Each Player has a Wonder, each board once, and plays it on one of its sides: part of 7 Wonders. */
+export const sevenWondersModule: GameModule = {
+  id: "1adf0579-480f-4598-b5ea-92416b96b555",
+  key: "seven-wonders",
+  scorePad: {
+    minPlayers: 3,
+    maxPlayers: 7,
+    expansions: [],
+    variants: [],
+    categories: [
+      { key: "wonder", countsTowardTotal: true, min: 0, step: 1, soloOnly: false },
+      { key: "military", countsTowardTotal: true, step: 1, soloOnly: false },
+    ],
+    recorderDecidesTies: true,
+    victoryTypes: [],
+    playerSetup: [
+      { key: "wonder", options: ["babylon", "giza", "rhodes"], oncePerPlay: true },
+      { key: "side", options: ["day", "night"], oncePerPlay: false },
+    ],
+  },
+}
+
+export const gameModules = [
+  calicoModule,
+  genericModule,
+  duelModule,
+  sevenWondersModule,
+  wyrmspanModule,
+]
 
 export const gameModuleTexts: Record<string, string> = {
   "generic.name": "Generic",
@@ -133,6 +165,17 @@ export const gameModuleTexts: Record<string, string> = {
   "seven-wonders-duel.victoryType.militarySupremacy": "Military supremacy",
   "seven-wonders-duel.victoryType.scientificSupremacy": "Scientific supremacy",
   "seven-wonders-duel.victoryType.politicalSupremacy": "Political supremacy",
+  "seven-wonders.name": "7 Wonders",
+  "seven-wonders.playerSetup.wonder": "Wonder board",
+  "seven-wonders.playerSetup.wonder.babylon": "Babylon",
+  "seven-wonders.playerSetup.wonder.giza": "Giza",
+  "seven-wonders.playerSetup.wonder.rhodes": "Rhodes",
+  "seven-wonders.playerSetup.side": "Side",
+  "seven-wonders.playerSetup.side.day": "Day",
+  "seven-wonders.playerSetup.side.night": "Night",
+  "seven-wonders.category.wonder": "Wonder",
+  "seven-wonders.category.military": "Military",
+  "seven-wonders.tie": "The player with the most coins wins the tie.",
   "wyrmspan.name": "Wyrmspan",
   "wyrmspan.variant.automaLevel": "Automa level",
   "wyrmspan.variant.automaLevel.1": "Level 1",

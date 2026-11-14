@@ -1,6 +1,7 @@
 package io.github.oliverjuhasz.boardkeeper.games.internal;
 
 import io.github.oliverjuhasz.boardkeeper.gameapi.GameModule;
+import io.github.oliverjuhasz.boardkeeper.gameapi.PlayerSetupChoice;
 import io.github.oliverjuhasz.boardkeeper.gameapi.ScorePad;
 import io.github.oliverjuhasz.boardkeeper.gameapi.Variant;
 import io.github.oliverjuhasz.boardkeeper.games.GameModules;
@@ -121,6 +122,10 @@ public class GameModuleTexts {
         }
         pad.categories().forEach(category -> needed.add(prefix + "category." + category.key()));
         pad.victoryTypes().forEach(victoryType -> needed.add(prefix + "victoryType." + victoryType.key()));
+        for (PlayerSetupChoice choice : pad.playerSetup()) {
+            needed.add(prefix + "playerSetup." + choice.key());
+            choice.options().forEach(option -> needed.add(prefix + "playerSetup." + choice.key() + "." + option));
+        }
         if (pad.recorderDecidesTies()) {
             needed.add(prefix + "tie");
         }

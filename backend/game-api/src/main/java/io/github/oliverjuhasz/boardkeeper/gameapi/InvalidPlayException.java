@@ -34,7 +34,9 @@ public class InvalidPlayException extends RuntimeException {
         /** A Play of a Game that can be won in more than one way does not say how it was won. */
         VICTORY_TYPE_MISSING("victoryTypeMissing"),
         /** A Play won outright, not on points, has more than one winner. */
-        ONE_WINNER_ONLY("oneWinnerOnly");
+        ONE_WINNER_ONLY("oneWinnerOnly"),
+        /** Two Players have the same option of a Player Setup choice that can be made once per Play. */
+        CHOSEN_TWICE("chosenTwice");
 
         private final String reason;
 

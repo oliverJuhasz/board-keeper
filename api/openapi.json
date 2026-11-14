@@ -784,6 +784,13 @@
             "description" : "The value for each Score Category, by the category's key. The Generic Module has one, \"total\". Leave it out when only the winner is recorded.",
             "type" : "object"
           },
+          "setup" : {
+            "additionalProperties" : {
+              "type" : "string"
+            },
+            "description" : "The Player Setup, such as their Wonder: the option chosen for each of the Game Module's Player Setup choices, by the choice's key. Leave out a choice nobody made.",
+            "type" : "object"
+          },
           "winner" : {
             "description" : "Whether you mark this Player as a winner. With Recording Mode WINNER_ONLY that is the Result. With POINTS it decides a tie for first place.",
             "type" : "boolean"
@@ -834,6 +841,27 @@
           }
         },
         "required" : [ "name" ],
+        "type" : "object"
+      },
+      "PlayerSetupChoice" : {
+        "description" : "Something chosen for each Player, such as their Wonder. It may be left out for a Player.",
+        "properties" : {
+          "key" : {
+            "type" : "string"
+          },
+          "oncePerPlay" : {
+            "description" : "Whether no two Players of a Play can have the same option",
+            "type" : "boolean"
+          },
+          "options" : {
+            "description" : "The keys of the options, in the order to offer them",
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          }
+        },
+        "required" : [ "key", "oncePerPlay", "options" ],
         "type" : "object"
       },
       "PlayerSoloStats" : {
@@ -1076,6 +1104,13 @@
             "description" : "As entered: the value for each Score Category",
             "type" : "object"
           },
+          "setup" : {
+            "additionalProperties" : {
+              "type" : "string"
+            },
+            "description" : "As entered: the Player Setup, the option chosen for each of the Game Module's Player Setup choices",
+            "type" : "object"
+          },
           "total" : {
             "description" : "Absent when no scores were recorded for the Player",
             "format" : "int32",
@@ -1086,7 +1121,7 @@
             "type" : "boolean"
           }
         },
-        "required" : [ "markedWinner", "player", "scores" ],
+        "required" : [ "markedWinner", "player", "scores", "setup" ],
         "type" : "object"
       },
       "Role" : {
@@ -1184,7 +1219,7 @@
         "type" : "object"
       },
       "ScorePad" : {
-        "description" : "What is entered for a Play of the module's Game. It holds keys; what people read is in the module's texts: \"<module>.expansion.<key>\", \"<module>.variant.<key>\", \"<module>.category.<key>\", \"<module>.victoryType.<key>\" and \"<module>.tie\".",
+        "description" : "What is entered for a Play of the module's Game. It holds keys; what people read is in the module's texts: \"<module>.expansion.<key>\", \"<module>.variant.<key>\", \"<module>.category.<key>\", \"<module>.victoryType.<key>\", \"<module>.playerSetup.<key>\", \"<module>.playerSetup.<key>.<option>\" and \"<module>.tie\".",
         "properties" : {
           "categories" : {
             "description" : "The rows of the score pad, in its order",
@@ -1209,6 +1244,13 @@
             "format" : "int32",
             "type" : "integer"
           },
+          "playerSetup" : {
+            "description" : "The choices made for each Player, such as their Wonder, in the order to offer them. Empty for a Game without Player Setup.",
+            "items" : {
+              "$ref" : "#/components/schemas/PlayerSetupChoice"
+            },
+            "type" : "array"
+          },
           "recorderDecidesTies" : {
             "description" : "Whether the recorder is asked who won a tie for first place that the scores cannot decide",
             "type" : "boolean"
@@ -1231,7 +1273,7 @@
             "type" : "array"
           }
         },
-        "required" : [ "categories", "expansions", "minPlayers", "recorderDecidesTies", "variants", "victoryTypes" ],
+        "required" : [ "categories", "expansions", "minPlayers", "playerSetup", "recorderDecidesTies", "variants", "victoryTypes" ],
         "type" : "object"
       },
       "Session" : {

@@ -529,6 +529,66 @@ class StandardGameModuleTests {
         }
     }
 
+    @Nested
+    class PlayerSetups {
+
+        /** The made-up Game where each Player picks a bird to be, each bird once, and a nest. */
+        private final GameModule module = module(new ScorePad(
+                2,
+                4,
+                List.of(),
+                List.of(ScoreCategory.of("birds")),
+                List.of(),
+                false,
+                null,
+                List.of(),
+                List.of(),
+                List.of(
+                        PlayerSetupChoice.of("bird", List.of("owl", "wren", "heron")).eachOptionOncePerPlay(),
+                        PlayerSetupChoice.of("nest", List.of("tree", "reed")))));
+
+        @Test
+        void areRecordedForEachPlayerAndCanBeLeftOut() {
+            assertThat(results(module, Map.of(), as(10, Map.of("bird", "owl", "nest", "tree")), as(12, Map.of())))
+                    .extracting(PlayerResult::total)
+                    .containsExactly(10, 12);
+        }
+
+        @Test
+        void haveToBeChoicesAndOptionsOfThePad() {
+            assertRefused(Standard.NOT_RECORDED, module, entry(Map.of(), as(10, Map.of("bird", "eagle")), as(12, Map.of())));
+            assertRefused(Standard.NOT_RECORDED, module, entry(Map.of(), as(10, Map.of("hat", "red")), as(12, Map.of())));
+        }
+
+        @Test
+        void canGiveAnOptionToOnePlayerOnlyWhereTheChoiceSaysSo() {
+            assertRefused(
+                    Standard.CHOSEN_TWICE,
+                    module,
+                    entry(Map.of(), as(10, Map.of("bird", "owl")), as(12, Map.of("bird", "owl"))));
+            assertThat(results(module, Map.of(), as(10, Map.of("nest", "reed")), as(12, Map.of("nest", "reed"))))
+                    .hasSize(2);
+        }
+
+        @Test
+        void haveToFitThePad() {
+            assertThatIllegalArgumentException()
+                    .isThrownBy(() -> PlayerSetupChoice.of("bird", List.of("owl")))
+                    .withMessageContaining("'bird'");
+            List<PlayerSetupChoice> twice = List.of(
+                    PlayerSetupChoice.of("bird", List.of("owl", "wren")), PlayerSetupChoice.of("bird", List.of("heron", "wren")));
+            assertThatIllegalArgumentException()
+                    .isThrownBy(() -> new ScorePad(
+                            2, 4, List.of(), List.of(ScoreCategory.of("birds")), List.of(), false, null, List.of(), List.of(), twice))
+                    .withMessageContaining("'bird'");
+        }
+
+        /** A Player's birds, with their Player Setup. */
+        private static PlayerEntry as(int birds, Map<String, String> setup) {
+            return new PlayerEntry(Map.of("birds", birds), false, setup);
+        }
+    }
+
     /** An entry with scores, won this way. */
     private static PlayEntry victory(String victoryType, Map<String, String> setup, PlayerEntry... players) {
         return new PlayEntry(RecordingMode.POINTS, setup, Arrays.asList(players), null, victoryType);

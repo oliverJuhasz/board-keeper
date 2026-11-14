@@ -396,6 +396,44 @@ class ModuleGamePlaysApiTests {
                 .isLenientlyEqualTo("{\"results\": [{\"won\": true}, {\"won\": false}]}");
     }
 
+    @Test
+    void eachPlayerCanHaveAPlayerSetup() {
+        UUID sevenWonders = gameOfModule("seven-wonders");
+        String play = """
+                {"gameId": "%s", "playedOn": "2026-03-14", "recordingMode": "POINTS", "setup": {"cities": "true"},
+                 "players": [
+                   {"playerId": "%s", "winner": false, "setup": {"wonder": "babylon", "side": "night"},
+                    "scores": {"wonder": 10, "treasury": -3, "military": -6, "civilian": 15, "commercial": 5,
+                               "scientific": 13, "guilds": 7, "cities": 4}},
+                   {"playerId": "%s", "winner": false, "setup": {"wonder": "%s"},
+                    "scores": {"wonder": 7, "treasury": 2, "military": 5, "civilian": 20, "commercial": 8,
+                               "scientific": 1, "guilds": 4, "cities": 0}},
+                   {"playerId": "%s", "winner": false,
+                    "scores": {"wonder": 3, "treasury": 6, "military": 0, "civilian": 12, "commercial": 2,
+                               "scientific": 25, "guilds": 6, "cities": 2}}]}
+                """;
+
+        MvcTestResult recorded = member.post("/api/plays", play.formatted(sevenWonders, anna, bence, "petra", dora));
+        assertThat(recorded)
+                .hasStatusOk()
+                .bodyJson()
+                .isLenientlyEqualTo("""
+                        {"results": [
+                          {"setup": {"wonder": "babylon", "side": "night"}, "total": 45, "placing": 3},
+                          {"setup": {"wonder": "petra"}, "total": 47, "placing": 2},
+                          {"setup": {}, "total": 56, "placing": 1, "won": true}]}
+                        """);
+        assertThat(member.get("/api/plays/" + idOf(recorded)))
+                .bodyJson()
+                .extractingPath("$.results[0].setup.wonder")
+                .isEqualTo("babylon");
+        // Each Wonder exists once.
+        assertThat(member.post("/api/plays", play.formatted(sevenWonders, anna, bence, "babylon", dora)))
+                .hasStatus(422)
+                .bodyJson()
+                .isLenientlyEqualTo("{\"reason\": \"plays.invalid.chosenTwice\"}");
+    }
+
     /** The Game that appears in the catalogue for the Calico module. */
     private UUID calicoFromItsModule() {
         return gameOfModule("calico");

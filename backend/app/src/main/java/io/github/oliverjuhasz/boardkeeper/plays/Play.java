@@ -46,6 +46,7 @@ public record Play(
      * What one Player got in a Play.
      *
      * @param scores entered: the value for each Score Category, by the category's key
+     * @param setup entered: the Player's Player Setup, such as their Wonder, by the choice's key
      * @param markedWinner entered: whether the recorder marked the Player as a winner
      * @param total calculated: null when no scores were recorded for the Player
      * @param placing calculated: null in a Cooperative Play and in a Solo Play, and when only the
@@ -54,7 +55,13 @@ public record Play(
      *     recorded for score only, which nobody wins or loses
      */
     public record Result(
-            UUID playerId, Map<String, Integer> scores, boolean markedWinner, Integer total, Integer placing, Boolean won) {}
+            UUID playerId,
+            Map<String, Integer> scores,
+            Map<String, String> setup,
+            boolean markedWinner,
+            Integer total,
+            Integer placing,
+            Boolean won) {}
 
     /**
      * How a Cooperative Play ended for the group.
