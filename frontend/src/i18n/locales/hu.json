@@ -4,7 +4,11 @@
   },
   "common": {
     "reloadToRetry": "Töltsd újra az oldalt, és próbáld meg még egyszer.",
-    "cancel": "Mégse"
+    "cancel": "Mégse",
+    "offline": {
+      "title": "Még nincs betöltve",
+      "text": "Nincs kapcsolat. Magától betöltődik, amint lesz."
+    }
   },
   "games": {
     "title": "Játékok",
@@ -110,7 +114,8 @@
       "placing": "Helyezés",
       "playersFull": "Ezt a játékot legfeljebb {{max}} játékos játszhatja.",
       "lost": "Vesztett",
-      "soloResult": "Eredmény"
+      "soloResult": "Eredmény",
+      "offline": "Nincs kapcsolat. Ez a parti ezen az eszközön marad, és elküldjük, amint lesz kapcsolat. Az összpontszámokat és a helyezéseket akkor számoljuk ki."
     },
     "history": {
       "title": "Partik",
@@ -179,6 +184,18 @@
       "winnerNotTied": "Csak a holtversenyben érintett játékos kaphatja a győzelmet.",
       "notRecorded": "Olyasmit adtál meg, amit ez a játék nem rögzít.",
       "scoresNeeded": "Ennek a játéknak az egyszemélyes partiját a pontszámokkal rögzítjük."
+    },
+    "waiting": {
+      "title": "Még nincs elküldve",
+      "description": "Ezen az eszközön rögzítve. Elküldjük őket, amint elérhető a Board Keeper.",
+      "waiting": "Kapcsolatra vár",
+      "open": "Megnyitás",
+      "remove": "A(z) {{game}} parti törlése ({{date}})",
+      "removeDialog": {
+        "title": "Törlöd ezt a partit?",
+        "description": "Sosem lett elküldve, így végleg eltűnik.",
+        "confirm": "Parti törlése"
+      }
     }
   },
   "notFound": {
@@ -194,7 +211,8 @@
       "available": "Elkészült a Board Keeper új verziója.",
       "reload": "Újratöltés",
       "later": "Később"
-    }
+    },
+    "offline": "Nincs kapcsolat. A rögzített partik ezen az eszközön maradnak, és elküldjük őket, amint lesz kapcsolat."
   },
   "signIn": {
     "title": "Bejelentkezés",
@@ -322,7 +340,9 @@
       "dateInFuture": "A dátum nem lehet a jövőben.",
       "gameModuleMissing": "A Board Keeper ezen verziója nem tudja pontozni ezt a játékot.",
       "notFound": "Ez a parti már nem létezik.",
-      "gameCannotChange": "Egy partit nem lehet másik játékhoz áthelyezni."
+      "gameCannotChange": "Egy partit nem lehet másik játékhoz áthelyezni.",
+      "tieUndecided": "Többen holtversenyben állnak az első helyen, és a pontszámok nem döntik el, ki nyert. Nyisd meg, és válassz.",
+      "idTaken": "Ezt a partit nem sikerült az azonosítójával rögzíteni. Nyisd meg, és rögzítsd újra."
     },
     "passkeys": {
       "notAdded": "Nem sikerült hozzáadni a passkeyt. Próbáld újra.",

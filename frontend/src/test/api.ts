@@ -1,4 +1,5 @@
 import { http, HttpResponse } from "msw"
+import { expect } from "vitest"
 import type {
   Account,
   CurrentAccount,
@@ -315,3 +316,11 @@ export function historyIs(...pages: Play[][]) {
   )
   return asked
 }
+
+/**
+ * The id the form gives a new Play: a version 7 UUID, made fresh each time, so a test can only
+ * check its form.
+ */
+export const aNewPlayId = expect.stringMatching(
+  /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+) as string

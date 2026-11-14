@@ -233,6 +233,17 @@ Board Keeper can be installed as an app, on a phone's home screen for example. `
 
 **Trying it.** The service worker is part of the production build only: `npm run dev` has none, so changes show at once. Build the frontend, then the backend, and open Spring Boot's own port (8080); a browser allows service workers on `localhost` and on https addresses. In Chromium's developer tools, the Application tab shows the manifest, the service worker and the files it keeps, and can go offline or skip waiting.
 
+### Recording without a connection
+
+New Plays can be recorded without a connection; existing Plays can't be changed then, so two devices never change the same Play differently.
+
+- **The Play's id comes from the device.** The form gives each new Play a UUID of version 7 (`frontend/src/lib/uuid.ts`), which starts with the time like the database's own, and sends it with the Play. The server records a Play once per id: the same id from the same Account gives back the Play already recorded (`Plays.record`), so sending again after a lost answer does no harm.
+- **What the form needs is kept on the device.** TanStack Query's persistence (`frontend/src/api/persistence.ts`) saves part of its cache in localStorage and reads it back when the app starts: who is signed in, the Games, the Players, the Game Modules with their texts, and the recent Plays. Without a connection, a query with nothing kept doesn't fail: it pauses, and `QueryState` says so. TanStack Query learns about the connection from the browser's online and offline events; `queryClient.ts` also asks the browser when the app starts.
+- **A Play that can't be sent waits on the device** (`waitingPlays.ts`), when the device is offline or the server doesn't answer. The form then neither shows totals nor asks about a tie (`onUnreachable` in `PlayEntryForm`). The start page lists what waits.
+- **Sending** (`useSendWaitingPlays`, used in `AppLayout`) happens when the app starts, when the device comes back online, and every minute while something waits, for the Account that recorded it only. Before sending, it asks the server how the Play ends: a tie only the recorder can decide, or a refusal, leaves the Play waiting for them, and opening it from the start page fills in the form again (`/plays/new?waiting=<id>`).
+
+To try it, use the production build on Spring Boot's own port, as for the installable app, and the developer tools' "Offline" switch (Network or Application tab).
+
 ### Adding a page
 
 Give the page an address in `frontend/src/router.tsx`, with `lazy` like the pages already there, not with `element`. The build then puts the page's code into a file of its own, which the browser loads the first time the page is shown. `npm run build` lists the files and their sizes.

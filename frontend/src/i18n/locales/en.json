@@ -4,7 +4,11 @@
   },
   "common": {
     "reloadToRetry": "Reload the page to try again.",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "offline": {
+      "title": "Not loaded yet",
+      "text": "There's no connection. This loads by itself once there is."
+    }
   },
   "games": {
     "title": "Games",
@@ -110,7 +114,8 @@
       "placing": "Placing",
       "playersFull": "This game is for at most {{max}} players.",
       "lost": "Lost",
-      "soloResult": "Result"
+      "soloResult": "Result",
+      "offline": "You're offline. This play will be kept on this device and sent once there's a connection. Its totals and placings are worked out then."
     },
     "history": {
       "title": "Plays",
@@ -179,6 +184,18 @@
       "winnerNotTied": "Only a player who is part of the tie can be given the win.",
       "notRecorded": "Something was entered that this game doesn't record.",
       "scoresNeeded": "A solo play of this game is recorded with its scores."
+    },
+    "waiting": {
+      "title": "Not sent yet",
+      "description": "Recorded on this device. They're sent as soon as Board Keeper can be reached.",
+      "waiting": "Waiting for a connection",
+      "open": "Open",
+      "remove": "Remove the play of {{game}} on {{date}}",
+      "removeDialog": {
+        "title": "Remove this play?",
+        "description": "It was never sent, so it will be gone for good.",
+        "confirm": "Remove play"
+      }
     }
   },
   "notFound": {
@@ -194,7 +211,8 @@
       "available": "A new version of Board Keeper is ready.",
       "reload": "Reload",
       "later": "Later"
-    }
+    },
+    "offline": "You're offline. Plays you record are kept on this device and sent once there's a connection."
   },
   "signIn": {
     "title": "Sign in",
@@ -322,7 +340,9 @@
       "dateInFuture": "The date can't be in the future.",
       "gameModuleMissing": "This version of Board Keeper can't score this game.",
       "notFound": "This play no longer exists.",
-      "gameCannotChange": "A play can't be moved to another game."
+      "gameCannotChange": "A play can't be moved to another game.",
+      "tieUndecided": "Players are tied for first place, and the scores can't decide who won. Open it to choose.",
+      "idTaken": "This play couldn't be recorded under its id. Open it and record it again."
     },
     "passkeys": {
       "notAdded": "The passkey couldn't be added. Please try again.",

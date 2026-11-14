@@ -107,7 +107,7 @@ class PlayController {
             operationId = "recordPlay")
     PlayResponse record(
             @AuthenticationPrincipal CurrentAccount account, @Valid @RequestBody NewPlayRequest body) {
-        return toResponse(plays.record(body.toNewPlay(), account), account);
+        return toResponse(plays.record(body.id(), body.toNewPlay(), account), account);
     }
 
     @GetMapping("/last-played")
@@ -232,6 +232,11 @@ class PlayController {
             name = "NewPlay",
             requiredProperties = {"gameId", "playedOn", "recordingMode", "setup", "players"})
     record NewPlayRequest(
+            @Schema(description = "Only when recording, and optional: the new Play's id, chosen by the device. A Play"
+                            + " is recorded once per id: sending it again gives back the Play already recorded."
+                            + " Another Account's Play with the same id is refused with plays.idTaken. Use a UUID"
+                            + " of version 7, which starts with the time: the history orders a day's Plays by id.")
+                    UUID id,
             @NotNull UUID gameId,
             @NotNull @Schema(description = "The day it was played. Not later than today.") LocalDate playedOn,
             @Size(max = Plays.MAX_LOCATION_LENGTH) @Schema(description = "Where it was played, in your own words")

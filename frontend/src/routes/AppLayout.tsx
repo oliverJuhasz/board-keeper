@@ -1,12 +1,17 @@
 import { useTranslation } from "react-i18next"
 import { Link, NavLink, Outlet, useMatch } from "react-router"
+import { useSendWaitingPlays } from "@/features/plays/sendWaitingPlays"
 import { AccountMenu } from "@/features/session/AccountMenu"
 import { useAccountLanguage } from "@/features/session/useChangeLanguage"
+import { useOnline } from "@/lib/online"
 
 /** The frame around every signed-in page. `<Outlet />` is where the current page is drawn. */
 export function AppLayout() {
   const { t } = useTranslation()
   useAccountLanguage()
+  // Plays recorded on this device without a connection are sent from here, on every page.
+  useSendWaitingPlays()
+  const online = useOnline()
   // A Game's statistics belong with the Games, though their address doesn't start with the
   // start page's "/". useMatch says whether the current address fits a pattern.
   const onGamePage = useMatch("/games/*") !== null
@@ -48,6 +53,11 @@ export function AppLayout() {
           <AccountMenu />
         </div>
       </header>
+      {!online && (
+        <p role="status" className="bg-muted px-4 py-2 text-center text-sm text-muted-foreground">
+          {t("app.offline")}
+        </p>
+      )}
       <main className="mx-auto max-w-3xl px-4 py-8">
         <Outlet />
       </main>

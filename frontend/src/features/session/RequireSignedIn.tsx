@@ -15,10 +15,13 @@ export function RequireSignedIn({ children }: { children: ReactNode }) {
   const session = useSession()
   const location = useLocation()
 
-  if (session.isPending) {
+  // Without a connection, who is signed in comes from what the device kept (persistence.ts),
+  // even when asking the server again failed.
+  const unreachable = session.isError || (session.isPending && session.fetchStatus === "paused")
+  if (session.isPending && !unreachable) {
     return <AppLoading />
   }
-  if (session.isError) {
+  if (!session.data) {
     return (
       <div className="mx-auto max-w-sm p-8">
         <PageMessage title={t("app.unreachable")}>

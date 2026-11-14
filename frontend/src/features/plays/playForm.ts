@@ -362,6 +362,38 @@ export function fromPlay(module: GameModule, play: Play): PlayFormValues {
 }
 
 /**
+ * The form filled in with a Play that waits on this device to be sent (waitingPlays.ts): what
+ * toNewPlay made of it, turned back. Nobody was asked about a tie yet, so that is left open.
+ */
+export function fromNewPlay(module: GameModule, play: NewPlay): PlayFormValues {
+  return {
+    playedOn: play.playedOn,
+    location: play.location ?? "",
+    notes: play.notes ?? "",
+    recordingMode: play.recordingMode,
+    setup: Object.fromEntries(
+      module.scorePad.variants.map((variant) => [
+        variant.key,
+        play.setup[variant.key] ?? variant.defaultValue,
+      ]),
+    ),
+    players: play.players.map((player) => ({
+      playerId: player.playerId,
+      scores: Object.fromEntries(
+        module.scorePad.categories.map((category) => [
+          category.key,
+          player.scores?.[category.key]?.toString() ?? "",
+        ]),
+      ),
+      won: player.winner,
+    })),
+    tieWinner: "",
+    groupOutcome: play.group ? (play.group.won ? "won" : "lost") : "",
+    groupScore: play.group?.scores?.total?.toString() ?? "",
+  }
+}
+
+/**
  * The form for playing a recorded Play again: the same Players in the same order, and, if the
  * Play was scored by the module that scores its Game today, the same choices. Only the date and
  * the scores are new.

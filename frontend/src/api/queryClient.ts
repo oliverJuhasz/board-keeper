@@ -1,4 +1,4 @@
-import { QueryClient } from "@tanstack/react-query"
+import { onlineManager, QueryClient } from "@tanstack/react-query"
 
 /** Whether the server answered and refused (a 4xx status), as opposed to failing or not answering. */
 function wasRefused(error: unknown) {
@@ -16,3 +16,9 @@ export const queryClient = new QueryClient({
     },
   },
 })
+
+// TanStack Query starts out taking the device to be online, and learns otherwise only from the
+// browser's "offline" event. An app opened without a connection gets no such event, so it would
+// try the network and fail, instead of waiting with what the device has kept. Start from what
+// the browser says instead.
+onlineManager.setOnline(navigator.onLine)
