@@ -168,7 +168,13 @@
       "pad": "Score pad",
       "won": "Won",
       "lost": "Lost",
-      "victoryType": "Won by: {{how}}"
+      "victoryType": "Won by: {{how}}",
+      "recalculate": "Recalculate",
+      "recalculated": {
+        "changed": "Recalculated: the results changed.",
+        "same": "Recalculated: the results are the same.",
+        "refused": "This play kept its results, because the game's rules refuse it now: {{reason}}"
+      }
     },
     "edit": {
       "title": "Edit a play",
@@ -575,6 +581,10 @@
     "REMOVE_GAMES": {
       "name": "Remove games",
       "hint": "Only games without plays."
+    },
+    "RECALCULATE_PLAYS": {
+      "name": "Recalculate every play of a game",
+      "hint": "Work out the results of every play of a game again, after the game's scoring changed."
     }
   },
   "resetPassword": {
@@ -614,7 +624,16 @@
       "padAverages": "Score pad averages",
       "padAveragesHint": "What a player scores on each row, on average.",
       "allPlays": "All plays of {{game}}",
-      "victoryTypes": "How plays were won"
+      "victoryTypes": "How plays were won",
+      "actions": "Actions for this game",
+      "recalculate": "Recalculate every play",
+      "recalculated_one": "Recalculated the game's 1 play.",
+      "recalculated_other": "Recalculated the game's {{count}} plays.",
+      "nothingChanged": "No results changed.",
+      "changed_one": "1 play got new results.",
+      "changed_other": "{{count}} plays got new results.",
+      "refused_one": "This play kept its results, because the game's rules refuse it now:",
+      "refused_other": "These {{count}} plays kept their results, because the game's rules refuse them now:"
     },
     "player": {
       "played_one": "Played once",

@@ -168,7 +168,13 @@
       "pad": "Pontozólap",
       "won": "Nyert",
       "lost": "Vesztett",
-      "victoryType": "Győzelem módja: {{how}}"
+      "victoryType": "Győzelem módja: {{how}}",
+      "recalculate": "Újraszámolás",
+      "recalculated": {
+        "changed": "Újraszámolva: az eredmény megváltozott.",
+        "same": "Újraszámolva: az eredmény ugyanaz.",
+        "refused": "Ez a parti megtartotta az eredményét, mert a játék szabályai most elutasítják: {{reason}}"
+      }
     },
     "edit": {
       "title": "Parti szerkesztése",
@@ -575,6 +581,10 @@
     "REMOVE_GAMES": {
       "name": "Játékok eltávolítása",
       "hint": "Csak olyan játékoké, amelyeknek nincsenek partijaik."
+    },
+    "RECALCULATE_PLAYS": {
+      "name": "Egy játék összes partijának újraszámolása",
+      "hint": "Egy játék összes partija eredményének újraszámolása, miután a játék pontozása megváltozott."
     }
   },
   "resetPassword": {
@@ -614,7 +624,16 @@
       "padAverages": "Átlagok a pontozólapon",
       "padAveragesHint": "Egy játékos átlagosan ennyi pontot szerez soronként.",
       "allPlays": "Összes parti: {{game}}",
-      "victoryTypes": "Hogyan nyertek a partik"
+      "victoryTypes": "Hogyan nyertek a partik",
+      "actions": "Műveletek ezzel a játékkal",
+      "recalculate": "Minden parti újraszámolása",
+      "recalculated_one": "A játék 1 partiját újraszámoltuk.",
+      "recalculated_other": "A játék {{count}} partiját újraszámoltuk.",
+      "nothingChanged": "Egy eredmény sem változott.",
+      "changed_one": "1 parti kapott új eredményt.",
+      "changed_other": "{{count}} parti kapott új eredményt.",
+      "refused_one": "Ez a parti megtartotta az eredményét, mert a játék szabályai most elutasítják:",
+      "refused_other": "Ez a {{count}} parti megtartotta az eredményét, mert a játék szabályai most elutasítják őket:"
     },
     "player": {
       "played_one": "Egyszer játszott",

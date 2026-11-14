@@ -44,6 +44,7 @@ export const anna: CurrentAccount = {
     "MANAGE_INVITES",
     "MANAGE_ACCOUNTS",
     "MANAGE_ROLES",
+    "RECALCULATE_PLAYS",
   ],
 }
 

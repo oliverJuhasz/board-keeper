@@ -18,6 +18,7 @@ const adminOnly: Record<Permission, boolean> = {
   MANAGE_INVITES: true,
   MANAGE_ACCOUNTS: true,
   MANAGE_ROLES: true,
+  RECALCULATE_PLAYS: true,
 }
 
 /** The Permissions a Role can be given, in the order the interface lists them. */
