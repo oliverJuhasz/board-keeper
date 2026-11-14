@@ -10,6 +10,7 @@ import { FormProblem } from "@/components/FormProblem"
 import { LinkButton } from "@/components/LinkButton"
 import { PageHeader } from "@/components/PageHeader"
 import { RadioField } from "@/components/RadioField"
+import { SelectField } from "@/components/SelectField"
 import { TextAreaField } from "@/components/TextAreaField"
 import { TextField } from "@/components/TextField"
 import { Button } from "@/components/ui/button"
@@ -50,6 +51,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 
 /** What the list of Players to add holds for "someone new", where the others have their id. */
 const NEW_PLAYER = "new"
+
+/** A Variant with more options than this is a drop-down rather than a list of radio buttons. */
+const RADIO_BUTTONS_AT_MOST = 5
 
 /**
  * The form for what is entered about a Play, used both to record a new one and to edit one.
@@ -346,6 +350,18 @@ export function PlayEntryForm({
                 hint={moduleText(`variant.${variant.key}.hint`)}
                 checked={play.setup[variant.key] === "true"}
                 onChange={(on) => form.setValue(`setup.${variant.key}`, String(on), changed)}
+              />
+            ) : (variant.options ?? []).length > RADIO_BUTTONS_AT_MOST ? (
+              // A long list of options, such as Hadara's twelve NPC levels, is a drop-down.
+              <SelectField
+                key={variant.key}
+                label={moduleText(`variant.${variant.key}`)}
+                value={play.setup[variant.key]}
+                onChange={(option) => form.setValue(`setup.${variant.key}`, option, changed)}
+                options={(variant.options ?? []).map((option) => ({
+                  value: option,
+                  label: moduleText(`variant.${variant.key}.${option}`),
+                }))}
               />
             ) : (
               <RadioField

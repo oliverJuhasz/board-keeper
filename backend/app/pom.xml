@@ -49,6 +49,11 @@
             <artifactId>game-wyrmspan</artifactId>
             <scope>runtime</scope>
         </dependency>
+        <dependency>
+            <groupId>io.github.oliverjuhasz.boardkeeper</groupId>
+            <artifactId>game-hadara</artifactId>
+            <scope>runtime</scope>
+        </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
