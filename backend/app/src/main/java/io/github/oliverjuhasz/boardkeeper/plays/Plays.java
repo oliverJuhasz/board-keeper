@@ -3,6 +3,7 @@ package io.github.oliverjuhasz.boardkeeper.plays;
 import io.github.oliverjuhasz.boardkeeper.access.CurrentAccount;
 import io.github.oliverjuhasz.boardkeeper.access.Permission;
 import io.github.oliverjuhasz.boardkeeper.gameapi.GameModule;
+import io.github.oliverjuhasz.boardkeeper.gameapi.GroupEntry;
 import io.github.oliverjuhasz.boardkeeper.gameapi.InvalidPlayException;
 import io.github.oliverjuhasz.boardkeeper.gameapi.Outcome;
 import io.github.oliverjuhasz.boardkeeper.gameapi.PlayEntry;
@@ -20,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.context.ApplicationEventPublisher;
@@ -193,6 +195,79 @@ public class Plays {
         repository.update(id, changed, scored.group(), scored.results());
         events.publishEvent(new PlayChanged(id));
         return repository.find(id).orElseThrow();
+    }
+
+    /** What a Recalculation of one Play did: the Play as it is now, and whether its Results changed. */
+    public record Recalculated(Play play, boolean changed) {}
+
+    /**
+     * What a Recalculation of every Play of a Game did.
+     *
+     * @param plays how many Plays the Game has
+     * @param changed how many of them got different Results
+     * @param refused the Plays the Game Module refuses now, which kept their Results
+     */
+    public record GameRecalculation(int plays, int changed, List<Refused> refused) {}
+
+    /**
+     * A Play that could not be recalculated.
+     *
+     * @param reason the name of the text that says why, such as "plays.invalid.scoreMissing"
+     */
+    public record Refused(UUID playId, LocalDate playedOn, String reason) {}
+
+    /**
+     * Runs the Game Module's scoring again over what was entered for a Play, and stores the new
+     * Results if they differ (ADR 0010). It uses the module that scored the Play before, and the
+     * Play's own Setup, Expansions included. Whoever may change the Play may do this.
+     *
+     * @throws Problem when the module refuses the Play now; it then keeps its Results
+     */
+    @Transactional
+    public Recalculated recalculate(UUID id, CurrentAccount account) {
+        return recalculate(changeable(id, account));
+    }
+
+    /**
+     * Recalculates every Play of a Game, each as {@link #recalculate(UUID, CurrentAccount)} does.
+     * A Play the module refuses keeps its Results and is listed in the answer. Only for Admins.
+     */
+    @Transactional
+    public GameRecalculation recalculateGame(UUID gameId) {
+        games.find(gameId).orElseThrow(() -> Problem.notFound("games.notFound"));
+        List<UUID> ids = repository.idsOfGame(gameId);
+        int changed = 0;
+        List<Refused> refused = new ArrayList<>();
+        for (UUID id : ids) {
+            Play play = repository.find(id).orElseThrow();
+            try {
+                if (recalculate(play).changed()) {
+                    changed++;
+                }
+            } catch (Problem refusal) {
+                refused.add(new Refused(id, play.playedOn(), refusal.reason() != null ? refusal.reason() : refusal.code()));
+            }
+        }
+        return new GameRecalculation(ids.size(), changed, refused);
+    }
+
+    private Recalculated recalculate(Play play) {
+        PlayEntry entry = new PlayEntry(
+                play.recordingMode(),
+                play.setup(),
+                play.results().stream()
+                        .map(result -> new PlayerEntry(result.scores(), result.markedWinner(), result.setup()))
+                        .toList(),
+                play.group() == null ? null : new GroupEntry(play.group().won(), play.group().scores()),
+                play.victoryType());
+        List<UUID> playerIds = play.results().stream().map(Play.Result::playerId).toList();
+        Scored scored = score(moduleOf(play.gameModuleId()), playerIds, entry);
+        if (scored.results().equals(play.results()) && Objects.equals(scored.group(), play.group())) {
+            return new Recalculated(play, false);
+        }
+        repository.replaceResults(play.id(), scored.group(), scored.results());
+        events.publishEvent(new PlayChanged(play.id()));
+        return new Recalculated(repository.find(play.id()).orElseThrow(), true);
     }
 
     /** Deletes a Play for good. */

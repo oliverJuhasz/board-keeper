@@ -164,6 +164,36 @@ class PlayController {
         return toResponse(plays.change(id, body.toNewPlay(), account), account);
     }
 
+    @PostMapping("/{id}/recalculation")
+    @Operation(
+            summary = "Recalculate a Play",
+            description = "Runs the Game Module that scored the Play over what was entered for it again, and keeps the"
+                    + " new Results if they differ, for example after a fix to the module's scoring. A Play the"
+                    + " module refuses now keeps its Results: plays.invalidEntry. Who may do this depends on the"
+                    + " Play: see \"canChange\".",
+            operationId = "recalculatePlay")
+    RecalculationResponse recalculate(@AuthenticationPrincipal CurrentAccount account, @PathVariable UUID id) {
+        Plays.Recalculated recalculated = plays.recalculate(id, account);
+        return new RecalculationResponse(recalculated.changed(), toResponse(recalculated.play(), account));
+    }
+
+    @PostMapping("/recalculation")
+    @RequiresPermission(Permission.RECALCULATE_PLAYS)
+    @Operation(
+            summary = "Recalculate every Play of a Game",
+            description = "Recalculates each Play of the Game as for a single Play. The Plays the module refuses now"
+                    + " keep their Results, and are listed with the reason. For Admins only.",
+            operationId = "recalculateGame")
+    GameRecalculationResponse recalculateGame(@RequestParam UUID gameId) {
+        Plays.GameRecalculation done = plays.recalculateGame(gameId);
+        return new GameRecalculationResponse(
+                done.plays(),
+                done.changed(),
+                done.refused().stream()
+                        .map(refused -> new RefusedResponse(refused.playId(), refused.playedOn(), refused.reason()))
+                        .toList());
+    }
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(
@@ -369,6 +399,32 @@ class PlayController {
             @Schema(description = "The Player of the Account that recorded it") NamedReference recordedBy,
             Instant recordedAt,
             @Schema(description = "Whether the signed-in Account may edit and delete this Play") boolean canChange) {}
+
+    @Schema(
+            name = "Recalculation",
+            requiredProperties = {"changed", "play"})
+    record RecalculationResponse(
+            @Schema(description = "Whether the Results came out different from those stored") boolean changed,
+            @Schema(description = "The Play as it is now") PlayResponse play) {}
+
+    @Schema(
+            name = "GameRecalculation",
+            requiredProperties = {"plays", "changed", "refused"})
+    record GameRecalculationResponse(
+            @Schema(description = "How many Plays the Game has") int plays,
+            @Schema(description = "How many of them got different Results") int changed,
+            @Schema(description = "The Plays the Game Module refuses now, which kept their Results")
+                    List<RefusedResponse> refused) {}
+
+    @Schema(
+            name = "RefusedPlay",
+            requiredProperties = {"playId", "playedOn", "reason"})
+    record RefusedResponse(
+            UUID playId,
+            LocalDate playedOn,
+            @Schema(description = "Why, as the name of a text: under \"problems\" in the frontend's texts, or a"
+                            + " Game Module's own such as \"<module>.invalid.<reason>\"")
+                    String reason) {}
 
     @Schema(
             name = "PlayHistory",

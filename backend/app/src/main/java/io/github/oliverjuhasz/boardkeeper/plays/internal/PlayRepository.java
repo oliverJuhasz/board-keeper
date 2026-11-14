@@ -108,6 +108,15 @@ public class PlayRepository {
         return dsl.select(PLAY.ID).from(PLAY).fetch(row -> row.value1());
     }
 
+    /** The ids of a Game's Plays, the oldest first. */
+    public List<UUID> idsOfGame(UUID gameId) {
+        return dsl.select(PLAY.ID)
+                .from(PLAY)
+                .where(PLAY.GAME_ID.eq(gameId))
+                .orderBy(PLAY.PLAYED_ON, PLAY.ID)
+                .fetch(row -> row.value1());
+    }
+
     /** The day each Game was last played on, by the Game's id. A Game without Plays is missing. */
     public Map<UUID, LocalDate> lastPlayedOnByGame() {
         return dsl.select(PLAY.GAME_ID, max(PLAY.PLAYED_ON))
@@ -167,6 +176,22 @@ public class PlayRepository {
                 .where(PLAY.ID.eq(id))
                 .execute();
         // The Players themselves may have changed, so the Results are written anew.
+        dsl.deleteFrom(PLAY_RESULT).where(PLAY_RESULT.PLAY_ID.eq(id)).execute();
+        insertResults(id, results);
+    }
+
+    /**
+     * Replaces what was calculated for a Play, after a Recalculation. What was entered stays as
+     * it is, except for each Player's entry, which is written anew with their Result.
+     */
+    public void replaceResults(UUID id, Play.GroupResult group, List<Play.Result> results) {
+        dsl.update(PLAY)
+                .set(PLAY.COOPERATIVE, group != null)
+                .set(PLAY.GROUP_WON, group == null ? null : group.won())
+                .set(PLAY.GROUP_SCORES, group == null ? null : JsonColumns.toJson(group.scores()))
+                .set(PLAY.GROUP_TOTAL, group == null ? null : group.total())
+                .where(PLAY.ID.eq(id))
+                .execute();
         dsl.deleteFrom(PLAY_RESULT).where(PLAY_RESULT.PLAY_ID.eq(id)).execute();
         insertResults(id, results);
     }
