@@ -27,7 +27,6 @@ Terms are defined in [`CONTEXT.md`](../CONTEXT.md). The reasons behind the bigge
   - a page per Player: plays, wins, win rate, most-played Games
 - The interface in English (default), Dutch and Hungarian.
 - An installable PWA. New Plays can be recorded without a connection and are sent later.
-- Each Game's rulebooks, uploaded by an Admin and readable by every signed-in Player.
 - A container image built by CI, an example compose file and a self-hosting guide.
 - The API's description and Swagger UI, open to everyone who can reach a running installation.
 
@@ -38,6 +37,7 @@ Changing Plays without a connection, teams, unfinished plays, game nights, impor
 ### Later
 
 - Merging duplicate Players. The model must not rule it out.
+- Rulebooks for each Game, readable in Board Keeper. Parked during M6 until it is clear how they are best uploaded. They are copyrighted and may only be used privately, so they will be uploaded to each installation, never shipped in the repository or the container image.
 - Head-to-head records, streaks and charts.
 - Playwright end-to-end tests, once the frontend is functionally complete and settled.
 - Signing in through an outside provider.
@@ -54,7 +54,7 @@ Changing Plays without a connection, teams, unfinished plays, game nights, impor
 | **M3** | The module contract with real games | `StandardGameModule`, Setup, Tie-breakers, solo styles; Calico, then Wyrmspan, then Harmonies | Designing a plug-in interface |
 | **M4** | Statistics | Events from `plays`, statistics' own tables, the per-Game and per-Player pages | Spring Modulith events |
 | **M5** | Passkeys, PWA, self-hosting guide | Passkey registration and sign-in, installing and updating the app, the guide | Spring Security passkeys; service workers |
-| **M6** | More games | Hadara; rulebooks for each Game; 7 Wonders Duel with Pantheon and Agora (Expansions, Victory Types); 7 Wonders with Leaders and Cities (Player Setup, negative Score Categories); Spirit Island without its expansions (number Variants, a calculated group score); screens for Recalculation | Stretching the module contract |
+| **M6** | More games | Hadara; 7 Wonders Duel with Pantheon and Agora (Expansions, Victory Types); 7 Wonders with Leaders and Cities (Player Setup, negative Score Categories); Spirit Island without its expansions (number Variants, a calculated group score); screens for Recalculation | Stretching the module contract |
 
 ## Settled for milestone M2
 
@@ -107,8 +107,8 @@ Changing Plays without a connection, teams, unfinished plays, game nights, impor
 
 ## Settled for milestone M6
 
-- **The order of work** is Hadara, then the rulebooks, then 7 Wonders Duel, 7 Wonders and Spirit Island, and last the screens for Recalculation.
-- **Rulebooks are uploaded, not shipped.** The publishers' rulebooks are copyrighted and may only be used privately, so they stay out of the repository and the container image. An Admin uploads a Game's rulebooks (Markdown files with their pictures) in Board Keeper, which keeps them in its database, and every signed-in Player can read them from the Game's page. This works for Games without a module of their own, too.
+- **The order of work** is Hadara, then 7 Wonders Duel, 7 Wonders and Spirit Island, and last the screens for Recalculation.
+- **Rulebooks are parked** (see Later). The publishers' rulebooks are copyrighted and may only be used privately, so when they come, an installation's rulebooks will be uploaded to it and kept in its database, never shipped in the repository or the container image. How they are uploaded is still open.
 - **Spirit Island is played without its expansions** for now: the base game's Spirits, adversaries and scenarios.
 - **7 Wonders is the second edition** (2020), with the Leaders and Cities expansions of that edition.
 - Hadara is scored from the publisher's rulebook (page 10) and its solo rules (pages 2 and 3): Colonies, Statues, Silver medals, Gold medals, Cards and Remaining coins add up, and a tie goes to the most coins left over, then is shared. The leftover coins are not on the score pad, so the form asks who won a tie. A Solo Play is played against the NPC: its score is a row of the score pad, and the Play is won by beating it. A tie is won too: the solo rules follow the normal rules, and the NPC never has coins, so it can't win a tie. The NPC's level (1 to 11, or God mode) is a Variant of Solo Plays only. Which side of the setup cards was used changes nothing about the scoring and is not recorded.
