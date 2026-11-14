@@ -115,6 +115,10 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
       `${moduleText(`variant.${variant.key}`)}: ${moduleText(`variant.${variant.key}.${value}`)}`,
     ]
   })
+  // The Expansions it was played with, by name.
+  const expansionsPlayed = (module?.scorePad.expansions ?? [])
+    .filter((expansion) => play.setup[expansion.key] === "true")
+    .map((expansion) => moduleText(`expansion.${expansion.key}`))
   const howRecorded =
     module?.key === GENERIC
       ? recordedAs({
@@ -128,8 +132,11 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
             : solo
               ? t("recording.wonOrLostOnly")
               : t("recording.winnerOnly"),
+          ...expansionsPlayed,
           ...variantsChosen,
         ].join(", ")
+  // How it was won, for a Game that can be won in more than one way.
+  const victoryType = play.victoryType ? moduleText(`victoryType.${play.victoryType}`) : undefined
 
   return (
     <div className="space-y-6">
@@ -185,6 +192,9 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
         </section>
       ) : (
         <>
+          {victoryType && (
+            <p className="font-medium">{t("plays.page.victoryType", { how: victoryType })}</p>
+          )}
           <Table aria-label={t("plays.page.results")}>
             <TableHeader>
               <TableRow>

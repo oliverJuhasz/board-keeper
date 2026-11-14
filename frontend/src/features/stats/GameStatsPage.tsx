@@ -7,7 +7,14 @@ import { PageHeader } from "@/components/PageHeader"
 import { PageMessage } from "@/components/PageMessage"
 import { QueryState } from "@/components/QueryState"
 import { QuietLink } from "@/components/QuietLink"
-import { Table, TableBody, TableHead, TableRow } from "@/components/ui/table"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { moduleWithId, useGameModules, useGameName } from "@/features/games/useGameModules"
 import { useGameModuleTexts, useGameModuleTextsQuery } from "@/features/games/useGameModuleTexts"
 import { useCan } from "@/features/session/useSession"
@@ -107,6 +114,9 @@ function GameStatsDetails({
               }))}
             />
           )}
+          {module && stats.victoryTypes.length > 0 && (
+            <VictoryTypes counts={stats.victoryTypes} module={module} />
+          )}
           {module && <PadAverages averages={stats.categoryAverages} module={module} />}
           {stats.cooperative && <Together group={stats.cooperative} />}
           {stats.solo.length > 0 && (
@@ -127,6 +137,42 @@ function GameStatsDetails({
         </>
       )}
     </div>
+  )
+}
+
+/** How many Plays were won in each way, the most first, for a Game that can be won in several. */
+function VictoryTypes({
+  counts,
+  module,
+}: {
+  counts: GameStats["victoryTypes"]
+  module: GameModule
+}) {
+  const { t } = useTranslation()
+  const texts = useGameModuleTexts()
+
+  return (
+    <section className="space-y-2">
+      <h2 className="text-sm font-medium">{t("stats.game.victoryTypes")}</h2>
+      <Table aria-label={t("stats.game.victoryTypes")}>
+        <TableHeader>
+          <TableRow>
+            <TableHead>{t("stats.columns.victoryType")}</TableHead>
+            <TableHead className="text-right">{t("stats.columns.plays")}</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {counts.map((count) => (
+            <TableRow key={count.key}>
+              <TableHead scope="row" className="font-normal whitespace-normal">
+                {texts[`${module.key}.victoryType.${count.key}`]}
+              </TableHead>
+              <TableCell className="text-right tabular-nums">{count.plays}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </section>
   )
 }
 

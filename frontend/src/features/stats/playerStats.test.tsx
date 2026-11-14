@@ -126,6 +126,7 @@ test("each game's name leads to its statistics", async () => {
     lastPlayedOn: "2026-03-15",
     players: [{ playerId: doraPlayer.id, name: "Dora", plays: 1, wins: 1 }],
     categoryAverages: {},
+    victoryTypes: [],
     solo: [],
   }
   server.use(http.get(`*/api/stats/games/${azul.id}`, () => HttpResponse.json(azulStats)))

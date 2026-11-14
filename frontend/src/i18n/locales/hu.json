@@ -115,7 +115,10 @@
       "playersFull": "Ezt a játékot legfeljebb {{max}} játékos játszhatja.",
       "lost": "Vesztett",
       "soloResult": "Eredmény",
-      "offline": "Nincs kapcsolat. Ez a parti ezen az eszközön marad, és elküldjük, amint lesz kapcsolat. Az összpontszámokat és a helyezéseket akkor számoljuk ki."
+      "offline": "Nincs kapcsolat. Ez a parti ezen az eszközön marad, és elküldjük, amint lesz kapcsolat. Az összpontszámokat és a helyezéseket akkor számoljuk ki.",
+      "expansions": "Kiegészítők",
+      "victoryType": "Hogyan nyert?",
+      "outrightHint": "A játék azonnal véget ért, és senki nem számolt pontot: jelöld be, ki nyert."
     },
     "history": {
       "title": "Partik",
@@ -163,7 +166,8 @@
       "total": "Összesen",
       "pad": "Pontozólap",
       "won": "Nyert",
-      "lost": "Vesztett"
+      "lost": "Vesztett",
+      "victoryType": "Győzelem módja: {{how}}"
     },
     "edit": {
       "title": "Parti szerkesztése",
@@ -183,7 +187,9 @@
       "winnerMissing": "Jelölj meg legalább egy győztest.",
       "winnerNotTied": "Csak a holtversenyben érintett játékos kaphatja a győzelmet.",
       "notRecorded": "Olyasmit adtál meg, amit ez a játék nem rögzít.",
-      "scoresNeeded": "Ennek a játéknak az egyszemélyes partiját a pontszámokkal rögzítjük."
+      "scoresNeeded": "Ennek a játéknak az egyszemélyes partiját a pontszámokkal rögzítjük.",
+      "victoryTypeMissing": "Add meg, hogyan nyert a parti.",
+      "oneWinnerOnly": "Az így megnyert partinak egy győztese van."
     },
     "waiting": {
       "title": "Még nincs elküldve",
@@ -280,7 +286,8 @@
     "scoreTooHigh": "Legfeljebb {{max}} lehet.",
     "scoreStep": "{{step}} többszörösét add meg.",
     "tieUnanswered": "Add meg, ki nyerte a holtversenyt, vagy hogy a győzelem megosztott.",
-    "soloScoresOnly": "Ennek a játéknak az egyszemélyes partiját a pontszámokkal rögzítjük. Válaszd a Pontokat."
+    "soloScoresOnly": "Ennek a játéknak az egyszemélyes partiját a pontszámokkal rögzítjük. Válaszd a Pontokat.",
+    "oneWinnerOnly": "Így csak egy játékos nyerhet."
   },
   "problems": {
     "unknown": "Valami hiba történt. Próbáld újra.",
@@ -588,7 +595,8 @@
       "wins": "Győzelmek",
       "bestScore": "Legjobb pontszám",
       "averageScore": "Átlagos pontszám",
-      "averagePlacing": "Átlagos helyezés"
+      "averagePlacing": "Átlagos helyezés",
+      "victoryType": "Győzelem módja"
     },
     "game": {
       "played_one": "Egyszer játszottátok",
@@ -601,7 +609,8 @@
       "players": "Játékosok",
       "padAverages": "Átlagok a pontozólapon",
       "padAveragesHint": "Egy játékos átlagosan ennyi pontot szerez soronként.",
-      "allPlays": "Összes parti: {{game}}"
+      "allPlays": "Összes parti: {{game}}",
+      "victoryTypes": "Hogyan nyertek a partik"
     },
     "player": {
       "played_one": "Egyszer játszott",

@@ -11,7 +11,7 @@ import type {
   Player,
   Role,
 } from "@/api/client"
-import { calicoModule, genericModule, wyrmspanModule } from "./gameModules"
+import { calicoModule, duelModule, genericModule, wyrmspanModule } from "./gameModules"
 import { server } from "./server"
 
 // Ready-made answers of the pretend backend, for tests to combine.
@@ -98,6 +98,18 @@ export const wyrmspan: Game = {
   name: "Wyrmspan",
   gameModuleId: wyrmspanModule.id,
   moduleKey: "wyrmspan",
+  hasOwnModule: true,
+  cooperative: false,
+  recordingMode: "POINTS",
+  lowestScoreWins: false,
+}
+
+/** A Game that is won on points or outright, with Expansions to play with. */
+export const duel: Game = {
+  id: "0193a000-0000-7000-8000-0000000000e6",
+  name: "7 Wonders Duel",
+  gameModuleId: duelModule.id,
+  moduleKey: "seven-wonders-duel",
   hasOwnModule: true,
   cooperative: false,
   recordingMode: "POINTS",

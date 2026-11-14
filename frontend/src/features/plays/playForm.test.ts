@@ -33,6 +33,7 @@ function form(overrides: Partial<PlayFormValues>): PlayFormValues {
     notes: "",
     recordingMode: "POINTS",
     setup: {},
+    victoryType: "",
     players: [],
     tieWinner: "",
     groupOutcome: "",

@@ -11,6 +11,7 @@ import {
   bencePlayer,
   calico,
   doraPlayer,
+  duel,
   gamesAre,
   pandemic,
   playIs,
@@ -18,7 +19,7 @@ import {
   signedInAs,
   wyrmspan,
 } from "@/test/api"
-import { calicoModule, genericModule, wyrmspanModule } from "@/test/gameModules"
+import { calicoModule, duelModule, genericModule, wyrmspanModule } from "@/test/gameModules"
 import { renderApp } from "@/test/renderApp"
 import { server } from "@/test/server"
 
@@ -28,7 +29,15 @@ function statsAre(stats: GameStats) {
 
 /** Statistics of a Game nobody has played yet, for a test to fill in. */
 function noStats(gameId: string, gameModuleId: string): GameStats {
-  return { gameId, gameModuleId, plays: 0, players: [], categoryAverages: {}, solo: [] }
+  return {
+    gameId,
+    gameModuleId,
+    plays: 0,
+    players: [],
+    categoryAverages: {},
+    solo: [],
+    victoryTypes: [],
+  }
 }
 
 /** The cells of each row of a table, as text, below its heading row. */
@@ -128,6 +137,45 @@ test("shows the average of each row of the score pad, in the pad's order", async
       .getAllByRole("row")
       .map((row) => row.textContent),
   ).toEqual(["Design goals24.3", "Cats21", "Buttons19.5"])
+})
+
+test("shows how the plays of a game won in several ways were won", async () => {
+  signedInAs(bence)
+  gamesAre([duel])
+  statsAre({
+    ...noStats(duel.id, duelModule.id),
+    plays: 3,
+    lastPlayedOn: "2026-03-15",
+    players: [{ playerId: annaPlayer.id, name: "Anna", plays: 3, wins: 2 }],
+    victoryTypes: [
+      { key: "militarySupremacy", plays: 2 },
+      { key: "civilian", plays: 1 },
+    ],
+  })
+
+  renderApp(`/games/${duel.id}`)
+
+  const table = await screen.findByRole("table", { name: "How plays were won" })
+  expect(
+    within(table)
+      .getAllByRole("row")
+      .map((row) => row.textContent),
+  ).toEqual(["Won byPlays", "Military supremacy2", "Civilian victory (on points)1"])
+})
+
+test("a game won in one way only doesn't say how its plays were won", async () => {
+  signedInAs(bence)
+  gamesAre([calico])
+  statsAre({
+    ...noStats(calico.id, calicoModule.id),
+    plays: 1,
+    players: [{ playerId: annaPlayer.id, name: "Anna", plays: 1, wins: 1 }],
+  })
+
+  renderApp(`/games/${calico.id}`)
+
+  await screen.findByRole("table", { name: "Players" })
+  expect(screen.queryByRole("table", { name: "How plays were won" })).not.toBeInTheDocument()
 })
 
 test("shows solo plays in a section of their own", async () => {

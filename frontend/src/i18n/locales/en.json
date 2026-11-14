@@ -115,7 +115,10 @@
       "playersFull": "This game is for at most {{max}} players.",
       "lost": "Lost",
       "soloResult": "Result",
-      "offline": "You're offline. This play will be kept on this device and sent once there's a connection. Its totals and placings are worked out then."
+      "offline": "You're offline. This play will be kept on this device and sent once there's a connection. Its totals and placings are worked out then.",
+      "expansions": "Expansions",
+      "victoryType": "How was it won?",
+      "outrightHint": "The game ended there and nobody counted points: tick who won."
     },
     "history": {
       "title": "Plays",
@@ -163,7 +166,8 @@
       "total": "Total",
       "pad": "Score pad",
       "won": "Won",
-      "lost": "Lost"
+      "lost": "Lost",
+      "victoryType": "Won by: {{how}}"
     },
     "edit": {
       "title": "Edit a play",
@@ -183,7 +187,9 @@
       "winnerMissing": "Mark at least one winner.",
       "winnerNotTied": "Only a player who is part of the tie can be given the win.",
       "notRecorded": "Something was entered that this game doesn't record.",
-      "scoresNeeded": "A solo play of this game is recorded with its scores."
+      "scoresNeeded": "A solo play of this game is recorded with its scores.",
+      "victoryTypeMissing": "Say how the play was won.",
+      "oneWinnerOnly": "A play won this way has one winner."
     },
     "waiting": {
       "title": "Not sent yet",
@@ -280,7 +286,8 @@
     "scoreTooHigh": "Enter {{max}} or less.",
     "scoreStep": "Enter a multiple of {{step}}.",
     "tieUnanswered": "Say who won the tie, or that the win is shared.",
-    "soloScoresOnly": "A solo play of this game is recorded with its scores. Choose Points."
+    "soloScoresOnly": "A solo play of this game is recorded with its scores. Choose Points.",
+    "oneWinnerOnly": "Only one player can win this way."
   },
   "problems": {
     "unknown": "Something went wrong. Try again.",
@@ -588,7 +595,8 @@
       "wins": "Wins",
       "bestScore": "Best score",
       "averageScore": "Average score",
-      "averagePlacing": "Average placing"
+      "averagePlacing": "Average placing",
+      "victoryType": "Won by"
     },
     "game": {
       "played_one": "Played once",
@@ -601,7 +609,8 @@
       "players": "Players",
       "padAverages": "Score pad averages",
       "padAveragesHint": "What a player scores on each row, on average.",
-      "allPlays": "All plays of {{game}}"
+      "allPlays": "All plays of {{game}}",
+      "victoryTypes": "How plays were won"
     },
     "player": {
       "played_one": "Played once",
