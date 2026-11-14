@@ -36,7 +36,9 @@ public class InvalidPlayException extends RuntimeException {
         /** A Play won outright, not on points, has more than one winner. */
         ONE_WINNER_ONLY("oneWinnerOnly"),
         /** Two Players have the same option of a Player Setup choice that can be made once per Play. */
-        CHOSEN_TWICE("chosenTwice");
+        CHOSEN_TWICE("chosenTwice"),
+        /** A Cooperative Play does not say whether the group won. */
+        GROUP_RESULT_MISSING("groupResultMissing");
 
         private final String reason;
 

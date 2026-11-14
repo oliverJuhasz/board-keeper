@@ -43,8 +43,8 @@ public abstract class StandardGameModule implements GameModule {
         if (pad.maxPlayers() != null && players.size() > pad.maxPlayers()) {
             throw new InvalidPlayException(Standard.TOO_MANY_PLAYERS);
         }
-        checkSetup(pad, entry.setup(), soloPlay);
-        checkPlayerSetup(pad, players);
+        Checks.setup(pad, entry.setup(), soloPlay);
+        Checks.playerSetup(pad, players);
         if (entry.group() != null) {
             throw new InvalidPlayException(Standard.NOT_RECORDED);
         }
@@ -57,51 +57,6 @@ public abstract class StandardGameModule implements GameModule {
             return outright(points, players);
         }
         return points ? byPoints(pad, entry.setup(), players) : byMarkedWinners(players);
-    }
-
-    /**
-     * Every Variant and Expansion in the Setup has to be on the pad, with a value it allows. A
-     * Variant for Solo Plays only belongs in the Setup of a Solo Play only.
-     */
-    private static void checkSetup(ScorePad pad, Map<String, String> setup, boolean soloPlay) {
-        setup.forEach((key, value) -> {
-            boolean variant = pad.variants().stream()
-                    .anyMatch(candidate -> candidate.key().equals(key)
-                            && candidate.allows(value)
-                            && (soloPlay || !candidate.soloOnly()));
-            boolean expansion = pad.expansions().stream().anyMatch(candidate -> candidate.key().equals(key))
-                    && Expansion.allows(value);
-            if (!variant && !expansion) {
-                throw new InvalidPlayException(Standard.NOT_RECORDED);
-            }
-        });
-    }
-
-    /**
-     * Every choice in a Player Setup has to be one of the pad's, with one of its options. A
-     * choice made once per Play cannot give two Players the same option.
-     */
-    private static void checkPlayerSetup(ScorePad pad, List<PlayerEntry> players) {
-        for (PlayerEntry player : players) {
-            player.setup().forEach((key, option) -> {
-                boolean known = pad.playerSetup().stream()
-                        .anyMatch(choice -> choice.key().equals(key) && choice.options().contains(option));
-                if (!known) {
-                    throw new InvalidPlayException(Standard.NOT_RECORDED);
-                }
-            });
-        }
-        for (PlayerSetupChoice choice : pad.playerSetup()) {
-            if (choice.oncePerPlay()) {
-                List<String> chosen = players.stream()
-                        .map(player -> player.setup().get(choice.key()))
-                        .filter(option -> option != null)
-                        .toList();
-                if (Set.copyOf(chosen).size() != chosen.size()) {
-                    throw new InvalidPlayException(Standard.CHOSEN_TWICE);
-                }
-            }
-        }
     }
 
     /**
@@ -130,20 +85,8 @@ public abstract class StandardGameModule implements GameModule {
      * in a row that isn't on it.
      */
     private static void checkPad(List<ScoreCategory> categories, List<PlayerEntry> players) {
-        Set<String> onThePad = categories.stream().map(ScoreCategory::key).collect(Collectors.toSet());
         for (PlayerEntry player : players) {
-            if (!onThePad.containsAll(player.scores().keySet())) {
-                throw new InvalidPlayException(Standard.NOT_RECORDED);
-            }
-            for (ScoreCategory category : categories) {
-                Integer value = player.scores().get(category.key());
-                if (value == null) {
-                    throw new InvalidPlayException(Standard.SCORE_MISSING);
-                }
-                if (!category.allows(value)) {
-                    throw new InvalidPlayException(Standard.SCORE_NOT_ALLOWED);
-                }
-            }
+            Checks.rows(categories, player.scores());
         }
     }
 

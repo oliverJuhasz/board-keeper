@@ -1228,6 +1228,10 @@
             },
             "type" : "array"
           },
+          "cooperative" : {
+            "description" : "Whether the Players win or lose together. The categories are then the group's, entered once for the Play, and the module works out the group's score from them.",
+            "type" : "boolean"
+          },
           "expansions" : {
             "description" : "The Expansions a Play can be played with, in the order to offer them",
             "items" : {
@@ -1259,6 +1263,11 @@
             "$ref" : "#/components/schemas/Solo",
             "description" : "How a Solo Play is recorded. Absent for a Game that is not played alone."
           },
+          "usualRecordingMode" : {
+            "description" : "The Recording Mode a new Play starts with",
+            "enum" : [ "POINTS", "WINNER_ONLY" ],
+            "type" : "string"
+          },
           "variants" : {
             "items" : {
               "$ref" : "#/components/schemas/Variant"
@@ -1273,7 +1282,7 @@
             "type" : "array"
           }
         },
-        "required" : [ "categories", "expansions", "minPlayers", "playerSetup", "recorderDecidesTies", "variants", "victoryTypes" ],
+        "required" : [ "categories", "cooperative", "expansions", "minPlayers", "playerSetup", "recorderDecidesTies", "usualRecordingMode", "variants", "victoryTypes" ],
         "type" : "object"
       },
       "Session" : {
@@ -1421,15 +1430,29 @@
       "Variant" : {
         "properties" : {
           "defaultValue" : {
-            "description" : "What a Setup holds when nothing was chosen. For ON_OFF, \"true\" or \"false\".",
+            "description" : "What a Setup holds when nothing was chosen. For ON_OFF, \"true\" or \"false\"; for RANGE, a number as text.",
             "type" : "string"
           },
           "key" : {
             "type" : "string"
           },
           "kind" : {
-            "enum" : [ "ON_OFF", "CHOICE" ],
+            "enum" : [ "ON_OFF", "CHOICE", "RANGE" ],
             "type" : "string"
+          },
+          "max" : {
+            "description" : "For a RANGE: the highest number",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "min" : {
+            "description" : "For a RANGE: the lowest number",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "onlyWhen" : {
+            "$ref" : "#/components/schemas/OnlyWhen",
+            "description" : "It is chosen only when the Setup has this value, such as an adversary's level once that adversary is chosen. Absent when it always is."
           },
           "options" : {
             "description" : "For a CHOICE: the keys of the options, in the order to offer them",

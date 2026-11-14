@@ -27,6 +27,7 @@
         <module>games/hadara</module>
         <module>games/seven-wonders</module>
         <module>games/seven-wonders-duel</module>
+        <module>games/spirit-island</module>
         <module>app</module>
     </modules>
 
@@ -120,6 +121,11 @@
             <dependency>
                 <groupId>io.github.oliverjuhasz.boardkeeper</groupId>
                 <artifactId>game-seven-wonders-duel</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.oliverjuhasz.boardkeeper</groupId>
+                <artifactId>game-spirit-island</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>
