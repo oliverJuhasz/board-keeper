@@ -24,7 +24,7 @@ import { useCan } from "@/features/session/useSession"
 import { formatRecentDay } from "@/lib/dates"
 import { GameDialog } from "./GameDialog"
 import { useRecordedAs } from "./recordedAs"
-import { useGameName } from "./useGameModules"
+import { useGameModules, useGameName } from "./useGameModules"
 
 type OpenDialog = { kind: "add" } | { kind: "edit" | "remove"; game: Game } | undefined
 
@@ -44,6 +44,9 @@ export function GamesPage() {
   const [dialog, setDialog] = useState<OpenDialog>()
   const games = api.useQuery("get", "/api/games")
   const lastPlayed = api.useQuery("get", "/api/plays/last-played")
+  // Not drawn here, but loaded, so the device keeps them (persistence.ts): the form for a Play is
+  // drawn from them, also when it is opened without a connection.
+  useGameModules()
   const close = () => setDialog(undefined)
   const records = can("CREATE_PLAYS")
 
