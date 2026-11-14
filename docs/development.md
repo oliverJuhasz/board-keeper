@@ -21,6 +21,7 @@ backend/
     harmonies/       the Game Module for Harmonies
     seven-wonders/   the Game Module for 7 Wonders, with Leaders and Cities
     seven-wonders-duel/  the Game Module for 7 Wonders Duel, with Pantheon and Agora
+    spirit-island/   the Game Module for Spirit Island, a cooperative game
     wyrmspan/        the Game Module for Wyrmspan
   app/               the Spring Boot application
 frontend/            the React app
@@ -241,7 +242,7 @@ Board Keeper can be installed as an app, on a phone's home screen for example. `
 New Plays can be recorded without a connection; existing Plays can't be changed then, so two devices never change the same Play differently.
 
 - **The Play's id comes from the device.** The form gives each new Play a UUID of version 7 (`frontend/src/lib/uuid.ts`), which starts with the time like the database's own, and sends it with the Play. The server records a Play once per id: the same id from the same Account gives back the Play already recorded (`Plays.record`), so sending again after a lost answer does no harm.
-- **What the form needs is kept on the device.** TanStack Query's persistence (`frontend/src/api/persistence.ts`) saves part of its cache in localStorage and reads it back when the app starts: who is signed in, the Games, the Players, the Game Modules with their texts, and the recent Plays. Without a connection, a query with nothing kept doesn't fail: it pauses, and `QueryState` says so. TanStack Query learns about the connection from the browser's online and offline events; `queryClient.ts` also asks the browser when the app starts.
+- **What the form needs is kept on the device.** TanStack Query's persistence (`frontend/src/api/persistence.ts`) saves part of its cache in localStorage and reads it back when the app starts: who is signed in, the Games, the Players, the Game Modules with their texts, and the recent Plays. Who is signed in is only kept while someone is: the cache is saved at most once a second, and a kept "signed out" would send a page loaded right after signing in back to the sign-in page. Without a connection, a query with nothing kept doesn't fail: it pauses, and `QueryState` says so. TanStack Query learns about the connection from the browser's online and offline events; `queryClient.ts` also asks the browser when the app starts.
 - **A Play that can't be sent waits on the device** (`waitingPlays.ts`), when the device is offline or the server doesn't answer. The form then neither shows totals nor asks about a tie (`onUnreachable` in `PlayEntryForm`). The start page lists what waits.
 - **Sending** (`useSendWaitingPlays`, used in `AppLayout`) happens when the app starts, when the device comes back online, and every minute while something waits, for the Account that recorded it only. Before sending, it asks the server how the Play ends: a tie only the recorder can decide, or a refusal, leaves the Play waiting for them, and opening it from the start page fills in the form again (`/plays/new?waiting=<id>`).
 
@@ -306,7 +307,7 @@ This writes `frontend/src/components/ui/dialog.tsx`. Run `npm run format` afterw
 
 ### Adding a Game Module
 
-`backend/games/calico` is the example to copy; `backend/games/harmonies` shows a Variant that is a choice, and rows that a Variant swaps; `backend/games/wyrmspan` shows a Game played alone against an automated opponent; `backend/games/hadara` shows a choice with many options, which the form offers as a drop-down instead of radio buttons once there are more than five; `backend/games/seven-wonders-duel` shows Expansions and a Game that can be won in more than one way; `backend/games/seven-wonders` shows a Player Setup and rows that can be negative. A module has three parts: an identity, a description of its Game's score pad, and its texts.
+`backend/games/calico` is the example to copy; `backend/games/harmonies` shows a Variant that is a choice, and rows that a Variant swaps; `backend/games/wyrmspan` shows a Game played alone against an automated opponent; `backend/games/hadara` shows a choice with many options, which the form offers as a drop-down instead of radio buttons once there are more than five; `backend/games/seven-wonders-duel` shows Expansions and a Game that can be won in more than one way; `backend/games/seven-wonders` shows a Player Setup and rows that can be negative; `backend/games/spirit-island` shows a cooperative Game whose module works out the group's score, and Variants that are numbers or depend on another choice. A module has three parts: an identity, a description of its Game's score pad, and its texts.
 
 1. Copy `backend/games/calico` to `backend/games/<key>` and rename the artifact to `game-<key>`.
 2. Give the module a newly generated UUID. It is stored with every Play, so it never changes afterwards ([ADR 0012](adr/0012-game-module-uuid-and-key.md)).
@@ -320,8 +321,8 @@ This writes `frontend/src/components/ui/dialog.tsx`. Run `npm run format` afterw
    | `<key>.name` | the Game, as the catalogue lists it |
    | `<key>.expansion.<expansion>` | an Expansion |
    | `<key>.variant.<variant>` | a Variant; `<key>.variant.<variant>.hint` adds a line under it, and is optional |
-   | `<key>.variant.<variant>.<option>` | each option of a Variant that is a choice |
-   | `<key>.category.<category>` | a row of the score pad |
+   | `<key>.variant.<variant>.<option>` | each option of a Variant that is a choice; for a Variant that is a number, a name for one number, such as `.0` for "Base level", is optional |
+   | `<key>.category.<category>` | a row of the score pad; a cooperative Game may name a row differently after a win and a loss with `.won` and `.lost` |
    | `<key>.victoryType.<victoryType>` | a way to win the Game |
    | `<key>.playerSetup.<choice>` | a choice of the Player Setup, such as a Wonder board |
    | `<key>.playerSetup.<choice>.<option>` | each option of such a choice |
@@ -338,6 +339,10 @@ Nothing else changes. When the application next starts, the Game is in the catal
 **Expansions.** List the Expansions a Play can be played with. In a Play's Setup each is `"true"` or `"false"` under its key, next to the Variants, and the form offers them as checkboxes. What an Expansion changes is said where it applies: a row that an Expansion adds is `onlyWhen("pantheon", Expansion.WITH)`, and a row it takes away is `onlyWhen("pantheon", Expansion.WITHOUT)`. `onlyWhen` names a Variant or an Expansion alike.
 
 **Ways to win.** A Game that can be won in more than one way lists its Victory Types, the usual one first. `VictoryType.onPoints(key)` is decided by the score pad. `VictoryType.outright(key)` ends the Play before anyone counts points, such as a supremacy in 7 Wonders Duel: the form then takes the pad away and asks for the one winner, and the Play is recorded like one with only the winner. A Victory Type can depend on the Setup through `onlyWhen`, as political supremacy depends on Agora. A Play of such a Game always says how it was won, except a Solo Play, which has no Victory Type. A Game's statistics count its Plays by Victory Type.
+
+**Variants that are numbers, or depend on another choice.** `new Variant.Range(key, min, max)` is a whole number, such as an adversary's level from 0 to 6; the form offers its numbers, under the names the texts give them. A Variant can depend on the Setup with `onlyWhen`, as Spirit Island's level of England is only chosen once England is the adversary: the form shows it then, and only then is it sent.
+
+**Cooperative Games.** Make the score pad with `ScorePad.cooperative(...)` and extend `CooperativeGameModule`. The Players win or lose together; the pad's rows are the group's, entered once for the Play when it is recorded in points, and `groupScore` works out the group's score from them. The pad says which Recording Mode a Play starts with: Spirit Island's starts with only won or lost, because its rulebook calls scoring optional.
 
 **Player Setup.** List what is chosen for each Player, such as their Wonder board and its side, as `PlayerSetupChoice`s. The form shows a drop-down for each in every Player's row, and a choice can be left open. Mark a choice `eachOptionOncePerPlay()` where each option exists once, as each Wonder board does: the form greys out what another Player has, and the module refuses a Play that gives two Players the same option. Name a choice so that it can't be mistaken for a row of the pad: 7 Wonders has a "Wonder" row, so its choice is the "Wonder board".
 
