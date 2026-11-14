@@ -13,9 +13,11 @@ import java.util.Set;
  * <p>The description holds only keys. The module's translation files hold what people read:
  *
  * <ul>
+ *   <li>{@code <module>.expansion.<key>} for an Expansion;
  *   <li>{@code <module>.variant.<key>} for a Variant, and {@code <module>.variant.<key>.<option>}
  *       for each option of a choice;
  *   <li>{@code <module>.category.<key>} for a Score Category;
+ *   <li>{@code <module>.victoryType.<key>} for a Victory Type;
  *   <li>{@code <module>.tie}, when {@code recorderDecidesTies} is set: how the Game decides a
  *       tie, for the recorder who is asked to say who won it.
  * </ul>
@@ -30,7 +32,10 @@ import java.util.Set;
  *     {@code tieBreakers} is decided by something that is not entered. If so, the recorder is
  *     asked who won it. If not, such a tie is a shared win.
  * @param solo how a Solo Play is recorded; null for a Game that is not played alone, for which
- *     the constructor without it is shorter
+ *     the constructors without it are shorter
+ * @param expansions the Expansions a Play can be played with, in the order to offer them
+ * @param victoryTypes the ways a Play can be won, in the order to offer them, the usual one
+ *     first; empty for a Game that is won in one way only. A Solo Play has no Victory Type.
  */
 public record ScorePad(
         int minPlayers,
@@ -39,12 +44,16 @@ public record ScorePad(
         List<ScoreCategory> categories,
         List<TieBreaker> tieBreakers,
         boolean recorderDecidesTies,
-        Solo solo) {
+        Solo solo,
+        List<Expansion> expansions,
+        List<VictoryType> victoryTypes) {
 
     public ScorePad {
         variants = List.copyOf(variants);
         categories = List.copyOf(categories);
         tieBreakers = List.copyOf(tieBreakers);
+        expansions = List.copyOf(expansions);
+        victoryTypes = List.copyOf(victoryTypes);
         if (minPlayers < 1 || (maxPlayers != null && maxPlayers < minPlayers)) {
             throw new IllegalArgumentException("A score pad is for at least one Player, and for no more than its maximum");
         }
@@ -62,10 +71,16 @@ public record ScorePad(
                     + "' has to be a Score Category for Solo Plays only that does not count toward the total");
         }
 
-        Set<String> variantKeys = new HashSet<>();
+        // Variants and Expansions share the Setup, so their keys have to differ from each other.
+        Set<String> setupKeys = new HashSet<>();
+        for (Expansion expansion : expansions) {
+            if (!setupKeys.add(expansion.key())) {
+                throw new IllegalArgumentException("Two Expansions have the key '" + expansion.key() + "'");
+            }
+        }
         for (Variant variant : variants) {
-            if (!variantKeys.add(variant.key())) {
-                throw new IllegalArgumentException("Two Variants have the key '" + variant.key() + "'");
+            if (!setupKeys.add(variant.key())) {
+                throw new IllegalArgumentException("Two Variants or Expansions have the key '" + variant.key() + "'");
             }
         }
         Set<String> categoryKeys = new HashSet<>();
@@ -73,11 +88,9 @@ public record ScorePad(
             if (!categoryKeys.add(category.key())) {
                 throw new IllegalArgumentException("Two Score Categories have the key '" + category.key() + "'");
             }
-            ScoreCategory.OnlyWhen onlyWhen = category.onlyWhen();
-            if (onlyWhen != null && variants.stream().noneMatch(variant ->
-                    variant.key().equals(onlyWhen.variant()) && variant.allows(onlyWhen.value()))) {
+            if (!possible(category.onlyWhen(), variants, expansions)) {
                 throw new IllegalArgumentException("The Score Category '" + category.key()
-                        + "' depends on a Variant or a value that is not on the pad");
+                        + "' depends on a Variant, an Expansion or a value that is not on the pad");
             }
         }
         for (TieBreaker tieBreaker : tieBreakers) {
@@ -85,6 +98,22 @@ public record ScorePad(
                 throw new IllegalArgumentException(
                         "The Tie-breaker '" + tieBreaker.category() + "' is not a Score Category of the pad");
             }
+        }
+        Set<String> victoryTypeKeys = new HashSet<>();
+        for (VictoryType victoryType : victoryTypes) {
+            if (!victoryTypeKeys.add(victoryType.key())) {
+                throw new IllegalArgumentException("Two Victory Types have the key '" + victoryType.key() + "'");
+            }
+            if (!possible(victoryType.onlyWhen(), variants, expansions)) {
+                throw new IllegalArgumentException("The Victory Type '" + victoryType.key()
+                        + "' depends on a Variant, an Expansion or a value that is not on the pad");
+            }
+        }
+        if (victoryTypes.size() == 1) {
+            throw new IllegalArgumentException("A Game won in one way only has no Victory Types");
+        }
+        if (!victoryTypes.isEmpty() && victoryTypes.getFirst().onlyWhen() != null) {
+            throw new IllegalArgumentException("The first Victory Type is the usual one, so it has to be always possible");
         }
     }
 
@@ -99,21 +128,61 @@ public record ScorePad(
         this(minPlayers, maxPlayers, variants, categories, tieBreakers, recorderDecidesTies, null);
     }
 
+    /** A score pad without Expansions, for a Game that is won in one way only. */
+    public ScorePad(
+            int minPlayers,
+            Integer maxPlayers,
+            List<Variant> variants,
+            List<ScoreCategory> categories,
+            List<TieBreaker> tieBreakers,
+            boolean recorderDecidesTies,
+            Solo solo) {
+        this(minPlayers, maxPlayers, variants, categories, tieBreakers, recorderDecidesTies, solo, List.of(), List.of());
+    }
+
+    /** Whether a condition names a Variant or an Expansion of the pad, with a value it can have. */
+    private static boolean possible(OnlyWhen onlyWhen, List<Variant> variants, List<Expansion> expansions) {
+        if (onlyWhen == null) {
+            return true;
+        }
+        return variants.stream().anyMatch(variant ->
+                        variant.key().equals(onlyWhen.key()) && variant.allows(onlyWhen.value()))
+                || expansions.stream().anyMatch(expansion ->
+                        expansion.key().equals(onlyWhen.key()) && Expansion.allows(onlyWhen.value()));
+    }
+
     /** The Score Categories that are on the pad for a Play with this Setup. */
     public List<ScoreCategory> categoriesFor(Map<String, String> setup, boolean soloPlay) {
         return categories.stream()
                 .filter(category -> soloPlay || !category.soloOnly())
-                .filter(category -> category.onlyWhen() == null
-                        || category.onlyWhen().value().equals(valueOf(category.onlyWhen().variant(), setup)))
+                .filter(category -> holds(category.onlyWhen(), setup))
                 .toList();
     }
 
-    /** What a Setup holds for a Variant: what was chosen, or else the Variant's default. */
-    public String valueOf(String variantKey, Map<String, String> setup) {
+    /** The ways a Play with this Setup can be won. */
+    public List<VictoryType> victoryTypesFor(Map<String, String> setup) {
+        return victoryTypes.stream()
+                .filter(victoryType -> holds(victoryType.onlyWhen(), setup))
+                .toList();
+    }
+
+    /** Whether a Setup meets a condition. No condition is always met. */
+    public boolean holds(OnlyWhen onlyWhen, Map<String, String> setup) {
+        return onlyWhen == null || onlyWhen.value().equals(valueOf(onlyWhen.key(), setup));
+    }
+
+    /**
+     * What a Setup holds for a Variant or an Expansion: what was chosen, or else the Variant's
+     * default. An Expansion that was not chosen was not played with.
+     */
+    public String valueOf(String setupKey, Map<String, String> setup) {
+        if (expansions.stream().anyMatch(expansion -> expansion.key().equals(setupKey))) {
+            return setup.getOrDefault(setupKey, Expansion.WITHOUT);
+        }
         Variant variant = variants.stream()
-                .filter(candidate -> candidate.key().equals(variantKey))
+                .filter(candidate -> candidate.key().equals(setupKey))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("No Variant '" + variantKey + "' on the pad"));
-        return setup.getOrDefault(variantKey, variant.defaultValue());
+                .orElseThrow(() -> new IllegalArgumentException("No Variant or Expansion '" + setupKey + "' on the pad"));
+        return setup.getOrDefault(setupKey, variant.defaultValue());
     }
 }

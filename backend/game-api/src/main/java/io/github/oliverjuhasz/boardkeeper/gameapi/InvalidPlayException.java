@@ -30,7 +30,11 @@ public class InvalidPlayException extends RuntimeException {
         /** Something was entered that this kind of Play does not record. */
         NOT_RECORDED("notRecorded"),
         /** A Solo Play for score only was recorded without its scores. */
-        SCORES_NEEDED("scoresNeeded");
+        SCORES_NEEDED("scoresNeeded"),
+        /** A Play of a Game that can be won in more than one way does not say how it was won. */
+        VICTORY_TYPE_MISSING("victoryTypeMissing"),
+        /** A Play won outright, not on points, has more than one winner. */
+        ONE_WINNER_ONLY("oneWinnerOnly");
 
         private final String reason;
 

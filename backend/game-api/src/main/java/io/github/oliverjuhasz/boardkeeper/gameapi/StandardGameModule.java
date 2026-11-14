@@ -25,6 +25,10 @@ import java.util.stream.IntStream;
  * <p>A Play with one Player is a Solo Play, which the pad's {@link Solo} describes. Played for
  * score only, it has a total but no winner. Played against an automated opponent, the Player
  * wins by beating the opponent's score. A Solo Play has no Placing.
+ *
+ * <p>A Game that can be won in more than one way has Victory Types, and every Play that isn't a
+ * Solo Play says which one it was won by. On points, it is scored as above. Won outright, nobody
+ * counted points: it is recorded like a Play with only the winner, and has one winner.
  */
 public abstract class StandardGameModule implements GameModule {
 
@@ -43,27 +47,54 @@ public abstract class StandardGameModule implements GameModule {
         if (entry.group() != null) {
             throw new InvalidPlayException(Standard.NOT_RECORDED);
         }
+        VictoryType victoryType = victoryTypeOf(pad, entry, soloPlay);
         boolean points = entry.recordingMode() == RecordingMode.POINTS;
         if (soloPlay) {
             return solo(pad, entry.setup(), players.getFirst(), points);
+        }
+        if (victoryType != null && !victoryType.onPoints()) {
+            return outright(points, players);
         }
         return points ? byPoints(pad, entry.setup(), players) : byMarkedWinners(players);
     }
 
     /**
-     * Every Variant in the Setup has to be on the pad, with a value the Variant allows. A
+     * Every Variant and Expansion in the Setup has to be on the pad, with a value it allows. A
      * Variant for Solo Plays only belongs in the Setup of a Solo Play only.
      */
     private static void checkSetup(ScorePad pad, Map<String, String> setup, boolean soloPlay) {
         setup.forEach((key, value) -> {
-            boolean known = pad.variants().stream()
-                    .anyMatch(variant -> variant.key().equals(key)
-                            && variant.allows(value)
-                            && (soloPlay || !variant.soloOnly()));
-            if (!known) {
+            boolean variant = pad.variants().stream()
+                    .anyMatch(candidate -> candidate.key().equals(key)
+                            && candidate.allows(value)
+                            && (soloPlay || !candidate.soloOnly()));
+            boolean expansion = pad.expansions().stream().anyMatch(candidate -> candidate.key().equals(key))
+                    && Expansion.allows(value);
+            if (!variant && !expansion) {
                 throw new InvalidPlayException(Standard.NOT_RECORDED);
             }
         });
+    }
+
+    /**
+     * How the Play was won: one of the ways the Game can be won with its Setup. Null for a Game
+     * that is won in one way only, and for a Solo Play.
+     */
+    private static VictoryType victoryTypeOf(ScorePad pad, PlayEntry entry, boolean soloPlay) {
+        String key = entry.victoryType();
+        if (pad.victoryTypes().isEmpty() || soloPlay) {
+            if (key != null) {
+                throw new InvalidPlayException(Standard.NOT_RECORDED);
+            }
+            return null;
+        }
+        if (key == null) {
+            throw new InvalidPlayException(Standard.VICTORY_TYPE_MISSING);
+        }
+        return pad.victoryTypesFor(entry.setup()).stream()
+                .filter(victoryType -> victoryType.key().equals(key))
+                .findFirst()
+                .orElseThrow(() -> new InvalidPlayException(Standard.NOT_RECORDED));
     }
 
     /**
@@ -131,6 +162,18 @@ public abstract class StandardGameModule implements GameModule {
             }
         };
         return new Outcome.Competitive(List.of(result), List.of());
+    }
+
+    /** A Play won outright: nobody counted points, and the recorder marks its one winner. */
+    private static Outcome outright(boolean points, List<PlayerEntry> players) {
+        if (points) {
+            throw new InvalidPlayException(Standard.NOT_RECORDED);
+        }
+        Outcome outcome = byMarkedWinners(players);
+        if (players.stream().filter(PlayerEntry::winner).count() > 1) {
+            throw new InvalidPlayException(Standard.ONE_WINNER_ONLY);
+        }
+        return outcome;
     }
 
     private static Outcome byMarkedWinners(List<PlayerEntry> players) {
