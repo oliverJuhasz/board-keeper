@@ -40,6 +40,11 @@ import java.util.Set;
  *     first; empty for a Game that is won in one way only. A Solo Play has no Victory Type.
  * @param playerSetup the choices made for each Player, such as their Wonder, in the order to
  *     offer them; empty for a Game without Player Setup
+ * @param cooperative whether the Players win or lose together, against the game. The Score
+ *     Categories are then the group's, entered once for the whole Play, and a module that
+ *     extends {@link CooperativeGameModule} works out the group's score from them. Make such a
+ *     pad with {@link #cooperative}.
+ * @param usualRecordingMode the Recording Mode a new Play starts with; the recorder can switch it
  */
 public record ScorePad(
         int minPlayers,
@@ -51,7 +56,9 @@ public record ScorePad(
         Solo solo,
         List<Expansion> expansions,
         List<VictoryType> victoryTypes,
-        List<PlayerSetupChoice> playerSetup) {
+        List<PlayerSetupChoice> playerSetup,
+        boolean cooperative,
+        RecordingMode usualRecordingMode) {
 
     public ScorePad {
         variants = List.copyOf(variants);
@@ -87,6 +94,13 @@ public record ScorePad(
         for (Variant variant : variants) {
             if (!setupKeys.add(variant.key())) {
                 throw new IllegalArgumentException("Two Variants or Expansions have the key '" + variant.key() + "'");
+            }
+        }
+        for (Variant variant : variants) {
+            OnlyWhen onlyWhen = variant.onlyWhen();
+            if ((onlyWhen != null && onlyWhen.key().equals(variant.key())) || !possible(onlyWhen, variants, expansions)) {
+                throw new IllegalArgumentException("The Variant '" + variant.key()
+                        + "' depends on another Variant, an Expansion or a value that is not on the pad");
             }
         }
         Set<String> categoryKeys = new HashSet<>();
@@ -127,6 +141,61 @@ public record ScorePad(
                 throw new IllegalArgumentException("Two Player Setup choices have the key '" + choice.key() + "'");
             }
         }
+        if (usualRecordingMode == null) {
+            throw new IllegalArgumentException("A score pad says which Recording Mode a Play starts with");
+        }
+        if (cooperative && (solo != null || !tieBreakers.isEmpty() || recorderDecidesTies || !victoryTypes.isEmpty())) {
+            throw new IllegalArgumentException(
+                    "A cooperative score pad has no Solo Plays, Tie-breakers or Victory Types: the group wins or loses");
+        }
+    }
+
+    /**
+     * The score pad of a Cooperative Game, which the Players win or lose together. Its Score
+     * Categories are the group's, entered once for the Play, from which the module works out the
+     * group's score.
+     *
+     * @param categories the group's rows, in the order of the score pad
+     * @param usualRecordingMode how a new Play starts: with the score, or with only whether the
+     *     group won
+     */
+    public static ScorePad cooperative(
+            int minPlayers,
+            Integer maxPlayers,
+            List<Expansion> expansions,
+            List<Variant> variants,
+            List<ScoreCategory> categories,
+            List<PlayerSetupChoice> playerSetup,
+            RecordingMode usualRecordingMode) {
+        return new ScorePad(
+                minPlayers,
+                maxPlayers,
+                variants,
+                categories,
+                List.of(),
+                false,
+                null,
+                expansions,
+                List.of(),
+                playerSetup,
+                true,
+                usualRecordingMode);
+    }
+
+    /** A competitive score pad, whose Plays start with Recording Mode "Points". */
+    public ScorePad(
+            int minPlayers,
+            Integer maxPlayers,
+            List<Variant> variants,
+            List<ScoreCategory> categories,
+            List<TieBreaker> tieBreakers,
+            boolean recorderDecidesTies,
+            Solo solo,
+            List<Expansion> expansions,
+            List<VictoryType> victoryTypes,
+            List<PlayerSetupChoice> playerSetup) {
+        this(minPlayers, maxPlayers, variants, categories, tieBreakers, recorderDecidesTies, solo, expansions,
+                victoryTypes, playerSetup, false, RecordingMode.POINTS);
     }
 
     /** A score pad without Player Setup. */
@@ -184,6 +253,17 @@ public record ScorePad(
         return categories.stream()
                 .filter(category -> soloPlay || !category.soloOnly())
                 .filter(category -> holds(category.onlyWhen(), setup))
+                .toList();
+    }
+
+    /**
+     * The Variants that are chosen for a Play with this Setup: those for Solo Plays only are left
+     * out of other Plays, and those that depend on the Setup are left out where it doesn't hold.
+     */
+    public List<Variant> variantsFor(Map<String, String> setup, boolean soloPlay) {
+        return variants.stream()
+                .filter(variant -> soloPlay || !variant.soloOnly())
+                .filter(variant -> holds(variant.onlyWhen(), setup))
                 .toList();
     }
 

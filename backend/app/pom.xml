@@ -64,6 +64,11 @@
             <artifactId>game-seven-wonders-duel</artifactId>
             <scope>runtime</scope>
         </dependency>
+        <dependency>
+            <groupId>io.github.oliverjuhasz.boardkeeper</groupId>
+            <artifactId>game-spirit-island</artifactId>
+            <scope>runtime</scope>
+        </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>

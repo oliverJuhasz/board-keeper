@@ -59,7 +59,9 @@ async function signInWithPasskey(
   conditional: boolean,
   signal?: AbortSignal,
 ): Promise<Session> {
-  const options = await fetchClient.POST("/api/session/passkey/options")
+  // The signal stops the request for options too. Its answer brings a session of its own, so it
+  // must not arrive after a password sign-in has replaced that session with a signed-in one.
+  const options = await fetchClient.POST("/api/session/passkey/options", { signal })
   if (options.error) {
     throw options.error
   }
@@ -110,14 +112,26 @@ export function usePasskeySignIn(staySignedIn: () => boolean) {
           await signInWithPasskey(staySignedIn(), true, controller.signal),
         )
       } catch (failed) {
-        if (!controller.signal.aborted && !wasCancelled(failed)) {
-          setError(failed instanceof DOMException ? notAccepted : failed)
+        // The browser's own failures here mean it can't offer passkeys among the suggestions,
+        // which needs no message: nobody tried one, and the button still works. The server's
+        // refusal of a passkey that was picked does.
+        if (!controller.signal.aborted && !(failed instanceof DOMException)) {
+          setError(failed)
         }
       }
     })()
     // Leaving the page, or a new round, stops the browser from offering them.
     return () => controller.abort()
   }, [offered, round, queryClient, staySignedIn])
+
+  /**
+   * Stops offering passkeys among the suggestions, for a sign-in with the password. It has to
+   * come before that sign-in is sent: the request for passkey options starts a session of its
+   * own, and an answer that arrived afterwards would replace the signed-in session with it.
+   */
+  function stopSuggestions() {
+    suggestions.current?.abort()
+  }
 
   /** Signing in with the button: the browser asks in a window of its own. */
   async function signIn() {
@@ -137,5 +151,5 @@ export function usePasskeySignIn(staySignedIn: () => boolean) {
     }
   }
 
-  return { offered, signIn, pending, error }
+  return { offered, signIn, stopSuggestions, pending, error }
 }

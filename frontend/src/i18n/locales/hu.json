@@ -108,6 +108,7 @@
       "groupScoreHint": "Nem kötelező. Egy pontszám az egész csapatnak.",
       "submit": "Parti rögzítése",
       "padHint": "A pontozólap minden sora, minden játékosnak.",
+      "groupPadHint": "A csapat sorai a pontozólapon, amelyekből a pontszám kiszámolható.",
       "valueOf": "{{name}}: {{category}}",
       "pad": "Pontozólap",
       "total": "Összesen",
@@ -190,7 +191,8 @@
       "scoresNeeded": "Ennek a játéknak az egyszemélyes partiját a pontszámokkal rögzítjük.",
       "victoryTypeMissing": "Add meg, hogyan nyert a parti.",
       "oneWinnerOnly": "Az így megnyert partinak egy győztese van.",
-      "chosenTwice": "Két játékos ugyanazt kapta, pedig mindegyikből csak egy van, például egy csodából."
+      "chosenTwice": "Két játékos ugyanazt kapta, pedig mindegyikből csak egy van, például egy csodából.",
+      "groupResultMissing": "Add meg, hogy a csapat nyert vagy vesztett."
     },
     "waiting": {
       "title": "Még nincs elküldve",

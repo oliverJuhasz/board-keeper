@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query"
-import { useState } from "react"
+import { Fragment, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Link, useNavigate, useParams } from "react-router"
 import { api, type GameModule, type Play, type Result } from "@/api/client"
@@ -104,16 +104,21 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
   // against an opponent, or played for a score only.
   const solo = !play.cooperative && play.results.length === 1
   const variantsChosen = (module?.scorePad.variants ?? []).flatMap((variant) => {
+    // A Variant for Solo Plays only, or one that depends on a choice the Play didn't make, such
+    // as the level of an adversary it wasn't played against, isn't part of it.
     if (variant.soloOnly && !solo) {
+      return []
+    }
+    if (variant.onlyWhen && play.setup[variant.onlyWhen.key] !== variant.onlyWhen.value) {
       return []
     }
     const value = play.setup[variant.key] ?? variant.defaultValue
     if (variant.kind === "ON_OFF") {
       return value === "true" ? [moduleText(`variant.${variant.key}`)] : []
     }
-    return [
-      `${moduleText(`variant.${variant.key}`)}: ${moduleText(`variant.${variant.key}.${value}`)}`,
-    ]
+    // A number may have no name of its own: then it is shown as it is.
+    const named = moduleText(`variant.${variant.key}.${value}`) ?? value
+    return [`${moduleText(`variant.${variant.key}`)}: ${named}`]
   })
   // The Expansions it was played with, by name.
   const expansionsPlayed = (module?.scorePad.expansions ?? [])
@@ -129,7 +134,7 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
       : [
           points
             ? t("recording.points")
-            : solo
+            : solo || play.cooperative
               ? t("recording.wonOrLostOnly")
               : t("recording.winnerOnly"),
           ...expansionsPlayed,
@@ -187,6 +192,23 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
               </p>
             )}
           </div>
+          {/* The group's rows, from which a cooperative module worked out the score. A row
+              may be named differently after a win and after a loss. */}
+          {module?.scorePad.cooperative && Object.keys(play.group.scores).length > 0 && (
+            <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1 text-muted-foreground">
+              {module.scorePad.categories
+                .filter((category) => play.group?.scores[category.key] !== undefined)
+                .map((category) => (
+                  <Fragment key={category.key}>
+                    <dt>
+                      {moduleText(`category.${category.key}.${play.group?.won ? "won" : "lost"}`) ??
+                        moduleText(`category.${category.key}`)}
+                    </dt>
+                    <dd className="tabular-nums">{play.group?.scores[category.key]}</dd>
+                  </Fragment>
+                ))}
+            </dl>
+          )}
           <div className="space-y-1">
             <h2 className="text-sm font-medium">{t("plays.page.players")}</h2>
             <ul className="text-muted-foreground">

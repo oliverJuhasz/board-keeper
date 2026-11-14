@@ -434,6 +434,49 @@ class ModuleGamePlaysApiTests {
                 .isLenientlyEqualTo("{\"reason\": \"plays.invalid.chosenTwice\"}");
     }
 
+    @Test
+    void aCooperativeGameWithAModuleOfItsOwnWorksOutTheGroupsScore() {
+        UUID spiritIsland = gameOfModule("spirit-island");
+        String play = """
+                {"gameId": "%s", "playedOn": "2026-03-14", "recordingMode": "%s",
+                 "setup": {"adversary": "england", "englandLevel": "3"},
+                 "players": [{"playerId": "%s", "winner": false, "setup": {"spirit": "thunderspeaker"}},
+                             {"playerId": "%s", "winner": false, "setup": {"spirit": "oceansHungryGrasp"}}],
+                 "group": %s}
+                """;
+
+        // Without a score: only whether the Spirits won.
+        assertThat(member.post("/api/plays", play.formatted(spiritIsland, "WINNER_ONLY", anna, dora, "{\"won\": true}")))
+                .hasStatusOk()
+                .bodyJson()
+                .isLenientlyEqualTo("""
+                        {"cooperative": true, "group": {"won": true}, "results": [{"won": true}, {"won": true}]}
+                        """);
+        // With it: 5 × 6 + 10 + 2 × 4, + 7 Dahan for two (3) − 5 Blight for two (2).
+        MvcTestResult scored = member.post(
+                "/api/plays",
+                play.formatted(
+                        spiritIsland,
+                        "POINTS",
+                        anna,
+                        dora,
+                        "{\"won\": true, \"scores\": {\"invaderCards\": 4, \"dahan\": 7, \"blight\": 5}}"));
+        assertThat(scored)
+                .hasStatusOk()
+                .bodyJson()
+                .isLenientlyEqualTo("""
+                        {"group": {"won": true, "scores": {"invaderCards": 4, "dahan": 7, "blight": 5}, "total": 49},
+                         "results": [{"setup": {"spirit": "thunderspeaker"}}, {"setup": {"spirit": "oceansHungryGrasp"}}]}
+                        """);
+        assertThat(member.get("/api/plays/" + idOf(scored))).bodyJson().extractingPath("$.group.total").isEqualTo(49);
+        // An adversary's level goes with that adversary only.
+        assertThat(member.post("/api/plays", play.formatted(spiritIsland, "WINNER_ONLY", anna, dora, "{\"won\": true}")
+                        .replace("\"adversary\": \"england\"", "\"adversary\": \"sweden\"")))
+                .hasStatus(422)
+                .bodyJson()
+                .isLenientlyEqualTo("{\"reason\": \"plays.invalid.notRecorded\"}");
+    }
+
     /** The Game that appears in the catalogue for the Calico module. */
     private UUID calicoFromItsModule() {
         return gameOfModule("calico");

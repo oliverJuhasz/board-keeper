@@ -16,6 +16,7 @@ import {
   duelModule,
   genericModule,
   sevenWondersModule,
+  spiritIslandModule,
   wyrmspanModule,
 } from "./gameModules"
 import { server } from "./server"
@@ -131,6 +132,18 @@ export const sevenWonders: Game = {
   hasOwnModule: true,
   cooperative: false,
   recordingMode: "POINTS",
+  lowestScoreWins: false,
+}
+
+/** A Cooperative Game with a module of its own, which works out the group's score. */
+export const spiritIsland: Game = {
+  id: "0193a000-0000-7000-8000-0000000000e8",
+  name: "Spirit Island",
+  gameModuleId: spiritIslandModule.id,
+  moduleKey: "spirit-island",
+  hasOwnModule: true,
+  cooperative: true,
+  recordingMode: "WINNER_ONLY",
   lowestScoreWins: false,
 }
 

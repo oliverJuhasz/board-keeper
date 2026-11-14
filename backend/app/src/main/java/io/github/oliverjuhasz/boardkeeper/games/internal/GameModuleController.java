@@ -2,6 +2,7 @@ package io.github.oliverjuhasz.boardkeeper.games.internal;
 
 import io.github.oliverjuhasz.boardkeeper.gameapi.GameModule;
 import io.github.oliverjuhasz.boardkeeper.gameapi.OnlyWhen;
+import io.github.oliverjuhasz.boardkeeper.gameapi.RecordingMode;
 import io.github.oliverjuhasz.boardkeeper.gameapi.ScoreCategory;
 import io.github.oliverjuhasz.boardkeeper.gameapi.ScorePad;
 import io.github.oliverjuhasz.boardkeeper.gameapi.Solo;
@@ -71,7 +72,9 @@ class GameModuleController {
                 "categories",
                 "recorderDecidesTies",
                 "victoryTypes",
-                "playerSetup"
+                "playerSetup",
+                "cooperative",
+                "usualRecordingMode"
             })
     record ScorePadResponse(
             int minPlayers,
@@ -90,7 +93,11 @@ class GameModuleController {
                     List<VictoryTypeResponse> victoryTypes,
             @Schema(description = "The choices made for each Player, such as their Wonder, in the order to offer them."
                             + " Empty for a Game without Player Setup.")
-                    List<PlayerSetupChoiceResponse> playerSetup) {
+                    List<PlayerSetupChoiceResponse> playerSetup,
+            @Schema(description = "Whether the Players win or lose together. The categories are then the group's,"
+                            + " entered once for the Play, and the module works out the group's score from them.")
+                    boolean cooperative,
+            @Schema(description = "The Recording Mode a new Play starts with") RecordingMode usualRecordingMode) {
 
         static ScorePadResponse from(ScorePad pad) {
             return new ScorePadResponse(
@@ -104,7 +111,9 @@ class GameModuleController {
                     pad.victoryTypes().stream().map(VictoryTypeResponse::from).toList(),
                     pad.playerSetup().stream()
                             .map(choice -> new PlayerSetupChoiceResponse(choice.key(), choice.options(), choice.oncePerPlay()))
-                            .toList());
+                            .toList(),
+                    pad.cooperative(),
+                    pad.usualRecordingMode());
         }
     }
 
@@ -172,7 +181,9 @@ class GameModuleController {
 
     enum VariantKind {
         ON_OFF,
-        CHOICE
+        CHOICE,
+        /** A whole number from "min" to "max" */
+        RANGE
     }
 
     @Schema(
@@ -182,18 +193,43 @@ class GameModuleController {
             String key,
             VariantKind kind,
             @Schema(description = "For a CHOICE: the keys of the options, in the order to offer them") List<String> options,
-            @Schema(description = "What a Setup holds when nothing was chosen. For ON_OFF, \"true\" or \"false\".")
+            @Schema(description = "For a RANGE: the lowest number") Integer min,
+            @Schema(description = "For a RANGE: the highest number") Integer max,
+            @Schema(description = "What a Setup holds when nothing was chosen. For ON_OFF, \"true\" or \"false\"; for"
+                            + " RANGE, a number as text.")
                     String defaultValue,
-            @Schema(description = "Whether it is chosen for a Solo Play only") boolean soloOnly) {
+            @Schema(description = "Whether it is chosen for a Solo Play only") boolean soloOnly,
+            @Schema(description = "It is chosen only when the Setup has this value, such as an adversary's level once"
+                            + " that adversary is chosen. Absent when it always is.")
+                    OnlyWhenResponse onlyWhen) {
 
         static VariantResponse from(Variant variant) {
+            OnlyWhenResponse onlyWhen = OnlyWhenResponse.from(variant.onlyWhen());
             // The switch has no "default": Variant is sealed, so the compiler knows every kind.
             return switch (variant) {
                 case Variant.OnOff onOff ->
-                    new VariantResponse(onOff.key(), VariantKind.ON_OFF, null, onOff.defaultValue(), onOff.soloOnly());
+                    new VariantResponse(
+                            onOff.key(), VariantKind.ON_OFF, null, null, null, onOff.defaultValue(), onOff.soloOnly(), onlyWhen);
                 case Variant.Choice choice ->
                     new VariantResponse(
-                            choice.key(), VariantKind.CHOICE, choice.options(), choice.defaultValue(), choice.soloOnly());
+                            choice.key(),
+                            VariantKind.CHOICE,
+                            choice.options(),
+                            null,
+                            null,
+                            choice.defaultValue(),
+                            choice.soloOnly(),
+                            onlyWhen);
+                case Variant.Range range ->
+                    new VariantResponse(
+                            range.key(),
+                            VariantKind.RANGE,
+                            null,
+                            range.min(),
+                            range.max(),
+                            range.defaultValue(),
+                            range.soloOnly(),
+                            onlyWhen);
             };
         }
     }

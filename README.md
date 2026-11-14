@@ -41,7 +41,7 @@ Milestones M0 to M5 are done. Board Keeper builds, runs as a container image, an
 - Players, who exist with or without an Account
 - a catalogue of Games, each with how its Plays are recorded by default
 - recording Plays of any Game in the catalogue: competitive or Cooperative, in points or with only the winner, with Placings and shared wins
-- Game Modules that bring a Game with its own score pad, Expansions, Variants, choices for each Player, tie rules, ways to win and way of playing alone: 7 Wonders (with Leaders and Cities), 7 Wonders Duel (with Pantheon and Agora), Calico, Hadara, Harmonies and Wyrmspan
+- Game Modules that bring a Game with its own score pad, Expansions, Variants, choices for each Player, tie rules, ways to win and way of playing alone: 7 Wonders (with Leaders and Cities), 7 Wonders Duel (with Pantheon and Agora), Calico, Hadara, Harmonies, Spirit Island and Wyrmspan
 - a start page that gets to recording a Play in one or two taps: recent Plays to play again, and the most recently played Games first
 - the play history, filterable by "my plays", Game, Player and date, with editing and deleting Plays according to Permissions
 - statistics per Game and per Player: wins and win rates, best and average scores, average Placings, averages per row of a score pad, and Cooperative and Solo Plays on their own

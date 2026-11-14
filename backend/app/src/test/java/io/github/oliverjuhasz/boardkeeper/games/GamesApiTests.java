@@ -132,6 +132,22 @@ class GamesApiTests {
                               {"key": "scientificSupremacy", "onPoints": false},
                               {"key": "politicalSupremacy", "onPoints": false,
                                "onlyWhen": {"key": "agora", "value": "true"}}]}},
+                         {"key": "spirit-island",
+                          "scorePad": {
+                            "minPlayers": 1, "maxPlayers": 4, "cooperative": true, "usualRecordingMode": "WINNER_ONLY",
+                            "expansions": [],
+                            "variants": [
+                              {"key": "adversary", "kind": "CHOICE", "defaultValue": "none",
+                               "options": ["none", "brandenburgPrussia", "england", "sweden"]},
+                              {"key": "brandenburgPrussiaLevel", "kind": "RANGE", "min": 0, "max": 6, "defaultValue": "0",
+                               "onlyWhen": {"key": "adversary", "value": "brandenburgPrussia"}},
+                              {"key": "englandLevel", "kind": "RANGE", "onlyWhen": {"key": "adversary", "value": "england"}},
+                              {"key": "swedenLevel", "kind": "RANGE", "onlyWhen": {"key": "adversary", "value": "sweden"}},
+                              {"key": "scenario", "kind": "CHOICE"},
+                              {"key": "thematicMap", "kind": "ON_OFF", "defaultValue": "false"}],
+                            "categories": [{"key": "invaderCards"}, {"key": "dahan"}, {"key": "blight"}],
+                            "victoryTypes": [],
+                            "playerSetup": [{"key": "spirit", "oncePerPlay": true}]}},
                          {"key": "wyrmspan",
                           "scorePad": {
                             "minPlayers": 1, "maxPlayers": 5,
@@ -160,12 +176,13 @@ class GamesApiTests {
                          {"name": "Calico", "gameModuleId": "%s", "moduleKey": "calico", "hasOwnModule": true},
                          {"name": "Hadara", "moduleKey": "hadara", "hasOwnModule": true},
                          {"name": "Harmonies", "moduleKey": "harmonies", "hasOwnModule": true},
+                         {"name": "Spirit Island", "moduleKey": "spirit-island", "hasOwnModule": true},
                          {"name": "Wyrmspan", "moduleKey": "wyrmspan", "hasOwnModule": true}]
                         """.formatted(CALICO_MODULE_ID));
 
         // Bringing the catalogue in step again changes nothing.
         games.addGamesOfModules();
-        assertThat(games.all()).hasSize(6);
+        assertThat(games.all()).hasSize(7);
     }
 
     @Test
@@ -207,6 +224,7 @@ class GamesApiTests {
                          {"id": "%s", "name": "calico", "moduleKey": "calico", "hasOwnModule": true},
                          {"name": "Hadara", "moduleKey": "hadara", "hasOwnModule": true},
                          {"name": "Harmonies", "moduleKey": "harmonies", "hasOwnModule": true},
+                         {"name": "Spirit Island", "moduleKey": "spirit-island", "hasOwnModule": true},
                          {"name": "Wyrmspan", "moduleKey": "wyrmspan", "hasOwnModule": true}]
                         """.formatted(byHand));
     }

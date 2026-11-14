@@ -42,6 +42,7 @@ import {
   soloOf,
   toNewPlay,
   toPreviewRequest,
+  groupRowsOf,
   recordingModeOf,
   variantsFor,
   victoryTypeOf,
@@ -287,7 +288,7 @@ export function PlayEntryForm({
                   ? recordedAs(recording)
                   : points
                     ? t("recording.points")
-                    : solo?.kind === "AGAINST_OPPONENT"
+                    : solo?.kind === "AGAINST_OPPONENT" || cooperative
                       ? t("recording.wonOrLostOnly")
                       : t("recording.winnerOnly")}
               </span>
@@ -328,13 +329,15 @@ export function PlayEntryForm({
                     {
                       value: "POINTS",
                       label: t("recording.points"),
-                      hint: t("plays.record.padHint"),
+                      hint: cooperative
+                        ? t("plays.record.groupPadHint")
+                        : t("plays.record.padHint"),
                     },
                     {
                       value: "WINNER_ONLY",
-                      // Against an opponent, a Solo Play is won or lost.
+                      // Against an opponent, a Solo Play is won or lost, and so is a cooperative one.
                       label:
-                        solo?.kind === "AGAINST_OPPONENT"
+                        solo?.kind === "AGAINST_OPPONENT" || cooperative
                           ? t("recording.wonOrLostOnly")
                           : t("recording.winnerOnly"),
                       hint: t("recording.outcomeHint"),
@@ -376,27 +379,18 @@ export function PlayEntryForm({
                 checked={play.setup[variant.key] === "true"}
                 onChange={(on) => form.setValue(`setup.${variant.key}`, String(on), changed)}
               />
-            ) : (variant.options ?? []).length > RADIO_BUTTONS_AT_MOST ? (
-              // A long list of options, such as Hadara's twelve NPC levels, is a drop-down.
-              <SelectField
+            ) : (
+              <ChoiceField
                 key={variant.key}
                 label={moduleText(`variant.${variant.key}`)}
                 value={play.setup[variant.key]}
                 onChange={(option) => form.setValue(`setup.${variant.key}`, option, changed)}
-                options={(variant.options ?? []).map((option) => ({
+                options={choicesOf(variant).map((option) => ({
                   value: option,
-                  label: moduleText(`variant.${variant.key}.${option}`),
-                }))}
-              />
-            ) : (
-              <RadioField
-                key={variant.key}
-                legend={moduleText(`variant.${variant.key}`)}
-                value={play.setup[variant.key]}
-                onChange={(option) => form.setValue(`setup.${variant.key}`, option, changed)}
-                options={(variant.options ?? []).map((option) => ({
-                  value: option,
-                  label: moduleText(`variant.${variant.key}.${option}`),
+                  // A number may have a name of its own, such as "Base level" for 0.
+                  label:
+                    moduleText(`variant.${variant.key}.${option}`) ??
+                    (variant.kind === "RANGE" ? option : ""),
                 }))}
               />
             ),
@@ -729,7 +723,7 @@ export function PlayEntryForm({
                 <FieldError>{t(errors.groupOutcome.message as "validation.required")}</FieldError>
               )}
             </div>
-            {points && (
+            {points && !pad.cooperative && (
               <TextField
                 label={t("plays.record.groupScore")}
                 hint={t("plays.record.groupScoreHint")}
@@ -738,6 +732,34 @@ export function PlayEntryForm({
                 error={errors.groupScore}
                 {...form.register("groupScore")}
               />
+            )}
+            {/* A cooperative Game with a module of its own: the group's rows, from which the
+                module works out the score. A row may be counted differently after a win and
+                after a loss, and then says so. */}
+            {groupRowsOf(module, play).map((category) => (
+              <TextField
+                key={category.key}
+                label={
+                  moduleText(`category.${category.key}.${play.groupOutcome}`) ??
+                  moduleText(`category.${category.key}`)
+                }
+                type="number"
+                step={category.step}
+                error={
+                  errors.groupScores?.[category.key]?.message
+                    ? {
+                        type: "validate",
+                        message: errors.groupScores[category.key]?.message,
+                      }
+                    : undefined
+                }
+                {...form.register(`groupScores.${category.key}`)}
+              />
+            ))}
+            {groupRowsOf(module, play).length > 0 && (
+              <p className="font-medium">
+                {t("plays.page.groupScore", { score: preview?.group?.total ?? "–" })}
+              </p>
             )}
           </>
         )}
@@ -773,4 +795,33 @@ export function PlayEntryForm({
 /** A line of text in the form FieldError takes a list of. */
 function asError(message: string) {
   return { message }
+}
+
+/** The options of a Variant that is a choice, or the numbers of one that is a range. */
+function choicesOf(variant: GameModule["scorePad"]["variants"][number]) {
+  if (variant.kind === "RANGE" && variant.min !== undefined && variant.max !== undefined) {
+    return Array.from({ length: variant.max - variant.min + 1 }, (_, index) =>
+      String((variant.min ?? 0) + index),
+    )
+  }
+  return variant.options ?? []
+}
+
+/** A choice of a few options as radio buttons, and of many as a drop-down. */
+function ChoiceField({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string
+  value: string
+  onChange: (value: string) => void
+  options: { value: string; label: string }[]
+}) {
+  return options.length > RADIO_BUTTONS_AT_MOST ? (
+    <SelectField label={label} value={value} onChange={onChange} options={options} />
+  ) : (
+    <RadioField legend={label} value={value} onChange={onChange} options={options} />
+  )
 }

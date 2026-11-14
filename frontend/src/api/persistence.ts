@@ -33,8 +33,24 @@ export const persistOptions: Omit<PersistQueryClientOptions, "queryClient"> = {
   maxAge: KEPT_FOR,
   // Changing this throws away what every device kept, for when the API's answers change shape.
   buster: "1",
-  dehydrateOptions: {
-    shouldDehydrateQuery: (query: Query) =>
-      query.state.status === "success" && KEPT.has(query.queryKey[1] as string),
-  },
+  dehydrateOptions: { shouldDehydrateQuery: shouldKeep },
+}
+
+/**
+ * Whether a query's answer is kept on the device. "Signed out" never is: the cache is saved at
+ * most once a second, so a page loaded right after signing in could read the "signed out" from
+ * before and send the person back to sign in. Without a kept answer, the app asks the server.
+ */
+export function shouldKeep(query: Query) {
+  const path = query.queryKey[1] as string
+  if (query.state.status !== "success" || !KEPT.has(path)) {
+    return false
+  }
+  return path !== "/api/session" || hasAccount(query.state.data)
+}
+
+function hasAccount(session: unknown) {
+  return (
+    typeof session === "object" && session !== null && "account" in session && !!session.account
+  )
 }

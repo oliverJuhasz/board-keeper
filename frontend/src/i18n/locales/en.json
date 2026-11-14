@@ -108,6 +108,7 @@
       "groupScoreHint": "Optional. One score for the whole group.",
       "submit": "Record play",
       "padHint": "Every row of the score pad, for each player.",
+      "groupPadHint": "The group's rows of the score pad, from which the score is worked out.",
       "valueOf": "{{category}} of {{name}}",
       "pad": "Score pad",
       "total": "Total",
@@ -190,7 +191,8 @@
       "scoresNeeded": "A solo play of this game is recorded with its scores.",
       "victoryTypeMissing": "Say how the play was won.",
       "oneWinnerOnly": "A play won this way has one winner.",
-      "chosenTwice": "Two players were given the same choice where each one exists only once, such as a Wonder."
+      "chosenTwice": "Two players were given the same choice where each one exists only once, such as a Wonder.",
+      "groupResultMissing": "Say whether the group won or lost."
     },
     "waiting": {
       "title": "Not sent yet",

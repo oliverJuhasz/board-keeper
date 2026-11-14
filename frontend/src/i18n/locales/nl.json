@@ -108,6 +108,7 @@
       "groupScoreHint": "Optioneel. Eén score voor de hele groep.",
       "submit": "Partij vastleggen",
       "padHint": "Elke regel van het scoreblok, voor iedere speler.",
+      "groupPadHint": "De rijen van de groep op het scoreblok, waaruit de score wordt berekend.",
       "valueOf": "{{category}} van {{name}}",
       "pad": "Scoreblok",
       "total": "Totaal",
@@ -190,7 +191,8 @@
       "scoresNeeded": "Een solopartij van dit spel wordt met de scores vastgelegd.",
       "victoryTypeMissing": "Geef aan hoe de partij gewonnen is.",
       "oneWinnerOnly": "Een partij die zo gewonnen is, heeft één winnaar.",
-      "chosenTwice": "Twee spelers kregen dezelfde keuze, terwijl die er maar één keer is, zoals een wereldwonder."
+      "chosenTwice": "Twee spelers kregen dezelfde keuze, terwijl die er maar één keer is, zoals een wereldwonder.",
+      "groupResultMissing": "Geef aan of de groep gewonnen of verloren heeft."
     },
     "waiting": {
       "title": "Nog niet verstuurd",
