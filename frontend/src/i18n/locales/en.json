@@ -108,6 +108,7 @@
       "groupScoreHint": "Optional. One score for the whole group.",
       "submit": "Record play",
       "padHint": "Every row of the score pad, for each player.",
+      "groupPadHint": "The group's rows of the score pad, from which the score is worked out.",
       "valueOf": "{{category}} of {{name}}",
       "pad": "Score pad",
       "total": "Total",

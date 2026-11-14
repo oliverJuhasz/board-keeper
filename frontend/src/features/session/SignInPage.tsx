@@ -59,7 +59,14 @@ export function SignInPage() {
   }
 
   return (
-    <form onSubmit={form.handleSubmit((values) => signIn.mutate({ body: values }))} noValidate>
+    <form
+      onSubmit={form.handleSubmit((values) => {
+        // Before the password is sent: see stopSuggestions.
+        passkey.stopSuggestions()
+        signIn.mutate({ body: values })
+      })}
+      noValidate
+    >
       <FieldGroup>
         <h1 className="font-heading text-xl font-semibold">{t("signIn.title")}</h1>
         <FormProblem error={signIn.error ?? passkey.error} />

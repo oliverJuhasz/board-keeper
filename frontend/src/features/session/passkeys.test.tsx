@@ -1,6 +1,6 @@
 import { screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { http, HttpResponse } from "msw"
+import { delay, http, HttpResponse } from "msw"
 import { afterEach, beforeEach, expect, test, vi } from "vitest"
 import { anna, gamesAre, problem } from "@/test/api"
 import { renderApp } from "@/test/renderApp"
@@ -115,6 +115,52 @@ test("the username field invites passkey suggestions", async () => {
   await waitFor(() =>
     expect(screen.getByLabelText("Username")).toHaveAttribute("autocomplete", "username webauthn"),
   )
+})
+
+test("a sign-in with the password first stops the passkey suggestions", async () => {
+  // The request for passkey options starts a session of its own on the server. Its answer must
+  // not arrive after the password sign-in, or it would replace the signed-in session.
+  const phone = browserWithPasskeys({ suggestions: true })
+  signedOutWithPasskeys()
+  const optionsRequests: Request[] = []
+  let sentPassword = false
+  server.use(
+    http.post("*/api/session/passkey/options", async ({ request }) => {
+      optionsRequests.push(request)
+      await delay(500)
+      return HttpResponse.json(signInOptions)
+    }),
+    http.post("*/api/session", () => {
+      // By now the request for options has been stopped.
+      sentPassword = optionsRequests.every((request) => request.signal.aborted)
+      server.use(
+        http.get("*/api/session", () => HttpResponse.json({ account: anna, passkeys: true })),
+      )
+      return HttpResponse.json({ account: anna, passkeys: true })
+    }),
+  )
+  renderApp("/sign-in")
+
+  await waitFor(() => expect(optionsRequests).toHaveLength(1))
+  await userEvent.type(screen.getByLabelText("Username"), "anna")
+  await userEvent.type(screen.getByLabelText("Password"), "correct horse battery staple")
+  await userEvent.click(screen.getByRole("button", { name: /^Sign in$/ }))
+
+  expect(await screen.findByText("No games yet.")).toBeInTheDocument()
+  expect(sentPassword).toBe(true)
+  expect(phone.get).not.toHaveBeenCalled()
+})
+
+test("says nothing when the browser can't offer passkeys among the suggestions", async () => {
+  // As a browser without an authenticator answers.
+  const phone = browserWithPasskeys({ suggestions: true })
+  phone.get.mockRejectedValue(new DOMException("Not supported", "NotSupportedError"))
+  signedOutWithPasskeys()
+  renderApp("/sign-in")
+
+  await waitFor(() => expect(phone.get).toHaveBeenCalled())
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument()
+  expect(screen.getByRole("button", { name: "Sign in with a passkey" })).toBeEnabled()
 })
 
 test("says nothing when the person cancels on their phone", async () => {

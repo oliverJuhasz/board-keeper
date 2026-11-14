@@ -108,6 +108,7 @@
       "groupScoreHint": "Optioneel. Eén score voor de hele groep.",
       "submit": "Partij vastleggen",
       "padHint": "Elke regel van het scoreblok, voor iedere speler.",
+      "groupPadHint": "De rijen van de groep op het scoreblok, waaruit de score wordt berekend.",
       "valueOf": "{{category}} van {{name}}",
       "pad": "Scoreblok",
       "total": "Totaal",

@@ -329,7 +329,9 @@ export function PlayEntryForm({
                     {
                       value: "POINTS",
                       label: t("recording.points"),
-                      hint: t("plays.record.padHint"),
+                      hint: cooperative
+                        ? t("plays.record.groupPadHint")
+                        : t("plays.record.padHint"),
                     },
                     {
                       value: "WINNER_ONLY",
