@@ -45,6 +45,11 @@ const fields = z.object({
       /** What was typed in each row of the pad, by the Score Category's key. */
       scores: z.record(z.string(), z.string().trim()),
       won: z.boolean(),
+      /**
+       * The Player Setup, such as their Wonder: the option chosen for each choice, by the
+       * choice's key. Empty for a choice not made.
+       */
+      setup: z.record(z.string(), z.string()),
     }),
   ),
   /**
@@ -228,6 +233,20 @@ export function entryProblems(module: GameModule, play: PlayFormValues) {
     problems.push({ path: ["players"], message: "validation.playersTooMany" })
   }
 
+  // An option that is there once, such as a Wonder board, can't be given to a second Player.
+  for (const choice of pad.playerSetup.filter((choice) => choice.oncePerPlay)) {
+    play.players.forEach((player, index) => {
+      const option = player.setup[choice.key]
+      const before = play.players.slice(0, index)
+      if (option && before.some((earlier) => earlier.setup[choice.key] === option)) {
+        problems.push({
+          path: ["players", index, "setup", choice.key],
+          message: "validation.chosenTwice",
+        })
+      }
+    })
+  }
+
   if (isCooperative(module, play)) {
     if (play.groupOutcome === "") {
       problems.push({ path: ["groupOutcome"], message: "validation.outcomeRequired" })
@@ -277,7 +296,16 @@ export function newPlayerRow(pad: ScorePad, playerId: string) {
     playerId,
     scores: Object.fromEntries(pad.categories.map((category) => [category.key, ""])),
     won: false,
+    setup: Object.fromEntries(pad.playerSetup.map((choice) => [choice.key, ""])),
   }
+}
+
+/**
+ * A Player's Setup as the form holds it, from one sent or recorded: every choice of the pad,
+ * empty where nothing was chosen.
+ */
+function playerSetupFrom(pad: ScorePad, from: Record<string, string> | undefined) {
+  return Object.fromEntries(pad.playerSetup.map((choice) => [choice.key, from?.[choice.key] ?? ""]))
 }
 
 /**
@@ -337,6 +365,12 @@ function entryOf(module: GameModule, play: PlayFormValues, tie: string[]) {
             )
           : undefined,
       winner: isMarkedWinner(player),
+      // Only the choices that were made.
+      setup: Object.fromEntries(
+        module.scorePad.playerSetup
+          .filter((choice) => player.setup[choice.key])
+          .map((choice) => [choice.key, player.setup[choice.key]]),
+      ),
     })),
     group: cooperative
       ? {
@@ -421,6 +455,7 @@ export function fromPlay(module: GameModule, play: Play): PlayFormValues {
         ]),
       ),
       won: result.markedWinner,
+      setup: playerSetupFrom(module.scorePad, result.setup),
     })),
     // What the recorder answered when the Play was recorded: one Player, or else a shared win.
     // The form can give a tie to one Player; a Play recorded through the API with several
@@ -452,6 +487,7 @@ export function fromNewPlay(module: GameModule, play: NewPlay): PlayFormValues {
         ]),
       ),
       won: player.winner,
+      setup: playerSetupFrom(module.scorePad, player.setup),
     })),
     tieWinner: "",
     groupOutcome: play.group ? (play.group.won ? "won" : "lost") : "",

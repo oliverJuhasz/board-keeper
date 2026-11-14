@@ -189,7 +189,8 @@
       "notRecorded": "Olyasmit adtál meg, amit ez a játék nem rögzít.",
       "scoresNeeded": "Ennek a játéknak az egyszemélyes partiját a pontszámokkal rögzítjük.",
       "victoryTypeMissing": "Add meg, hogyan nyert a parti.",
-      "oneWinnerOnly": "Az így megnyert partinak egy győztese van."
+      "oneWinnerOnly": "Az így megnyert partinak egy győztese van.",
+      "chosenTwice": "Két játékos ugyanazt kapta, pedig mindegyikből csak egy van, például egy csodából."
     },
     "waiting": {
       "title": "Még nincs elküldve",
@@ -287,7 +288,8 @@
     "scoreStep": "{{step}} többszörösét add meg.",
     "tieUnanswered": "Add meg, ki nyerte a holtversenyt, vagy hogy a győzelem megosztott.",
     "soloScoresOnly": "Ennek a játéknak az egyszemélyes partiját a pontszámokkal rögzítjük. Válaszd a Pontokat.",
-    "oneWinnerOnly": "Így csak egy játékos nyerhet."
+    "oneWinnerOnly": "Így csak egy játékos nyerhet.",
+    "chosenTwice": "Egy másik játékosnak már ez a választása ({{choice}})."
   },
   "problems": {
     "unknown": "Valami hiba történt. Próbáld újra.",

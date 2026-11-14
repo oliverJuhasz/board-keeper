@@ -481,7 +481,58 @@ export function PlayEntryForm({
                         <XIcon />
                       </Button>
                     </div>
+                    {/* The Player Setup, such as their Wonder: a drop-down for each choice. Each can
+                        be left as it is, for a choice nobody remembers. */}
+                    {pad.playerSetup.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {pad.playerSetup.map((choice) => {
+                          // Where each option is there once, such as a Wonder board, the ones
+                          // another Player has already can't be picked.
+                          const taken = choice.oncePerPlay
+                            ? play.players
+                                .filter((_, other) => other !== index)
+                                .map((other) => other.setup[choice.key])
+                            : []
+                          return (
+                            <NativeSelect
+                              key={choice.key}
+                              size="sm"
+                              aria-label={t("plays.record.valueOf", {
+                                category: moduleText(`playerSetup.${choice.key}`),
+                                name,
+                              })}
+                              {...form.register(`players.${index}.setup.${choice.key}`)}
+                            >
+                              <NativeSelectOption value="">
+                                {moduleText(`playerSetup.${choice.key}`)}
+                              </NativeSelectOption>
+                              {choice.options.map((option) => (
+                                <NativeSelectOption
+                                  key={option}
+                                  value={option}
+                                  disabled={taken.includes(option)}
+                                >
+                                  {moduleText(`playerSetup.${choice.key}.${option}`)}
+                                </NativeSelectOption>
+                              ))}
+                            </NativeSelect>
+                          )
+                        })}
+                      </div>
+                    )}
                     {scoreError && <FieldError className="text-right">{scoreError}</FieldError>}
+                    {pad.playerSetup.map((choice) => {
+                      const message = errors.players?.[index]?.setup?.[choice.key]?.message
+                      return (
+                        message && (
+                          <FieldError key={choice.key}>
+                            {t(message as "validation.chosenTwice", {
+                              choice: moduleText(`playerSetup.${choice.key}`),
+                            })}
+                          </FieldError>
+                        )
+                      )
+                    })}
                   </li>
                 )
               })}

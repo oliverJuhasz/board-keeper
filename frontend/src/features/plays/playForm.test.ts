@@ -18,12 +18,12 @@ const dora = "0193a000-0000-7000-8000-0000000000b3"
 
 /** A Player's row in the form for a Game without a module of its own: one score. */
 function scored(playerId: string, total: string) {
-  return { playerId, scores: { total }, won: false }
+  return { playerId, scores: { total }, won: false, setup: {} }
 }
 
 /** A Player's rows on Calico's score pad. */
 function pad(playerId: string, designGoals: string, cats: string, buttons: string) {
-  return { playerId, scores: { designGoals, cats, buttons }, won: false }
+  return { playerId, scores: { designGoals, cats, buttons }, won: false, setup: {} }
 }
 
 function form(overrides: Partial<PlayFormValues>): PlayFormValues {
@@ -101,8 +101,18 @@ test("every row of the pad is sent as a number, with every variant", () => {
     recordingMode: "POINTS",
     setup: { family: "false" },
     players: [
-      { playerId: anna, scores: { designGoals: 28, cats: 23, buttons: 21 }, winner: false },
-      { playerId: dora, scores: { designGoals: 21, cats: 19, buttons: 18 }, winner: false },
+      {
+        playerId: anna,
+        scores: { designGoals: 28, cats: 23, buttons: 21 },
+        winner: false,
+        setup: {},
+      },
+      {
+        playerId: dora,
+        scores: { designGoals: 21, cats: 19, buttons: 18 },
+        winner: false,
+        setup: {},
+      },
     ],
     group: undefined,
   })
@@ -166,14 +176,14 @@ test("what doesn't count for the way a play is recorded is not sent", () => {
     form({
       recordingMode: "WINNER_ONLY",
       setup: { cooperative: "true", lowestScoreWins: "true" },
-      players: [{ playerId: anna, scores: { total: "50" }, won: true }],
+      players: [{ playerId: anna, scores: { total: "50" }, won: true, setup: {} }],
       groupOutcome: "won",
       groupScore: "17",
     }),
   )
 
   expect(play.setup).toEqual({ cooperative: "true", lowestScoreWins: "false" })
-  expect(play.players).toEqual([{ playerId: anna, scores: undefined, winner: false }])
+  expect(play.players).toEqual([{ playerId: anna, scores: undefined, winner: false, setup: {} }])
   expect(play.group).toEqual({ won: true, scores: undefined })
 })
 
@@ -267,6 +277,7 @@ function result(playerId: string, total: number, markedWinner = false) {
   return {
     player: { id: playerId, name: playerId },
     scores: { total },
+    setup: {},
     markedWinner,
     total,
     placing: 1,
@@ -289,7 +300,10 @@ test("a recorded play fills the form with what was entered for it", () => {
     location: "At Dora's",
     notes: "",
     setup: { cooperative: "false", lowestScoreWins: "true" },
-    players: [scored(anna, "50"), { playerId: bence, scores: { total: "50" }, won: true }],
+    players: [
+      scored(anna, "50"),
+      { playerId: bence, scores: { total: "50" }, won: true, setup: {} },
+    ],
     tieWinner: bence,
   })
 })
@@ -308,15 +322,23 @@ test("saving an unchanged play sends what was recorded", () => {
   expect(
     toNewPlay(genericModule, "game", fromPlay(genericModule, competitive), [anna, bence]).players,
   ).toEqual([
-    { playerId: anna, scores: { total: 50 }, winner: false },
-    { playerId: bence, scores: { total: 50 }, winner: true },
+    { playerId: anna, scores: { total: 50 }, winner: false, setup: {} },
+    { playerId: bence, scores: { total: 50 }, winner: true, setup: {} },
   ])
 
   const cooperative = recorded({
     cooperative: true,
     setup: { cooperative: "true", lowestScoreWins: "false" },
     group: { won: false, scores: { total: 17 }, total: 17 },
-    results: [{ player: { id: anna, name: "Anna" }, scores: {}, markedWinner: false, won: false }],
+    results: [
+      {
+        player: { id: anna, name: "Anna" },
+        scores: {},
+        setup: {},
+        markedWinner: false,
+        won: false,
+      },
+    ],
   })
   expect(toNewPlay(genericModule, "game", fromPlay(genericModule, cooperative))).toMatchObject({
     setup: { cooperative: "true", lowestScoreWins: "false" },

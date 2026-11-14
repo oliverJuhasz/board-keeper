@@ -11,7 +11,13 @@ import type {
   Player,
   Role,
 } from "@/api/client"
-import { calicoModule, duelModule, genericModule, wyrmspanModule } from "./gameModules"
+import {
+  calicoModule,
+  duelModule,
+  genericModule,
+  sevenWondersModule,
+  wyrmspanModule,
+} from "./gameModules"
 import { server } from "./server"
 
 // Ready-made answers of the pretend backend, for tests to combine.
@@ -110,6 +116,18 @@ export const duel: Game = {
   name: "7 Wonders Duel",
   gameModuleId: duelModule.id,
   moduleKey: "seven-wonders-duel",
+  hasOwnModule: true,
+  cooperative: false,
+  recordingMode: "POINTS",
+  lowestScoreWins: false,
+}
+
+/** A Game in which each Player has a Player Setup: their Wonder and its side. */
+export const sevenWonders: Game = {
+  id: "0193a000-0000-7000-8000-0000000000e7",
+  name: "7 Wonders",
+  gameModuleId: sevenWondersModule.id,
+  moduleKey: "seven-wonders",
   hasOwnModule: true,
   cooperative: false,
   recordingMode: "POINTS",
@@ -265,6 +283,7 @@ export const azulPlay: Play = {
     {
       player: doraPlayer,
       scores: { total: 61 },
+      setup: {},
       markedWinner: false,
       total: 61,
       placing: 2,
@@ -273,6 +292,7 @@ export const azulPlay: Play = {
     {
       player: annaPlayer,
       scores: { total: 74 },
+      setup: {},
       markedWinner: false,
       total: 74,
       placing: 1,
@@ -295,8 +315,8 @@ export const pandemicPlay: Play = {
   cooperative: true,
   group: { won: false, scores: { total: 17 }, total: 17 },
   results: [
-    { player: annaPlayer, scores: {}, markedWinner: false, won: false },
-    { player: bencePlayer, scores: {}, markedWinner: false, won: false },
+    { player: annaPlayer, scores: {}, setup: {}, markedWinner: false, won: false },
+    { player: bencePlayer, scores: {}, setup: {}, markedWinner: false, won: false },
   ],
   recordedBy: annaPlayer,
   recordedAt: "2026-03-15T12:00:00Z",
