@@ -42,7 +42,7 @@ Changing Plays without a connection, teams, unfinished plays, game nights, impor
 - Playwright end-to-end tests, once the frontend is functionally complete and settled.
 - Signing in through an outside provider.
 - Limits on the number of sign-in attempts. Left out while the app sits on a private network.
-- Before publishing the repository: a licence and ARM images.
+- Before publishing the repository: ARM images.
 
 ## Milestones
 

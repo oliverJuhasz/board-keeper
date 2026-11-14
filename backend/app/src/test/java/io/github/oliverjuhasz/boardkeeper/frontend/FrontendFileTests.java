@@ -34,6 +34,12 @@ class FrontendFileTests {
     }
 
     @Test
+    void aTextFileSaysItIsInUtf8() throws Exception {
+        assertThat(get("/test-only/notice.txt").headers().firstValue("Content-Type"))
+                .hasValue("text/plain;charset=UTF-8");
+    }
+
+    @Test
     void filesOutsideTheAssetsAreCheckedWithTheServerOnEveryUse() throws Exception {
         assertThat(get("/test-only/app.webmanifest").headers().firstValue("Cache-Control")).hasValue("no-cache");
     }
