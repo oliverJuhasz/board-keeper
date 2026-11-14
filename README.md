@@ -28,13 +28,13 @@ Board Keeper is a learning project first ([ADR 0001](docs/adr/0001-learning-proj
 | Tests | Vitest, React Testing Library, Mock Service Worker; Playwright end-to-end tests once the frontend is complete |
 | Lint and format | ESLint, Prettier |
 
-**Deployment:** GitHub Actions builds and tests every push and publishes the container image to GitHub Container Registry. It runs as one app container (Spring Boot serves both the API and the built frontend) plus one PostgreSQL container. The repository provides the image, an example compose file and a self-hosting guide. Anything specific to one installation is out of scope: network access, reverse proxy, automatic updates and backup scheduling. On first start, with no accounts yet, the app writes a one-time link to its log for creating the first Admin. If the only Admin forgets their password, a command run on the container writes a Reset Link for them.
+**Deployment:** GitHub Actions builds and tests every push and publishes the container image to GitHub Container Registry. It runs as one app container (Spring Boot serves both the API and the built frontend) plus one PostgreSQL container. The repository provides the image, an example compose file and a [self-hosting guide](docs/self-hosting.md). Anything specific to one installation is out of scope: network access, reverse proxy, automatic updates and backup scheduling. On first start, with no accounts yet, the app writes a one-time link to its log for creating the first Admin. If the only Admin forgets their password, a command run on the container writes a Reset Link for them.
 
 **Building needs Docker**, because jOOQ code is generated from a throwaway PostgreSQL ([ADR 0007](docs/adr/0007-flyway-and-jooq-codegen-from-real-postgres.md)).
 
 ## Status
 
-Milestones M0 to M4 are done. Board Keeper builds, runs as a container image, and has:
+Milestones M0 to M5 are done. Board Keeper builds, runs as a container image, and has:
 
 - the interface in English, Dutch and Hungarian
 - Accounts with sign-in by password or passkey, created through a first-time Setup Link and through Invites
@@ -50,4 +50,4 @@ Milestones M0 to M4 are done. Board Keeper builds, runs as a container image, an
 - Roles made of fine-grained Permissions, with pages for managing Roles and Accounts
 - password changes and Reset Links
 
-Milestone M5 comes next: passkeys, installing Board Keeper as an app on a phone, and a self-hosting guide.
+Milestone M6 comes next: more games, with 7 Wonders Duel, Spirit Island and 7 Wonders.
