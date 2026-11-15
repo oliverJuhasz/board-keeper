@@ -8,9 +8,12 @@ import java.util.Base64;
 import java.util.HexFormat;
 
 /**
- * The secret part of a one-time link, such as an Invite's. The token itself goes into the link
- * and is shown once. The database keeps only its hash, which is enough to recognise the token
- * when the link is opened, but cannot be turned back into it.
+ * The secret part of a one-time link, such as an Invite's, and of an API Key. The token itself
+ * goes into the link and is shown once. The database keeps only its hash, which is enough to
+ * recognise the token when the link is opened, but cannot be turned back into it.
+ *
+ * <p>A plain SHA-256 hash is enough here, unlike for passwords, which need a slow hash such as
+ * Argon2. A password may be guessable; 32 random bytes are not, however fast each guess is.
  */
 final class LinkTokens {
 

@@ -65,6 +65,7 @@ class Passkeys {
 
     private static final String NOT_ADDED = "passkeys.notAdded";
     private static final String NOT_ACCEPTED = "session.passkeyNotAccepted";
+    private static final String NOT_CONFIRMED = "passkeys.notConfirmed";
 
     private final Optional<WebAuthnRelyingPartyOperations> operations;
     private final PublicKeyCredentialUserEntityRepository users;
@@ -73,6 +74,9 @@ class Passkeys {
     private final HttpSessionPublicKeyCredentialCreationOptionsRepository creationOptions =
             new HttpSessionPublicKeyCredentialCreationOptionsRepository();
     private final HttpSessionPublicKeyCredentialRequestOptionsRepository requestOptions =
+            new HttpSessionPublicKeyCredentialRequestOptionsRepository();
+    /** Confirming keeps its options apart from signing in's, so that neither can stand in for the other. */
+    private final HttpSessionPublicKeyCredentialRequestOptionsRepository confirmationOptions =
             new HttpSessionPublicKeyCredentialRequestOptionsRepository();
 
     Passkeys(
@@ -84,6 +88,7 @@ class Passkeys {
         this.credentials = credentials;
         this.accounts = accounts;
         this.operations = address.isBlank() ? Optional.empty() : Optional.of(operationsFor(address));
+        confirmationOptions.setAttrName(Passkeys.class.getName() + ".confirmationOptions");
     }
 
     /**
@@ -204,6 +209,48 @@ class Passkeys {
             throw new Problem(HttpStatus.UNAUTHORIZED, "session.accountDisabled");
         }
         return account.accountId();
+    }
+
+    /**
+     * The first step of confirming that it really is the signed-in Account's owner, before
+     * something that needs more than a session, such as creating an API Key. Unlike signing in,
+     * the options name the Account, so the phone offers only that Account's passkeys.
+     */
+    PublicKeyCredentialRequestOptions startConfirming(
+            CurrentAccount account, HttpServletRequest request, HttpServletResponse response) {
+        var named = UsernamePasswordAuthenticationToken.authenticated(account.username(), null, List.of());
+        PublicKeyCredentialRequestOptions options =
+                operations().createCredentialRequestOptions(new ImmutablePublicKeyCredentialRequestOptionsRequest(named));
+        confirmationOptions.save(request, response, options);
+        return options;
+    }
+
+    /**
+     * The second step: checks the passkey's signature, and that the passkey is the signed-in
+     * Account's. Anything else is the Problem {@code passkeys.notConfirmed}.
+     */
+    @Transactional
+    void confirm(
+            CurrentAccount account,
+            PublicKeyCredential<AuthenticatorAssertionResponse> credential,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+        WebAuthnRelyingPartyOperations operations = operations();
+        PublicKeyCredentialRequestOptions options = confirmationOptions.load(request);
+        confirmationOptions.save(request, response, null);
+        if (options == null) {
+            throw Problem.forbidden(NOT_CONFIRMED);
+        }
+        PublicKeyCredentialUserEntity user;
+        try {
+            user = operations.authenticate(new RelyingPartyAuthenticationRequest(options, credential));
+        } catch (WebAuthnException | IllegalArgumentException e) {
+            log.debug("A passkey did not confirm", e);
+            throw Problem.forbidden(NOT_CONFIRMED);
+        }
+        if (!user.getName().equals(account.username())) {
+            throw Problem.forbidden(NOT_CONFIRMED);
+        }
     }
 
     private WebAuthnRelyingPartyOperations operations() {

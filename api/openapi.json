@@ -58,6 +58,34 @@
         "required" : [ "plays", "wins" ],
         "type" : "object"
       },
+      "ApiKey" : {
+        "properties" : {
+          "created" : {
+            "description" : "When it was created",
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "expires" : {
+            "description" : "When it stops working. Absent when it never does.",
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "lastUsed" : {
+            "description" : "When it was last used, recorded at most once an hour. Absent when it never was.",
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "created", "id", "name" ],
+        "type" : "object"
+      },
       "Claims" : {
         "properties" : {
           "playerIds" : {
@@ -72,6 +100,19 @@
         "required" : [ "playerIds" ],
         "type" : "object"
       },
+      "CreatedApiKey" : {
+        "properties" : {
+          "apiKey" : {
+            "$ref" : "#/components/schemas/ApiKey"
+          },
+          "secret" : {
+            "description" : "The API Key itself, starting with bk_. Send it as \"Authorization: Bearer …\".",
+            "type" : "string"
+          }
+        },
+        "required" : [ "apiKey", "secret" ],
+        "type" : "object"
+      },
       "CurrentAccount" : {
         "properties" : {
           "id" : {
@@ -84,7 +125,7 @@
           },
           "permissions" : {
             "items" : {
-              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "REMOVE_GAMES", "CREATE_PLAYS", "CHANGE_PLAYS_RECORDED", "CHANGE_PLAYS_TAKEN_PART_IN", "CHANGE_ANY_PLAY", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES", "RECALCULATE_PLAYS" ],
+              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "REMOVE_GAMES", "CREATE_PLAYS", "CHANGE_PLAYS_RECORDED", "CHANGE_PLAYS_TAKEN_PART_IN", "CHANGE_ANY_PLAY", "USE_API_KEYS", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES", "RECALCULATE_PLAYS" ],
               "type" : "string"
             },
             "type" : "array",
@@ -451,6 +492,31 @@
           }
         },
         "required" : [ "id", "name" ],
+        "type" : "object"
+      },
+      "NewApiKey" : {
+        "properties" : {
+          "expiry" : {
+            "description" : "How long it works",
+            "enum" : [ "THIRTY_DAYS", "NINETY_DAYS", "ONE_YEAR", "NEVER" ],
+            "type" : "string"
+          },
+          "name" : {
+            "description" : "A name to recognise it by, unique among your API Keys, such as \"Backup script\"",
+            "maxLength" : 50,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "passkey" : {
+            "$ref" : "#/components/schemas/WebAuthnJson",
+            "description" : "What credential.toJSON() returns for the options from POST /api/account/api-keys/passkey-options. Send either this or your password."
+          },
+          "password" : {
+            "description" : "Your password. Send either this or a passkey.",
+            "type" : "string"
+          }
+        },
+        "required" : [ "expiry", "name" ],
         "type" : "object"
       },
       "NewInvite" : {
@@ -1205,7 +1271,7 @@
           },
           "permissions" : {
             "items" : {
-              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "REMOVE_GAMES", "CREATE_PLAYS", "CHANGE_PLAYS_RECORDED", "CHANGE_PLAYS_TAKEN_PART_IN", "CHANGE_ANY_PLAY", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES", "RECALCULATE_PLAYS" ],
+              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "REMOVE_GAMES", "CREATE_PLAYS", "CHANGE_PLAYS_RECORDED", "CHANGE_PLAYS_TAKEN_PART_IN", "CHANGE_ANY_PLAY", "USE_API_KEYS", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES", "RECALCULATE_PLAYS" ],
               "type" : "string"
             },
             "type" : "array",
@@ -1224,7 +1290,7 @@
           },
           "permissions" : {
             "items" : {
-              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "REMOVE_GAMES", "CREATE_PLAYS", "CHANGE_PLAYS_RECORDED", "CHANGE_PLAYS_TAKEN_PART_IN", "CHANGE_ANY_PLAY", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES", "RECALCULATE_PLAYS" ],
+              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "REMOVE_GAMES", "CREATE_PLAYS", "CHANGE_PLAYS_RECORDED", "CHANGE_PLAYS_TAKEN_PART_IN", "CHANGE_ANY_PLAY", "USE_API_KEYS", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES", "RECALCULATE_PLAYS" ],
               "type" : "string"
             },
             "type" : "array",
@@ -1570,6 +1636,13 @@
         "description" : "WebAuthn options or a credential, in the JSON form of WebAuthn Level 3",
         "type" : "object"
       }
+    },
+    "securitySchemes" : {
+      "apiKey" : {
+        "description" : "An API Key, created on the settings page. It starts with bk_.",
+        "scheme" : "bearer",
+        "type" : "http"
+      }
     }
   },
   "info" : {
@@ -1610,6 +1683,139 @@
         },
         "summary" : "About the running version",
         "tags" : [ "About" ]
+      }
+    },
+    "/api/account/api-keys" : {
+      "get" : {
+        "description" : "The most recently created first. Listed even without the Permission to use them.",
+        "operationId" : "listOwnApiKeys",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/ApiKey"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "List your own API Keys",
+        "tags" : [ "API Keys" ]
+      },
+      "post" : {
+        "description" : "Confirmed with either your password or one of your passkeys. The answer holds the API Key's secret, which is not stored and cannot be shown again.",
+        "operationId" : "createApiKey",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/NewApiKey"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CreatedApiKey"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Create an API Key",
+        "tags" : [ "API Keys" ]
+      }
+    },
+    "/api/account/api-keys/passkey-options" : {
+      "post" : {
+        "description" : "Answers the options for navigator.credentials.get(), naming your own passkeys. Send what it returns as the passkey of POST /api/account/api-keys. The code passkeys.unavailable means this installation offers no passkeys.",
+        "operationId" : "startConfirmingApiKey",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/WebAuthnJson"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Start confirming a new API Key with a passkey",
+        "tags" : [ "API Keys" ]
+      }
+    },
+    "/api/account/api-keys/{id}" : {
+      "delete" : {
+        "description" : "Possible even without the Permission to use them.",
+        "operationId" : "deleteApiKey",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Delete one of your own API Keys",
+        "tags" : [ "API Keys" ]
       }
     },
     "/api/account/language" : {
@@ -1842,7 +2048,7 @@
     },
     "/api/accounts/{id}/disabled" : {
       "put" : {
-        "description" : "A disabled Account cannot sign in and is signed out everywhere. Its Player and history stay.",
+        "description" : "A disabled Account cannot sign in, is signed out everywhere, and loses its API Keys. Its Player and history stay.",
         "operationId" : "setAccountDisabled",
         "parameters" : [ {
           "in" : "path",
@@ -3195,7 +3401,7 @@
         "tags" : [ "Session" ]
       },
       "get" : {
-        "description" : "Open to everyone. Without a sign-in the answer has no account. The frontend calls this first: the answer also sets the XSRF-TOKEN cookie.",
+        "description" : "Open to everyone. Without a sign-in the answer has no account. The frontend calls this first: the answer also sets the XSRF-TOKEN cookie. With an API Key, it answers for the API Key's Account, with the Permissions the API Key has.",
         "operationId" : "getSession",
         "responses" : {
           "200" : {
@@ -3476,6 +3682,9 @@
       }
     }
   },
+  "security" : [ {
+    "apiKey" : [ ]
+  } ],
   "servers" : [ {
     "url" : "/"
   } ]
