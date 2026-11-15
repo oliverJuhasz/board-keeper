@@ -43,6 +43,7 @@ Changing Plays without a connection, teams, unfinished plays, game nights, impor
 - Signing in through an outside provider.
 - Limits on the number of sign-in attempts. Left out while the app sits on a private network.
 - Before publishing the repository: ARM images.
+- Versioning the API, from the first release on. Until then the API changes along with the frontend, so a script that uses it may need changing after an update.
 
 ## Milestones
 
