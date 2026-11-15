@@ -31,8 +31,10 @@ export const persistOptions: Omit<PersistQueryClientOptions, "queryClient"> = {
     key: "boardkeeper.cache",
   }),
   maxAge: KEPT_FOR,
-  // Changing this throws away what every device kept, for when the API's answers change shape.
-  buster: "1",
+  // What one version of the app kept is thrown away by any other, which loads it again: a new
+  // version's answers can have another shape, and it can bring other Game Modules. Waiting Plays
+  // are kept apart (waitingPlays.ts) and stay.
+  buster: __APP_VERSION__,
   dehydrateOptions: { shouldDehydrateQuery: shouldKeep },
 }
 
