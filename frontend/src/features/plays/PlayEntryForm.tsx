@@ -279,138 +279,8 @@ export function PlayEntryForm({
           />
         </div>
 
-        <div className="space-y-4 rounded-lg border p-3">
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-sm">
-              <span className="text-muted-foreground">{t("plays.record.recordedAs")}: </span>
-              <span className="font-medium">
-                {generic
-                  ? recordedAs(recording)
-                  : points
-                    ? t("recording.points")
-                    : solo?.kind === "AGAINST_OPPONENT" || cooperative
-                      ? t("recording.wonOrLostOnly")
-                      : t("recording.winnerOnly")}
-              </span>
-            </p>
-            {/* A Play won outright has nothing to choose: only its winner is recorded. */}
-            {!changingRecording && !outright && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setChangingRecording(true)}
-              >
-                {t("plays.record.change")}
-              </Button>
-            )}
-          </div>
-          {changingRecording && !outright && (
-            <>
-              <p className="text-sm text-muted-foreground">{t("plays.record.changeHint")}</p>
-              {generic ? (
-                // A Game without a module of its own: the recorder says what kind of Game it is.
-                <RecordingChoices
-                  value={recording}
-                  onChange={(choice) => {
-                    form.setValue("setup.cooperative", String(choice.cooperative), changed)
-                    form.setValue("recordingMode", choice.recordingMode, changed)
-                    form.setValue("setup.lowestScoreWins", String(choice.lowestScoreWins), changed)
-                  }}
-                />
-              ) : (
-                <RadioField
-                  legend={t("recording.recording")}
-                  value={play.recordingMode}
-                  onChange={(recordingMode) =>
-                    form.setValue("recordingMode", recordingMode, changed)
-                  }
-                  options={[
-                    {
-                      value: "POINTS",
-                      label: t("recording.points"),
-                      hint: cooperative
-                        ? t("plays.record.groupPadHint")
-                        : t("plays.record.padHint"),
-                    },
-                    {
-                      value: "WINNER_ONLY",
-                      // Against an opponent, a Solo Play is won or lost, and so is a cooperative one.
-                      label:
-                        solo?.kind === "AGAINST_OPPONENT" || cooperative
-                          ? t("recording.wonOrLostOnly")
-                          : t("recording.winnerOnly"),
-                      hint: t("recording.outcomeHint"),
-                    },
-                  ]}
-                />
-              )}
-            </>
-          )}
-          {errors.recordingMode?.message && (
-            <FieldError>{t(errors.recordingMode.message as "validation.required")}</FieldError>
-          )}
-        </div>
-
-        {/* The Expansions the Play was played with. Each can add rows to the pad, or ways to win. */}
-        {pad.expansions.length > 0 && (
-          <FieldSet>
-            <FieldLegend variant="label">{t("plays.record.expansions")}</FieldLegend>
-            {pad.expansions.map((expansion) => (
-              <CheckboxField
-                key={expansion.key}
-                label={moduleText(`expansion.${expansion.key}`)}
-                checked={play.setup[expansion.key] === "true"}
-                onChange={(on) => form.setValue(`setup.${expansion.key}`, String(on), changed)}
-              />
-            ))}
-          </FieldSet>
-        )}
-
-        {/* The Variants of a Game with a module of its own. The Generic Module's two are the
-            recording choices above. */}
-        {!generic &&
-          variantsFor(module, play).map((variant) =>
-            variant.kind === "ON_OFF" ? (
-              <CheckboxField
-                key={variant.key}
-                label={moduleText(`variant.${variant.key}`)}
-                hint={moduleText(`variant.${variant.key}.hint`)}
-                checked={play.setup[variant.key] === "true"}
-                onChange={(on) => form.setValue(`setup.${variant.key}`, String(on), changed)}
-              />
-            ) : (
-              <ChoiceField
-                key={variant.key}
-                label={moduleText(`variant.${variant.key}`)}
-                value={play.setup[variant.key]}
-                onChange={(option) => form.setValue(`setup.${variant.key}`, option, changed)}
-                options={choicesOf(variant).map((option) => ({
-                  value: option,
-                  // A number may have a name of its own, such as "Base level" for 0.
-                  label:
-                    moduleText(`variant.${variant.key}.${option}`) ??
-                    (variant.kind === "RANGE" ? option : ""),
-                }))}
-              />
-            ),
-          )}
-
-        {victoryTypes.length > 0 && (
-          <div className="space-y-2">
-            <RadioField
-              legend={t("plays.record.victoryType")}
-              value={victoryType?.key ?? ""}
-              onChange={(key) => form.setValue("victoryType", key, changed)}
-              options={victoryTypes.map((option) => ({
-                value: option.key,
-                label: moduleText(`victoryType.${option.key}`),
-              }))}
-            />
-            {outright && <FieldDescription>{t("plays.record.outrightHint")}</FieldDescription>}
-          </div>
-        )}
-
+        {/* Who played comes first: whether the Play is a Solo Play decides which Variants and
+            ways to win there are, and what the recording is called. */}
         <FieldSet>
           <FieldLegend variant="label">{t("plays.record.players")}</FieldLegend>
           {rows.fields.length === 0 ? (
@@ -574,6 +444,138 @@ export function PlayEntryForm({
             </FieldError>
           )}
         </FieldSet>
+
+        <div className="space-y-4 rounded-lg border p-3">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm">
+              <span className="text-muted-foreground">{t("plays.record.recordedAs")}: </span>
+              <span className="font-medium">
+                {generic
+                  ? recordedAs(recording)
+                  : points
+                    ? t("recording.points")
+                    : solo?.kind === "AGAINST_OPPONENT" || cooperative
+                      ? t("recording.wonOrLostOnly")
+                      : t("recording.winnerOnly")}
+              </span>
+            </p>
+            {/* A Play won outright has nothing to choose: only its winner is recorded. */}
+            {!changingRecording && !outright && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setChangingRecording(true)}
+              >
+                {t("plays.record.change")}
+              </Button>
+            )}
+          </div>
+          {changingRecording && !outright && (
+            <>
+              <p className="text-sm text-muted-foreground">{t("plays.record.changeHint")}</p>
+              {generic ? (
+                // A Game without a module of its own: the recorder says what kind of Game it is.
+                <RecordingChoices
+                  value={recording}
+                  onChange={(choice) => {
+                    form.setValue("setup.cooperative", String(choice.cooperative), changed)
+                    form.setValue("recordingMode", choice.recordingMode, changed)
+                    form.setValue("setup.lowestScoreWins", String(choice.lowestScoreWins), changed)
+                  }}
+                />
+              ) : (
+                <RadioField
+                  legend={t("recording.recording")}
+                  value={play.recordingMode}
+                  onChange={(recordingMode) =>
+                    form.setValue("recordingMode", recordingMode, changed)
+                  }
+                  options={[
+                    {
+                      value: "POINTS",
+                      label: t("recording.points"),
+                      hint: cooperative
+                        ? t("plays.record.groupPadHint")
+                        : t("plays.record.padHint"),
+                    },
+                    {
+                      value: "WINNER_ONLY",
+                      // Against an opponent, a Solo Play is won or lost, and so is a cooperative one.
+                      label:
+                        solo?.kind === "AGAINST_OPPONENT" || cooperative
+                          ? t("recording.wonOrLostOnly")
+                          : t("recording.winnerOnly"),
+                      hint: t("recording.outcomeHint"),
+                    },
+                  ]}
+                />
+              )}
+            </>
+          )}
+          {errors.recordingMode?.message && (
+            <FieldError>{t(errors.recordingMode.message as "validation.required")}</FieldError>
+          )}
+        </div>
+
+        {/* The Expansions the Play was played with. Each can add rows to the pad, or ways to win. */}
+        {pad.expansions.length > 0 && (
+          <FieldSet>
+            <FieldLegend variant="label">{t("plays.record.expansions")}</FieldLegend>
+            {pad.expansions.map((expansion) => (
+              <CheckboxField
+                key={expansion.key}
+                label={moduleText(`expansion.${expansion.key}`)}
+                checked={play.setup[expansion.key] === "true"}
+                onChange={(on) => form.setValue(`setup.${expansion.key}`, String(on), changed)}
+              />
+            ))}
+          </FieldSet>
+        )}
+
+        {/* The Variants of a Game with a module of its own. The Generic Module's two are the
+            recording choices above. */}
+        {!generic &&
+          variantsFor(module, play).map((variant) =>
+            variant.kind === "ON_OFF" ? (
+              <CheckboxField
+                key={variant.key}
+                label={moduleText(`variant.${variant.key}`)}
+                hint={moduleText(`variant.${variant.key}.hint`)}
+                checked={play.setup[variant.key] === "true"}
+                onChange={(on) => form.setValue(`setup.${variant.key}`, String(on), changed)}
+              />
+            ) : (
+              <ChoiceField
+                key={variant.key}
+                label={moduleText(`variant.${variant.key}`)}
+                value={play.setup[variant.key]}
+                onChange={(option) => form.setValue(`setup.${variant.key}`, option, changed)}
+                options={choicesOf(variant).map((option) => ({
+                  value: option,
+                  // A number may have a name of its own, such as "Base level" for 0.
+                  label:
+                    moduleText(`variant.${variant.key}.${option}`) ??
+                    (variant.kind === "RANGE" ? option : ""),
+                }))}
+              />
+            ),
+          )}
+
+        {victoryTypes.length > 0 && (
+          <div className="space-y-2">
+            <RadioField
+              legend={t("plays.record.victoryType")}
+              value={victoryType?.key ?? ""}
+              onChange={(key) => form.setValue("victoryType", key, changed)}
+              options={victoryTypes.map((option) => ({
+                value: option.key,
+                label: moduleText(`victoryType.${option.key}`),
+              }))}
+            />
+            {outright && <FieldDescription>{t("plays.record.outrightHint")}</FieldDescription>}
+          </div>
+        )}
 
         {drawnAsPad && rows.fields.length > 0 && (
           <div className="space-y-2">

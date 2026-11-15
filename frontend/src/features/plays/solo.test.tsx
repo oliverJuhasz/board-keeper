@@ -245,7 +245,11 @@ test("the Automa is not part of a play with more players", async () => {
   const sent = playsCanBeRecorded(soloPlay({}))
   renderApp(`/plays/new?game=${wyrmspan.id}`)
 
-  expect(await screen.findByRole("radio", { name: "Level 1" })).toBeInTheDocument()
+  // The Players come first, so adding one takes away choices further down the form, not above.
+  const levelOne = await screen.findByRole("radio", { name: "Level 1" })
+  expect(screen.getByLabelText("Add a player").compareDocumentPosition(levelOne)).toBe(
+    Node.DOCUMENT_POSITION_FOLLOWING,
+  )
   await userEvent.selectOptions(screen.getByLabelText("Add a player"), "Anna")
 
   expect(screen.queryByRole("radio", { name: "Level 1" })).not.toBeInTheDocument()
