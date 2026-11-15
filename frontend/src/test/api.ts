@@ -41,6 +41,7 @@ export const anna: CurrentAccount = {
     "CHANGE_PLAYS_RECORDED",
     "CHANGE_PLAYS_TAKEN_PART_IN",
     "CHANGE_ANY_PLAY",
+    "USE_API_KEYS",
     "MANAGE_INVITES",
     "MANAGE_ACCOUNTS",
     "MANAGE_ROLES",

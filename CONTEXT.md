@@ -110,6 +110,10 @@ _Avoid_: Recovery link, forgot-password link
 A way to sign in to an Account with a phone, computer or security key, by fingerprint, face or PIN, instead of typing the password. An Account can have several, and keeps its password as well.
 _Avoid_: Security key (one kind of device that holds passkeys), WebAuthn credential
 
+**API Key**:
+A secret an Account creates so that a program, such as a script or an AI agent, can use Board Keeper as that Account without signing in. It can't do Admin work or change how its Account signs in.
+_Avoid_: Token, access token, personal access token, app password. Don't shorten it to "key": a Game Module has a key of its own.
+
 **Disabled Account**:
 An Account that can no longer sign in. Its Player and its history stay, and it can be enabled again.
 _Avoid_: Deleted account, banned, locked
@@ -138,5 +142,6 @@ The built-in Role an Invite gives unless the Admin picks another.
 | Play | partij | parti |
 | Player | speler | játékos |
 | Passkey | passkey | passkey |
+| API Key | API-sleutel | API-kulcs |
 
 The interface addresses people informally in both: "je" in Dutch, tegezés in Hungarian.

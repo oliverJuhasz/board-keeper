@@ -32,7 +32,7 @@ class TableOwnershipTests {
             "players", Set.of("Player"),
             "plays", Set.of("Play", "PlayResult"),
             "stats", Set.of("StatsPlay", "StatsResult"),
-            "accounts", Set.of("Account", "AccountRole", "Role", "RolePermission", "Invite", "PasswordReset"));
+            "accounts", Set.of("Account", "AccountRole", "Role", "RolePermission", "Invite", "PasswordReset", "ApiKey"));
 
     private static final String ROOT = "io.github.oliverjuhasz.boardkeeper";
     private static final String TABLES_PACKAGE = ROOT + ".jooq.tables";

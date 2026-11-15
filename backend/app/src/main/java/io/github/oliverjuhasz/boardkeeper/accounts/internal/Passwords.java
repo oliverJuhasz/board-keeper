@@ -44,11 +44,20 @@ class Passwords {
     /** Changes the signed-in Account's password, and signs it out on every other device. */
     @Transactional
     void changeOwn(CurrentAccount account, String currentPassword, String newPassword, HttpServletRequest request) {
-        if (!passwordEncoder.matches(currentPassword, accounts.findPasswordHash(account.accountId()))) {
-            throw new Problem(HttpStatus.FORBIDDEN, "accounts.wrongCurrentPassword");
-        }
+        confirm(account, currentPassword);
         accounts.setPasswordHash(account.accountId(), passwordEncoder.encode(newPassword));
         sessions.endAllOf(account.accountId(), request);
+    }
+
+    /**
+     * Checks that the signed-in Account's owner knows its password, before something that needs
+     * more than a session: changing the password, or creating an API Key.
+     */
+    @Transactional(readOnly = true)
+    void confirm(CurrentAccount account, String password) {
+        if (!passwordEncoder.matches(password, accounts.findPasswordHash(account.accountId()))) {
+            throw new Problem(HttpStatus.FORBIDDEN, "accounts.wrongCurrentPassword");
+        }
     }
 
     /**

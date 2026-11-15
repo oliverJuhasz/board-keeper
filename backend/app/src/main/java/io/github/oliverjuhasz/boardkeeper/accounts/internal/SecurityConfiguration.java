@@ -12,6 +12,7 @@ import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -24,12 +25,28 @@ import org.springframework.security.web.context.DelegatingSecurityContextReposit
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+import org.springframework.security.web.util.matcher.AndRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.session.web.http.CookieSerializer;
 import org.springframework.session.security.web.authentication.SpringSessionRememberMeServices;
 import org.springframework.session.web.http.DefaultCookieSerializer;
 
 @Configuration(proxyBeanMethods = false)
 class SecurityConfiguration {
+
+    /** Signing in and out, registering, and changing a password, passkeys or API Keys. */
+    private static final RequestMatcher ABOUT_SIGNING_IN = new OrRequestMatcher(
+            PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.POST, "/api/session"),
+            PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.DELETE, "/api/session"),
+            PathPatternRequestMatcher.withDefaults().matcher("/api/session/passkey/**"),
+            PathPatternRequestMatcher.withDefaults().matcher("/api/setup"),
+            PathPatternRequestMatcher.withDefaults().matcher("/api/registration/**"),
+            PathPatternRequestMatcher.withDefaults().matcher("/api/password-reset/**"),
+            PathPatternRequestMatcher.withDefaults().matcher("/api/account/password"),
+            PathPatternRequestMatcher.withDefaults().matcher("/api/account/passkeys/**"),
+            PathPatternRequestMatcher.withDefaults().matcher("/api/account/api-keys/**"));
 
     /**
      * The rules every request passes through before it reaches a controller. Spring Security
@@ -40,9 +57,14 @@ class SecurityConfiguration {
             HttpSecurity http,
             SecurityContextRepository contextRepository,
             CurrentAccounts currentAccounts,
-            SignInSessions sessions)
+            SignInSessions sessions,
+            ApiKeys apiKeys)
             throws Exception {
         http.authorizeHttpRequests(requests -> requests
+                        // An API Key can't sign in, register, or change how an Account signs in
+                        // (ADR 0017). Requests without one go on to the rules below.
+                        .requestMatchers(new AndRequestMatcher(ApiKeyFilter.REQUESTS, ABOUT_SIGNING_IN))
+                        .denyAll()
                         // Open to everyone: asking who is signed in, signing in with a password or a
                         // passkey, the first-time setup, and the pages behind an Invite's link and a
                         // Reset Link.
@@ -68,7 +90,8 @@ class SecurityConfiguration {
                 // the server hands out a token in the XSRF-TOKEN cookie, and the frontend sends it
                 // back in the X-XSRF-TOKEN header on every request that changes something. Another
                 // website can make the browser send our cookies, but it cannot read them.
-                .csrf(csrf -> csrf.spa())
+                // A request with an API Key needs no token; ApiKeyFilter explains why.
+                .csrf(csrf -> csrf.spa().ignoringRequestMatchers(ApiKeyFilter.REQUESTS))
                 .securityContext(context -> context.securityContextRepository(contextRepository))
                 // Signing in and out are our own endpoints (SessionController), not Spring's pages.
                 .formLogin(AbstractHttpConfigurer::disable)
@@ -76,13 +99,20 @@ class SecurityConfiguration {
                 .logout(AbstractHttpConfigurer::disable)
                 // An API call without a sign-in gets "401 Unauthorized", not a redirect to a sign-in
                 // page, and one without the needed Permission gets "403 Forbidden". Both carry a code,
-                // like every other error.
+                // like every other error. A refused API Key gets a code of its own, because it may
+                // be refused for what its Account may well do: Admin work, or signing in.
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint((request, response, exception) ->
                                 ProblemResponses.write(response, HttpStatus.UNAUTHORIZED, "access.notSignedIn"))
-                        .accessDeniedHandler((request, response, exception) ->
-                                ProblemResponses.write(response, HttpStatus.FORBIDDEN, "access.denied")))
-                .addFilterBefore(new AccountRefreshFilter(currentAccounts, sessions), AuthorizationFilter.class);
+                        .accessDeniedHandler((request, response, exception) -> ProblemResponses.write(
+                                response,
+                                HttpStatus.FORBIDDEN,
+                                ApiKeyAuthentication.isOne(SecurityContextHolder.getContext().getAuthentication())
+                                        ? "access.deniedToApiKey"
+                                        : "access.denied")))
+                .addFilterBefore(new AccountRefreshFilter(currentAccounts, sessions), AuthorizationFilter.class)
+                // Before AccountRefreshFilter, which then leaves a request with an API Key alone.
+                .addFilterBefore(new ApiKeyFilter(apiKeys), AccountRefreshFilter.class);
         return http.build();
     }
 

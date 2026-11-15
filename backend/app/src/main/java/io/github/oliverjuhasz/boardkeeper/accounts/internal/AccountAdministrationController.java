@@ -56,7 +56,7 @@ class AccountAdministrationController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(
             summary = "Disable or enable an Account",
-            description = "A disabled Account cannot sign in and is signed out everywhere. "
+            description = "A disabled Account cannot sign in, is signed out everywhere, and loses its API Keys. "
                     + "Its Player and history stay.",
             operationId = "setAccountDisabled")
     void setDisabled(

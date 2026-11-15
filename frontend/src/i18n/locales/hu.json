@@ -341,7 +341,11 @@
     },
     "access": {
       "notSignedIn": "Már nem vagy bejelentkezve.",
-      "denied": "Ehhez nincs jogosultságod."
+      "denied": "Ehhez nincs jogosultságod.",
+      "apiKeyNotValid": "Ez az API-kulcs nem érvényes.",
+      "apiKeyExpired": "Ez az API-kulcs lejárt.",
+      "apiKeysNotAllowed": "Ez a fiók nem használhat API-kulcsokat.",
+      "deniedToApiKey": "Ezt egy API-kulcs nem teheti meg. Az API-kulcsok soha nem végeznek adminisztrátori feladatokat, és nem módosítják, hogyan jelentkezik be egy fiók."
     },
     "resetLinks": {
       "notValid": "Ez a visszaállító hivatkozás már nem működik. Kérj egy újat."
@@ -365,7 +369,13 @@
     "passkeys": {
       "notAdded": "Nem sikerült hozzáadni a passkeyt. Próbáld újra.",
       "notFound": "Ez a passkey már nem létezik.",
-      "unavailable": "Ez a Board Keeper nem kínál passkeyt."
+      "unavailable": "Ez a Board Keeper nem kínál passkeyt.",
+      "notConfirmed": "A passkey nem erősítette meg, hogy te vagy az. Próbáld újra, vagy használd a jelszavadat."
+    },
+    "apiKeys": {
+      "confirmationNeeded": "Erősítsd meg a jelszavaddal vagy egy passkeyjel, hogy te vagy az.",
+      "nameTaken": "Már van ilyen nevű API-kulcsod.",
+      "notFound": "Ez az API-kulcs már nem létezik."
     }
   },
   "nav": {
@@ -502,6 +512,51 @@
         "description": "Többé nem tudsz vele bejelentkezni. A jelszavad és a többi passkeyed továbbra is működik. Az eszközöd talán még mutatja, amíg ott is nem törlöd.",
         "confirm": "Passkey törlése"
       }
+    },
+    "apiKeys": {
+      "title": "API-kulcsok",
+      "description": "Engedd, hogy egy program, például egy szkript vagy egy MI-ügynök, a nevedben használja a Board Keepert. Egy API-kulcs mindarra képes, amire te, kivéve az adminisztrátori feladatokat és a bejelentkezésed módosítását.",
+      "loading": "Az API-kulcsaid betöltése",
+      "loadFailed": "Nem sikerült betölteni az API-kulcsaidat",
+      "none": "Még nincs API-kulcsod.",
+      "created": "Létrehozva: {{date}}",
+      "lastUsed": "utoljára használva: {{date}}",
+      "neverUsed": "még nem használták",
+      "expires": "lejár: {{date}}",
+      "expired": "lejárt: {{date}}",
+      "neverExpires": "nem jár le",
+      "notAllowed": "Az API-kulcsaid most nem működnek, mert a fiókod már nem használhat API-kulcsokat. Egy adminisztrátor újra engedélyezheti.",
+      "delete": "{{name}} törlése",
+      "create": "API-kulcs létrehozása",
+      "createDialog": {
+        "title": "API-kulcs létrehozása",
+        "description": "A program minden kéréssel elküldi. Addig működik, amíg le nem jár, vagy amíg nem törlöd.",
+        "name": "Név",
+        "nameHint": "Hogy meg tudd különböztetni az API-kulcsaidat, például \"Mentési szkript\".",
+        "expiry": "Lejárat",
+        "expiries": {
+          "THIRTY_DAYS": "30 nap múlva",
+          "NINETY_DAYS": "90 nap múlva",
+          "ONE_YEAR": "Egy év múlva",
+          "NEVER": "Soha"
+        },
+        "password": "A jelszavad",
+        "passwordHint": "Hogy megerősítsd, hogy te vagy az.",
+        "submit": "API-kulcs létrehozása",
+        "withPasskey": "Inkább passkeyjel erősítem meg"
+      },
+      "createdDialog": {
+        "title": "Az új API-kulcsod",
+        "description": "Másold ki most, és őrizd biztonságban: többé nem jelenik meg. Akinél megvan, a nevedben használhatja a Board Keepert.",
+        "label": "API-kulcs",
+        "howToUse": "A program egy fejlécben küldi el: Authorization: Bearer, utána a kulcs.",
+        "copy": "API-kulcs másolása"
+      },
+      "deleteDialog": {
+        "title": "Törlöd a(z) \"{{name}}\" API-kulcsot?",
+        "description": "Az ezt használó programok azonnal leállnak.",
+        "confirm": "API-kulcs törlése"
+      }
     }
   },
   "accounts": {
@@ -558,6 +613,10 @@
     "CHANGE_ANY_PLAY": {
       "name": "Bármely parti módosítása",
       "hint": "Minden parti szerkesztése és törlése, bárki rögzítette vagy játszotta is."
+    },
+    "USE_API_KEYS": {
+      "name": "API-kulcsok használata",
+      "hint": "API-kulcsok létrehozása, hogy szkriptek és MI-ügynökök a nevükben használhassák a Board Keepert."
     },
     "MANAGE_INVITES": {
       "name": "Meghívók kezelése",

@@ -24,11 +24,13 @@ class AccountAdministration {
     private final AccountRepository accounts;
     private final RoleRepository roles;
     private final SignInSessions sessions;
+    private final ApiKeys apiKeys;
 
-    AccountAdministration(AccountRepository accounts, RoleRepository roles, SignInSessions sessions) {
+    AccountAdministration(AccountRepository accounts, RoleRepository roles, SignInSessions sessions, ApiKeys apiKeys) {
         this.accounts = accounts;
         this.roles = roles;
         this.sessions = sessions;
+        this.apiKeys = apiKeys;
     }
 
     List<AccountSummary> all() {
@@ -63,7 +65,10 @@ class AccountAdministration {
         }
         accounts.setDisabled(accountId, disabled);
         if (disabled) {
+            // A disabled Account is often one that someone else got into, so everything that
+            // gets into it goes: its sessions and its API Keys (ADR 0017).
             sessions.endAllOf(accountId, request);
+            apiKeys.deleteAllOf(accountId);
         }
     }
 

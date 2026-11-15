@@ -216,6 +216,32 @@ A passkey belongs to one web address, so Board Keeper offers passkeys only when 
 
 **Tests.** `TestPhone` is a pretend phone that makes and uses passkeys with real keys, from WebAuthn4J's emulated authenticator; `PasskeyTests` shows it at work. In the frontend, the tests stand in for the browser's `PublicKeyCredential` and `navigator.credentials` (`passkeys.test.tsx`). To try passkeys in Chromium without a phone, its developer tools can add a virtual authenticator (More tools, WebAuthn).
 
+### API Keys
+
+An API Key lets a program, such as a script or an AI agent, use the API as one Account, without signing in ([ADR 0017](adr/0017-api-keys-instead-of-oauth.md)). Its owner creates it on the settings page, which shows it once; the database keeps only its hash, as for a one-time link. Using API Keys needs the Permission `USE_API_KEYS`, which the Admin Role has and no other Role starts with.
+
+A program sends the API Key in a header, `Authorization: Bearer bk_…`. `ApiKeyFilter` reads it, `ApiKeys.check` finds its Account, and the request then acts as that Account, with the Permissions it holds at that moment minus the Admin-only ones. Controllers get it as the usual `@AuthenticationPrincipal CurrentAccount`, so nothing else has to know about API Keys. What sets such a request apart:
+
+- **No session.** The filter puts the Account into the request's security context and nowhere else, so the request creates no session. If it also carries a session cookie, the API Key wins, and an API Key that isn't accepted is refused without falling back to the session.
+- **No CSRF token.** The token guards against a browser sending cookies on another website's behalf. A browser never adds an `Authorization` header by itself, so `SecurityConfiguration` leaves requests with an API Key out of the CSRF check. Only a header that starts with `Bearer bk_` counts; any other `Authorization` header, such as one from a reverse proxy, is left alone.
+- **No signing in.** A rule in `SecurityConfiguration` refuses API Keys at every address about signing in: signing in and out, registering, Reset Links, and changing the password, passkeys or API Keys. `ApiKeyAuthentication`, the kind of authentication the filter creates, is how the rule tells such a request apart.
+
+Creating an API Key is confirmed with the password or a passkey, because an API Key outlives the session it was made in. The passkey's options come from `POST /api/account/api-keys/passkey-options` and wait in the session apart from those for signing in (`Passkeys.startConfirming` and `confirm`). Disabling an Account deletes its API Keys; changing its password doesn't.
+
+To try the API with an API Key, create one on the settings page and send it along:
+
+```bash
+curl -H "Authorization: Bearer bk_..." http://localhost:8080/api/session
+```
+
+```bash
+curl -X POST -H "Authorization: Bearer bk_..." -H "Content-Type: application/json" -d '{"name": "Zsófi"}' http://localhost:8080/api/players
+```
+
+`GET /api/session` tells a program which Account it acts as and what it may do. In Swagger UI, the **Authorize** button takes an API Key and sends it with every "Try it out"; `ApiDocumentationConfiguration` declares it. Until the first release, the API changes along with the frontend, so a program may need changing after an update.
+
+**Tests.** `ApiKeyTests` sends requests as a script would: only the header, without cookies or a CSRF token.
+
 ### Forms in the frontend
 
 A form is described once with Zod, which gives both the checks and the TypeScript type, and run by React Hook Form. `frontend/src/features/session/SignInPage.tsx` is the example to copy. `TextField` draws a labelled input with its hint and error; `FormProblem` shows why the server refused a submission.

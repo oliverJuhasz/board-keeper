@@ -27,6 +27,11 @@ public enum Permission {
     CHANGE_PLAYS_TAKEN_PART_IN(false),
     /** Edit or delete any Play, whoever recorded it or played in it. */
     CHANGE_ANY_PLAY(false),
+    /**
+     * Create API Keys for the Account's own use, and use them (ADR 0017). Without it, the
+     * Account's API Keys stop working, but it can still see and delete them.
+     */
+    USE_API_KEYS(false),
     /** Create and cancel Invites and Reset Links. */
     MANAGE_INVITES(true),
     /** See the Accounts, give and take their Roles, and disable them. */

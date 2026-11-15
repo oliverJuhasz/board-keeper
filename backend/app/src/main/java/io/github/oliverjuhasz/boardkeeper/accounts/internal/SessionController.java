@@ -54,7 +54,8 @@ class SessionController {
     @Operation(
             summary = "Who is signed in",
             description = "Open to everyone. Without a sign-in the answer has no account. "
-                    + "The frontend calls this first: the answer also sets the XSRF-TOKEN cookie.",
+                    + "The frontend calls this first: the answer also sets the XSRF-TOKEN cookie. "
+                    + "With an API Key, it answers for the API Key's Account, with the Permissions the API Key has.",
             operationId = "getSession")
     SessionResponse current(
             @AuthenticationPrincipal CurrentAccount account, @Parameter(hidden = true) CsrfToken csrfToken) {

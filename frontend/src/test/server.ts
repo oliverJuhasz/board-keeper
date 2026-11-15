@@ -25,4 +25,6 @@ export const server = setupServer(
   http.get("*/api/plays", () => HttpResponse.json({ plays: [] })),
   // Where the source code of the running version is, for the account menu.
   http.get("*/api/about", () => HttpResponse.json(about)),
+  // The settings page lists the Account's API Keys. Unless a test says otherwise, there are none.
+  http.get("*/api/account/api-keys", () => HttpResponse.json([])),
 )

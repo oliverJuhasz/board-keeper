@@ -49,6 +49,7 @@ Milestones M0 to M6 are done, which are all the milestones planned for v1. Board
 - installing Board Keeper as an app on a phone's home screen, with a notice when a new version is ready
 - recording Plays without a connection: they wait on the device and are sent once Board Keeper can be reached
 - Roles made of fine-grained Permissions, with pages for managing Roles and Accounts
+- API Keys, with which scripts and AI agents use Board Keeper as an Account, and the API described in Swagger UI
 - password changes and Reset Links
 
 What might come after v1 is listed under Later in the [roadmap](docs/roadmap.md).
