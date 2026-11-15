@@ -12,11 +12,15 @@ import { FieldGroup } from "@/components/ui/field"
 import { newPassword, required } from "@/features/session/accountRules"
 import { useSession } from "@/features/session/useSession"
 import { LanguageSelect } from "@/i18n/LanguageSelect"
+import { ApiKeysCard } from "./ApiKeysCard"
 import { PasskeysCard } from "./PasskeysCard"
 
 const passwordForm = z.object({ currentPassword: required, newPassword })
 
-/** What someone can change about their own Account: the language, the password and passkeys. */
+/**
+ * What someone can change about their own Account: the language, the password, passkeys and
+ * API Keys.
+ */
 export function SettingsPage() {
   const { t } = useTranslation()
   // Only an installation whose address is set offers passkeys.
@@ -83,6 +87,7 @@ export function SettingsPage() {
       </Card>
 
       {passkeys && <PasskeysCard />}
+      <ApiKeysCard />
     </div>
   )
 }

@@ -15,6 +15,7 @@ const adminOnly: Record<Permission, boolean> = {
   CHANGE_PLAYS_RECORDED: false,
   CHANGE_PLAYS_TAKEN_PART_IN: false,
   CHANGE_ANY_PLAY: false,
+  USE_API_KEYS: false,
   MANAGE_INVITES: true,
   MANAGE_ACCOUNTS: true,
   MANAGE_ROLES: true,

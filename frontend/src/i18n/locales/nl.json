@@ -341,7 +341,11 @@
     },
     "access": {
       "notSignedIn": "Je bent niet meer ingelogd.",
-      "denied": "Je mag dit niet doen."
+      "denied": "Je mag dit niet doen.",
+      "apiKeyNotValid": "Deze API-sleutel is niet geldig.",
+      "apiKeyExpired": "Deze API-sleutel is verlopen.",
+      "apiKeysNotAllowed": "Dit account mag geen API-sleutels gebruiken.",
+      "deniedToApiKey": "Een API-sleutel kan dit niet. API-sleutels doen nooit beheerderswerk en wijzigen nooit hoe een account inlogt."
     },
     "resetLinks": {
       "notValid": "Deze link werkt niet meer. Vraag een nieuwe aan."
@@ -365,7 +369,13 @@
     "passkeys": {
       "notAdded": "De passkey kon niet worden toegevoegd. Probeer het nog eens.",
       "notFound": "Deze passkey bestaat niet meer.",
-      "unavailable": "Deze Board Keeper biedt geen passkeys."
+      "unavailable": "Deze Board Keeper biedt geen passkeys.",
+      "notConfirmed": "De passkey heeft niet bevestigd dat jij het bent. Probeer het opnieuw, of gebruik je wachtwoord."
+    },
+    "apiKeys": {
+      "confirmationNeeded": "Bevestig met je wachtwoord of een passkey dat jij het bent.",
+      "nameTaken": "Je hebt al een API-sleutel met deze naam.",
+      "notFound": "Deze API-sleutel bestaat niet meer."
     }
   },
   "nav": {
@@ -502,6 +512,51 @@
         "description": "Je kunt er dan niet meer mee inloggen. Je wachtwoord en je andere passkeys blijven werken. Je apparaat toont hem misschien nog, tot je hem daar ook verwijdert.",
         "confirm": "Passkey verwijderen"
       }
+    },
+    "apiKeys": {
+      "title": "API-sleutels",
+      "description": "Laat een programma, zoals een script of een AI-agent, Board Keeper als jou gebruiken. Een API-sleutel kan alles wat jij kunt, behalve beheerderswerk en wijzigen hoe je inlogt.",
+      "loading": "Je API-sleutels laden",
+      "loadFailed": "Je API-sleutels konden niet worden geladen",
+      "none": "Je hebt nog geen API-sleutels.",
+      "created": "Gemaakt op {{date}}",
+      "lastUsed": "laatst gebruikt op {{date}}",
+      "neverUsed": "nog niet gebruikt",
+      "expires": "verloopt op {{date}}",
+      "expired": "verlopen op {{date}}",
+      "neverExpires": "verloopt nooit",
+      "notAllowed": "Je API-sleutels werken op dit moment niet, omdat je account geen API-sleutels meer mag gebruiken. Een beheerder kan dat weer toestaan.",
+      "delete": "{{name}} verwijderen",
+      "create": "API-sleutel maken",
+      "createDialog": {
+        "title": "API-sleutel maken",
+        "description": "Een programma stuurt hem mee met elk verzoek. Hij werkt tot hij verloopt of tot je hem verwijdert.",
+        "name": "Naam",
+        "nameHint": "Om je API-sleutels uit elkaar te houden, zoals \"Backupscript\".",
+        "expiry": "Verloopt",
+        "expiries": {
+          "THIRTY_DAYS": "Over 30 dagen",
+          "NINETY_DAYS": "Over 90 dagen",
+          "ONE_YEAR": "Over een jaar",
+          "NEVER": "Nooit"
+        },
+        "password": "Je wachtwoord",
+        "passwordHint": "Om te bevestigen dat jij het bent.",
+        "submit": "API-sleutel maken",
+        "withPasskey": "Liever bevestigen met een passkey"
+      },
+      "createdDialog": {
+        "title": "Je nieuwe API-sleutel",
+        "description": "Kopieer hem nu en bewaar hem goed: hij wordt niet nog eens getoond. Wie hem heeft, kan Board Keeper als jou gebruiken.",
+        "label": "API-sleutel",
+        "howToUse": "Een programma stuurt hem mee in een header: Authorization: Bearer, gevolgd door de sleutel.",
+        "copy": "API-sleutel kopiëren"
+      },
+      "deleteDialog": {
+        "title": "De API-sleutel \"{{name}}\" verwijderen?",
+        "description": "Programma's die hem gebruiken, werken meteen niet meer.",
+        "confirm": "API-sleutel verwijderen"
+      }
     }
   },
   "accounts": {
@@ -558,6 +613,10 @@
     "CHANGE_ANY_PLAY": {
       "name": "Alle partijen wijzigen",
       "hint": "Elke partij bewerken en verwijderen, wie hem ook heeft vastgelegd of gespeeld."
+    },
+    "USE_API_KEYS": {
+      "name": "API-sleutels gebruiken",
+      "hint": "API-sleutels maken, zodat scripts en AI-agents Board Keeper namens hen kunnen gebruiken."
     },
     "MANAGE_INVITES": {
       "name": "Uitnodigingen beheren",

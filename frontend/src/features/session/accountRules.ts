@@ -22,6 +22,9 @@ export const playerName = z
 /** The name of a passkey, such as "My phone" (Passkeys.MAX_LABEL_LENGTH). */
 export const passkeyLabel = playerName
 
+/** The name of an API Key, such as "Backup script" (ApiKeys.MAX_NAME_LENGTH). */
+export const apiKeyName = playerName
+
 export const gameName = z
   .string()
   .trim()

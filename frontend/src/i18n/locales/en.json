@@ -341,7 +341,11 @@
     },
     "access": {
       "notSignedIn": "You are no longer signed in.",
-      "denied": "You aren't allowed to do this."
+      "denied": "You aren't allowed to do this.",
+      "apiKeyNotValid": "This API key isn't valid.",
+      "apiKeyExpired": "This API key has expired.",
+      "apiKeysNotAllowed": "This account may not use API keys.",
+      "deniedToApiKey": "An API key can't do this. API keys never do admin work or change how an account signs in."
     },
     "resetLinks": {
       "notValid": "This reset link doesn't work any more. Ask for a new one."
@@ -365,7 +369,13 @@
     "passkeys": {
       "notAdded": "The passkey couldn't be added. Please try again.",
       "notFound": "This passkey no longer exists.",
-      "unavailable": "This Board Keeper doesn't offer passkeys."
+      "unavailable": "This Board Keeper doesn't offer passkeys.",
+      "notConfirmed": "The passkey didn't confirm it's you. Try again, or use your password."
+    },
+    "apiKeys": {
+      "confirmationNeeded": "Confirm it's you with your password or a passkey.",
+      "nameTaken": "You already have an API key with this name.",
+      "notFound": "This API key no longer exists."
     }
   },
   "nav": {
@@ -502,6 +512,51 @@
         "description": "It won't sign you in any more. Your password and your other passkeys keep working. Your device may still list it until you delete it there too.",
         "confirm": "Remove passkey"
       }
+    },
+    "apiKeys": {
+      "title": "API keys",
+      "description": "Let a program, such as a script or an AI agent, use Board Keeper as you. An API key can do what you can, except admin work and changing how you sign in.",
+      "loading": "Loading your API keys",
+      "loadFailed": "Couldn't load your API keys",
+      "none": "You have no API keys yet.",
+      "created": "Created {{date}}",
+      "lastUsed": "last used {{date}}",
+      "neverUsed": "not used yet",
+      "expires": "expires {{date}}",
+      "expired": "expired {{date}}",
+      "neverExpires": "never expires",
+      "notAllowed": "Your API keys don't work at the moment, because your account may no longer use API keys. An admin can allow it again.",
+      "delete": "Delete {{name}}",
+      "create": "Create an API key",
+      "createDialog": {
+        "title": "Create an API key",
+        "description": "A program sends it with every request. It works until it expires or you delete it.",
+        "name": "Name",
+        "nameHint": "To tell your API keys apart, such as \"Backup script\".",
+        "expiry": "Expires",
+        "expiries": {
+          "THIRTY_DAYS": "In 30 days",
+          "NINETY_DAYS": "In 90 days",
+          "ONE_YEAR": "In a year",
+          "NEVER": "Never"
+        },
+        "password": "Your password",
+        "passwordHint": "To confirm it's you.",
+        "submit": "Create API key",
+        "withPasskey": "Confirm with a passkey instead"
+      },
+      "createdDialog": {
+        "title": "Your new API key",
+        "description": "Copy it now and keep it safe: it won't be shown again. Whoever has it can use Board Keeper as you.",
+        "label": "API key",
+        "howToUse": "A program sends it in a header: Authorization: Bearer, then the key.",
+        "copy": "Copy API key"
+      },
+      "deleteDialog": {
+        "title": "Delete the API key \"{{name}}\"?",
+        "description": "Programs that use it stop working at once.",
+        "confirm": "Delete API key"
+      }
     }
   },
   "accounts": {
@@ -558,6 +613,10 @@
     "CHANGE_ANY_PLAY": {
       "name": "Change any play",
       "hint": "Edit and delete every play, whoever recorded it or played in it."
+    },
+    "USE_API_KEYS": {
+      "name": "Use API keys",
+      "hint": "Create API keys, so that scripts and AI agents can use Board Keeper as them."
     },
     "MANAGE_INVITES": {
       "name": "Manage invites",

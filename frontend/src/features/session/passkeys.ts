@@ -54,6 +54,15 @@ async function choosePasskey(options: unknown, conditional: boolean, signal?: Ab
   return credential.toJSON()
 }
 
+/**
+ * Asks for one of the signed-in Account's own passkeys, to confirm that it's really them before
+ * something that needs more than being signed in, such as creating an API Key. The options come
+ * from the server and name that Account's passkeys.
+ */
+export function confirmWithPasskey(options: unknown) {
+  return choosePasskey(options, false)
+}
+
 async function signInWithPasskey(
   staySignedIn: boolean,
   conditional: boolean,

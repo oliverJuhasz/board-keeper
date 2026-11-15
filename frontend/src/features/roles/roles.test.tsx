@@ -118,8 +118,9 @@ test("offers only the permissions a role can hold", async () => {
 
   // Managing roles, accounts and invites is for admins only.
   const dialog = await screen.findByRole("dialog")
-  expect(within(dialog).getAllByRole("checkbox")).toHaveLength(10)
+  expect(within(dialog).getAllByRole("checkbox")).toHaveLength(11)
   expect(within(dialog).getByRole("checkbox", { name: "Change any play" })).toBeInTheDocument()
+  expect(within(dialog).getByRole("checkbox", { name: "Use API keys" })).toBeInTheDocument()
   expect(within(dialog).getByRole("checkbox", { name: "Create players" })).toBeInTheDocument()
   expect(within(dialog).queryByRole("checkbox", { name: "Manage roles" })).not.toBeInTheDocument()
   expect(
