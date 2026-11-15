@@ -1,3 +1,4 @@
+import { execSync } from "node:child_process"
 import path from "node:path"
 import tailwindcss from "@tailwindcss/vite"
 import react from "@vitejs/plugin-react"
@@ -5,8 +6,27 @@ import { VitePWA } from "vite-plugin-pwa"
 import { defineConfig } from "vitest/config"
 import { thirdPartyLicenses } from "./vite-plugins/thirdPartyLicenses.ts"
 
+/**
+ * The version of the app: the commit it is built from, or, where Git can't tell, the moment of the
+ * build. What the app keeps on a device belongs to one version (src/api/persistence.ts).
+ */
+function appVersion() {
+  try {
+    return execSync("git rev-parse HEAD", {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim()
+  } catch {
+    return `built-${Date.now()}`
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
+  // Names that Vite replaces with a value in the code it builds, declared in src/appVersion.d.ts.
+  define: {
+    __APP_VERSION__: JSON.stringify(appVersion()),
+  },
   plugins: [
     react(),
     tailwindcss(),
