@@ -38,6 +38,7 @@ Board Keeper expects a reverse proxy in front of it to handle https: the proxy h
 
 - Pass every path through, unchanged. The web app, the API (`/api/…`) and the health check (`/actuator/health`) all live at the same address.
 - Send the `X-Forwarded-Proto` header (and preferably `X-Forwarded-Host` and `X-Forwarded-For`), so Board Keeper knows the visitor came in over https. Most proxies do this by default.
+- Pass the `Authorization` header through, for programs that use an API Key. Most proxies do this by default.
 - Nothing else is needed: no WebSockets, no sticky sessions.
 
 Set `BOARDKEEPER_URL` to the address the proxy answers at, exactly as people type it, and start Board Keeper again with `docker compose up -d`.
@@ -92,6 +93,10 @@ docker compose exec app java -jar board-keeper.jar --reset-link-for=USERNAME
 ```
 
 It prints a one-time link such as `/reset-password/…`. Add it to your address and open it to choose a new password. It works for 24 hours. Board Keeper keeps running meanwhile.
+
+## Letting programs use Board Keeper
+
+A script or an AI agent can use Board Keeper with an API Key, which someone creates on their settings page. It acts as their Account, but never does Admin work. Admins may use API Keys from the start; to let others, give the permission "Use API keys" to one of their Roles. Taking it away stops their API Keys at once, and disabling an Account deletes them. The API is described at `/swagger-ui.html` on your installation.
 
 ## Checking that it runs
 
