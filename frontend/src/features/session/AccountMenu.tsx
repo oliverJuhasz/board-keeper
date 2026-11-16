@@ -20,8 +20,6 @@ export function AccountMenu() {
   const queryClient = useQueryClient()
   const account = useSession().data?.account
   const can = useCan()
-  // Where the source code of the running version is. It changes only with a new version.
-  const about = api.useQuery("get", "/api/about", {}, { staleTime: Infinity })
 
   const signOut = api.useMutation("delete", "/api/session", {
     onSuccess: () => {
@@ -67,14 +65,9 @@ export function AccountMenu() {
         {can("MANAGE_ROLES") && (
           <DropdownMenuItem render={<Link to="/roles" />}>{t("account.roles")}</DropdownMenuItem>
         )}
-        {about.data && (
-          // Board Keeper's licence, the AGPL, asks that everyone using it can get its source (ADR 0016).
-          <DropdownMenuItem
-            render={<a href={about.data.sourceCode} target="_blank" rel="noreferrer" />}
-          >
-            {t("account.sourceCode")}
-          </DropdownMenuItem>
-        )}
+        {/* The version that is running and where its source code is: Board Keeper's licence, the
+            AGPL, asks that everyone using it can get its source (ADR 0016). */}
+        <DropdownMenuItem render={<Link to="/about" />}>{t("account.about")}</DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => signOut.mutate({})}>
           {t("account.signOut")}

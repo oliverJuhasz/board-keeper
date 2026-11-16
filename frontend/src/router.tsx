@@ -127,6 +127,10 @@ export function appRoutes(): RouteObject[] {
             Component: async () => (await import("./features/settings/SettingsPage")).SettingsPage,
           },
         },
+        {
+          path: "about",
+          lazy: { Component: async () => (await import("./features/about/AboutPage")).AboutPage },
+        },
         { path: "*", element: <NotFoundPage /> },
       ],
     },

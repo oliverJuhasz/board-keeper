@@ -262,6 +262,36 @@
       "signIn": "Naar inloggen"
     }
   },
+  "about": {
+    "title": "Over Board Keeper",
+    "loading": "De versie laden",
+    "loadFailed": "De versie kon niet worden geladen",
+    "version": {
+      "release": "Versie {{version}}",
+      "snapshot": "Snapshot",
+      "unknown": "Versie onbekend",
+      "unknownHint": "Deze kopie is zonder Git gebouwd, dus de versie is niet bekend.",
+      "changes_one": "1 wijziging na {{release}}",
+      "changes_other": "{{count}} wijzigingen na {{release}}",
+      "noRelease": "nog geen release",
+      "uncommitted": "met niet-gecommitte wijzigingen",
+      "whatsNew": "Wat is er nieuw in {{version}}",
+      "device": "Dit apparaat heeft nog een andere versie van de app: {{version}}."
+    },
+    "message": "Ik heb Board Keeper gebouwd om het bijhouden van scores makkelijker te maken. Veel mooie partijen!",
+    "signature": "Oliver",
+    "source": {
+      "title": "Broncode",
+      "thisVersion": "De code van precies deze versie"
+    },
+    "licence": {
+      "title": "Licentie",
+      "text": "© 2026 Oliver Juhasz. Board Keeper is vrije software onder de GNU Affero General Public License, versie 3 of later. Er zit geen enkele garantie op.",
+      "full": "De tekst van de licentie",
+      "thirdParty": "Licenties van de gebruikte bibliotheken",
+      "trademarks": "Board Keeper is niet verbonden aan de uitgevers van de spellen waarvan het de punten telt. De namen van de spellen zijn van hun eigenaars."
+    }
+  },
   "account": {
     "menu": "Account",
     "signedInAs": "Ingelogd als {{username}}",
@@ -269,7 +299,7 @@
     "settings": "Instellingen",
     "accounts": "Accounts",
     "roles": "Rollen",
-    "sourceCode": "Broncode"
+    "about": "Over Board Keeper"
   },
   "password": {
     "show": "Wachtwoord tonen",

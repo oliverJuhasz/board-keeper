@@ -8,6 +8,6 @@ Board Keeper is free software under the GNU Affero General Public License, versi
 
 ## Consequences
 
-- The application offers its own source: a "Source code" link in the account menu leads to the commit the running version was built from. A changed copy points it at its own code.
+- The application offers its own source: the About page, opened from the account menu, links to the commit the running version was built from. A changed copy points the links there at its own code.
 - Game Modules run inside the application, so a module added to a copy is part of it and falls under the AGPL too.
 - Contributions come in under the same licence, so changing the licence later needs the agreement of everyone who contributed.

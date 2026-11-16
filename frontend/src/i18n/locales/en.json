@@ -262,6 +262,36 @@
       "signIn": "Go to sign in"
     }
   },
+  "about": {
+    "title": "About Board Keeper",
+    "loading": "Loading the version",
+    "loadFailed": "Couldn't load the version",
+    "version": {
+      "release": "Version {{version}}",
+      "snapshot": "Snapshot",
+      "unknown": "Version unknown",
+      "unknownHint": "This copy was built without Git, so it can't tell which version it is.",
+      "changes_one": "1 change after {{release}}",
+      "changes_other": "{{count}} changes after {{release}}",
+      "noRelease": "no release yet",
+      "uncommitted": "with uncommitted changes",
+      "whatsNew": "What's new in {{version}}",
+      "device": "This device still has another version of the app: {{version}}."
+    },
+    "message": "I built Board Keeper to make keeping track of scores easier. Have great plays!",
+    "signature": "Oliver",
+    "source": {
+      "title": "Source code",
+      "thisVersion": "The code of exactly this version"
+    },
+    "licence": {
+      "title": "Licence",
+      "text": "© 2026 Oliver Juhasz. Board Keeper is free software under the GNU Affero General Public License, version 3 or later. It comes without any warranty.",
+      "full": "The licence's text",
+      "thirdParty": "Licences of the libraries it uses",
+      "trademarks": "Board Keeper is not affiliated with the publishers of the games it scores. The names of the games belong to their owners."
+    }
+  },
   "account": {
     "menu": "Account",
     "signedInAs": "Signed in as {{username}}",
@@ -269,7 +299,7 @@
     "settings": "Settings",
     "accounts": "Accounts",
     "roles": "Roles",
-    "sourceCode": "Source code"
+    "about": "About Board Keeper"
   },
   "password": {
     "show": "Show password",

@@ -4,7 +4,7 @@ import { http, HttpResponse } from "msw"
 import { expect, test } from "vitest"
 import { anna, bence, gamesAre, problem, signedInAs, signedOut } from "@/test/api"
 import { renderApp } from "@/test/renderApp"
-import { about, server } from "@/test/server"
+import { server } from "@/test/server"
 
 const PASSWORD = "correct horse battery staple"
 
@@ -201,14 +201,13 @@ test("the account menu shows a member only what a member can use", async () => {
   expect(screen.queryByRole("menuitem", { name: "Roles" })).not.toBeInTheDocument()
 })
 
-test("the account menu links to the source code of the running version", async () => {
+test("the account menu leads to the page about Board Keeper", async () => {
   signedInAs(bence)
   gamesAre([])
   renderApp("/")
 
   await userEvent.click(await screen.findByRole("button", { name: "Account" }))
+  await userEvent.click(await screen.findByRole("menuitem", { name: "About Board Keeper" }))
 
-  const link = await screen.findByRole("menuitem", { name: "Source code" })
-  expect(link).toHaveAttribute("href", about.sourceCode)
-  expect(link).toHaveAttribute("target", "_blank")
+  expect(await screen.findByRole("heading", { name: "About Board Keeper" })).toBeInTheDocument()
 })
