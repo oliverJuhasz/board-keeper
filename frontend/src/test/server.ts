@@ -5,6 +5,7 @@ import { gameModules, gameModuleTexts } from "./gameModules"
 
 /** What the backend says about the running version. */
 export const about: About = {
+  uncommittedChanges: false,
   sourceCode:
     "https://github.com/oliverJuhasz/board-keeper/tree/1221b004748ae4f76d42d91dcdba7abb5890b2b7",
 }
