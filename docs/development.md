@@ -443,7 +443,7 @@ A guideline, not a promise:
    git push origin 1.2.3
    ```
 
-CI then checks that the tag is on a commit on `main` and that the changelog has a section for it, and stops if not. Otherwise it builds and tests as always, publishes the image as `1.2.3` and `latest`, and creates a GitHub Release with the changelog's section as its text.
+CI then checks that the tag is on a commit on `main` and that the changelog has a section for it, and stops if not. Otherwise it builds and tests as always, makes sure the build found its version, publishes the image as `1.2.3` and `latest`, and creates a GitHub Release with the changelog's section as its text.
 
 The image that was published as `sha-…` when the commit reached `main` was built before the tag was there, so it goes on calling itself a Snapshot. It holds the same code as the release.
 

@@ -93,6 +93,21 @@ jobs:
         working-directory: backend
         run: ./mvnw --batch-mode --no-transfer-progress verify
 
+      # The build has just read its version from git (see git-commit-id-maven-plugin in
+      # backend/app/pom.xml). Had it not found the tag, or had a step before it changed a file, the
+      # image would call itself a Snapshot: stop before such an image is published as a release.
+      - name: "Release: check that the build knows its version"
+        if: steps.release.outputs.version != ''
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          properties=backend/app/target/classes/git.properties
+          if ! grep -qE "^git\.tags=(.*,)?${VERSION//./\\.}(,.*)?$" "$properties" || ! grep -qx "git.dirty=false" "$properties"; then
+            echo "::error::The build doesn't know that it is $VERSION."
+            cat "$properties"
+            exit 1
+          fi
+
       - name: Log in to GitHub Container Registry
         if: github.ref == 'refs/heads/main' || steps.release.outputs.version != ''
         uses: docker/login-action@v4
