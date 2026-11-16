@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Adding a Player to a Play no longer moves the cursor to their points. It stays on the list of Players, ready for the next one, until nobody more can be added. Closing the dialog for a new Player brings it back there too.
+
 ## [1.0.0] - 2026-11-16
 
 ### Added

@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useQueryClient } from "@tanstack/react-query"
+import type { ComponentProps } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { z } from "zod"
@@ -25,15 +26,20 @@ const nameForm = z.object({ name: playerName })
  * The dialog for a Player's name: adds a Player, or renames the one it is given.
  *
  * @param onAdded called with the new Player once it has been added, before the dialog closes
+ * @param finalFocus where focus goes once the dialog has closed. Without it, focus is lost: the
+ *   dialog would give it back to what had it before, but only notes that once its own name field
+ *   has taken focus.
  */
 export function PlayerNameDialog({
   player,
   onAdded,
   onClose,
+  finalFocus,
 }: {
   player?: Player
   onAdded?: (player: Player) => void
   onClose: () => void
+  finalFocus?: ComponentProps<typeof DialogContent>["finalFocus"]
 }) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
@@ -63,7 +69,7 @@ export function PlayerNameDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent>
+      <DialogContent finalFocus={finalFocus}>
         {/* The dialog can be opened from inside another form. React passes events up through
             the components, not the page, so without stopPropagation submitting this form would
             submit that one too. */}

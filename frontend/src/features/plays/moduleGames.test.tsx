@@ -206,6 +206,26 @@ test("a game says how many can play", async () => {
   expect(screen.queryByText("Add at least one player.")).not.toBeInTheDocument()
 })
 
+test("focus stays on the list of players until the game is full, then moves on to the pad", async () => {
+  await startCalico()
+  const eszter = { id: "0193a000-0000-7000-8000-0000000000b9", name: "Eszter" }
+  server.use(http.post("*/api/players", () => HttpResponse.json(eszter)))
+
+  // Someone else may still join, so the pad can wait.
+  await userEvent.selectOptions(screen.getByLabelText("Add a player"), "Anna")
+  expect(screen.getByLabelText("Design goals of Anna")).toBeInTheDocument()
+  expect(screen.getByLabelText("Add a player")).toHaveFocus()
+  await userEvent.selectOptions(screen.getByLabelText("Add a player"), "Dora")
+  expect(screen.getByLabelText("Add a player")).toHaveFocus()
+
+  // Calico is for at most four: the last one fills the game, so their column is next.
+  await userEvent.selectOptions(screen.getByLabelText("Add a player"), "Add a new player…")
+  const dialog = await screen.findByRole("dialog", { name: "Add a player" })
+  await userEvent.type(within(dialog).getByLabelText("Name"), "Eszter{Enter}")
+  expect(await screen.findByText("This game is for at most 4 players.")).toBeInTheDocument()
+  await waitFor(() => expect(screen.getByLabelText("Design goals of Eszter")).toHaveFocus())
+})
+
 test("a tie is explained in the game's own words", async () => {
   const { sent } = await startCalico()
   await userEvent.selectOptions(screen.getByLabelText("Add a player"), "Anna")
