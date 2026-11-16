@@ -44,6 +44,7 @@ Changing Plays without a connection, teams, unfinished plays, game nights, impor
 - Limits on the number of sign-in attempts. Left out while the app sits on a private network.
 - Before publishing the repository: ARM images.
 - Versioning the API, before Board Keeper is published. Until then the API changes along with the frontend, so a script that uses it may need changing after an update.
+- Moving to Maven 4 once it is released. Its new pom format no longer needs each module to repeat its parent's version.
 - An MCP server, so that AI agents can use Board Keeper through tools such as recording a Play. Until then they use the API with an API Key (ADR 0017).
 
 ## Milestones
