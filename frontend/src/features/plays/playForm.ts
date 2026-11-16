@@ -583,3 +583,23 @@ export function playAgain(
       .map((playerId) => newPlayerRow(module.scorePad, playerId)),
   }
 }
+
+/**
+ * The form for another Play after a recorded one, as "Record another play" on its page opens
+ * it: as playAgain, and on the same day at the same place. Notes belong to one Play, so they
+ * are not carried over.
+ *
+ * @param playerIds the Players that exist today; anyone removed since is left out
+ */
+export function anotherPlay(
+  module: GameModule,
+  game: Game,
+  previous: Play,
+  playerIds: string[],
+): PlayFormValues {
+  return {
+    ...playAgain(module, game, previous, playerIds),
+    playedOn: previous.playedOn,
+    location: previous.location ?? "",
+  }
+}
