@@ -10,13 +10,15 @@ import { useGameModuleTextsQuery } from "@/features/games/useGameModuleTexts"
 import { useCurrentAccount } from "@/features/session/useSession"
 import { uuidv7 } from "@/lib/uuid"
 import { PlayEntryForm } from "./PlayEntryForm"
-import { blankPlay, fromNewPlay, playAgain } from "./playForm"
+import { anotherPlay, blankPlay, fromNewPlay, playAgain } from "./playForm"
 import { playKey, playsKey } from "./playQueries"
 import { forgetWaiting, keepWaiting, useWaitingPlay, type WaitingPlay } from "./waitingPlays"
 
 /**
  * Records a Play of the Game named in the address: /plays/new?game=<id>. With &again=<id> of
- * an earlier Play, the form starts with that Play's Players and choices. With &waiting=<id> of
+ * an earlier Play, the form starts with that Play's Players and choices. With &another=<id>, it
+ * starts with its date and location as well, for one more Play on the same day at the same
+ * place: "Record another play" on a Play's page leads here. With &waiting=<id> of
  * a Play that waits on this device to be sent, the form starts with that Play, to put right
  * what kept it from being recorded.
  */
@@ -27,7 +29,9 @@ export function RecordPlayPage() {
   // The part of the address after the "?".
   const [searchParams] = useSearchParams()
   const gameId = searchParams.get("game")
-  const againId = searchParams.get("again")
+  const anotherId = searchParams.get("another")
+  // The earlier Play the form starts from, if there is one.
+  const againId = anotherId ?? searchParams.get("again")
   const waiting = useWaitingPlay(account.id, searchParams.get("waiting"))
   const games = api.useQuery("get", "/api/games")
   // Without a connection, the Play to play again may still be in the history kept on the
@@ -87,6 +91,7 @@ export function RecordPlayPage() {
             module={module}
             players={players.data ?? []}
             previous={again?.game.id === game.id ? again : undefined}
+            another={anotherId !== null}
             waiting={waiting?.play.gameId === game.id ? waiting : undefined}
           />
         )
@@ -108,6 +113,7 @@ function RecordPlay({
   module,
   players,
   previous,
+  another,
   waiting,
 }: {
   game: Game
@@ -115,6 +121,8 @@ function RecordPlay({
   players: Player[]
   /** The Play to play again, whose Players and choices the form starts with. */
   previous?: Play
+  /** Whether the new Play follows `previous` on the same day, at the same place. */
+  another: boolean
   /** The Play that waits on this device, which the form starts with. */
   waiting?: WaitingPlay
 }) {
@@ -178,7 +186,7 @@ function RecordPlay({
         waiting
           ? fromNewPlay(module, waiting.play)
           : previous
-            ? playAgain(
+            ? (another ? anotherPlay : playAgain)(
                 module,
                 game,
                 previous,
