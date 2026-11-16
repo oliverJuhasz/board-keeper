@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-16
+
 ### Added
 
 - Accounts that sign in with a password or a Passkey. The first Admin is created through a one-time Setup Link, everyone else through an Invite. A forgotten password is solved with a Reset Link.
@@ -25,4 +27,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - An About page, opened from the account menu: the running version, where its source code is, and the licence.
 - A container image, an example Docker Compose file and a self-hosting guide. Images are tagged with their version, `latest` for the newest release, `snapshot` for the newest change, and `sha-…` for each change.
 
-[unreleased]: https://github.com/oliverJuhasz/board-keeper/commits/main
+[unreleased]: https://github.com/oliverJuhasz/board-keeper/compare/1.0.0...HEAD
+[1.0.0]: https://github.com/oliverJuhasz/board-keeper/releases/tag/1.0.0
