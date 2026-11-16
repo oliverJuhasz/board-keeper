@@ -45,7 +45,7 @@ Set `BOARDKEEPER_URL` to the address the proxy answers at, exactly as people typ
 
 ## Updating
 
-Each version of Board Keeper is published as a container image. To update to the newest:
+Board Keeper is published as container images. `BOARD_KEEPER_IMAGE` in `.env` says which one runs; left out, it is `latest`, the newest release. To update to it:
 
 ```bash
 docker compose pull
@@ -54,7 +54,22 @@ docker compose up -d
 
 Board Keeper updates its database by itself when it starts. Sessions survive, so nobody is signed out. Phones and browsers that have Board Keeper open show "A new version of Board Keeper is ready" with a Reload button.
 
-Every published image is also tagged after the change it was built from, such as `sha-1a2b3c4`, besides `latest`. To run a particular version, set `BOARD_KEEPER_IMAGE` in `.env` to `ghcr.io/oliverjuhasz/board-keeper:sha-1a2b3c4` and run the two commands above. Going back to an older version than the one that last ran is possible only from a backup made with that older version: database updates only go forward.
+Every image has a tag, the part after the colon in `ghcr.io/oliverjuhasz/board-keeper:latest`:
+
+| Tag | What it is |
+|---|---|
+| `latest` | The newest release. |
+| `1.2.3` | One release. It never changes. |
+| `snapshot` | The newest change, released or not. It is usually ahead of `latest`, and less tried. |
+| `sha-1a2b3c4` | One change, named after its commit. It never changes. |
+
+To run something other than the newest release, set `BOARD_KEEPER_IMAGE` in `.env`, for example to `ghcr.io/oliverjuhasz/board-keeper:1.2.3`, and run the two commands above.
+
+**About Board Keeper**, in the account menu, shows what is running. A release shows its number. Anything else shows as a Snapshot, with its `sha-…` tag and how many changes it is past the newest release.
+
+What changed in each release is in [`CHANGELOG.md`](../CHANGELOG.md). When the first number of a version goes up, as from 1.4.0 to 2.0.0, updating needs something from you, such as a setting that was renamed: read the changelog first.
+
+Going back to an older version than the one that last ran is possible only from a backup made with that older version: database updates only go forward.
 
 ## Backups
 
@@ -110,7 +125,17 @@ docker compose logs --tail 100 app
 
 ## If you change Board Keeper's code
 
-Board Keeper is under the GNU Affero General Public License. Running it unchanged asks nothing of you. If you change its code and let others use your copy, the licence asks you to offer them your changed source. The "Source code" link in the account menu points to Board Keeper's own repository; point it at yours with the `BOARDKEEPER_SOURCE_URL` environment variable of the `app` container, where `{commit}` stands for the commit your build was made from, such as `https://example.org/you/board-keeper/tree/{commit}`.
+Board Keeper is under the GNU Affero General Public License. Running it unchanged asks nothing of you. If you change its code and let others use your copy, the licence asks you to offer them your changed source. The About page, opened from the account menu, links to Board Keeper's own repository; point its links at yours with these environment variables of the `app` container:
+
+| Variable | What it is |
+|---|---|
+| `BOARDKEEPER_SOURCE_REPOSITORY` | Your repository's page, such as `https://example.org/you/board-keeper`. The page shows the address itself. |
+| `BOARDKEEPER_SOURCE_URL` | The code of the version that runs, where `{commit}` stands for the commit your build was made from, such as `https://example.org/you/board-keeper/tree/{commit}`. |
+| `BOARDKEEPER_SOURCE_RELEASES` | What is new in a release, where `{version}` stands for the release, such as `https://example.org/you/board-keeper/releases/{version}`. |
+
+Set the first or the last to nothing (`BOARDKEEPER_SOURCE_REPOSITORY=`) and the page leaves that link out.
+
+Your copy calls itself a version, such as 1.2.3, only when it is built from a commit that has that git tag. Any other build is a Snapshot.
 
 ## Settings
 
@@ -119,7 +144,7 @@ Board Keeper is under the GNU Affero General Public License. Running it unchange
 | `POSTGRES_PASSWORD` | The database's password. Required. |
 | `BOARDKEEPER_URL` | The https address people open. Passkeys need it. |
 | `BOARD_KEEPER_PORT` | The port on the machine that Board Keeper answers on. 8080 if left out. |
-| `BOARD_KEEPER_IMAGE` | The image to run. The newest (`ghcr.io/oliverjuhasz/board-keeper:latest`) if left out. |
+| `BOARD_KEEPER_IMAGE` | The image to run. The newest release (`ghcr.io/oliverjuhasz/board-keeper:latest`) if left out. "Updating" lists the other tags. |
 
 ## When something is wrong
 
