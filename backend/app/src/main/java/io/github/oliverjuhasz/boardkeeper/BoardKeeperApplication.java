@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
 /**
  * The application's entry point.
@@ -17,8 +18,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * application does that command's work and stops, instead of serving Board Keeper. It then runs
  * with the {@value #COMMAND_PROFILE} profile, whose settings are in
  * {@code application-command.properties}.
+ *
+ * <p>{@code @ConfigurationPropertiesScan} makes Spring Boot look through the modules for records
+ * marked {@code @ConfigurationProperties}, which hold a group of settings, such as {@code SourceCode}.
  */
 @SpringBootApplication
+@ConfigurationPropertiesScan
 public class BoardKeeperApplication {
 
     public static final String COMMAND_PROFILE = "command";

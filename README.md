@@ -6,6 +6,7 @@ A self-hosted app for recording board game plays and scores, for personal use an
 - Architecture decisions: [`docs/adr/`](docs/adr/)
 - Scope and milestones: [`docs/roadmap.md`](docs/roadmap.md)
 - Building, running and changing it: [`docs/development.md`](docs/development.md)
+- What changed in each release: [`CHANGELOG.md`](CHANGELOG.md)
 
 ## Stack
 
@@ -28,7 +29,7 @@ Board Keeper is a learning project first ([ADR 0001](docs/adr/0001-learning-proj
 | Tests | Vitest, React Testing Library, Mock Service Worker; Playwright end-to-end tests once the frontend is complete |
 | Lint and format | ESLint, Prettier |
 
-**Deployment:** GitHub Actions builds and tests every push and publishes the container image to GitHub Container Registry. It runs as one app container (Spring Boot serves both the API and the built frontend) plus one PostgreSQL container. The repository provides the image, an example compose file and a [self-hosting guide](docs/self-hosting.md). Anything specific to one installation is out of scope: network access, reverse proxy, automatic updates and backup scheduling. On first start, with no accounts yet, the app writes a one-time link to its log for creating the first Admin. If the only Admin forgets their password, a command run on the container writes a Reset Link for them.
+**Deployment:** GitHub Actions builds and tests every push and publishes the container image to GitHub Container Registry: every change on `main` as a snapshot, and every release, which is a git tag such as `1.2.3` ([ADR 0018](docs/adr/0018-releases-are-git-tags.md)). It runs as one app container (Spring Boot serves both the API and the built frontend) plus one PostgreSQL container. The repository provides the image, an example compose file and a [self-hosting guide](docs/self-hosting.md). Anything specific to one installation is out of scope: network access, reverse proxy, automatic updates and backup scheduling. On first start, with no accounts yet, the app writes a one-time link to its log for creating the first Admin. If the only Admin forgets their password, a command run on the container writes a Reset Link for them.
 
 **Building needs Docker**, because jOOQ code is generated from a throwaway PostgreSQL ([ADR 0007](docs/adr/0007-flyway-and-jooq-codegen-from-real-postgres.md)).
 
@@ -51,6 +52,7 @@ Milestones M0 to M6 are done, which are all the milestones planned for v1. Board
 - Roles made of fine-grained Permissions, with pages for managing Roles and Accounts
 - API Keys, with which scripts and AI agents use Board Keeper as an Account, and the API described in Swagger UI
 - password changes and Reset Links
+- an About page with the version that is running, where its source code is, and the licence
 
 What might come after v1 is listed under Later in the [roadmap](docs/roadmap.md).
 
@@ -60,7 +62,7 @@ Copyright (C) 2026 Oliver Juhasz
 
 Board Keeper is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. It is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See [`LICENSE`](LICENSE) for the full terms.
 
-In short: anyone may use, change and share Board Keeper, also for money. Whoever shares a copy, or runs a changed copy for others, must offer its source code under the same licence. The "Source code" link in the account menu makes that offer for the running version ([ADR 0016](docs/adr/0016-agpl-licence.md)).
+In short: anyone may use, change and share Board Keeper, also for money. Whoever shares a copy, or runs a changed copy for others, must offer its source code under the same licence. The About page, opened from the account menu, makes that offer for the running version ([ADR 0016](docs/adr/0016-agpl-licence.md)).
 
 The web app includes libraries under licences of their own, listed in `third-party-licenses.txt` beside it (`/third-party-licenses.txt` on a running installation). The backend's libraries keep their licence files inside their own jars.
 

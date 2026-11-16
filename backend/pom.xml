@@ -15,7 +15,9 @@
 
     <groupId>io.github.oliverjuhasz.boardkeeper</groupId>
     <artifactId>board-keeper</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <!-- Not Board Keeper's version: that is the git tag a build is made from (ADR 0018). Maven needs
+         a version here, and every module has to repeat it, so it is one that never changes. -->
+    <version>0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Board Keeper</name>
     <url>https://github.com/oliverJuhasz/board-keeper</url>

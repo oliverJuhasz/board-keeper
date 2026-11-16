@@ -3,12 +3,46 @@
     "schemas" : {
       "About" : {
         "properties" : {
+          "changesSinceRelease" : {
+            "description" : "For a Snapshot, how many commits it is past that release",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "commit" : {
+            "description" : "The commit the running version was built from. Absent when the build had no git.",
+            "type" : "string"
+          },
+          "committedAt" : {
+            "description" : "When that commit was made",
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "latestRelease" : {
+            "description" : "For a Snapshot, the newest release before its commit. Absent when there is no release yet.",
+            "type" : "string"
+          },
+          "releaseNotes" : {
+            "description" : "Where to read what is new in the release that is running. Absent for a Snapshot.",
+            "type" : "string"
+          },
+          "repository" : {
+            "description" : "The page of the repository that holds the source code. Absent if this copy names none.",
+            "type" : "string"
+          },
           "sourceCode" : {
             "description" : "Where the source code of the running version is",
             "type" : "string"
+          },
+          "uncommittedChanges" : {
+            "description" : "Whether files were changed after that commit, as in a build made while developing",
+            "type" : "boolean"
+          },
+          "version" : {
+            "description" : "The release that is running, such as 1.2.3. Absent for a Snapshot: a build that wasn't made from a release's tag.",
+            "type" : "string"
           }
         },
-        "required" : [ "sourceCode" ],
+        "required" : [ "sourceCode", "uncommittedChanges" ],
         "type" : "object"
       },
       "Account" : {
@@ -1657,7 +1691,7 @@
   "paths" : {
     "/api/about" : {
       "get" : {
-        "description" : "Where the source code of the running version is. Signed-in Accounts only, because the exact version is of no use to anyone else.",
+        "description" : "Which version of Board Keeper is running, and where its source code is. Signed-in Accounts only, because the exact version is of no use to anyone else.",
         "operationId" : "getAbout",
         "responses" : {
           "200" : {

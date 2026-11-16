@@ -262,6 +262,36 @@
       "signIn": "Tovább a bejelentkezéshez"
     }
   },
+  "about": {
+    "title": "A Board Keeperről",
+    "loading": "A verzió betöltése",
+    "loadFailed": "Nem sikerült betölteni a verziót",
+    "version": {
+      "release": "Verzió: {{version}}",
+      "snapshot": "Snapshot",
+      "unknown": "Ismeretlen verzió",
+      "unknownHint": "Ez a példány Git nélkül készült, ezért nem tudja, melyik verzió.",
+      "changes_one": "1 változtatás a legutóbbi kiadás ({{release}}) óta",
+      "changes_other": "{{count}} változtatás a legutóbbi kiadás ({{release}}) óta",
+      "noRelease": "még nincs kiadás",
+      "uncommitted": "nem véglegesített módosításokkal",
+      "whatsNew": "Újdonságok ebben a verzióban ({{version}})",
+      "device": "Ezen az eszközön még az alkalmazás egy másik verziója van: {{version}}."
+    },
+    "message": "Azért készítettem a Board Keepert, hogy könnyebb legyen a pontszámok vezetése. Sok jó partit!",
+    "signature": "Oliver",
+    "source": {
+      "title": "Forráskód",
+      "thisVersion": "Pontosan ennek a verziónak a kódja"
+    },
+    "licence": {
+      "title": "Licenc",
+      "text": "© 2026 Oliver Juhasz. A Board Keeper szabad szoftver, a GNU Affero General Public License 3-as vagy újabb verziója szerint. Semmilyen garancia nem jár hozzá.",
+      "full": "A licenc szövege",
+      "thirdParty": "A felhasznált programkönyvtárak licencei",
+      "trademarks": "A Board Keeper nem áll kapcsolatban azoknak a játékoknak a kiadóival, amelyeket pontoz. A játékok neve a tulajdonosaiké."
+    }
+  },
   "account": {
     "menu": "Fiók",
     "signedInAs": "Bejelentkezve: {{username}}",
@@ -269,7 +299,7 @@
     "settings": "Beállítások",
     "accounts": "Fiókok",
     "roles": "Szerepkörök",
-    "sourceCode": "Forráskód"
+    "about": "A Board Keeperről"
   },
   "password": {
     "show": "Jelszó megjelenítése",

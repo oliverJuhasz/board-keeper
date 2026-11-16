@@ -27,6 +27,7 @@ backend/
 frontend/            the React app
 deploy/              an example Docker Compose setup
 Dockerfile           packages the built application as a container image
+CHANGELOG.md         what changed in each release
 ```
 
 ## Everyday commands
@@ -238,7 +239,7 @@ curl -H "Authorization: Bearer bk_..." http://localhost:8080/api/session
 curl -X POST -H "Authorization: Bearer bk_..." -H "Content-Type: application/json" -d '{"name": "Zsófi"}' http://localhost:8080/api/players
 ```
 
-`GET /api/session` tells a program which Account it acts as and what it may do. In Swagger UI, the **Authorize** button takes an API Key and sends it with every "Try it out"; `ApiDocumentationConfiguration` declares it. Until the first release, the API changes along with the frontend, so a program may need changing after an update.
+`GET /api/session` tells a program which Account it acts as and what it may do. In Swagger UI, the **Authorize** button takes an API Key and sends it with every "Try it out"; `ApiDocumentationConfiguration` declares it. The API isn't versioned yet: it changes along with the frontend, so a program may need changing after an update.
 
 **Tests.** `ApiKeyTests` sends requests as a script would: only the header, without cookies or a CSRF token.
 
@@ -382,13 +383,83 @@ Nothing else changes. When the application next starts, the Game is in the catal
 
 Board Keeper is under the AGPL, version 3 or later ([ADR 0016](adr/0016-agpl-licence.md)). Two parts of the build come from that.
 
-**The "Source code" link.** The AGPL asks whoever runs a changed copy for others to offer them its source, so the account menu links to the commit the running version was built from. While the backend is built, `git-commit-id-maven-plugin` writes that commit into `git.properties`; Spring Boot reads the file into a `GitProperties` bean, and `GET /api/about` puts the commit into the `boardkeeper.source.url` setting. The plugin records nothing but the commit, because by default it would also write who built the jar, on which machine, and their e-mail address, into a jar that gets published. A build from a copy without Git links to the newest code.
+**The links to the source code.** The AGPL asks whoever runs a changed copy for others to offer them its source, so the About page links to the repository and to the commit the running version was built from. The addresses are the `boardkeeper.source.*` settings, which `SourceCode` in the `about` module holds, so that a changed copy can point them at its own code. `GET /api/about` fills in the commit and the version. "The About page" below says where those come from.
 
 **The licences of the libraries.** The libraries' licences ask for their notices to go along with every copy, and minifying the web app throws away the comments that held them. A small Vite plugin, `frontend/vite-plugins/thirdPartyLicenses.ts`, writes the licence of every package in the build into `third-party-licenses.txt`. It finds the packages the JavaScript imports by itself; a package that reaches the browser another way, such as through a stylesheet, is named in `vite.config.ts`, so add it there. The backend's libraries go into the jar, and the image, as their own unchanged jars, with whatever licence files they carry.
 
+### The About page
+
+`AboutPage.tsx`, in `frontend/src/features/about/`, shows which version is running. Everything it knows about that comes from `GET /api/about`.
+
+**The version comes from git** ([ADR 0018](adr/0018-releases-are-git-tags.md)). While the backend is built, `git-commit-id-maven-plugin` writes what git knows into `git.properties`: the commit and its time, whether files were changed since, the tags on the commit, and the newest release before it with the number of commits in between. Spring Boot reads the file into a `GitProperties` bean, and `Build`, in the `about` module, decides from it: a commit with a tag such as `1.2.3` is that release, and anything else is a Snapshot. The plugin records nothing else, because by default it would also write who built the jar, on which machine, and their e-mail address, into a jar that gets published. A build from a copy without Git doesn't know its version, and the page says so.
+
+While developing, the page shows a Snapshot, "with uncommitted changes" as soon as a file differs from the commit. To see it as a release, commit your work, tag the commit (`git tag 9.9.9`), start the backend again, and delete the tag afterwards (`git tag -d 9.9.9`). Don't push such a tag.
+
+**The app on the device** knows the commit it was built from too: `__APP_VERSION__`, which `vite.config.ts` writes into the code. When it isn't the server's, the server was updated and the device still has the app as it was, so the page says so and offers to reload. `reloadIntoNewestVersion`, in `frontend/src/lib/appUpdate.ts`, asks the service worker for the new version and reloads the page once that has taken over. `npm run dev` and the backend each read the commit when they start, so while developing the line can also show after a commit, until both are started again.
+
+## Releases
+
+A release is a git tag such as `1.2.3` on a commit on `main` ([ADR 0018](adr/0018-releases-are-git-tags.md)). No file holds the version: the build reads it from git, and the `0-SNAPSHOT` in the poms never changes.
+
+### What a version number says
+
+A guideline, not a promise:
+
+| Part | Goes up when |
+|---|---|
+| The first, as from 1.4.0 to 2.0.0 | Someone who runs Board Keeper, or a script that uses its API, has to do something when updating: a setting was renamed, or the API changed in a way that breaks scripts. |
+| The second, as from 1.4.0 to 1.5.0 | There is something new, such as a feature or a Game Module. |
+| The third, as from 1.4.0 to 1.4.1 | It only fixes things. |
+
+### The changelog
+
+`CHANGELOG.md` follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Every pull request that changes something a person who uses or runs Board Keeper would notice adds a line under `## [Unreleased]`, below one of the headings Added, Changed, Deprecated, Removed, Fixed and Security. Write it in English, in the terms of `CONTEXT.md`. Refactoring, tests and internal docs stay out.
+
+### Making a release
+
+1. On `main`, in `CHANGELOG.md`, rename `## [Unreleased]` to the version and the day, such as `## [1.2.3] - 2026-12-02`, and put a new, empty `## [Unreleased]` above it. At the bottom of the file, give the release a link, and point `[unreleased]` at what comes after it:
+
+   ```markdown
+   [unreleased]: https://github.com/oliverJuhasz/board-keeper/compare/1.2.3...HEAD
+   [1.2.3]: https://github.com/oliverJuhasz/board-keeper/compare/1.2.2...1.2.3
+   ```
+
+   The first release has nothing to be compared with, so its link is `https://github.com/oliverJuhasz/board-keeper/releases/tag/1.0.0`.
+
+2. Check what the release will say:
+
+   ```bash
+   .github/scripts/release-notes.sh 1.2.3
+   ```
+
+3. Commit that as "Release 1.2.3" and push it.
+4. Tag that commit, and push the tag:
+
+   ```bash
+   git tag 1.2.3
+   ```
+
+   ```bash
+   git push origin 1.2.3
+   ```
+
+CI then checks that the tag is on a commit on `main` and that the changelog has a section for it, and stops if not. Otherwise it builds and tests as always, makes sure the build found its version, publishes the image as `1.2.3` and `latest`, and creates a GitHub Release with the changelog's section as its text.
+
+The image that was published as `sha-…` when the commit reached `main` was built before the tag was there, so it goes on calling itself a Snapshot. It holds the same code as the release.
+
+If CI stopped because something was missing, take the tag away again, fix it, and tag anew:
+
+```bash
+git push --delete origin 1.2.3
+```
+
+```bash
+git tag -d 1.2.3
+```
+
 ## Continuous integration
 
-`.github/workflows/ci.yml` runs on every push. It checks and tests the frontend, builds it, builds and tests the backend, and builds the container image. On `main` it also publishes the image to GitHub Container Registry as `ghcr.io/oliverjuhasz/board-keeper`, tagged `latest` and `sha-<commit>`.
+`.github/workflows/ci.yml` runs on every push. It checks and tests the frontend, builds it, builds and tests the backend, and builds the container image. It publishes the image to GitHub Container Registry as `ghcr.io/oliverjuhasz/board-keeper`: from `main` tagged `sha-<commit>` and `snapshot`, and for a release tagged with its version and `latest`. A second job then creates the GitHub Release; it is apart so that only that job may write to the repository.
 
 ## Tooling notes
 

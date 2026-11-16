@@ -6,7 +6,7 @@
     <parent>
         <groupId>io.github.oliverjuhasz.boardkeeper</groupId>
         <artifactId>board-keeper</artifactId>
-        <version>0.1.0-SNAPSHOT</version>
+        <version>0-SNAPSHOT</version>
     </parent>
 
     <artifactId>app</artifactId>
@@ -366,11 +366,15 @@
             </plugin>
 
             <!--
-              Records the commit the build is made from in git.properties, for the "Source code" link
-              (ADR 0016). Spring Boot reads that file into a GitProperties bean. Only the commit is
-              recorded: by default the plugin would also write who built it, on which machine, and their
-              e-mail address, into a jar that is published. Building from a copy without Git still works,
-              and the link then points to the newest code.
+              Records what git knows about the build in git.properties, which Spring Boot reads into a
+              GitProperties bean. The About page takes Board Keeper's version from it (ADR 0018) and
+              the address of its source code (ADR 0016):
+              - the commit, its time, and whether files were changed since ("dirty");
+              - the tags on the commit: built from a release's tag, this is that release;
+              - the newest release before the commit, and how many commits it is behind.
+              Only these are recorded: by default the plugin would also write who built it, on which
+              machine, and their e-mail address, into a jar that is published. Building from a copy
+              without Git still works, and Board Keeper then doesn't know its version.
             -->
             <plugin>
                 <groupId>io.github.git-commit-id</groupId>
@@ -378,8 +382,20 @@
                 <configuration>
                     <verbose>false</verbose>
                     <failOnNoGitDirectory>false</failOnNoGitDirectory>
+                    <!-- Which tags to look at for the newest release: those with two dots, such as
+                         1.2.3, also plain ones, as "git tag 1.2.3" makes. The pattern knows only "*";
+                         Build checks that the parts are numbers. -->
+                    <gitDescribe>
+                        <tags>true</tags>
+                        <match>*.*.*</match>
+                    </gitDescribe>
                     <includeOnlyProperties>
                         <includeOnlyProperty>^git\.commit\.id$</includeOnlyProperty>
+                        <includeOnlyProperty>^git\.commit\.time$</includeOnlyProperty>
+                        <includeOnlyProperty>^git\.dirty$</includeOnlyProperty>
+                        <includeOnlyProperty>^git\.tags$</includeOnlyProperty>
+                        <includeOnlyProperty>^git\.closest\.tag\.name$</includeOnlyProperty>
+                        <includeOnlyProperty>^git\.closest\.tag\.commit\.count$</includeOnlyProperty>
                     </includeOnlyProperties>
                 </configuration>
             </plugin>

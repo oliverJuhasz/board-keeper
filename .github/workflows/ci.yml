@@ -9,6 +9,11 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# What gets published (ADR 0018):
+# - every commit on main: the image, tagged "sha-<commit>" and "snapshot";
+# - a tag such as 1.2.3, which makes a release: the image, tagged "1.2.3" and "latest", and a
+#   GitHub Release;
+# - anything else: nothing. It is built and tested all the same.
 jobs:
   build:
     name: Build, test and publish
@@ -16,11 +21,38 @@ jobs:
     permissions:
       contents: read
       packages: write # to publish the image to GitHub Container Registry
-    env:
-      # The image is published only from the main branch.
-      PUBLISH: ${{ github.ref == 'refs/heads/main' }}
+    outputs:
+      # The release this run makes, such as 1.2.3; empty when it makes none.
+      version: ${{ steps.release.outputs.version }}
     steps:
+      # The whole history, with its tags, instead of only the newest commit: the build reads from
+      # git which release it is, or how many changes it is past the newest one.
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # A release needs its tag to be on a commit that is on main, and a section in CHANGELOG.md,
+      # which becomes the text of the GitHub Release. Checked first, so that a tag that isn't
+      # ready stops here, before anything is published.
+      - name: "Release: check the tag and the changelog"
+        id: release
+        if: github.ref_type == 'tag'
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          if [[ ! "$TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "The tag $TAG isn't a release, so nothing is published."
+            exit 0
+          fi
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::The tag $TAG is on a commit that isn't on main."
+            exit 1
+          fi
+          if ! .github/scripts/release-notes.sh "$TAG" > /dev/null; then
+            echo "::error::CHANGELOG.md has no section for $TAG. See \"Releases\" in docs/development.md."
+            exit 1
+          fi
+          echo "version=$TAG" >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-node@v7
         with:
@@ -61,16 +93,36 @@ jobs:
         working-directory: backend
         run: ./mvnw --batch-mode --no-transfer-progress verify
 
+      # The build has just read its version from git (see git-commit-id-maven-plugin in
+      # backend/app/pom.xml). Had it not found the tag, or had a step before it changed a file, the
+      # image would call itself a Snapshot: stop before such an image is published as a release.
+      - name: "Release: check that the build knows its version"
+        if: steps.release.outputs.version != ''
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          properties=backend/app/target/classes/git.properties
+          if ! grep -qE "^git\.tags=(.*,)?${VERSION//./\\.}(,.*)?$" "$properties" || ! grep -qx "git.dirty=false" "$properties"; then
+            echo "::error::The build doesn't know that it is $VERSION."
+            cat "$properties"
+            exit 1
+          fi
+
       - name: Log in to GitHub Container Registry
-        if: env.PUBLISH == 'true'
+        if: github.ref == 'refs/heads/main' || steps.release.outputs.version != ''
         uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Works out the image's name (in lower case, as registries require) and its tags:
-      # "latest", plus one named after the commit so an older version can be run again.
+      # Works out the image's name (in lower case, as registries require) and its tags. Each line
+      # under "tags" is one tag, and "enable" says when it applies:
+      # - on main: "sha-<commit>", so that any change can be run again, and "snapshot";
+      # - for a release: its version ("type=semver" reads it from the git tag), and "latest". The
+      #   action would also decide by itself when to add "latest"; "latest=false" leaves that to
+      #   the line here;
+      # - on other branches: the branch's name. That image is never published, but needs a name.
       # It also labels the image with where its source is, its commit and its licence; the licence
       # is given here because GitHub reports it under an older name (ADR 0016).
       - name: Work out image tags
@@ -78,19 +130,46 @@ jobs:
         uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository }}
+          flavor: |
+            latest=false
           tags: |
-            type=raw,value=latest
-            type=sha
+            type=sha,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=snapshot,enable=${{ github.ref == 'refs/heads/main' }}
+            type=semver,pattern={{version}},enable=${{ steps.release.outputs.version != '' }}
+            type=raw,value=latest,enable=${{ steps.release.outputs.version != '' }}
+            type=ref,event=branch,enable=${{ github.ref != 'refs/heads/main' }}
           labels: |
             org.opencontainers.image.licenses=AGPL-3.0-or-later
 
       - uses: docker/setup-buildx-action@v4
 
-      # On other branches the image is still built, to prove the Dockerfile works, but not published.
-      - name: Build the image, and publish it from main
+      # Elsewhere the image is still built, to prove the Dockerfile works, but not published.
+      - name: Build the image, and publish it from main and for a release
         uses: docker/build-push-action@v7
         with:
           context: .
-          push: ${{ env.PUBLISH == 'true' }}
+          push: ${{ github.ref == 'refs/heads/main' || steps.release.outputs.version != '' }}
           tags: ${{ steps.image.outputs.tags }}
           labels: ${{ steps.image.outputs.labels }}
+
+  # Publishes a release on GitHub, once its image is there. A job of its own, so that nothing but
+  # this may write to the repository.
+  release:
+    name: Publish the GitHub Release
+    needs: build
+    if: needs.build.outputs.version != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # to create the release
+    steps:
+      - uses: actions/checkout@v7
+
+      # The release's text is its section of CHANGELOG.md. "gh" is GitHub's command line tool,
+      # which the runners have; --verify-tag makes it refuse to create a tag of its own.
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          .github/scripts/release-notes.sh "$VERSION" > "$RUNNER_TEMP/release-notes.md"
+          gh release create "$VERSION" --verify-tag --title "$VERSION" --notes-file "$RUNNER_TEMP/release-notes.md"

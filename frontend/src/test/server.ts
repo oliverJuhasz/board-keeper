@@ -3,10 +3,16 @@ import { setupServer } from "msw/node"
 import type { About } from "@/api/client"
 import { gameModules, gameModuleTexts } from "./gameModules"
 
-/** What the backend says about the running version. */
+/** What the backend says about the running version: here, a release. */
 export const about: About = {
+  version: "1.2.3",
+  commit: "1221b004748ae4f76d42d91dcdba7abb5890b2b7",
+  committedAt: "2026-11-14T22:40:52Z",
+  uncommittedChanges: false,
+  repository: "https://github.com/oliverJuhasz/board-keeper",
   sourceCode:
     "https://github.com/oliverJuhasz/board-keeper/tree/1221b004748ae4f76d42d91dcdba7abb5890b2b7",
+  releaseNotes: "https://github.com/oliverJuhasz/board-keeper/releases/tag/1.2.3",
 }
 
 /**
@@ -23,7 +29,7 @@ export const server = setupServer(
   // Unless a test says otherwise, nothing has been played yet.
   http.get("*/api/plays/last-played", () => HttpResponse.json([])),
   http.get("*/api/plays", () => HttpResponse.json({ plays: [] })),
-  // Where the source code of the running version is, for the account menu.
+  // Which version is running and where its source code is, for the About page.
   http.get("*/api/about", () => HttpResponse.json(about)),
   // The settings page lists the Account's API Keys. Unless a test says otherwise, there are none.
   http.get("*/api/account/api-keys", () => HttpResponse.json([])),
