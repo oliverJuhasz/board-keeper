@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { CheckIcon, CopyIcon, KeySquareIcon, PlusIcon, Trash2Icon } from "lucide-react"
-import { useId, useState } from "react"
+import { useId, useRef, useState, type ComponentProps } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { z } from "zod"
@@ -45,6 +45,8 @@ export function ApiKeysCard() {
   const allowed = useCan()("USE_API_KEYS")
   const apiKeys = api.useQuery("get", "/api/account/api-keys")
   const [creating, setCreating] = useState(false)
+  // The button that opens the dialog, to give focus back to once it closes.
+  const createButton = useRef<HTMLButtonElement>(null)
   const [deleting, setDeleting] = useState<ApiKey>()
   const queryClient = useQueryClient()
   const remove = api.useMutation("delete", "/api/account/api-keys/{id}", {
@@ -102,14 +104,16 @@ export function ApiKeysCard() {
           }
         </QueryState>
         {allowed && (
-          <Button variant="outline" onClick={() => setCreating(true)}>
+          <Button ref={createButton} variant="outline" onClick={() => setCreating(true)}>
             <PlusIcon />
             {t("settings.apiKeys.create")}
           </Button>
         )}
       </CardContent>
 
-      {creating && <CreateApiKeyDialog onClose={() => setCreating(false)} />}
+      {creating && (
+        <CreateApiKeyDialog onClose={() => setCreating(false)} finalFocus={createButton} />
+      )}
       {deleting && (
         <ConfirmDialog
           title={t("settings.apiKeys.deleteDialog.title", { name: deleting.name })}
@@ -153,8 +157,17 @@ type Confirmation = { password: string } | "passkey"
  * Asks for a name and an expiry, and for the password or a passkey to confirm that it's really
  * the Account's owner: an API Key outlives the session it was made in. Then shows the API Key,
  * once.
+ *
+ * @param finalFocus where focus goes once the dialog has closed, such as the button that opened
+ *   it. "Dialogs" in docs/development.md says when a dialog needs this.
  */
-function CreateApiKeyDialog({ onClose }: { onClose: () => void }) {
+function CreateApiKeyDialog({
+  onClose,
+  finalFocus,
+}: {
+  onClose: () => void
+  finalFocus?: ComponentProps<typeof DialogContent>["finalFocus"]
+}) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const form = useForm({
@@ -206,7 +219,7 @@ function CreateApiKeyDialog({ onClose }: { onClose: () => void }) {
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent>
+      <DialogContent finalFocus={finalFocus}>
         {create.data ? (
           <CreatedApiKey secret={create.data.secret} />
         ) : (

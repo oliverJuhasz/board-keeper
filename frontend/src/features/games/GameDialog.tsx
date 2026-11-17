@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useQueryClient } from "@tanstack/react-query"
-import { useState } from "react"
+import { useState, type ComponentProps } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { z } from "zod"
@@ -27,8 +27,19 @@ const gameForm = z.object({ name: gameName })
 /**
  * The dialog for a Game: adds one to the catalogue, or changes the one it is given. Besides the
  * name, it asks how the Game's Plays are recorded by default.
+ *
+ * @param finalFocus where focus goes once the dialog has closed, such as the button that opened
+ *   it. "Dialogs" in docs/development.md says when a dialog needs this.
  */
-export function GameDialog({ game, onClose }: { game?: Game; onClose: () => void }) {
+export function GameDialog({
+  game,
+  onClose,
+  finalFocus,
+}: {
+  game?: Game
+  onClose: () => void
+  finalFocus?: ComponentProps<typeof DialogContent>["finalFocus"]
+}) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const form = useForm({
@@ -64,7 +75,7 @@ export function GameDialog({ game, onClose }: { game?: Game; onClose: () => void
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent>
+      <DialogContent finalFocus={finalFocus}>
         <form onSubmit={submit} noValidate>
           <FieldGroup>
             <DialogHeader>

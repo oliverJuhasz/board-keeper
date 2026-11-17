@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react"
+import { screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { http, HttpResponse } from "msw"
 import { expect, test } from "vitest"
@@ -85,6 +85,22 @@ test("adds a game that is recorded in points, highest wins, unless told otherwis
   expect(sent).toEqual([
     { name: "Cascadia", cooperative: false, recordingMode: "POINTS", lowestScoreWins: false },
   ])
+  // The keyboard carries on from the button, not from the top of the page.
+  await waitFor(() => expect(screen.getByRole("button", { name: "Add game" })).toHaveFocus())
+})
+
+test("cancelling the dialog for a new game gives focus back to its button", async () => {
+  signedInAs(bence)
+  gamesAre([])
+  renderApp("/")
+
+  const add = await screen.findByRole("button", { name: "Add game" })
+  add.focus()
+  await userEvent.keyboard("{Enter}")
+  await screen.findByRole("dialog", { name: "Add a game" })
+  await userEvent.keyboard("{Escape}")
+
+  await waitFor(() => expect(add).toHaveFocus())
 })
 
 test("adds a game where the lowest score wins", async () => {

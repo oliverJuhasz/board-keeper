@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react"
+import { screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { http, HttpResponse } from "msw"
 import { expect, test } from "vitest"
@@ -72,6 +72,22 @@ test("adds a player", async () => {
 
   expect(await screen.findByRole("row", { name: /Zsofi/ })).toBeInTheDocument()
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+  // The keyboard carries on from the button, not from the top of the page.
+  await waitFor(() => expect(screen.getByRole("button", { name: "Add player" })).toHaveFocus())
+})
+
+test("cancelling the dialog for a new player gives focus back to its button", async () => {
+  signedInAs(bence)
+  playersAre(everyone, withAccounts)
+  renderApp("/players")
+
+  const add = await screen.findByRole("button", { name: "Add player" })
+  add.focus()
+  await userEvent.keyboard("{Enter}")
+  await screen.findByRole("dialog", { name: "Add a player" })
+  await userEvent.keyboard("{Escape}")
+
+  await waitFor(() => expect(add).toHaveFocus())
 })
 
 test("says so when a new player's name is taken, and keeps the dialog open", async () => {

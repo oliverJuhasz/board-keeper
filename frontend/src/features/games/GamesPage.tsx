@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query"
 import { ChevronRightIcon, PlusIcon } from "lucide-react"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router"
 import { api, type Game } from "@/api/client"
@@ -42,6 +42,8 @@ export function GamesPage() {
   const recordedAs = useRecordedAs()
   const gameName = useGameName()
   const [dialog, setDialog] = useState<OpenDialog>()
+  // The button that opens the dialog for a new Game, to give focus back to once it closes.
+  const addButton = useRef<HTMLButtonElement>(null)
   const games = api.useQuery("get", "/api/games")
   const lastPlayed = api.useQuery("get", "/api/plays/last-played")
   // Not drawn here, but loaded, so the device keeps them (persistence.ts): the form for a Play is
@@ -73,7 +75,7 @@ export function GamesPage() {
         description={records ? t("games.startDescription") : t("games.description")}
         action={
           can("CREATE_GAMES") && (
-            <Button onClick={() => setDialog({ kind: "add" })}>
+            <Button ref={addButton} onClick={() => setDialog({ kind: "add" })}>
               <PlusIcon />
               {t("games.add")}
             </Button>
@@ -175,7 +177,7 @@ export function GamesPage() {
         }
       </QueryState>
 
-      {dialog?.kind === "add" && <GameDialog onClose={close} />}
+      {dialog?.kind === "add" && <GameDialog onClose={close} finalFocus={addButton} />}
       {dialog?.kind === "edit" && <GameDialog game={dialog.game} onClose={close} />}
       {dialog?.kind === "remove" && (
         <ConfirmDialog

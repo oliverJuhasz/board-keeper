@@ -26,9 +26,8 @@ const nameForm = z.object({ name: playerName })
  * The dialog for a Player's name: adds a Player, or renames the one it is given.
  *
  * @param onAdded called with the new Player once it has been added, before the dialog closes
- * @param finalFocus where focus goes once the dialog has closed. Without it, focus is lost: the
- *   dialog would give it back to what had it before, but only notes that once its own name field
- *   has taken focus.
+ * @param finalFocus where focus goes once the dialog has closed, such as the button that opened
+ *   it. "Dialogs" in docs/development.md says when a dialog needs this.
  */
 export function PlayerNameDialog({
   player,
