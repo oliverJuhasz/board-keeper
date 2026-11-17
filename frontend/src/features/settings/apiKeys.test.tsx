@@ -95,6 +95,23 @@ test("creates an API key, confirmed with the password, and shows it once", async
   await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument())
   expect(await within(card).findByText("Claude")).toBeInTheDocument()
   expect(screen.queryByText(SECRET)).not.toBeInTheDocument()
+  // The keyboard carries on from the button, not from the top of the page.
+  await waitFor(() =>
+    expect(within(card).getByRole("button", { name: "Create an API key" })).toHaveFocus(),
+  )
+})
+
+test("cancelling the dialog for a new API key gives focus back to its button", async () => {
+  apiKeysAre([])
+  renderApp("/settings")
+
+  const create = within(await apiKeysCard()).getByRole("button", { name: "Create an API key" })
+  create.focus()
+  await userEvent.keyboard("{Enter}")
+  await screen.findByRole("dialog")
+  await userEvent.keyboard("{Escape}")
+
+  await waitFor(() => expect(create).toHaveFocus())
 })
 
 test("expires in 90 days unless another expiry is chosen", async () => {

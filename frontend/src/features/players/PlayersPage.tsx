@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query"
 import { EllipsisIcon, PlusIcon } from "lucide-react"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { api, type Invite, type Player } from "@/api/client"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -40,6 +40,8 @@ export function PlayersPage() {
   const can = useCan()
   const account = useCurrentAccount()
   const [dialog, setDialog] = useState<OpenDialog>()
+  // The button that opens the dialog for a new Player, to give focus back to once it closes.
+  const addButton = useRef<HTMLButtonElement>(null)
 
   const players = api.useQuery("get", "/api/players")
   const claims = api.useQuery("get", "/api/claims")
@@ -62,7 +64,7 @@ export function PlayersPage() {
           <p className="text-muted-foreground">{t("players.description")}</p>
         </div>
         {can("CREATE_PLAYERS") && (
-          <Button onClick={() => setDialog({ kind: "add" })}>
+          <Button ref={addButton} onClick={() => setDialog({ kind: "add" })}>
             <PlusIcon />
             {t("players.add")}
           </Button>
@@ -119,7 +121,7 @@ export function PlayersPage() {
         </Table>
       )}
 
-      {dialog?.kind === "add" && <PlayerNameDialog onClose={close} />}
+      {dialog?.kind === "add" && <PlayerNameDialog onClose={close} finalFocus={addButton} />}
       {dialog?.kind === "rename" && <PlayerNameDialog player={dialog.player} onClose={close} />}
       {dialog?.kind === "invite" && <InviteDialog player={dialog.player} onClose={close} />}
       {dialog?.kind === "resetPassword" && (

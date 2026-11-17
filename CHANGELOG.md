@@ -14,6 +14,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - "Record another play" on a Play's page starts the form with that Play's Players, Setup, date and location, so a second Play on the same day takes only its scores.
 
+### Fixed
+
+- Adding a Player to a Play no longer moves the cursor to their points. It stays on the list of Players, ready for the next one, until nobody more can be added. Closing the dialog for a new Player brings it back there too.
+- Closing the dialog for adding a Player, a Game, an API Key or a Passkey leaves the cursor on the button that opened it, instead of at the top of the page.
+
 ## [1.0.0] - 2026-11-16
 
 ### Added

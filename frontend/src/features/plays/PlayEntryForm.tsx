@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { onlineManager, useQueryClient } from "@tanstack/react-query"
 import { XIcon } from "lucide-react"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import type { GameModule, NewPlay, Player, ScoreCategory } from "@/api/client"
@@ -154,6 +154,9 @@ export function PlayEntryForm({
   // at once, without waiting for the list of Players to be fetched again.
   const [addedHere, setAddedHere] = useState<Player[]>([])
   const [addingPlayer, setAddingPlayer] = useState(false)
+  // The list of Players to add. useRef holds on to its element, to give it focus again after
+  // the dialog for someone new has closed.
+  const addPlayerList = useRef<HTMLSelectElement>(null)
   const allPlayers = [
     ...players,
     ...addedHere.filter((added) => !players.some((player) => player.id === added.id)),
@@ -164,6 +167,19 @@ export function PlayEntryForm({
     (player) => !play.players.some((entered) => entered.playerId === player.id),
   )
   const full = pad.maxPlayers !== undefined && play.players.length >= pad.maxPlayers
+
+  /**
+   * Adds a Player to the Play. Focus stays on the list of Players to add, ready for the next one.
+   * Once that list goes away, because the Game has no seat left or nobody is left to add, focus
+   * moves on to the new Player's first entry instead.
+   */
+  function addPlayer(playerId: string) {
+    const seatLeft = pad.maxPlayers === undefined || play.players.length + 1 < pad.maxPlayers
+    const someoneLeft =
+      can("CREATE_PLAYERS") || notYetAdded.some((player) => player.id !== playerId)
+    // By default, append moves focus to the first field of the row it adds.
+    rows.append(newPlayerRow(pad, playerId), { shouldFocus: !(seatLeft && someoneLeft) })
+  }
 
   // The server works out the totals, the Placings, and whether first place is a tie that the
   // scores can't decide. Only then is the recorder asked who won.
@@ -424,13 +440,14 @@ export function PlayEntryForm({
           ) : notYetAdded.length > 0 || can("CREATE_PLAYERS") ? (
             // Choosing a name adds that Player as a row; the list then goes back to its first line.
             <NativeSelect
+              ref={addPlayerList}
               value=""
               aria-label={t("plays.record.addPlayer")}
               onChange={(event) => {
                 if (event.target.value === NEW_PLAYER) {
                   setAddingPlayer(true)
                 } else {
-                  rows.append(newPlayerRow(pad, event.target.value))
+                  addPlayer(event.target.value)
                 }
               }}
             >
@@ -800,9 +817,12 @@ export function PlayEntryForm({
         <PlayerNameDialog
           onAdded={(player) => {
             setAddedHere((already) => [...already, player])
-            rows.append(newPlayerRow(pad, player.id))
+            addPlayer(player.id)
           }}
           onClose={() => setAddingPlayer(false)}
+          // Back to the list, for the next one. Once it has gone, because nobody more can be
+          // added, addPlayer has sent focus to the new Player's first entry: leave it there.
+          finalFocus={() => addPlayerList.current ?? false}
         />
       )}
     </form>
