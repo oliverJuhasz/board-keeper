@@ -10,6 +10,15 @@
       "text": "Nincs kapcsolat. Magától betöltődik, amint lesz."
     }
   },
+  "sortable": {
+    "move": "{{name}} áthelyezése",
+    "roleDescription": "húzható",
+    "instructions": "Az áthelyezéshez nyomd meg a szóközt. Utána mozgasd a fel és le nyilakkal, majd a szóközzel tedd le, vagy az Escape-pel tedd vissza.",
+    "pickedUp": "{{name}} felvéve. {{number}}. a sorrendben (összesen {{count}}).",
+    "moved": "{{name}} most {{number}}. a sorrendben (összesen {{count}}).",
+    "dropped": "{{name}} letéve. {{number}}. a sorrendben (összesen {{count}}).",
+    "cancelled": "Áthelyezés megszakítva. {{name}} újra {{number}}. a sorrendben (összesen {{count}})."
+  },
   "games": {
     "title": "Játékok",
     "description": "A játékok, amelyek partijait rögzítheted.",

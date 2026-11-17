@@ -11,6 +11,7 @@ import { LinkButton } from "@/components/LinkButton"
 import { PageHeader } from "@/components/PageHeader"
 import { RadioField } from "@/components/RadioField"
 import { SelectField } from "@/components/SelectField"
+import { SortableItem, SortableList } from "@/components/SortableList"
 import { TextAreaField } from "@/components/TextAreaField"
 import { TextField } from "@/components/TextField"
 import { Button } from "@/components/ui/button"
@@ -286,7 +287,9 @@ export function PlayEntryForm({
           {rows.fields.length === 0 ? (
             <p className="text-sm text-muted-foreground">{t("plays.record.noPlayers")}</p>
           ) : (
-            <ul className="divide-y rounded-lg border">
+            // The Players can be put in another order. It is the order of the pad's columns, and
+            // it is kept with the Play. useFieldArray's move() takes each Player's values along.
+            <SortableList onMove={rows.move} className="divide-y rounded-lg border">
               {rows.fields.map((row, index) => {
                 const name = nameOf(row.playerId)
                 const only = drawnAsPad ? undefined : categories[0]
@@ -294,113 +297,125 @@ export function PlayEntryForm({
                   ? scoreMessage(only, errors.players?.[index]?.scores?.[only.key]?.message)
                   : undefined
                 return (
-                  <li key={row.id} className="space-y-1 px-3 py-2">
-                    <div className="flex items-center gap-3">
-                      <span className="min-w-0 flex-1 truncate font-medium">{name}</span>
-                      {only && (
-                        <Input
-                          type="number"
-                          step={only.step}
-                          className="w-24 text-right"
-                          placeholder={moduleText(`category.${only.key}`)}
-                          aria-label={t("plays.record.valueOf", {
-                            category: moduleText(`category.${only.key}`),
-                            name,
-                          })}
-                          aria-invalid={scoreError ? true : undefined}
-                          {...form.register(`players.${index}.scores.${only.key}`)}
-                        />
-                      )}
-                      {!cooperative && !points && solo?.kind !== "FOR_SCORE_ONLY" && (
-                        // The label makes the word "Won" clickable too.
-                        <label className="flex items-center gap-2 text-sm">
-                          {/* Controller connects a component that isn't a plain <input> to the
-                              form: it hands over the field's value and a function to change it. */}
-                          <Controller
-                            control={form.control}
-                            name={`players.${index}.won`}
-                            render={({ field }) => (
-                              <Checkbox
-                                checked={field.value}
-                                onCheckedChange={(checked) => {
-                                  field.onChange(checked)
-                                  if (isSubmitted) {
-                                    void form.trigger("players")
-                                  }
-                                }}
-                                aria-label={t("plays.record.wonBy", { name })}
-                              />
-                            )}
-                          />
-                          {t("plays.record.won")}
-                        </label>
-                      )}
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        aria-label={t("plays.record.removePlayer", { name })}
-                        onClick={() => rows.remove(index)}
-                      >
-                        <XIcon />
-                      </Button>
-                    </div>
-                    {/* The Player Setup, such as their Wonder: a drop-down for each choice. Each can
-                        be left as it is, for a choice nobody remembers. */}
-                    {pad.playerSetup.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {pad.playerSetup.map((choice) => {
-                          // Where each option is there once, such as a Wonder board, the ones
-                          // another Player has already can't be picked.
-                          const taken = choice.oncePerPlay
-                            ? play.players
-                                .filter((_, other) => other !== index)
-                                .map((other) => other.setup[choice.key])
-                            : []
-                          return (
-                            <NativeSelect
-                              key={choice.key}
-                              size="sm"
+                  <SortableItem
+                    key={row.id}
+                    id={row.id}
+                    index={index}
+                    label={name}
+                    movable={rows.fields.length > 1}
+                    className="space-y-1 px-3 py-2"
+                  >
+                    {(handle) => (
+                      <>
+                        <div className="flex items-center gap-3">
+                          {handle}
+                          <span className="min-w-0 flex-1 truncate font-medium">{name}</span>
+                          {only && (
+                            <Input
+                              type="number"
+                              step={only.step}
+                              className="w-24 text-right"
+                              placeholder={moduleText(`category.${only.key}`)}
                               aria-label={t("plays.record.valueOf", {
-                                category: moduleText(`playerSetup.${choice.key}`),
+                                category: moduleText(`category.${only.key}`),
                                 name,
                               })}
-                              {...form.register(`players.${index}.setup.${choice.key}`)}
-                            >
-                              <NativeSelectOption value="">
-                                {moduleText(`playerSetup.${choice.key}`)}
-                              </NativeSelectOption>
-                              {choice.options.map((option) => (
-                                <NativeSelectOption
-                                  key={option}
-                                  value={option}
-                                  disabled={taken.includes(option)}
+                              aria-invalid={scoreError ? true : undefined}
+                              {...form.register(`players.${index}.scores.${only.key}`)}
+                            />
+                          )}
+                          {!cooperative && !points && solo?.kind !== "FOR_SCORE_ONLY" && (
+                            // The label makes the word "Won" clickable too.
+                            <label className="flex items-center gap-2 text-sm">
+                              {/* Controller connects a component that isn't a plain <input> to the
+                              form: it hands over the field's value and a function to change it. */}
+                              <Controller
+                                control={form.control}
+                                name={`players.${index}.won`}
+                                render={({ field }) => (
+                                  <Checkbox
+                                    checked={field.value}
+                                    onCheckedChange={(checked) => {
+                                      field.onChange(checked)
+                                      if (isSubmitted) {
+                                        void form.trigger("players")
+                                      }
+                                    }}
+                                    aria-label={t("plays.record.wonBy", { name })}
+                                  />
+                                )}
+                              />
+                              {t("plays.record.won")}
+                            </label>
+                          )}
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            aria-label={t("plays.record.removePlayer", { name })}
+                            onClick={() => rows.remove(index)}
+                          >
+                            <XIcon />
+                          </Button>
+                        </div>
+                        {/* The Player Setup, such as their Wonder: a drop-down for each choice. Each can
+                        be left as it is, for a choice nobody remembers. */}
+                        {pad.playerSetup.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {pad.playerSetup.map((choice) => {
+                              // Where each option is there once, such as a Wonder board, the ones
+                              // another Player has already can't be picked.
+                              const taken = choice.oncePerPlay
+                                ? play.players
+                                    .filter((_, other) => other !== index)
+                                    .map((other) => other.setup[choice.key])
+                                : []
+                              return (
+                                <NativeSelect
+                                  key={choice.key}
+                                  size="sm"
+                                  aria-label={t("plays.record.valueOf", {
+                                    category: moduleText(`playerSetup.${choice.key}`),
+                                    name,
+                                  })}
+                                  {...form.register(`players.${index}.setup.${choice.key}`)}
                                 >
-                                  {moduleText(`playerSetup.${choice.key}.${option}`)}
-                                </NativeSelectOption>
-                              ))}
-                            </NativeSelect>
+                                  <NativeSelectOption value="">
+                                    {moduleText(`playerSetup.${choice.key}`)}
+                                  </NativeSelectOption>
+                                  {choice.options.map((option) => (
+                                    <NativeSelectOption
+                                      key={option}
+                                      value={option}
+                                      disabled={taken.includes(option)}
+                                    >
+                                      {moduleText(`playerSetup.${choice.key}.${option}`)}
+                                    </NativeSelectOption>
+                                  ))}
+                                </NativeSelect>
+                              )
+                            })}
+                          </div>
+                        )}
+                        {scoreError && <FieldError className="text-right">{scoreError}</FieldError>}
+                        {pad.playerSetup.map((choice) => {
+                          const message = errors.players?.[index]?.setup?.[choice.key]?.message
+                          return (
+                            message && (
+                              <FieldError key={choice.key}>
+                                {t(message as "validation.chosenTwice", {
+                                  choice: moduleText(`playerSetup.${choice.key}`),
+                                })}
+                              </FieldError>
+                            )
                           )
                         })}
-                      </div>
+                      </>
                     )}
-                    {scoreError && <FieldError className="text-right">{scoreError}</FieldError>}
-                    {pad.playerSetup.map((choice) => {
-                      const message = errors.players?.[index]?.setup?.[choice.key]?.message
-                      return (
-                        message && (
-                          <FieldError key={choice.key}>
-                            {t(message as "validation.chosenTwice", {
-                              choice: moduleText(`playerSetup.${choice.key}`),
-                            })}
-                          </FieldError>
-                        )
-                      )
-                    })}
-                  </li>
+                  </SortableItem>
                 )
               })}
-            </ul>
+            </SortableList>
           )}
           {full ? (
             <FieldDescription>

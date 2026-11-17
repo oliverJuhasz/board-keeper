@@ -249,7 +249,7 @@ A form is described once with Zod, which gives both the checks and the TypeScrip
 
 `frontend/src/features/plays/` is the example of a bigger form. It is drawn from the score pad of the Game's Game Module: the Variants become choices and the Score Categories the rows of a pad, and what each is called comes from the module's texts. Its rules and what it sends are in `playForm.ts`, apart from the page, so they can be tested without drawing anything. `usePlayPreview.ts` asks the server how the Play would end, a moment after the recorder stops typing. The form itself, `PlayEntryForm.tsx`, is used by two pages: one records a new Play and one edits an existing Play. Each page says what the form starts with and where the result is sent. It uses three more parts of React Hook Form and Zod:
 
-- `useFieldArray` for the list of Players, where rows are added and removed;
+- `useFieldArray` for the list of Players, where rows are added, removed, and put in another order with its `move`. The order is kept with the Play (`entry_order`), and the pad's columns follow it;
 - `useWatch` to redraw when a field changes that others depend on, such as the Recording Mode;
 - Zod's `superRefine` for rules that involve several fields, such as "a competitive Play needs two Players".
 
@@ -296,6 +296,7 @@ New pages are put together from these, in `frontend/src/components/`. `frontend/
 | `LinkDialog` | Creating a one-time link and showing it to copy |
 | `LinkButton` | A link to another page that looks like a button |
 | `QuietLink` | A link in text or a table, such as a name that leads to its statistics, with a faint underline |
+| `SortableList`, `SortableItem` | A list whose items can be put in another order, by dragging a handle or from the keyboard, as the Players of a Play are. It uses dnd-kit (`@dnd-kit/react`); `sortableListsCanBeUsed()` in `src/test/sortable.ts` lets a test move its items from the keyboard |
 | `TextField`, `TextAreaField`, `CheckboxField`, `RadioField`, `SelectField` | A labelled input, text box, checkbox, set of a few choices, or drop-down of many, with hint and error |
 | `FormProblem` | Why the server refused a submission |
 | `PageMessage` | A page that only has something to say |

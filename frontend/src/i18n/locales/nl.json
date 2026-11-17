@@ -10,6 +10,15 @@
       "text": "Er is geen verbinding. Dit laadt vanzelf zodra die er is."
     }
   },
+  "sortable": {
+    "move": "{{name}} verplaatsen",
+    "roleDescription": "versleepbaar",
+    "instructions": "Druk op de spatiebalk om te verplaatsen. Gebruik daarna de pijltjes omhoog en omlaag, en druk nog een keer op de spatiebalk om neer te zetten, of op Escape om terug te zetten.",
+    "pickedUp": "{{name}} opgepakt, nummer {{number}} van {{count}}.",
+    "moved": "{{name}} is nu nummer {{number}} van {{count}}.",
+    "dropped": "{{name}} neergezet als nummer {{number}} van {{count}}.",
+    "cancelled": "Verplaatsen geannuleerd. {{name}} staat weer op nummer {{number}} van {{count}}."
+  },
   "games": {
     "title": "Spellen",
     "description": "De spellen waarvan je partijen kunt vastleggen.",

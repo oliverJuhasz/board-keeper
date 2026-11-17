@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- The Players of a Play can be put in another order while it is recorded or edited, by dragging or from the keyboard. The Score Pad's columns follow that order, and the Play keeps it.
+
 ### Changed
 
 - "Record another play" on a Play's page starts the form with that Play's Players, Setup, date and location, so a second Play on the same day takes only its scores.
