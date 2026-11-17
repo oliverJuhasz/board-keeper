@@ -10,6 +10,15 @@
       "text": "There's no connection. This loads by itself once there is."
     }
   },
+  "sortable": {
+    "move": "Move {{name}}",
+    "roleDescription": "draggable",
+    "instructions": "To move it, press Space. Then use the up and down arrow keys, and press Space again to put it down, or Escape to put it back.",
+    "pickedUp": "Picked up {{name}}, number {{number}} of {{count}}.",
+    "moved": "{{name}} is now number {{number}} of {{count}}.",
+    "dropped": "Put down {{name}} as number {{number}} of {{count}}.",
+    "cancelled": "Moving cancelled. {{name}} is back as number {{number}} of {{count}}."
+  },
   "games": {
     "title": "Games",
     "description": "The games you can record plays of.",
