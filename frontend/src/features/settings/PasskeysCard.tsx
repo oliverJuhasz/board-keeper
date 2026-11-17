@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { KeyRoundIcon, PlusIcon, Trash2Icon } from "lucide-react"
-import { useState } from "react"
+import { useRef, useState, type ComponentProps } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { z } from "zod"
@@ -38,6 +38,8 @@ export function PasskeysCard() {
   const { t } = useTranslation()
   const passkeys = api.useQuery("get", "/api/account/passkeys")
   const [adding, setAdding] = useState(false)
+  // The button that opens the dialog, to give focus back to once it closes.
+  const addButton = useRef<HTMLButtonElement>(null)
   const [removing, setRemoving] = useState<Passkey>()
   const queryClient = useQueryClient()
   const remove = api.useMutation("delete", "/api/account/passkeys/{id}", {
@@ -99,7 +101,7 @@ export function PasskeysCard() {
         </QueryState>
         {/* A browser without passkeys can still see and remove the ones made elsewhere. */}
         {browserHasPasskeys() ? (
-          <Button variant="outline" onClick={() => setAdding(true)}>
+          <Button ref={addButton} variant="outline" onClick={() => setAdding(true)}>
             <PlusIcon />
             {t("settings.passkeys.add")}
           </Button>
@@ -108,7 +110,7 @@ export function PasskeysCard() {
         )}
       </CardContent>
 
-      {adding && <AddPasskeyDialog onClose={() => setAdding(false)} />}
+      {adding && <AddPasskeyDialog onClose={() => setAdding(false)} finalFocus={addButton} />}
       {removing && (
         <ConfirmDialog
           title={t("settings.passkeys.removeDialog.title", { label: removing.label })}
@@ -129,8 +131,17 @@ const labelForm = z.object({ label: passkeyLabel })
 /**
  * Asks for a name, then has the browser make the passkey. The name only helps its owner tell
  * their passkeys apart, so the form suggests none.
+ *
+ * @param finalFocus where focus goes once the dialog has closed, such as the button that opened
+ *   it. "Dialogs" in docs/development.md says when a dialog needs this.
  */
-function AddPasskeyDialog({ onClose }: { onClose: () => void }) {
+function AddPasskeyDialog({
+  onClose,
+  finalFocus,
+}: {
+  onClose: () => void
+  finalFocus?: ComponentProps<typeof DialogContent>["finalFocus"]
+}) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const form = useForm({ resolver: zodResolver(labelForm), defaultValues: { label: "" } })
@@ -166,7 +177,7 @@ function AddPasskeyDialog({ onClose }: { onClose: () => void }) {
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent>
+      <DialogContent finalFocus={finalFocus}>
         <form
           onSubmit={(event) => void form.handleSubmit((values) => add.mutate(values.label))(event)}
           noValidate

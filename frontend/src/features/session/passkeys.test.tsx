@@ -254,6 +254,24 @@ test("settings list the passkeys, and add one with a name", async () => {
   expect(phone.create).toHaveBeenCalledWith({ publicKey: creationOptions })
   expect(sent).toEqual([{ label: "My phone", credential: attestation }])
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+  // The keyboard carries on from the button, not from the top of the page.
+  await waitFor(() =>
+    expect(within(card).getByRole("button", { name: "Add a passkey" })).toHaveFocus(),
+  )
+})
+
+test("cancelling the dialog for a new passkey gives focus back to its button", async () => {
+  browserWithPasskeys()
+  signedInWithPasskeys([])
+  renderApp("/settings")
+
+  const add = await screen.findByRole("button", { name: "Add a passkey" })
+  add.focus()
+  await userEvent.keyboard("{Enter}")
+  await screen.findByRole("dialog", { name: "Add a passkey" })
+  await userEvent.keyboard("{Escape}")
+
+  await waitFor(() => expect(add).toHaveFocus())
 })
 
 test("a passkey needs a name before the phone is asked", async () => {

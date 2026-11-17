@@ -302,6 +302,8 @@ New pages are put together from these, in `frontend/src/components/`. `frontend/
 
 The components in `components/ui/` are shadcn/ui's, added with its command line tool. Leave those as generated where possible, and build on top of them.
 
+**Dialogs** are opened from the page's state and taken off the page when they close, as in `PlayersPage`. Closing one should give focus back to whatever opened it, so that someone using the keyboard carries on from there. Base UI, which the dialogs are built on, does this by itself, except when a field in the dialog has `autoFocus`. Base UI then notes that field as what had focus before, and it is gone once the dialog has closed. Such a dialog takes a `finalFocus` with the button that opens it, as `PlayerNameDialog` does. A dialog opened from an `ActionsMenu` needs none: focus goes back to the menu's button. Keep `autoFocus` rather than switching to Base UI's `initialFocus`: Base UI moves focus a moment later, and a phone may then not bring up its keyboard.
+
 ### Texts and translations
 
 Every text the user sees comes from a translation file, in English, Dutch and Hungarian. There are two kinds.

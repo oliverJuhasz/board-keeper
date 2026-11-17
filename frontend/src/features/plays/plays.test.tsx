@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react"
+import { screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { http, HttpResponse } from "msw"
 import { expect, test } from "vitest"
@@ -155,6 +155,42 @@ test("someone who has never played can be added without leaving the form", async
     { playerId: bencePlayer.id, scores: { total: 48 }, winner: false, setup: {} },
     { playerId: eszter.id, scores: { total: 61 }, winner: false, setup: {} },
   ])
+})
+
+test("after adding a player, the list is ready for the next one", async () => {
+  signedInAs(bence)
+  gamesAre([azul])
+  playCanBeEntered()
+  const eszter = { id: "0193a000-0000-7000-8000-0000000000b9", name: "Eszter" }
+  server.use(http.post("*/api/players", () => HttpResponse.json(eszter)))
+  renderApp(`/plays/new?game=${azul.id}`)
+
+  await addPlayer("Anna")
+  expect(screen.getByLabelText("Score of Anna")).toBeInTheDocument()
+  expect(screen.getByLabelText("Add a player")).toHaveFocus()
+
+  // Also once the dialog for someone new has closed, whether or not they were added.
+  await addPlayer("Add a new player…")
+  await screen.findByRole("dialog", { name: "Add a player" })
+  await userEvent.keyboard("{Escape}")
+  await waitFor(() => expect(screen.getByLabelText("Add a player")).toHaveFocus())
+  await addPlayer("Add a new player…")
+  const dialog = await screen.findByRole("dialog", { name: "Add a player" })
+  await userEvent.type(within(dialog).getByLabelText("Name"), "Eszter{Enter}")
+  expect(await screen.findByLabelText("Score of Eszter")).toBeInTheDocument()
+  await waitFor(() => expect(screen.getByLabelText("Add a player")).toHaveFocus())
+})
+
+test("once nobody is left to add, focus moves on to the last one's score", async () => {
+  signedInAs({ ...bence, permissions: ["CREATE_PLAYS"] })
+  gamesAre([azul])
+  playCanBeEntered()
+  renderApp(`/plays/new?game=${azul.id}`)
+
+  await addPlayer("Anna")
+  expect(screen.getByLabelText("Add a player")).toHaveFocus()
+  await addPlayer("Dora")
+  expect(screen.getByLabelText("Score of Dora")).toHaveFocus()
 })
 
 test("someone who may not create players is not offered to add one", async () => {
