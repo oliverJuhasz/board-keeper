@@ -467,8 +467,50 @@ test("shows a competitive play with the best placing first", async () => {
   ).toBeInTheDocument()
   expect(screen.getByRole("link", { name: "Record another play" })).toHaveAttribute(
     "href",
-    `/plays/new?game=${azul.id}`,
+    `/plays/new?game=${azul.id}&another=${azulPlay.id}`,
   )
+})
+
+test("another play after one starts with the same players, day and place", async () => {
+  signedInAs(bence)
+  gamesAre([azul])
+  playCanBeEntered()
+  playsCanBePreviewed()
+  const sent = playsCanBeRecorded()
+  renderApp(`/plays/${azulPlay.id}`)
+
+  await userEvent.click(await screen.findByRole("link", { name: "Record another play" }))
+
+  // The same players in the same order, with only their scores to enter. Bence recorded the
+  // play without playing in it, so he isn't put in.
+  expect(await screen.findByLabelText("Score of Dora")).toHaveValue(null)
+  expect(
+    screen.getAllByLabelText(/^Score of/).map((input) => input.getAttribute("aria-label")),
+  ).toEqual(["Score of Dora", "Score of Anna"])
+  expect(screen.getByLabelText("Date")).toHaveValue("2026-03-14")
+  expect(screen.getByLabelText("Location")).toHaveValue("At Dora's")
+  // Notes belong to the one play.
+  expect(screen.getByLabelText("Notes")).toHaveValue("")
+
+  await userEvent.type(screen.getByLabelText("Score of Dora"), "70")
+  await userEvent.type(screen.getByLabelText("Score of Anna"), "52")
+  await submit()
+
+  await screen.findByRole("heading", { name: "Azul" })
+  expect(sent).toEqual([
+    {
+      id: aNewPlayId,
+      gameId: azul.id,
+      playedOn: "2026-03-14",
+      location: "At Dora's",
+      recordingMode: "POINTS",
+      setup: { cooperative: "false", lowestScoreWins: "false" },
+      players: [
+        { playerId: doraPlayer.id, scores: { total: 70 }, winner: false, setup: {} },
+        { playerId: annaPlayer.id, scores: { total: 52 }, winner: false, setup: {} },
+      ],
+    },
+  ])
 })
 
 test("shows only who won when that is all that was recorded", async () => {

@@ -172,7 +172,8 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
         action={
           <div className="flex items-center gap-1">
             {can("CREATE_PLAYS") && (
-              <LinkButton to={`/plays/new?game=${play.game.id}`}>
+              // The form starts with this Play's Players, Setup, date and location.
+              <LinkButton to={`/plays/new?game=${play.game.id}&another=${play.id}`}>
                 {t("plays.page.recordAnother")}
               </LinkButton>
             )}
