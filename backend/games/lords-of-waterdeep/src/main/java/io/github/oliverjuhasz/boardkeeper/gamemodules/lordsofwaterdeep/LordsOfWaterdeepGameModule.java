@@ -26,7 +26,8 @@ import java.util.UUID;
  *   <li>There is no score pad, so the rows follow "Final Scoring": the Victory Points on the
  *       scoring track at the end of the eighth round, then "each Adventurer in your Tavern" for 1
  *       VP, "every 2 Gold in your Tavern (rounding down)" for 1 VP, and the Lord card, "as
- *       specified by the card".
+ *       specified by the card". The Victory Points on the track can be below zero: with Skullport,
+ *       "you immediately lose 10 VP for each token you could not take from the track".
  *   <li>Skullport adds a row for Corruption: "Each player reduces his or her Victory Point total
  *       by an amount determined by the total Corruption in his or her Tavern", each token being
  *       worth "the number on the empty space of the Corruption track that is farthest from -1".
@@ -66,7 +67,7 @@ public final class LordsOfWaterdeepGameModule extends StandardGameModule {
             List.of(),
             // In the order of "Final Scoring", after the points already on the scoring track.
             List.of(
-                    ScoreCategory.of("scoringTrack"),
+                    ScoreCategory.of("scoringTrack").mayBeNegative(),
                     ScoreCategory.of("adventurers"),
                     ScoreCategory.of(GOLD),
                     ScoreCategory.of("lordCard"),

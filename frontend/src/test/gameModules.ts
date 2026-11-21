@@ -396,7 +396,6 @@ export const lordsOfWaterdeepModule: GameModule = {
       {
         key: "scoringTrack",
         countsTowardTotal: true,
-        min: 0,
         step: 1,
         soloOnly: false,
         afterVictoryOnly: false,

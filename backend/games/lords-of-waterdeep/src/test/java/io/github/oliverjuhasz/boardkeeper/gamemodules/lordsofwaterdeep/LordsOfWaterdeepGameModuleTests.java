@@ -63,6 +63,18 @@ class LordsOfWaterdeepGameModuleTests {
         assertThat(module.scorePad().recorderDecidesTies()).isTrue();
     }
 
+    /**
+     * Skullport, page 8: "you immediately lose 10 VP for each token you could not take", so the
+     * Victory Points on the scoring track can be below zero. What is counted at the end can't.
+     */
+    @Test
+    void theScoringTrackCanBeBelowZero() {
+        assertThat(results(SKULLPORT, corrupt(pad(-12, 3, 1, 8), -9), corrupt(pad(40, 2, 1, 16), 0)))
+                .extracting(PlayerResult::total)
+                .containsExactly(-9, 59);
+        assertRefused("scoreNotAllowed", entry(BASE_GAME, pad(10, -1, 1, 8), pad(40, 2, 1, 16)));
+    }
+
     /** Page 4: two to five players. Skullport, page 5: six with at least one of its halves. */
     @Test
     void isForTwoToFivePlayersAndSixWithEitherHalfOfTheExpansion() {
