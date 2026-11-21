@@ -18,11 +18,13 @@ import io.github.oliverjuhasz.boardkeeper.problems.Problem;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -71,6 +73,11 @@ public class Plays {
 
     public Optional<Play> find(UUID id) {
         return repository.find(id);
+    }
+
+    /** Every Play, the oldest first, as for an Export. */
+    public List<Play> all() {
+        return repository.findAll();
     }
 
     /** The day each Game was last played on, by the Game's id. A Game without Plays is missing. */
@@ -252,14 +259,7 @@ public class Plays {
     }
 
     private Recalculated recalculate(Play play) {
-        PlayEntry entry = new PlayEntry(
-                play.recordingMode(),
-                play.setup(),
-                play.results().stream()
-                        .map(result -> new PlayerEntry(result.scores(), result.markedWinner(), result.setup()))
-                        .toList(),
-                play.group() == null ? null : new GroupEntry(play.group().won(), play.group().scores()),
-                play.victoryType());
+        PlayEntry entry = entryOf(play);
         List<UUID> playerIds = play.results().stream().map(Play.Result::playerId).toList();
         Scored scored = score(moduleOf(play.gameModuleId()), playerIds, entry);
         if (scored.results().equals(play.results()) && Objects.equals(scored.group(), play.group())) {
@@ -268,6 +268,96 @@ public class Plays {
         repository.replaceResults(play.id(), scored.group(), scored.results());
         events.publishEvent(new PlayChanged(play.id()));
         return new Recalculated(repository.find(play.id()).orElseThrow(), true);
+    }
+
+    /** Which of these Plays exist, by id. */
+    public Set<UUID> existing(Collection<UUID> ids) {
+        return repository.existingIds(ids);
+    }
+
+    /**
+     * Checks that this Installation can hold a Play copied from an Export as it was (ADR 0021):
+     * that the Game Module which scored it is installed and accepts what was entered, and that it
+     * keeps the rules the core itself knows. Its Results are not compared with the module's: a
+     * copy keeps those it was given. Its Game and Players are not looked up, because an Import may
+     * still have to create them.
+     *
+     * @throws Problem saying why not, as recording the Play would
+     */
+    public void checkCopy(Play play) {
+        List<UUID> playerIds = play.results().stream().map(Play.Result::playerId).toList();
+        if (new HashSet<>(playerIds).size() != playerIds.size()) {
+            throw Problem.unprocessable("plays.playerTwice");
+        }
+        // What Board Keeper never writes into an Export, but someone may have changed in the file.
+        if (lengthOf(play.location()) > MAX_LOCATION_LENGTH
+                || lengthOf(play.notes()) > MAX_NOTES_LENGTH
+                || play.cooperative() != (play.group() != null)
+                || play.results().stream().anyMatch(result -> result.placing() != null && result.placing() < 1)) {
+            throw Problem.unprocessable("request.invalid");
+        }
+        score(moduleOf(play.gameModuleId()), playerIds, entryOf(play));
+    }
+
+    /**
+     * Stores a Play from an Export as it was where it was recorded (ADR 0021): with its id, what
+     * was entered, the Results its Game Module calculated there, and who recorded it and when. Its
+     * Game and its Players must exist here.
+     *
+     * @return false when a Play with its id is here already. That one is left as it is.
+     * @throws Problem when this Installation can't hold the Play; see {@link #checkCopy(Play)}
+     */
+    @Transactional
+    public boolean copy(Play play) {
+        checkCopy(play);
+        games.find(play.gameId()).orElseThrow(() -> Problem.notFound("games.notFound"));
+        Set<UUID> playerIds = new HashSet<>();
+        playerIds.add(play.recordedBy());
+        play.results().forEach(result -> playerIds.add(result.playerId()));
+        if (players.find(playerIds).size() != playerIds.size()) {
+            throw Problem.notFound("players.notFound");
+        }
+        Play tidied = new Play(
+                play.id(),
+                play.gameId(),
+                play.gameModuleId(),
+                play.playedOn(),
+                tidy(play.location()),
+                tidy(play.notes()),
+                play.recordingMode(),
+                play.setup(),
+                play.victoryType(),
+                play.cooperative(),
+                play.group(),
+                play.results(),
+                play.recordedBy(),
+                play.recordedAt());
+        if (!repository.insertCopy(tidied)) {
+            return false;
+        }
+        events.publishEvent(new PlayRecorded(play.id()));
+        return true;
+    }
+
+    /** Without spaces around it; null when nothing is left. */
+    private static String tidy(String text) {
+        return text == null || text.isBlank() ? null : text.strip();
+    }
+
+    private static int lengthOf(String text) {
+        return text == null ? 0 : text.strip().length();
+    }
+
+    /** What was entered for a stored Play, as it was given to its Game Module. */
+    private static PlayEntry entryOf(Play play) {
+        return new PlayEntry(
+                play.recordingMode(),
+                play.setup(),
+                play.results().stream()
+                        .map(result -> new PlayerEntry(result.scores(), result.markedWinner(), result.setup()))
+                        .toList(),
+                play.group() == null ? null : new GroupEntry(play.group().won(), play.group().scores()),
+                play.victoryType());
     }
 
     /** Deletes a Play for good. */

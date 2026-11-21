@@ -152,6 +152,30 @@ So a listener can see an event twice, and two listeners can run at once. Copying
 
 **The pages.** `GET /api/stats/games/{id}` and `GET /api/stats/players/{id}` feed the pages at `/games/<id>` and `/players/<id>` in `frontend/src/features/stats/`. The tables they share are in `StatsTables.tsx`: a Game's page has a row for each Player, a Player's page a row for each Game. On a phone too narrow for every column the table scrolls sideways, with the first column held in place.
 
+### Exports and Imports
+
+The `exports` module makes an Export, the file of an Installation's Games, Players and Plays (ADR 0020), and imports one into another Installation (ADR 0021). It has no tables of its own: it reads and writes through `Games`, `Players` and `Plays`. The page, `frontend/src/features/exports/`, and the endpoints are for Admins only, through the admin-only Permissions `EXPORT` and `IMPORT`, so API Keys can't use them (ADR 0017).
+
+**The format.** `Export` and the records inside it are the file. `GET /api/export` answers with one, so `api/openapi.json` describes the current format. `Export.FORMAT` is its version, and every version stays importable (ADR 0022):
+
+- A new field that may be absent needs nothing more. An older Board Keeper ignores fields it doesn't know.
+- Renaming or removing a field, changing what one means, or making an optional one required is a change an older Board Keeper can't read. Raise `Export.FORMAT`, keep a way to turn a file of each older version into the current records, and add a sample file of the new version to the tests.
+- A Game Module's keys are in every file, which is one reason they never change (see "Adding a Game Module").
+
+**Everything at one moment.** `Exports.export` reads the Games, the Players and the Plays in one read-only transaction with the isolation level `REPEATABLE_READ`. PostgreSQL then shows every query of the transaction the database as it was at the first one, so a Play recorded meanwhile can't name a Player that the file lacks.
+
+**Downloading.** The frontend asks for the Export with `parseAs: "blob"`, which keeps the answer as the file it is, and hands it to the browser through a link with a `download` attribute (`ExportCard.tsx`). The server's `Content-Disposition` header names the file.
+
+**Importing** takes two requests, and the server keeps nothing between them: the browser reads the file and sends it with each. `POST /api/import/review` says what the Import would do; `POST /api/import` does it, with the Admin's choice of who each of the file's Players is. `Imports` works the file out the same way for both:
+
+1. It checks that the file is an Export of a format it reads, and whole: every Play names Games and Players the file has (`imports.notAnExport`, `imports.formatTooNew`, `imports.fileBroken`).
+2. It matches each Game. A Game with a module of its own goes to that module's Game here; a Generic Game goes to the Game of its name, also a module's Game of that name in any language (`Games.findByName`), or becomes a new Game. A Game whose module isn't installed here goes nowhere, and its Plays are refused.
+3. It skips the Plays that are here already, by id, and has `Plays.checkCopy` check the others with their Game Module. A Play the module refuses is listed, with the module's reason.
+
+The Import then adds the new Players and Games and has `Plays.copy` store each Play as it was: its id, its Results, and who recorded it and when. `copy` publishes `PlayRecorded`, so the statistics take in imported Plays like recorded ones. All of it is one transaction: if anything fails, nothing has changed.
+
+The tests import `backend/app/src/test/resources/exports/format-1.json`, the sample file of the first version of the format (`ImportApiTests`).
+
 ### Changing the database
 
 1. Add a file to `backend/app/src/main/resources/db/migration`, named `V<next number>__<what_it_does>.sql`, with two underscores after the number. Never edit a migration that has been applied to a real database.
@@ -367,6 +391,8 @@ This writes `frontend/src/components/ui/dialog.tsx`. Run `npm run format` afterw
 8. Register it in three places: as a `<module>` and under `<dependencyManagement>` in `backend/pom.xml`, and as a `runtime` dependency in `backend/app/pom.xml`.
 
 Nothing else changes. When the application next starts, the Game is in the catalogue, and the frontend draws its form from the description.
+
+**Keys never change.** Once a module is released, the keys in its score pad never change and are never removed. That covers its Score Categories, Expansions, Variants and their options, Victory Types, and Player Setup choices and their options. Every stored Play holds them, and so does every Export, and a file someone keeps can't be migrated. If a key really must change, the module keeps accepting the old one, so that a Recalculation or an Import still understands the Plays that use it.
 
 **Solo Plays.** Give the score pad a `Solo` if the Game can be played alone, and make its minimum one Player. `Solo.forScoreOnly()` records a total and nothing else: such a Play has no Placing and is neither won nor lost. `Solo.againstOpponent(row, tieWins)` adds a row for the opponent's score, which must be marked `notCounted()` and `inSoloPlaysOnly()`; the Player wins by beating it. Variants that only apply when playing alone, such as the Automa's level, are marked `inSoloPlaysOnly()` too, and the form shows them only for a Play of one.
 

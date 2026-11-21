@@ -51,6 +51,7 @@ Milestones M0 to M6 are done, which are all the milestones planned for v1. Board
 - recording Plays without a connection: they wait on the device and are sent once Board Keeper can be reached
 - Roles made of fine-grained Permissions, with pages for managing Roles and Accounts
 - API Keys, with which scripts and AI agents use Board Keeper as an Account, and the API described in Swagger UI
+- Exports of the Games, Players and Plays as one file, and Imports of an Export into another Installation, for Admins
 - password changes and Reset Links
 - an About page with the version that is running, where its source code is, and the licence
 

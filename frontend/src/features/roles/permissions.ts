@@ -20,6 +20,8 @@ const adminOnly: Record<Permission, boolean> = {
   MANAGE_ACCOUNTS: true,
   MANAGE_ROLES: true,
   RECALCULATE_PLAYS: true,
+  EXPORT: true,
+  IMPORT: true,
 }
 
 /** The Permissions a Role can be given, in the order the interface lists them. */

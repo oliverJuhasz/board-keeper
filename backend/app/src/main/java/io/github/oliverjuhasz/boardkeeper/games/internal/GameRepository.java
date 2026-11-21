@@ -44,6 +44,15 @@ public class GameRepository {
                 .fetchOptional(row -> row.value1());
     }
 
+    /** A Game scored by this Game Module; the oldest, should there be several. */
+    public Optional<Game> findByModule(UUID gameModuleId) {
+        return selectGames()
+                .where(GAME.GAME_MODULE_ID.eq(gameModuleId))
+                .orderBy(GAME.ID)
+                .limit(1)
+                .fetchOptional(GameRepository::toGame);
+    }
+
     /** Whether some Game is scored by this Game Module. */
     public boolean existsByModule(UUID gameModuleId) {
         return dsl.fetchExists(GAME, GAME.GAME_MODULE_ID.eq(gameModuleId));

@@ -15,9 +15,12 @@ import io.github.oliverjuhasz.boardkeeper.plays.NewPlay;
 import io.github.oliverjuhasz.boardkeeper.plays.Play;
 import io.github.oliverjuhasz.boardkeeper.plays.PlayHistory;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
@@ -104,6 +107,14 @@ public class PlayRepository {
         return page.fetch(PlayRepository::toPlay);
     }
 
+    /** Every Play, from the oldest day on, and within a day in the order they were recorded. */
+    public List<Play> findAll() {
+        return dsl.select(PLAY.asterisk(), RESULTS)
+                .from(PLAY)
+                .orderBy(PLAY.PLAYED_ON, PLAY.ID)
+                .fetch(PlayRepository::toPlay);
+    }
+
     public List<UUID> allIds() {
         return dsl.select(PLAY.ID).from(PLAY).fetch(row -> row.value1());
     }
@@ -158,6 +169,44 @@ public class PlayRepository {
                 .fetchOptional(row -> row.value1());
         inserted.ifPresent(recorded -> insertResults(recorded, results));
         return inserted;
+    }
+
+    /**
+     * Stores a Play exactly as it is given, as when an Import copies it: its id, its Game Module,
+     * its Results, and who recorded it and when.
+     *
+     * @return false when a Play with its id exists already, in which case nothing was stored
+     */
+    public boolean insertCopy(Play play) {
+        Play.GroupResult group = play.group();
+        boolean inserted = dsl.insertInto(PLAY)
+                        .set(PLAY.ID, play.id())
+                        .set(PLAY.GAME_ID, play.gameId())
+                        .set(PLAY.GAME_MODULE_ID, play.gameModuleId())
+                        .set(PLAY.PLAYED_ON, play.playedOn())
+                        .set(PLAY.LOCATION, play.location())
+                        .set(PLAY.NOTES, play.notes())
+                        .set(PLAY.RECORDING_MODE, play.recordingMode().name())
+                        .set(PLAY.SETUP, JsonColumns.toJson(play.setup()))
+                        .set(PLAY.VICTORY_TYPE, play.victoryType())
+                        .set(PLAY.COOPERATIVE, play.cooperative())
+                        .set(PLAY.GROUP_WON, group == null ? null : group.won())
+                        .set(PLAY.GROUP_SCORES, group == null ? null : JsonColumns.toJson(group.scores()))
+                        .set(PLAY.GROUP_TOTAL, group == null ? null : group.total())
+                        .set(PLAY.RECORDED_BY, play.recordedBy())
+                        .set(PLAY.RECORDED_AT, play.recordedAt().atOffset(ZoneOffset.UTC))
+                        .onConflictDoNothing()
+                        .execute()
+                == 1;
+        if (inserted) {
+            insertResults(play.id(), play.results());
+        }
+        return inserted;
+    }
+
+    /** Which of these Plays exist, by id. */
+    public Set<UUID> existingIds(Collection<UUID> ids) {
+        return dsl.select(PLAY.ID).from(PLAY).where(PLAY.ID.in(ids)).fetchSet(row -> row.value1());
     }
 
     /** Replaces what was entered for a Play and what was calculated from it. Its Game and its recorder stay. */

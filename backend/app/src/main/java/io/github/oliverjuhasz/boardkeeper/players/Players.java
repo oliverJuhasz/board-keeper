@@ -43,6 +43,11 @@ public class Players {
         return repository.findAll(ids).stream().collect(Collectors.toMap(Player::id, Function.identity()));
     }
 
+    /** The Player with this name, whatever its capitals. */
+    public Optional<Player> findByName(String name) {
+        return repository.findIdByName(name.strip()).flatMap(repository::find);
+    }
+
     /**
      * Creates a Player. Names are unique whatever their capitals; a name that is taken is
      * reported as the Problem {@code players.nameTaken}.
