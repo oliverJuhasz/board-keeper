@@ -15,6 +15,8 @@ import {
   calicoModule,
   duelModule,
   genericModule,
+  lastBastionModule,
+  lordsOfWaterdeepModule,
   sevenWondersModule,
   spiritIslandModule,
   wyrmspanModule,
@@ -146,6 +148,30 @@ export const spiritIsland: Game = {
   hasOwnModule: true,
   cooperative: true,
   recordingMode: "WINNER_ONLY",
+  lowestScoreWins: false,
+}
+
+/** A Cooperative Game with a module of its own that scores only a victory. */
+export const lastBastion: Game = {
+  id: "0193a000-0000-7000-8000-0000000000ea",
+  name: "Last Bastion",
+  gameModuleId: lastBastionModule.id,
+  moduleKey: "last-bastion",
+  hasOwnModule: true,
+  cooperative: true,
+  recordingMode: "POINTS",
+  lowestScoreWins: false,
+}
+
+/** A Game for which an Expansion lets more Players take part. */
+export const lordsOfWaterdeep: Game = {
+  id: "0193a000-0000-7000-8000-0000000000eb",
+  name: "Lords of Waterdeep",
+  gameModuleId: lordsOfWaterdeepModule.id,
+  moduleKey: "lords-of-waterdeep",
+  hasOwnModule: true,
+  cooperative: false,
+  recordingMode: "POINTS",
   lowestScoreWins: false,
 }
 

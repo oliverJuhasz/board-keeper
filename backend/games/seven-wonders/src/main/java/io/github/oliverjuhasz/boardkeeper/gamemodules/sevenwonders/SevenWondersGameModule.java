@@ -20,8 +20,9 @@ import java.util.UUID;
  * <ul>
  *   <li>7 Wonders is for three to seven players. The rulebook doesn't say; the box does.
  *   <li>Each player has a Wonder board, played on its Day or Night side. Both are the Player
- *       Setup, and each Wonder exists once. Leaders brings Roma and Abu Simbel, Cities brings
- *       Byzantium and Petra, and Manneken Pis is a promotional Wonder.
+ *       Setup, and each Wonder exists once. Leaders brings Roma and Abu Simbel, and Cities brings
+ *       Byzantium and Petra, so these are only chosen in a Play with their Expansion. Manneken
+ *       Pis is a promotional Wonder, which can always be chosen.
  *   <li>The rows of the score pad add up: the Wonder, the Treasury (a point per three coins), the
  *       Military Conflict tokens, and the blue, yellow, green and purple cards. "The total may be
  *       a negative number" for Military, as Defeats are worth -1 each.
@@ -88,7 +89,9 @@ public final class SevenWondersGameModule extends StandardGameModule {
                                             "byzantium",
                                             "petra",
                                             "mannekenPis"))
-                            .eachOptionOncePerPlay(),
+                            .eachOptionOncePerPlay()
+                            .onlyWith(LEADERS, List.of("roma", "abuSimbel"))
+                            .onlyWith(CITIES, List.of("byzantium", "petra")),
                     PlayerSetupChoice.of("side", List.of("day", "night"))));
 
     @Override

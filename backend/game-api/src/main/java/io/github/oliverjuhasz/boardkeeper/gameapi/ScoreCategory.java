@@ -11,6 +11,7 @@ package io.github.oliverjuhasz.boardkeeper.gameapi;
  * ScoreCategory.of("buttons").inStepsOf(3)
  * ScoreCategory.of("designGoals").onlyWhen("family", "false")
  * ScoreCategory.of("automa").notCounted().inSoloPlaysOnly()
+ * ScoreCategory.of("lifeTokens").onlyAfterVictory()
  * }</pre>
  *
  * @param key the category's name within its module: lower camel case, such as {@code designGoals}
@@ -22,6 +23,8 @@ package io.github.oliverjuhasz.boardkeeper.gameapi;
  *     null for a row that is always on it
  * @param soloOnly whether the row is only on the pad of a Solo Play, such as the Automa's score
  *     in Wyrmspan
+ * @param afterVictoryOnly whether the row is only on the pad of a Cooperative Play that the group
+ *     won, for a Game that scores only a victory, such as Last Bastion
  */
 public record ScoreCategory(
         String key,
@@ -30,7 +33,8 @@ public record ScoreCategory(
         Integer max,
         int step,
         OnlyWhen onlyWhen,
-        boolean soloOnly) {
+        boolean soloOnly,
+        boolean afterVictoryOnly) {
 
     public ScoreCategory {
         if (step < 1) {
@@ -39,29 +43,29 @@ public record ScoreCategory(
     }
 
     public static ScoreCategory of(String key) {
-        return new ScoreCategory(key, true, 0, null, 1, null, false);
+        return new ScoreCategory(key, true, 0, null, 1, null, false, false);
     }
 
     /** A value that is entered but not added to the total, for example because it only breaks ties. */
     public ScoreCategory notCounted() {
-        return new ScoreCategory(key, false, min, max, step, onlyWhen, soloOnly);
+        return new ScoreCategory(key, false, min, max, step, onlyWhen, soloOnly, afterVictoryOnly);
     }
 
     public ScoreCategory mayBeNegative() {
-        return new ScoreCategory(key, countsTowardTotal, null, max, step, onlyWhen, soloOnly);
+        return new ScoreCategory(key, countsTowardTotal, null, max, step, onlyWhen, soloOnly, afterVictoryOnly);
     }
 
     /** For a row that always scores something, such as Harmonies' islands: there is at least one. */
     public ScoreCategory atLeast(int lowest) {
-        return new ScoreCategory(key, countsTowardTotal, lowest, max, step, onlyWhen, soloOnly);
+        return new ScoreCategory(key, countsTowardTotal, lowest, max, step, onlyWhen, soloOnly, afterVictoryOnly);
     }
 
     public ScoreCategory atMost(int highest) {
-        return new ScoreCategory(key, countsTowardTotal, min, highest, step, onlyWhen, soloOnly);
+        return new ScoreCategory(key, countsTowardTotal, min, highest, step, onlyWhen, soloOnly, afterVictoryOnly);
     }
 
     public ScoreCategory inStepsOf(int multiple) {
-        return new ScoreCategory(key, countsTowardTotal, min, max, multiple, onlyWhen, soloOnly);
+        return new ScoreCategory(key, countsTowardTotal, min, max, multiple, onlyWhen, soloOnly, afterVictoryOnly);
     }
 
     /**
@@ -69,12 +73,20 @@ public record ScoreCategory(
      * Expansion. For an Expansion, the value is {@link Expansion#WITH} or {@link Expansion#WITHOUT}.
      */
     public ScoreCategory onlyWhen(String setupKey, String value) {
-        return new ScoreCategory(key, countsTowardTotal, min, max, step, new OnlyWhen(setupKey, value), soloOnly);
+        return new ScoreCategory(key, countsTowardTotal, min, max, step, new OnlyWhen(setupKey, value), soloOnly, afterVictoryOnly);
     }
 
     /** Puts the row on the pad of Solo Plays only. */
     public ScoreCategory inSoloPlaysOnly() {
-        return new ScoreCategory(key, countsTowardTotal, min, max, step, onlyWhen, true);
+        return new ScoreCategory(key, countsTowardTotal, min, max, step, onlyWhen, true, afterVictoryOnly);
+    }
+
+    /**
+     * Puts the row on the pad of a Cooperative Play only when the group won: a defeat has no
+     * score. Only a cooperative pad has such rows.
+     */
+    public ScoreCategory onlyAfterVictory() {
+        return new ScoreCategory(key, countsTowardTotal, min, max, step, onlyWhen, soloOnly, true);
     }
 
     /** Whether a value may be entered in this row. */

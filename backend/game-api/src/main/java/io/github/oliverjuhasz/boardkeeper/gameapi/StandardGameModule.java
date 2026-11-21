@@ -37,14 +37,12 @@ public abstract class StandardGameModule implements GameModule {
         ScorePad pad = scorePad();
         List<PlayerEntry> players = entry.players();
         boolean soloPlay = players.size() == 1;
-        if (players.size() < pad.minPlayers() || (soloPlay && pad.solo() == null)) {
+        if (soloPlay && pad.solo() == null) {
             throw new InvalidPlayException(Standard.TOO_FEW_PLAYERS);
         }
-        if (pad.maxPlayers() != null && players.size() > pad.maxPlayers()) {
-            throw new InvalidPlayException(Standard.TOO_MANY_PLAYERS);
-        }
+        Checks.playerCount(pad, entry.setup(), players.size());
         Checks.setup(pad, entry.setup(), soloPlay);
-        Checks.playerSetup(pad, players);
+        Checks.playerSetup(pad, entry.setup(), players);
         if (entry.group() != null) {
             throw new InvalidPlayException(Standard.NOT_RECORDED);
         }

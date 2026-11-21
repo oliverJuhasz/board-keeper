@@ -1,10 +1,19 @@
 import { expect, test } from "vitest"
 import type { Game, Play } from "@/api/client"
-import { calicoModule, genericModule } from "@/test/gameModules"
+import type { GameModule } from "@/api/client"
+import {
+  calicoModule,
+  genericModule,
+  sevenWondersModule,
+  spiritIslandModule,
+} from "@/test/gameModules"
 import {
   blankPlay,
   categoriesOnPad,
   fromPlay,
+  groupRowsOf,
+  mostPlayers,
+  optionsFor,
   playFormFor,
   SHARED,
   toNewPlay,
@@ -44,7 +53,7 @@ function form(overrides: Partial<PlayFormValues>): PlayFormValues {
 }
 
 /** The fields the form would show a message at, with the name of the message. */
-function problemsOf(module: typeof genericModule, values: PlayFormValues) {
+function problemsOf(module: GameModule, values: PlayFormValues) {
   const checked = playFormFor(module).safeParse(values)
   return checked.success
     ? {}
@@ -246,6 +255,79 @@ test("a game has its own number of players", () => {
       form({ players: [row(anna), row(bence), row(dora), row("d"), row("e")] }),
     ),
   ).toEqual({ players: "validation.playersTooMany" })
+})
+
+test("an expansion can let more players take part", () => {
+  // A made-up Expansion of Calico, with which six can play.
+  const withKittens: GameModule = {
+    ...calicoModule,
+    scorePad: { ...calicoModule.scorePad, expansions: [{ key: "kittens", maxPlayers: 6 }] },
+  }
+  const row = (playerId: string) => pad(playerId, "1", "1", "3")
+  const five = [row(anna), row(bence), row(dora), row("d"), row("e")]
+
+  expect(mostPlayers(withKittens, form({}))).toBe(4)
+  expect(mostPlayers(withKittens, form({ setup: { kittens: "true" } }))).toBe(6)
+  expect(problemsOf(withKittens, form({ players: five }))).toEqual({
+    players: "validation.playersTooManyWithoutExpansion",
+  })
+  expect(problemsOf(withKittens, form({ setup: { kittens: "true" }, players: five }))).toEqual({})
+  expect(
+    problemsOf(
+      withKittens,
+      form({ setup: { kittens: "true" }, players: [...five, row("f"), row("g")] }),
+    ),
+  ).toEqual({ players: "validation.playersTooMany" })
+})
+
+test("an option of a player setup that comes with an expansion needs a play with it", () => {
+  const wonder = sevenWondersModule.scorePad.playerSetup[0]
+  const row = (playerId: string, chosen: string) => ({
+    playerId,
+    scores: { wonder: "1", military: "1" },
+    won: false,
+    setup: { wonder: chosen, side: "" },
+  })
+  const players = [row(anna, "petra"), row(bence, "giza"), row(dora, "")]
+
+  expect(optionsFor(sevenWondersModule, form({}), wonder)).toEqual(["babylon", "giza", "rhodes"])
+  expect(optionsFor(sevenWondersModule, form({ setup: { cities: "true" } }), wonder)).toContain(
+    "petra",
+  )
+  expect(problemsOf(sevenWondersModule, form({ players }))).toEqual({
+    "players.0.setup.wonder": "validation.needsExpansion",
+  })
+  expect(problemsOf(sevenWondersModule, form({ setup: { cities: "true" }, players }))).toEqual({})
+})
+
+test("a cooperative game that scores only a victory has no rows after a defeat", () => {
+  // Spirit Island's rows, as if they were scored after a victory only, as Last Bastion's are.
+  const victoriesOnly: GameModule = {
+    ...spiritIslandModule,
+    scorePad: {
+      ...spiritIslandModule.scorePad,
+      categories: spiritIslandModule.scorePad.categories.map((category) => ({
+        ...category,
+        afterVictoryOnly: true,
+      })),
+    },
+  }
+  const players = [{ playerId: anna, scores: {}, won: false, setup: {} }]
+  const rowsAfter = (groupOutcome: PlayFormValues["groupOutcome"]) =>
+    groupRowsOf(victoriesOnly, form({ groupOutcome })).map((category) => category.key)
+
+  expect(rowsAfter("")).toEqual([])
+  expect(rowsAfter("lost")).toEqual([])
+  expect(rowsAfter("won")).toEqual(["invaderCards", "dahan", "blight"])
+  // A defeat is recorded in points without any rows.
+  const lost = form({ players, groupOutcome: "lost" })
+  expect(problemsOf(victoriesOnly, lost)).toEqual({})
+  expect(toNewPlay(victoriesOnly, "game", lost).group).toEqual({ won: false })
+  expect(problemsOf(victoriesOnly, form({ players, groupOutcome: "won" }))).toEqual({
+    "groupScores.invaderCards": "validation.scoreRequired",
+    "groupScores.dahan": "validation.scoreRequired",
+    "groupScores.blight": "validation.scoreRequired",
+  })
 })
 
 test("a play cannot be dated in the future", () => {

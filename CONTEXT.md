@@ -11,7 +11,7 @@ A board game as a product, such as Wingspan or Catan. Each Game is scored by one
 _Avoid_: Title, board game. Don't use "game" for one occasion of playing; that is a Play.
 
 **Expansion**:
-An add-on product for a Game, such as Oceania for Wingspan. It can change how the Game is played and scored, for example its player count or its Score Categories.
+An add-on product for a Game, such as Oceania for Wingspan, or a part of one that is played with on its own, such as Undermountain, one of the two halves of Scoundrels of Skullport for Lords of Waterdeep. It can change how the Game is played and scored, for example its player count, its Score Categories or what can be chosen in a Player Setup.
 _Avoid_: Add-on, extension, DLC
 
 **Variant**:
