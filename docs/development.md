@@ -152,7 +152,7 @@ So a listener can see an event twice, and two listeners can run at once. Copying
 
 ### Exports and Imports
 
-The `exports` module makes an Export, the file of an Installation's Games, Players and Plays (ADR 0019). It has no tables of its own: it reads through `Games`, `Players` and `Plays`. Both pages and endpoints are for Admins only, through admin-only Permissions, so API Keys can't use them (ADR 0017).
+The `exports` module makes an Export, the file of an Installation's Games, Players and Plays (ADR 0019), and imports one into another Installation (ADR 0020). It has no tables of its own: it reads and writes through `Games`, `Players` and `Plays`. The page, `frontend/src/features/exports/`, and the endpoints are for Admins only, through the admin-only Permissions `EXPORT` and `IMPORT`, so API Keys can't use them (ADR 0017).
 
 **The format.** `Export` and the records inside it are the file. `GET /api/export` answers with one, so `api/openapi.json` describes the current format. `Export.FORMAT` is its version, and every version stays importable (ADR 0021):
 
@@ -162,7 +162,17 @@ The `exports` module makes an Export, the file of an Installation's Games, Playe
 
 **Everything at one moment.** `Exports.export` reads the Games, the Players and the Plays in one read-only transaction with the isolation level `REPEATABLE_READ`. PostgreSQL then shows every query of the transaction the database as it was at the first one, so a Play recorded meanwhile can't name a Player that the file lacks.
 
-**Downloading.** The frontend asks for the Export with `parseAs: "blob"`, which keeps the answer as the file it is, and hands it to the browser through a link with a `download` attribute (`frontend/src/features/exports/ExportCard.tsx`). The server's `Content-Disposition` header names the file.
+**Downloading.** The frontend asks for the Export with `parseAs: "blob"`, which keeps the answer as the file it is, and hands it to the browser through a link with a `download` attribute (`ExportCard.tsx`). The server's `Content-Disposition` header names the file.
+
+**Importing** takes two requests, and the server keeps nothing between them: the browser reads the file and sends it with each. `POST /api/import/review` says what the Import would do; `POST /api/import` does it, with the Admin's choice of who each of the file's Players is. `Imports` works the file out the same way for both:
+
+1. It checks that the file is an Export of a format it reads, and whole: every Play names Games and Players the file has (`imports.notAnExport`, `imports.formatTooNew`, `imports.fileBroken`).
+2. It matches each Game. A Game with a module of its own goes to that module's Game here; a Generic Game goes to the Game of its name, also a module's Game of that name in any language (`Games.findByName`), or becomes a new Game. A Game whose module isn't installed here goes nowhere, and its Plays are refused.
+3. It skips the Plays that are here already, by id, and has `Plays.checkCopy` check the others with their Game Module. A Play the module refuses is listed, with the module's reason.
+
+The Import then adds the new Players and Games and has `Plays.copy` store each Play as it was: its id, its Results, and who recorded it and when. `copy` publishes `PlayRecorded`, so the statistics take in imported Plays like recorded ones. All of it is one transaction: if anything fails, nothing has changed.
+
+The tests import `backend/app/src/test/resources/exports/format-1.json`, the sample file of the first version of the format (`ImportApiTests`).
 
 ### Changing the database
 

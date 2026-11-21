@@ -338,7 +338,8 @@
     "tieUnanswered": "Say who won the tie, or that the win is shared.",
     "soloScoresOnly": "A solo play of this game is recorded with its scores. Choose Points.",
     "oneWinnerOnly": "Only one player can win this way.",
-    "chosenTwice": "Another player has this {{choice}} already."
+    "chosenTwice": "Another player has this {{choice}} already.",
+    "playerNameTaken": "There is already a player with this name."
   },
   "problems": {
     "unknown": "Something went wrong. Try again.",
@@ -416,6 +417,14 @@
       "confirmationNeeded": "Confirm it's you with your password or a passkey.",
       "nameTaken": "You already have an API key with this name.",
       "notFound": "This API key no longer exists."
+    },
+    "imports": {
+      "notAnExport": "This file isn't an export of Board Keeper.",
+      "formatTooNew": "This export was made by a newer Board Keeper. Update this one first.",
+      "fileBroken": "This export is damaged: something is missing from it, or it names games or players it doesn't hold.",
+      "playersNotChosen": "Choose who every player of the export is.",
+      "playerChosenTwice": "Two players of the export can't be the same player here.",
+      "gameModuleMissing": "This Board Keeper can't score this game ({{module}}). Update Board Keeper first."
     }
   },
   "nav": {
@@ -632,6 +641,37 @@
       "title": "Export",
       "text": "Saves every game, player and play in one file, which another Board Keeper can import. It holds nothing about accounts, so it is no backup: back up the database for that. Should the database be lost all the same, importing an export brings back the plays.",
       "download": "Download an export"
+    },
+    "import": {
+      "title": "Import",
+      "text": "Adds the plays of an export from another Board Keeper, with the players and games they need. Plays that are here already stay as they are.",
+      "file": "Export file",
+      "backupFirst": "An import can't be undone, so back up the database first.",
+      "loading": "Loading the players",
+      "loadFailed": "Couldn't load the players",
+      "toAdd_one": "{{count}} play to add",
+      "toAdd_other": "{{count}} plays to add",
+      "alreadyHere_one": "{{count}} play is here already and stays as it is",
+      "alreadyHere_other": "{{count}} plays are here already and stay as they are",
+      "newPlayers_one": "{{count}} new player",
+      "newPlayers_other": "{{count}} new players",
+      "newGames_one": "{{count}} new game: {{names}}",
+      "newGames_other": "{{count}} new games: {{names}}",
+      "refused_one": "{{count}} play can't be imported:",
+      "refused_other": "{{count}} plays can't be imported:",
+      "refusedPlay": "{{day}}, {{game}}: {{reason}}",
+      "whoIsWho": "Who is who",
+      "whoIsWhoHint": "Choose who each player of the export is here. Board Keeper suggests who they most likely are: the player in their place in a play that is here already, or else the player with the same name.",
+      "newPlayer": "A new player",
+      "newPlayerName": "{{name}}'s name here",
+      "confirm": "Import",
+      "done_one": "Imported {{count}} play.",
+      "done_other": "Imported {{count}} plays.",
+      "newPlayersAdded_one": "Added {{count}} new player",
+      "newPlayersAdded_other": "Added {{count}} new players",
+      "newGamesAdded_one": "Added {{count}} new game",
+      "newGamesAdded_other": "Added {{count}} new games",
+      "another": "Import another export"
     }
   },
   "permissions": {
@@ -698,6 +738,10 @@
     "EXPORT": {
       "name": "Export",
       "hint": "Save every game, player and play in a file."
+    },
+    "IMPORT": {
+      "name": "Import",
+      "hint": "Add the plays of an export from another Board Keeper."
     }
   },
   "resetPassword": {

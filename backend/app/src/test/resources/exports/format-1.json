@@ -1,0 +1,134 @@
+{
+  "format": 1,
+  "exportedAt": "2026-03-01T18:00:00Z",
+  "writtenBy": { "version": "1.1.0", "commit": "0123456789abcdef0123456789abcdef01234567" },
+  "aFieldFromTheFuture": "an older Board Keeper ignores fields it doesn't know",
+  "gameModules": [
+    { "id": "d392b4e5-a531-44c4-85c7-369783d9be5c", "key": "calico" },
+    { "id": "38b119d2-8f9f-4e20-8068-cba305c06cdd", "key": "generic" },
+    { "id": "7d1e0c4a-5b6f-4a3e-9c2d-1f0e9d8c7b6a", "key": "fancy-game" }
+  ],
+  "games": [
+    { "id": "0190a000-0000-7000-8000-00000000a001", "name": "Calico", "gameModuleId": "d392b4e5-a531-44c4-85c7-369783d9be5c" },
+    {
+      "id": "0190a000-0000-7000-8000-00000000a003",
+      "name": "Catan",
+      "gameModuleId": "38b119d2-8f9f-4e20-8068-cba305c06cdd",
+      "recordingDefaults": { "cooperative": false, "recordingMode": "WINNER_ONLY", "lowestScoreWins": false }
+    },
+    { "id": "0190a000-0000-7000-8000-00000000a004", "name": "Fancy Game", "gameModuleId": "7d1e0c4a-5b6f-4a3e-9c2d-1f0e9d8c7b6a" },
+    {
+      "id": "0190a000-0000-7000-8000-00000000a002",
+      "name": "Golf",
+      "gameModuleId": "38b119d2-8f9f-4e20-8068-cba305c06cdd",
+      "recordingDefaults": { "cooperative": false, "recordingMode": "POINTS", "lowestScoreWins": true }
+    },
+    {
+      "id": "0190a000-0000-7000-8000-00000000a005",
+      "name": "Hanabi",
+      "gameModuleId": "38b119d2-8f9f-4e20-8068-cba305c06cdd",
+      "recordingDefaults": { "cooperative": true, "recordingMode": "POINTS", "lowestScoreWins": false }
+    }
+  ],
+  "players": [
+    { "id": "0190a000-0000-7000-8000-00000000b001", "name": "Anna" },
+    { "id": "0190a000-0000-7000-8000-00000000b002", "name": "Dora" },
+    { "id": "0190a000-0000-7000-8000-00000000b003", "name": "Zsófi" }
+  ],
+  "plays": [
+    {
+      "id": "0190a000-0000-7000-8000-00000000c001",
+      "gameId": "0190a000-0000-7000-8000-00000000a002",
+      "gameModuleId": "38b119d2-8f9f-4e20-8068-cba305c06cdd",
+      "playedOn": "2026-01-10",
+      "location": "Utrecht",
+      "notes": "A close one.",
+      "recordingMode": "POINTS",
+      "setup": { "lowestScoreWins": "true" },
+      "cooperative": false,
+      "results": [
+        { "playerId": "0190a000-0000-7000-8000-00000000b001", "scores": { "total": 70 }, "setup": {}, "markedWinner": false, "total": 70, "placing": 2, "won": false },
+        { "playerId": "0190a000-0000-7000-8000-00000000b002", "scores": { "total": 74 }, "setup": {}, "markedWinner": false, "total": 74, "placing": 1, "won": true }
+      ],
+      "recordedBy": "0190a000-0000-7000-8000-00000000b001",
+      "recordedAt": "2026-01-10T21:30:00Z",
+      "aFieldFromTheFuture": true
+    },
+    {
+      "id": "0190a000-0000-7000-8000-00000000c002",
+      "gameId": "0190a000-0000-7000-8000-00000000a001",
+      "gameModuleId": "d392b4e5-a531-44c4-85c7-369783d9be5c",
+      "playedOn": "2026-02-01",
+      "recordingMode": "POINTS",
+      "setup": {},
+      "cooperative": false,
+      "results": [
+        { "playerId": "0190a000-0000-7000-8000-00000000b001", "scores": { "designGoals": 28, "cats": 23, "buttons": 21 }, "setup": {}, "markedWinner": false, "total": 72, "placing": 1, "won": true },
+        { "playerId": "0190a000-0000-7000-8000-00000000b002", "scores": { "designGoals": 21, "cats": 19, "buttons": 18 }, "setup": {}, "markedWinner": false, "total": 58, "placing": 2, "won": false }
+      ],
+      "recordedBy": "0190a000-0000-7000-8000-00000000b002",
+      "recordedAt": "2026-02-01T20:00:00Z"
+    },
+    {
+      "id": "0190a000-0000-7000-8000-00000000c003",
+      "gameId": "0190a000-0000-7000-8000-00000000a001",
+      "gameModuleId": "d392b4e5-a531-44c4-85c7-369783d9be5c",
+      "playedOn": "2026-02-02",
+      "recordingMode": "POINTS",
+      "setup": {},
+      "cooperative": false,
+      "results": [
+        { "playerId": "0190a000-0000-7000-8000-00000000b001", "scores": { "designGoals": 28, "cats": 23, "buttons": 22 }, "setup": {}, "markedWinner": false, "total": 73, "placing": 1, "won": true },
+        { "playerId": "0190a000-0000-7000-8000-00000000b002", "scores": { "designGoals": 21, "cats": 19, "buttons": 18 }, "setup": {}, "markedWinner": false, "total": 58, "placing": 2, "won": false }
+      ],
+      "recordedBy": "0190a000-0000-7000-8000-00000000b002",
+      "recordedAt": "2026-02-02T20:00:00Z"
+    },
+    {
+      "id": "0190a000-0000-7000-8000-00000000c004",
+      "gameId": "0190a000-0000-7000-8000-00000000a004",
+      "gameModuleId": "7d1e0c4a-5b6f-4a3e-9c2d-1f0e9d8c7b6a",
+      "playedOn": "2026-02-03",
+      "recordingMode": "POINTS",
+      "setup": {},
+      "cooperative": false,
+      "results": [
+        { "playerId": "0190a000-0000-7000-8000-00000000b001", "scores": { "sparkles": 9 }, "setup": {}, "markedWinner": false, "total": 9, "placing": 1, "won": true },
+        { "playerId": "0190a000-0000-7000-8000-00000000b002", "scores": { "sparkles": 4 }, "setup": {}, "markedWinner": false, "total": 4, "placing": 2, "won": false }
+      ],
+      "recordedBy": "0190a000-0000-7000-8000-00000000b001",
+      "recordedAt": "2026-02-03T20:00:00Z"
+    },
+    {
+      "id": "0190a000-0000-7000-8000-00000000c005",
+      "gameId": "0190a000-0000-7000-8000-00000000a003",
+      "gameModuleId": "38b119d2-8f9f-4e20-8068-cba305c06cdd",
+      "playedOn": "2026-02-14",
+      "recordingMode": "WINNER_ONLY",
+      "setup": {},
+      "cooperative": false,
+      "results": [
+        { "playerId": "0190a000-0000-7000-8000-00000000b001", "scores": {}, "setup": {}, "markedWinner": true, "won": true },
+        { "playerId": "0190a000-0000-7000-8000-00000000b002", "scores": {}, "setup": {}, "markedWinner": false, "won": false }
+      ],
+      "recordedBy": "0190a000-0000-7000-8000-00000000b001",
+      "recordedAt": "2026-02-14T22:15:00Z"
+    },
+    {
+      "id": "0190a000-0000-7000-8000-00000000c006",
+      "gameId": "0190a000-0000-7000-8000-00000000a005",
+      "gameModuleId": "38b119d2-8f9f-4e20-8068-cba305c06cdd",
+      "playedOn": "2026-02-20",
+      "recordingMode": "POINTS",
+      "setup": { "cooperative": "true" },
+      "cooperative": true,
+      "group": { "won": true, "scores": { "total": 23 }, "total": 23 },
+      "results": [
+        { "playerId": "0190a000-0000-7000-8000-00000000b001", "scores": {}, "setup": {}, "markedWinner": false, "won": true },
+        { "playerId": "0190a000-0000-7000-8000-00000000b002", "scores": {}, "setup": {}, "markedWinner": false, "won": true }
+      ],
+      "recordedBy": "0190a000-0000-7000-8000-00000000b002",
+      "recordedAt": "2026-02-20T21:00:00Z"
+    }
+  ]
+}

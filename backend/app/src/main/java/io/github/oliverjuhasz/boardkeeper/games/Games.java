@@ -96,6 +96,30 @@ public class Games {
         return !game.gameModuleId().equals(gameModules.generic().id());
     }
 
+    /**
+     * The Game that goes by this name, whatever its capitals: one in the catalogue under that name,
+     * or the Game of a Game Module whose name it is in any language, as when the module arrived the
+     * Game would have been handed to it.
+     */
+    public Optional<Game> findByName(String name) {
+        String wanted = name.strip();
+        Optional<Game> inCatalogue = repository.findIdByName(wanted).flatMap(repository::find);
+        if (inCatalogue.isPresent()) {
+            return inCatalogue;
+        }
+        UUID generic = gameModules.generic().id();
+        return gameModules.all().stream()
+                .filter(module -> !module.id().equals(generic))
+                .filter(module -> texts.namesOf(module).stream().anyMatch(wanted::equalsIgnoreCase))
+                .findFirst()
+                .flatMap(module -> findByModule(module.id()));
+    }
+
+    /** The Game of a Game Module of its own. Every installed module has one, from startup on. */
+    public Optional<Game> findByModule(UUID gameModuleId) {
+        return repository.findByModule(gameModuleId);
+    }
+
     /** Every Game, ordered by name. */
     public List<Game> all() {
         return repository.findAllOrderedByName();

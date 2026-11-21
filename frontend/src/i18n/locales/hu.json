@@ -338,7 +338,8 @@
     "tieUnanswered": "Add meg, ki nyerte a holtversenyt, vagy hogy a győzelem megosztott.",
     "soloScoresOnly": "Ennek a játéknak az egyszemélyes partiját a pontszámokkal rögzítjük. Válaszd a Pontokat.",
     "oneWinnerOnly": "Így csak egy játékos nyerhet.",
-    "chosenTwice": "Egy másik játékosnak már ez a választása ({{choice}})."
+    "chosenTwice": "Egy másik játékosnak már ez a választása ({{choice}}).",
+    "playerNameTaken": "Már van ilyen nevű játékos."
   },
   "problems": {
     "unknown": "Valami hiba történt. Próbáld újra.",
@@ -416,6 +417,14 @@
       "confirmationNeeded": "Erősítsd meg a jelszavaddal vagy egy passkeyjel, hogy te vagy az.",
       "nameTaken": "Már van ilyen nevű API-kulcsod.",
       "notFound": "Ez az API-kulcs már nem létezik."
+    },
+    "imports": {
+      "notAnExport": "Ez a fájl nem a Board Keeper exportja.",
+      "formatTooNew": "Ezt az exportot egy újabb Board Keeper készítette. Előbb frissítsd ezt.",
+      "fileBroken": "Ez az export sérült: hiányzik belőle valami, vagy olyan játékokat vagy játékosokat említ, amelyek nincsenek benne.",
+      "playersNotChosen": "Válaszd ki az export minden játékosáról, hogy ki ő itt.",
+      "playerChosenTwice": "Az export két játékosa nem lehet itt ugyanaz a játékos.",
+      "gameModuleMissing": "Ez a Board Keeper nem tudja pontozni ezt a játékot ({{module}}). Előbb frissítsd a Board Keepert."
     }
   },
   "nav": {
@@ -632,6 +641,37 @@
       "title": "Exportálás",
       "text": "Minden játékot, játékost és partit egyetlen fájlba ment, amit egy másik Board Keeper be tud importálni. A fiókokról semmit sem tartalmaz, ezért nem biztonsági mentés: arra az adatbázisról készíts mentést. Ha mégis elveszne az adatbázis, egy export importálása visszahozza a partikat.",
       "download": "Export letöltése"
+    },
+    "import": {
+      "title": "Importálás",
+      "text": "Egy másik Board Keeper exportjának partijait adja hozzá, a hozzájuk kellő játékosokkal és játékokkal együtt. Az itt már meglévő partik változatlanok maradnak.",
+      "file": "Exportfájl",
+      "backupFirst": "Az importálás nem vonható vissza, ezért előbb készíts mentést az adatbázisról.",
+      "loading": "Játékosok betöltése",
+      "loadFailed": "Nem sikerült betölteni a játékosokat",
+      "toAdd_one": "{{count}} hozzáadandó parti",
+      "toAdd_other": "{{count}} hozzáadandó parti",
+      "alreadyHere_one": "{{count}} parti már itt van, és változatlan marad",
+      "alreadyHere_other": "{{count}} parti már itt van, és változatlan marad",
+      "newPlayers_one": "{{count}} új játékos",
+      "newPlayers_other": "{{count}} új játékos",
+      "newGames_one": "{{count}} új játék: {{names}}",
+      "newGames_other": "{{count}} új játék: {{names}}",
+      "refused_one": "{{count}} partit nem lehet importálni:",
+      "refused_other": "{{count}} partit nem lehet importálni:",
+      "refusedPlay": "{{day}}, {{game}}: {{reason}}",
+      "whoIsWho": "Ki kicsoda",
+      "whoIsWhoHint": "Válaszd ki, hogy az export egyes játékosai kik itt. A Board Keeper javasolja, ki lehet: aki egy itt már meglévő partiban az ő helyén áll, vagy ha ilyen nincs, az azonos nevű játékos.",
+      "newPlayer": "Új játékos",
+      "newPlayerName": "{{name}} neve itt",
+      "confirm": "Importálás",
+      "done_one": "{{count}} parti importálva.",
+      "done_other": "{{count}} parti importálva.",
+      "newPlayersAdded_one": "{{count}} új játékos hozzáadva",
+      "newPlayersAdded_other": "{{count}} új játékos hozzáadva",
+      "newGamesAdded_one": "{{count}} új játék hozzáadva",
+      "newGamesAdded_other": "{{count}} új játék hozzáadva",
+      "another": "Másik export importálása"
     }
   },
   "permissions": {
@@ -698,6 +738,10 @@
     "EXPORT": {
       "name": "Exportálás",
       "hint": "Minden játék, játékos és parti mentése egy fájlba."
+    },
+    "IMPORT": {
+      "name": "Importálás",
+      "hint": "Egy másik Board Keeper exportjának partijait hozzáadni."
     }
   },
   "resetPassword": {

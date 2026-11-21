@@ -1,6 +1,6 @@
 # Running Board Keeper yourself
 
-Board Keeper runs as two containers: the application, which serves both the API and the web app, and a PostgreSQL database. This guide sets them up with Docker Compose, and covers the first Admin, updates, backups and getting back in when the only Admin has forgotten their password.
+Board Keeper runs as two containers: the application, which serves both the API and the web app, and a PostgreSQL database. This guide sets them up with Docker Compose, and covers the first Admin, updates, backups, moving Plays to another installation, and getting back in when the only Admin has forgotten their password.
 
 How your installation is reached from outside (your network, a reverse proxy, a certificate), when it is updated and when it is backed up are yours to decide. This guide says what Board Keeper needs from them, not how to set them up.
 
@@ -39,6 +39,7 @@ Board Keeper expects a reverse proxy in front of it to handle https: the proxy h
 - Pass every path through, unchanged. The web app, the API (`/api/…`) and the health check (`/actuator/health`) all live at the same address.
 - Send the `X-Forwarded-Proto` header (and preferably `X-Forwarded-Host` and `X-Forwarded-For`), so Board Keeper knows the visitor came in over https. Most proxies do this by default.
 - Pass the `Authorization` header through, for programs that use an API Key. Most proxies do this by default.
+- Allow requests as large as an Export, to import one. A few thousand Plays make a file of a few megabytes; nginx, for one, allows 1 MB unless `client_max_body_size` says otherwise.
 - Nothing else is needed: no WebSockets, no sticky sessions.
 
 Set `BOARDKEEPER_URL` to the address the proxy answers at, exactly as people type it, and start Board Keeper again with `docker compose up -d`.
@@ -98,6 +99,19 @@ docker compose start app
 ```
 
 `--clean` replaces what the database holds with the backup's contents. Everything recorded since the backup is gone.
+
+An Admin can also save an Export, from **Export and import** in the account menu: one file with every Game, Player and Play, but nothing about Accounts. It is no backup of the installation. Still, should the database be lost without a backup, importing an Export into a new Board Keeper brings back the Plays; only the Accounts have to be set up again, by inviting everyone to claim their Player. An Export can't be made by a scheduled job, so keep making backups.
+
+## Moving Plays to another installation
+
+The Plays of one Board Keeper can be brought into another, such as when two circles of friends join up:
+
+1. In the first, an Admin opens **Export and import** from the account menu and downloads an Export.
+2. Make a backup of the other one: an Import can't be undone.
+3. In the other, an Admin chooses that file under **Import**. Board Keeper first says what it would add, and which Plays it can't take, such as those of a Game that only a newer Board Keeper can score. It asks who each Player of the Export is there, and suggests who they most likely are: the same Player as in a Play it has already, or else a Player of the same name. Anyone else can become a new Player.
+4. **Import** adds the Plays as they were: with their Results, and with who recorded them and when.
+
+Importing the same Export again adds nothing, and a Play that is already there is left as it is. The two needn't run the same version, but an Export made by a newer Board Keeper may need the other one to be updated first; it says so.
 
 ## When the only Admin has forgotten their password
 

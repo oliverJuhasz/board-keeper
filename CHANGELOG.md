@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Added
 
 - Admins can save every Game, Player and Play as an Export: one file, downloaded from "Export and import" in the account menu, to use elsewhere or to import into another Installation. It holds nothing about Accounts, so it is no backup of the Installation.
+- Admins can import an Export into another Installation, from the same page. A review first says what it would add and which Plays this Installation can't take, and asks who each of its Players is here. Plays keep their Results and who recorded them, and a Play that is already there is left as it is.
 - The Players of a Play can be put in another order while it is recorded or edited, by dragging or from the keyboard. The Score Pad's columns follow that order, and the Play keeps it.
 
 ### Changed

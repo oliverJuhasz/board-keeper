@@ -159,7 +159,7 @@
           },
           "permissions" : {
             "items" : {
-              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "REMOVE_GAMES", "CREATE_PLAYS", "CHANGE_PLAYS_RECORDED", "CHANGE_PLAYS_TAKEN_PART_IN", "CHANGE_ANY_PLAY", "USE_API_KEYS", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES", "RECALCULATE_PLAYS", "EXPORT" ],
+              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "REMOVE_GAMES", "CREATE_PLAYS", "CHANGE_PLAYS_RECORDED", "CHANGE_PLAYS_TAKEN_PART_IN", "CHANGE_ANY_PLAY", "USE_API_KEYS", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES", "RECALCULATE_PLAYS", "EXPORT", "IMPORT" ],
               "type" : "string"
             },
             "type" : "array",
@@ -708,6 +708,188 @@
           }
         },
         "required" : [ "plays", "wins" ],
+        "type" : "object"
+      },
+      "ImportPlayerChoice" : {
+        "description" : "Either a Player here, or the name of a new Player",
+        "properties" : {
+          "fileId" : {
+            "description" : "The Player's id in the file",
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "newName" : {
+            "description" : "A new Player's name, which no Player here may have yet",
+            "maxLength" : 50,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "playerId" : {
+            "description" : "The Player here who this is. Each can be chosen for one of the file's Players only.",
+            "format" : "uuid",
+            "type" : "string"
+          }
+        },
+        "required" : [ "fileId" ],
+        "type" : "object"
+      },
+      "ImportRefusedPlay" : {
+        "properties" : {
+          "game" : {
+            "description" : "The name of its Game in the file",
+            "type" : "string"
+          },
+          "gameModuleKey" : {
+            "description" : "When the reason is imports.gameModuleMissing: the key of the Game Module, or its id when the file doesn't say",
+            "type" : "string"
+          },
+          "playId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "playedOn" : {
+            "format" : "date",
+            "type" : "string"
+          },
+          "reason" : {
+            "description" : "Why, as the name of a text: under \"problems\" in the frontend's texts, or a Game Module's own such as \"<module>.invalid.<reason>\"",
+            "type" : "string"
+          }
+        },
+        "required" : [ "game", "playId", "playedOn", "reason" ],
+        "type" : "object"
+      },
+      "ImportRequest" : {
+        "properties" : {
+          "file" : {
+            "$ref" : "#/components/schemas/Export",
+            "description" : "The Export, as it was reviewed"
+          },
+          "players" : {
+            "description" : "Who each of the file's Players is here: one choice for every one of them",
+            "items" : {
+              "$ref" : "#/components/schemas/ImportPlayerChoice"
+            },
+            "type" : "array"
+          }
+        },
+        "required" : [ "file", "players" ],
+        "type" : "object"
+      },
+      "ImportResult" : {
+        "properties" : {
+          "added" : {
+            "description" : "How many Plays were added",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "alreadyHere" : {
+            "description" : "How many Plays were here already, and were left as they are",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "newGames" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "newPlayers" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "refused" : {
+            "description" : "The Plays this Installation couldn't take, and why",
+            "items" : {
+              "$ref" : "#/components/schemas/ImportRefusedPlay"
+            },
+            "type" : "array"
+          }
+        },
+        "required" : [ "added", "alreadyHere", "newGames", "newPlayers", "refused" ],
+        "type" : "object"
+      },
+      "ImportReview" : {
+        "description" : "What importing an Export would do. Nothing has been written yet.",
+        "properties" : {
+          "alreadyHere" : {
+            "description" : "How many of them are here already, and would be left as they are",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "games" : {
+            "description" : "Each of the file's Games, and where its Plays would go",
+            "items" : {
+              "$ref" : "#/components/schemas/ImportReviewedGame"
+            },
+            "type" : "array"
+          },
+          "players" : {
+            "description" : "Each of the file's Players, with who they most likely are here",
+            "items" : {
+              "$ref" : "#/components/schemas/ImportReviewedPlayer"
+            },
+            "type" : "array"
+          },
+          "plays" : {
+            "description" : "How many Plays the file holds",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "refused" : {
+            "description" : "The Plays this Installation can't take, and why",
+            "items" : {
+              "$ref" : "#/components/schemas/ImportRefusedPlay"
+            },
+            "type" : "array"
+          }
+        },
+        "required" : [ "alreadyHere", "games", "players", "plays", "refused" ],
+        "type" : "object"
+      },
+      "ImportReviewedGame" : {
+        "properties" : {
+          "fileId" : {
+            "description" : "The Game's id in the file",
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "gameId" : {
+            "description" : "For CATALOGUE: the Game here",
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "gameModuleKey" : {
+            "description" : "For MODULE_MISSING: the key of the Game Module it needs, or its id when the file doesn't say",
+            "type" : "string"
+          },
+          "match" : {
+            "enum" : [ "CATALOGUE", "NEW", "MODULE_MISSING" ],
+            "type" : "string"
+          },
+          "name" : {
+            "description" : "Its name in the file",
+            "type" : "string"
+          }
+        },
+        "required" : [ "fileId", "match", "name" ],
+        "type" : "object"
+      },
+      "ImportReviewedPlayer" : {
+        "properties" : {
+          "fileId" : {
+            "description" : "The Player's id in the file",
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "suggestedPlayerId" : {
+            "description" : "Who the Player most likely is here: the Player in their place in a Play that is here already, or else the Player with the same name, whatever its capitals. Absent when there is neither, in which case a new Player is the obvious choice.",
+            "format" : "uuid",
+            "type" : "string"
+          }
+        },
+        "required" : [ "fileId", "name" ],
         "type" : "object"
       },
       "Invite" : {
@@ -1566,7 +1748,7 @@
           },
           "permissions" : {
             "items" : {
-              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "REMOVE_GAMES", "CREATE_PLAYS", "CHANGE_PLAYS_RECORDED", "CHANGE_PLAYS_TAKEN_PART_IN", "CHANGE_ANY_PLAY", "USE_API_KEYS", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES", "RECALCULATE_PLAYS", "EXPORT" ],
+              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "REMOVE_GAMES", "CREATE_PLAYS", "CHANGE_PLAYS_RECORDED", "CHANGE_PLAYS_TAKEN_PART_IN", "CHANGE_ANY_PLAY", "USE_API_KEYS", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES", "RECALCULATE_PLAYS", "EXPORT", "IMPORT" ],
               "type" : "string"
             },
             "type" : "array",
@@ -1585,7 +1767,7 @@
           },
           "permissions" : {
             "items" : {
-              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "REMOVE_GAMES", "CREATE_PLAYS", "CHANGE_PLAYS_RECORDED", "CHANGE_PLAYS_TAKEN_PART_IN", "CHANGE_ANY_PLAY", "USE_API_KEYS", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES", "RECALCULATE_PLAYS", "EXPORT" ],
+              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "REMOVE_GAMES", "CREATE_PLAYS", "CHANGE_PLAYS_RECORDED", "CHANGE_PLAYS_TAKEN_PART_IN", "CHANGE_ANY_PLAY", "USE_API_KEYS", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES", "RECALCULATE_PLAYS", "EXPORT", "IMPORT" ],
               "type" : "string"
             },
             "type" : "array",
@@ -2705,6 +2887,86 @@
         },
         "summary" : "Rename a Game and change how its Plays are recorded",
         "tags" : [ "Games" ]
+      }
+    },
+    "/api/import" : {
+      "post" : {
+        "description" : "Adds the Plays of an Export that aren't here yet, as they were where they were recorded: with their ids, their Results, and who recorded them and when. Plays that are here already are left as they are, and Plays this Installation can't take are listed. Each of the file's Players becomes the Player here that was chosen for them, or a new one; each of its Games becomes the Game it was reviewed to match, or a new one. Either all of it happens, or, when something fails, nothing. For Admins only.",
+        "operationId" : "importExport",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ImportRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ImportResult"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Import an Export",
+        "tags" : [ "Export and import" ]
+      }
+    },
+    "/api/import/review" : {
+      "post" : {
+        "description" : "What importing an Export would do, without changing anything: where the Plays of each of its Games would go, which Player here has the name of each of its Players, how many of its Plays are here already, and which ones this Installation can't take, and why. An Export this Board Keeper can't read is answered with imports.notAnExport, imports.formatTooNew or imports.fileBroken. For Admins only.",
+        "operationId" : "reviewImport",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/Export"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ImportReview"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Review an Import",
+        "tags" : [ "Export and import" ]
       }
     },
     "/api/invites" : {

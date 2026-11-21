@@ -65,7 +65,7 @@ export function AccountMenu() {
         {can("MANAGE_ROLES") && (
           <DropdownMenuItem render={<Link to="/roles" />}>{t("account.roles")}</DropdownMenuItem>
         )}
-        {can("EXPORT") && (
+        {(can("EXPORT") || can("IMPORT")) && (
           <DropdownMenuItem render={<Link to="/export-and-import" />}>
             {t("account.exportAndImport")}
           </DropdownMenuItem>

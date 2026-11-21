@@ -338,7 +338,8 @@
     "tieUnanswered": "Geef aan wie het gelijkspel won, of dat de winst gedeeld is.",
     "soloScoresOnly": "Een solopartij van dit spel wordt met de scores vastgelegd. Kies Punten.",
     "oneWinnerOnly": "Zo kan maar één speler winnen.",
-    "chosenTwice": "Een andere speler heeft dit al als {{choice}}."
+    "chosenTwice": "Een andere speler heeft dit al als {{choice}}.",
+    "playerNameTaken": "Er is al een speler met deze naam."
   },
   "problems": {
     "unknown": "Er ging iets mis. Probeer het opnieuw.",
@@ -416,6 +417,14 @@
       "confirmationNeeded": "Bevestig met je wachtwoord of een passkey dat jij het bent.",
       "nameTaken": "Je hebt al een API-sleutel met deze naam.",
       "notFound": "Deze API-sleutel bestaat niet meer."
+    },
+    "imports": {
+      "notAnExport": "Dit bestand is geen export van Board Keeper.",
+      "formatTooNew": "Deze export komt van een nieuwere Board Keeper. Werk deze eerst bij.",
+      "fileBroken": "Deze export is beschadigd: er ontbreekt iets, of hij noemt spellen of spelers die er niet in staan.",
+      "playersNotChosen": "Kies voor elke speler uit de export wie het hier is.",
+      "playerChosenTwice": "Twee spelers uit de export kunnen hier niet dezelfde speler zijn.",
+      "gameModuleMissing": "Deze Board Keeper kan dit spel niet scoren ({{module}}). Werk Board Keeper eerst bij."
     }
   },
   "nav": {
@@ -632,6 +641,37 @@
       "title": "Exporteren",
       "text": "Slaat alle spellen, spelers en partijen op in één bestand, dat een andere Board Keeper kan importeren. Er staat niets over accounts in, dus het is geen back-up: maak daarvoor een back-up van de database. Raakt de database toch kwijt, dan brengt het importeren van een export de partijen terug.",
       "download": "Export downloaden"
+    },
+    "import": {
+      "title": "Importeren",
+      "text": "Voegt de partijen uit een export van een andere Board Keeper toe, met de spelers en spellen die ze nodig hebben. Partijen die hier al staan, blijven zoals ze zijn.",
+      "file": "Exportbestand",
+      "backupFirst": "Een import kun je niet ongedaan maken, dus maak eerst een back-up van de database.",
+      "loading": "Spelers laden",
+      "loadFailed": "Kon de spelers niet laden",
+      "toAdd_one": "{{count}} partij om toe te voegen",
+      "toAdd_other": "{{count}} partijen om toe te voegen",
+      "alreadyHere_one": "{{count}} partij staat hier al en blijft zoals hij is",
+      "alreadyHere_other": "{{count}} partijen staan hier al en blijven zoals ze zijn",
+      "newPlayers_one": "{{count}} nieuwe speler",
+      "newPlayers_other": "{{count}} nieuwe spelers",
+      "newGames_one": "{{count}} nieuw spel: {{names}}",
+      "newGames_other": "{{count}} nieuwe spellen: {{names}}",
+      "refused_one": "{{count}} partij kan niet worden geïmporteerd:",
+      "refused_other": "{{count}} partijen kunnen niet worden geïmporteerd:",
+      "refusedPlay": "{{day}}, {{game}}: {{reason}}",
+      "whoIsWho": "Wie is wie",
+      "whoIsWhoHint": "Kies wie elke speler uit de export hier is. Board Keeper stelt voor wie het waarschijnlijk is: de speler op hun plek in een partij die hier al staat, of anders de speler met dezelfde naam.",
+      "newPlayer": "Een nieuwe speler",
+      "newPlayerName": "Naam van {{name}} hier",
+      "confirm": "Importeren",
+      "done_one": "{{count}} partij geïmporteerd.",
+      "done_other": "{{count}} partijen geïmporteerd.",
+      "newPlayersAdded_one": "{{count}} nieuwe speler toegevoegd",
+      "newPlayersAdded_other": "{{count}} nieuwe spelers toegevoegd",
+      "newGamesAdded_one": "{{count}} nieuw spel toegevoegd",
+      "newGamesAdded_other": "{{count}} nieuwe spellen toegevoegd",
+      "another": "Nog een export importeren"
     }
   },
   "permissions": {
@@ -698,6 +738,10 @@
     "EXPORT": {
       "name": "Exporteren",
       "hint": "Alle spellen, spelers en partijen in een bestand opslaan."
+    },
+    "IMPORT": {
+      "name": "Importeren",
+      "hint": "De partijen uit een export van een andere Board Keeper toevoegen."
     }
   },
   "resetPassword": {

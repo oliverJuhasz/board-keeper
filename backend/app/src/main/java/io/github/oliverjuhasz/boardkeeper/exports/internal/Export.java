@@ -29,7 +29,9 @@ import java.util.UUID;
         requiredProperties = {"format", "exportedAt", "writtenBy", "gameModules", "games", "players", "plays"})
 record Export(
         @Schema(description = "The version of the format, raised only by a change an older Board Keeper can't read")
-                int format,
+                // An Integer rather than an int, so that a file without it reaches the Import, which
+                // says it isn't an Export, instead of failing to be read at all.
+                Integer format,
         Instant exportedAt,
         @Schema(description = "Which Board Keeper wrote the file") WrittenBy writtenBy,
         @Schema(description = "The key of each Game Module the Games and Plays name, for people. A Game Module that"

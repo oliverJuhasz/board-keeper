@@ -44,7 +44,12 @@ public enum Permission {
      */
     RECALCULATE_PLAYS(true),
     /** Save the Installation's Games, Players and Plays as an Export (ADR 0019). */
-    EXPORT(true);
+    EXPORT(true),
+    /**
+     * Bring the Plays of an Export into the Installation, with the Players and Games they need
+     * (ADR 0020).
+     */
+    IMPORT(true);
 
     private final boolean adminOnly;
 

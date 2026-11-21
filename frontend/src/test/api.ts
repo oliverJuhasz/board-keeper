@@ -47,6 +47,7 @@ export const anna: CurrentAccount = {
     "MANAGE_ROLES",
     "RECALCULATE_PLAYS",
     "EXPORT",
+    "IMPORT",
   ],
 }
 
