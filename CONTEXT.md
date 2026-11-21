@@ -134,6 +134,20 @@ The built-in Role that holds every Permission; also any Account holding it. Only
 **Member**:
 The built-in Role an Invite gives unless the Admin picks another.
 
+### Between installations
+
+**Installation**:
+One running Board Keeper, with its own database, Accounts, Players and Plays.
+_Avoid_: Instance, server, deployment
+
+**Export**:
+A file holding an Installation's Games, Players and Plays, to use them elsewhere or for an Import. It holds nothing about Accounts, so it is not a backup.
+_Avoid_: Backup, dump, archive
+
+**Import**:
+Adding the Plays of an Export to an Installation, together with the Players and Games they need. Plays already there are left as they are.
+_Avoid_: Restore, sync, merge. "Merge" is kept for merging duplicate Players.
+
 ## The main terms in the interface's other languages
 
 | English | Dutch | Hungarian |

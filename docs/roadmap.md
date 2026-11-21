@@ -46,8 +46,8 @@ Changing Plays without a connection, teams, unfinished plays, game nights, impor
 - Versioning the API, before Board Keeper is published. Until then the API changes along with the frontend, so a script that uses it may need changing after an update.
 - Moving to Maven 4 once it is released. Its new pom format no longer needs each module to repeat its parent's version.
 - An MCP server, so that AI agents can use Board Keeper through tools such as recording a Play. Until then they use the API with an API Key (ADR 0017).
-- Exporting part of the record, narrowed as the play history is: to a Game, a Player, a period or "my plays".
-- A CSV view of an export, to open in a spreadsheet. Only the JSON file can be imported.
+- An Export of part of the record, narrowed as the play history is: to a Game, a Player, a period or "my plays".
+- A CSV view of an Export, to open in a spreadsheet. Only the JSON file can be imported.
 
 ## Milestones
 
@@ -128,13 +128,15 @@ Changing Plays without a connection, teams, unfinished plays, game nights, impor
 
 ## Settled for import and export
 
-Board Keeper's Games, Players and Plays can be exported to a file, for use elsewhere, and that file can be imported into another installation. Importing from other apps, such as BG Stats or BoardGameGeek, is not part of this. Neither is copying a whole installation, which is what a backup is for (ADR 0019).
+An Installation's Games, Players and Plays can be saved as an Export, for use elsewhere, and an Export can be brought into another Installation by an Import. Importing from other apps, such as BG Stats or BoardGameGeek, is not part of this. Neither is copying a whole Installation, which is what a backup is for (ADR 0019).
 
-- **An export is one JSON file** of the whole shared record. It holds the Games (their name, their Game Module, and a Generic Game's recording defaults), the Players (their names only) and every Play: everything entered for it, who recorded it and when, and its Results. It holds nothing about Accounts and no statistics (ADR 0019).
-- The format allows a file that holds only some Plays, with just the Players and Games they need, so an export can be narrowed later without changing the format.
-- **An import keeps each Play as it was** at the source: its UUID and its Results (ADR 0020). This installation's Game Module checks what was entered, and a Play it refuses is left out and listed. A Play that is already here is skipped, never overwritten, so importing the same file twice changes nothing.
-- **Before anything is written, the importer says who is who.** A Game with a module of its own is matched by its module, and a Generic Game by its name. Each Player in the file is suggested to match the Player of the same name, or to become a new Player, and the importer can change each suggestion. The same step says how much the import adds, such as "43 Plays, 2 new Players, 1 new Game".
-- **Importing is for Admins only.** Its Permission is admin-only, like recalculating every Play of a Game.
+- **Export and Import are for Admins only.** They share a page, "Export and import", in the account menu, which only Admins see and reach. Their Permissions are admin-only, like recalculating every Play of a Game, so API Keys can do neither (ADR 0017). An Export is mostly for moving Plays to another Installation, and JSON is not for reading.
+- **An Export is one JSON file** of the whole shared record, downloaded as `board-keeper-YYYY-MM-DD.json`. It holds the Games (their name, their Game Module, and a Generic Game's recording defaults), every Player (their name only) and every Play: everything entered for it, who recorded it and when, and its Results. Players and Games without Plays are in it too. It holds nothing about Accounts and no statistics (ADR 0019).
+- The format allows a file that holds only some Plays, with just the Players and Games they need, so an Export can be narrowed later without changing the format.
+- **Every version of the format stays importable** (ADR 0021). The file says which version of the format it uses, and which Board Keeper wrote it and when. A file of a newer format than this Installation knows is refused, with the advice to update Board Keeper first.
+- **An Import keeps each Play as it was** at the source: its UUID, its Results (ADR 0020), and who recorded it and when, the recorder mapped to a Player here like everyone else in the file. A Play that is already here is skipped, never overwritten, so importing the same file twice changes nothing.
+- **Before anything is written, the Admin reviews the Import.** A Game with a module of its own is matched by its module. A Generic Game is matched by its name, also to a module's Game of that name, as the catalogue does when a module arrives; its Plays keep the Generic Module and their totals. Each Player in the file is suggested to match the Player of the same name, or to become a new Player, and the Admin can change each suggestion. The same step checks every Play with this Installation's Game Modules, lists those that would be refused, including all Plays of a Game whose module this Installation doesn't have, and says how much the Import adds, such as "43 Plays, 2 new Players, 1 new Game".
+- **Confirming writes everything else at once**, or nothing if something fails part-way. An Import can't be undone, so the page advises making a backup first.
 
 ## Details to settle when a milestone starts
 
