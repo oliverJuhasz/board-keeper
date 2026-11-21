@@ -366,6 +366,8 @@ This writes `frontend/src/components/ui/dialog.tsx`. Run `npm run format` afterw
 
 Nothing else changes. When the application next starts, the Game is in the catalogue, and the frontend draws its form from the description.
 
+**Keys never change.** Once a module is released, the keys in its score pad never change and are never removed. That covers its Score Categories, Expansions, Variants and their options, Victory Types, and Player Setup choices and their options. Every stored Play holds them, and so does every Export, and a file someone keeps can't be migrated. If a key really must change, the module keeps accepting the old one, so that a Recalculation or an Import still understands the Plays that use it.
+
 **Solo Plays.** Give the score pad a `Solo` if the Game can be played alone, and make its minimum one Player. `Solo.forScoreOnly()` records a total and nothing else: such a Play has no Placing and is neither won nor lost. `Solo.againstOpponent(row, tieWins)` adds a row for the opponent's score, which must be marked `notCounted()` and `inSoloPlaysOnly()`; the Player wins by beating it. Variants that only apply when playing alone, such as the Automa's level, are marked `inSoloPlaysOnly()` too, and the form shows them only for a Play of one.
 
 **Expansions.** List the Expansions a Play can be played with. In a Play's Setup each is `"true"` or `"false"` under its key, next to the Variants, and the form offers them as checkboxes. What an Expansion changes is said where it applies: a row that an Expansion adds is `onlyWhen("pantheon", Expansion.WITH)`, and a row it takes away is `onlyWhen("pantheon", Expansion.WITHOUT)`. `onlyWhen` names a Variant or an Expansion alike.
