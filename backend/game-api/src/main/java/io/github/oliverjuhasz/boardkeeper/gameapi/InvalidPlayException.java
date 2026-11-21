@@ -17,7 +17,7 @@ public class InvalidPlayException extends RuntimeException {
     public enum Standard {
         /** Fewer Players than the Game can be played with. */
         TOO_FEW_PLAYERS("tooFewPlayers"),
-        /** More Players than the Game can be played with. */
+        /** More Players than the Game can be played with, with the Expansions chosen. */
         TOO_MANY_PLAYERS("tooManyPlayers"),
         /** A Player has no value in a Score Category that is on the pad. */
         SCORE_MISSING("scoreMissing"),
@@ -37,6 +37,8 @@ public class InvalidPlayException extends RuntimeException {
         ONE_WINNER_ONLY("oneWinnerOnly"),
         /** Two Players have the same option of a Player Setup choice that can be made once per Play. */
         CHOSEN_TWICE("chosenTwice"),
+        /** A Player has a Player Setup option that comes with an Expansion the Play was not played with. */
+        NEEDS_EXPANSION("needsExpansion"),
         /** A Cooperative Play does not say whether the group won. */
         GROUP_RESULT_MISSING("groupResultMissing");
 

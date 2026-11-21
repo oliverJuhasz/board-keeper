@@ -123,6 +123,7 @@
       "total": "Összesen",
       "placing": "Helyezés",
       "playersFull": "Ezt a játékot legfeljebb {{max}} játékos játszhatja.",
+      "playersFullWithoutExpansion": "Ezt a játékot legfeljebb {{max}} játékos játszhatja, hacsak nem egy olyan kiegészítővel játszottok, amely többet enged.",
       "lost": "Vesztett",
       "soloResult": "Eredmény",
       "offline": "Nincs kapcsolat. Ez a parti ezen az eszközön marad, és elküldjük, amint lesz kapcsolat. Az összpontszámokat és a helyezéseket akkor számoljuk ki.",
@@ -207,6 +208,7 @@
       "victoryTypeMissing": "Add meg, hogyan nyert a parti.",
       "oneWinnerOnly": "Az így megnyert partinak egy győztese van.",
       "chosenTwice": "Két játékos ugyanazt kapta, pedig mindegyikből csak egy van, például egy csodából.",
+      "needsExpansion": "Egy játékos olyan választást kapott, amely egy kiegészítőhöz tartozik, de azzal nem játszottatok.",
       "groupResultMissing": "Add meg, hogy a csapat nyert vagy vesztett."
     },
     "waiting": {
@@ -332,6 +334,7 @@
     "locationTooLong": "Legfeljebb 100 karaktert használj.",
     "notesTooLong": "Legfeljebb 2000 karaktert használj.",
     "playersTooMany": "Ezt a játékot legfeljebb {{max}} játékos játszhatja.",
+    "playersTooManyWithoutExpansion": "Ezt a játékot legfeljebb {{max}} játékos játszhatja, hacsak nem egy olyan kiegészítővel játszottok, amely többet enged.",
     "scoreTooLow": "Legalább {{min}} legyen.",
     "scoreTooHigh": "Legfeljebb {{max}} lehet.",
     "scoreStep": "{{step}} többszörösét add meg.",
@@ -339,7 +342,8 @@
     "soloScoresOnly": "Ennek a játéknak az egyszemélyes partiját a pontszámokkal rögzítjük. Válaszd a Pontokat.",
     "oneWinnerOnly": "Így csak egy játékos nyerhet.",
     "chosenTwice": "Egy másik játékosnak már ez a választása ({{choice}}).",
-    "playerNameTaken": "Már van ilyen nevű játékos."
+    "playerNameTaken": "Már van ilyen nevű játékos.",
+    "needsExpansion": "Ez a választás ({{choice}}) a(z) {{expansion}} kiegészítővel jár. Pipáld be a kiegészítők között, vagy válassz mást."
   },
   "problems": {
     "unknown": "Valami hiba történt. Próbáld újra.",

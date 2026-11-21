@@ -193,6 +193,11 @@
         "properties" : {
           "key" : {
             "type" : "string"
+          },
+          "maxPlayers" : {
+            "description" : "The most Players a Play with this Expansion can have, more than the score pad's own maximum. Absent when the Expansion doesn't change it.",
+            "format" : "int32",
+            "type" : "integer"
           }
         },
         "required" : [ "key" ],
@@ -1435,9 +1440,16 @@
               "type" : "string"
             },
             "type" : "array"
+          },
+          "optionsOnlyWith" : {
+            "additionalProperties" : {
+              "type" : "string"
+            },
+            "description" : "The options that come with an Expansion, each with the Expansion's key. Such an option can only be chosen in a Play with that Expansion; any other option always can.",
+            "type" : "object"
           }
         },
-        "required" : [ "key", "oncePerPlay", "options" ],
+        "required" : [ "key", "oncePerPlay", "options", "optionsOnlyWith" ],
         "type" : "object"
       },
       "PlayerSoloStats" : {
@@ -1793,6 +1805,10 @@
       },
       "ScoreCategory" : {
         "properties" : {
+          "afterVictoryOnly" : {
+            "description" : "For a cooperative pad: whether the row is on the pad only when the group won, for a Game that scores only a victory",
+            "type" : "boolean"
+          },
           "countsTowardTotal" : {
             "type" : "boolean"
           },
@@ -1823,7 +1839,7 @@
             "type" : "integer"
           }
         },
-        "required" : [ "countsTowardTotal", "key", "soloOnly", "step" ],
+        "required" : [ "afterVictoryOnly", "countsTowardTotal", "key", "soloOnly", "step" ],
         "type" : "object"
       },
       "ScorePad" : {
@@ -1848,7 +1864,7 @@
             "type" : "array"
           },
           "maxPlayers" : {
-            "description" : "Absent when there is no limit",
+            "description" : "Absent when there is no limit. An Expansion can raise it for the Plays played with it.",
             "format" : "int32",
             "type" : "integer"
           },

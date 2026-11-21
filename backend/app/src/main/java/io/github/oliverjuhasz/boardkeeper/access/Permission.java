@@ -43,11 +43,11 @@ public enum Permission {
      * whoever may change it.
      */
     RECALCULATE_PLAYS(true),
-    /** Save the Installation's Games, Players and Plays as an Export (ADR 0019). */
+    /** Save the Installation's Games, Players and Plays as an Export (ADR 0020). */
     EXPORT(true),
     /**
      * Bring the Plays of an Export into the Installation, with the Players and Games they need
-     * (ADR 0020).
+     * (ADR 0021).
      */
     IMPORT(true);
 

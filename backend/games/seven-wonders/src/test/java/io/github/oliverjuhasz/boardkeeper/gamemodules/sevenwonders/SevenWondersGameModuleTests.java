@@ -111,6 +111,24 @@ class SevenWondersGameModuleTests {
                         "mannekenPis");
     }
 
+    /** The Wonders of an Expansion are only played with it; the promotional Manneken Pis always can be. */
+    @Test
+    void offersTheWondersOfAnExpansionOnlyWithIt() {
+        PlayerSetupChoice wonder = module.scorePad().playerSetup().getFirst();
+        PlayerEntry roma = as(pad(10, 4, 9, 15, 5, 13, 7), Map.of("wonder", "roma"));
+        PlayerEntry petra = as(pad(7, 2, 5, 20, 8, 1, 4), Map.of("wonder", "petra"));
+        PlayerEntry mannekenPis = as(pad(3, 6, 0, 12, 2, 25, 6), Map.of("wonder", "mannekenPis"));
+
+        assertThat(wonder.optionsFor(module.scorePad(), BASE_GAME))
+                .doesNotContain("roma", "abuSimbel", "byzantium", "petra")
+                .contains("mannekenPis");
+        assertThat(wonder.optionsFor(module.scorePad(), Map.of("leaders", "true")))
+                .contains("roma", "abuSimbel")
+                .doesNotContain("byzantium", "petra");
+        assertRefused("needsExpansion", entry(BASE_GAME, roma, petra, mannekenPis));
+        assertThat(results(BOTH, both(roma, 6, 9), both(petra, 3, 2), both(mannekenPis, 0, 5))).hasSize(3);
+    }
+
     @Test
     void isForThreeToSevenPlayers() {
         PlayerEntry anyone = pad(1, 1, 1, 1, 1, 1, 1);

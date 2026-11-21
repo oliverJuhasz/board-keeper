@@ -134,3 +134,33 @@ test("editing a play keeps each player's choices", async () => {
   expect(screen.getByLabelText("Wonder board of Anna")).toHaveValue("giza")
   expect(screen.getByLabelText("Wonder board of Dora")).toHaveValue("")
 })
+
+test("a wonder that comes with an expansion is offered once the expansion is ticked", async () => {
+  signedInAs(bence)
+  gamesAre([sevenWonders])
+  playCanBeEntered()
+  playsCanBePreviewed()
+  renderApp(`/plays/new?game=${sevenWonders.id}`)
+
+  // The Expansions come before the Players: they decide what can be chosen for each Player.
+  const expansions = await screen.findByRole("group", { name: "Expansions" })
+  const players = screen.getByRole("group", { name: "Players" })
+  expect(expansions.compareDocumentPosition(players)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+
+  const wonder = screen.getByLabelText("Wonder board of Bence")
+  expect(within(wonder).queryByRole("option", { name: "Petra" })).not.toBeInTheDocument()
+  await userEvent.click(screen.getByRole("checkbox", { name: "Cities" }))
+  await userEvent.selectOptions(wonder, "Petra")
+
+  // Taking Cities off again keeps Petra, and says at once why it can't stay.
+  await userEvent.click(screen.getByRole("checkbox", { name: "Cities" }))
+  expect(wonder).toHaveValue("petra")
+  expect(
+    screen.getByText(
+      "This Wonder board comes with Cities. Tick it under Expansions, or choose another.",
+    ),
+  ).toBeInTheDocument()
+  await userEvent.selectOptions(wonder, "Giza")
+  expect(screen.queryByText(/comes with Cities/)).not.toBeInTheDocument()
+  expect(within(wonder).queryByRole("option", { name: "Petra" })).not.toBeInTheDocument()
+})

@@ -78,7 +78,9 @@ class GameModuleController {
             })
     record ScorePadResponse(
             int minPlayers,
-            @Schema(description = "Absent when there is no limit") Integer maxPlayers,
+            @Schema(description = "Absent when there is no limit. An Expansion can raise it for the Plays played"
+                            + " with it.")
+                    Integer maxPlayers,
             @Schema(description = "The Expansions a Play can be played with, in the order to offer them")
                     List<ExpansionResponse> expansions,
             List<VariantResponse> variants,
@@ -103,14 +105,17 @@ class GameModuleController {
             return new ScorePadResponse(
                     pad.minPlayers(),
                     pad.maxPlayers(),
-                    pad.expansions().stream().map(expansion -> new ExpansionResponse(expansion.key())).toList(),
+                    pad.expansions().stream()
+                            .map(expansion -> new ExpansionResponse(expansion.key(), expansion.maxPlayers()))
+                            .toList(),
                     pad.variants().stream().map(VariantResponse::from).toList(),
                     pad.categories().stream().map(ScoreCategoryResponse::from).toList(),
                     pad.recorderDecidesTies(),
                     SoloResponse.from(pad.solo()),
                     pad.victoryTypes().stream().map(VictoryTypeResponse::from).toList(),
                     pad.playerSetup().stream()
-                            .map(choice -> new PlayerSetupChoiceResponse(choice.key(), choice.options(), choice.oncePerPlay()))
+                            .map(choice -> new PlayerSetupChoiceResponse(
+                                    choice.key(), choice.options(), choice.oncePerPlay(), choice.optionsOnlyWith()))
                             .toList(),
                     pad.cooperative(),
                     pad.usualRecordingMode());
@@ -120,17 +125,24 @@ class GameModuleController {
     @Schema(
             name = "PlayerSetupChoice",
             description = "Something chosen for each Player, such as their Wonder. It may be left out for a Player.",
-            requiredProperties = {"key", "options", "oncePerPlay"})
+            requiredProperties = {"key", "options", "oncePerPlay", "optionsOnlyWith"})
     record PlayerSetupChoiceResponse(
             String key,
             @Schema(description = "The keys of the options, in the order to offer them") List<String> options,
-            @Schema(description = "Whether no two Players of a Play can have the same option") boolean oncePerPlay) {}
+            @Schema(description = "Whether no two Players of a Play can have the same option") boolean oncePerPlay,
+            @Schema(description = "The options that come with an Expansion, each with the Expansion's key. Such an"
+                            + " option can only be chosen in a Play with that Expansion; any other option always can.")
+                    Map<String, String> optionsOnlyWith) {}
 
     @Schema(
             name = "Expansion",
             description = "In a Play's Setup, \"true\" when it was played with, and \"false\" or absent when not",
             requiredProperties = {"key"})
-    record ExpansionResponse(String key) {}
+    record ExpansionResponse(
+            String key,
+            @Schema(description = "The most Players a Play with this Expansion can have, more than the score pad's own"
+                            + " maximum. Absent when the Expansion doesn't change it.")
+                    Integer maxPlayers) {}
 
     @Schema(
             name = "VictoryType",
@@ -236,7 +248,7 @@ class GameModuleController {
 
     @Schema(
             name = "ScoreCategory",
-            requiredProperties = {"key", "countsTowardTotal", "step", "soloOnly"})
+            requiredProperties = {"key", "countsTowardTotal", "step", "soloOnly", "afterVictoryOnly"})
     record ScoreCategoryResponse(
             String key,
             boolean countsTowardTotal,
@@ -246,7 +258,10 @@ class GameModuleController {
             @Schema(description = "The row is on the pad only when the Setup has this value. Absent for a row that"
                             + " is always on it.")
                     OnlyWhenResponse onlyWhen,
-            @Schema(description = "Whether the row is on the pad of a Solo Play only") boolean soloOnly) {
+            @Schema(description = "Whether the row is on the pad of a Solo Play only") boolean soloOnly,
+            @Schema(description = "For a cooperative pad: whether the row is on the pad only when the group won, for"
+                            + " a Game that scores only a victory")
+                    boolean afterVictoryOnly) {
 
         static ScoreCategoryResponse from(ScoreCategory category) {
             return new ScoreCategoryResponse(
@@ -256,7 +271,8 @@ class GameModuleController {
                     category.max(),
                     category.step(),
                     OnlyWhenResponse.from(category.onlyWhen()),
-                    category.soloOnly());
+                    category.soloOnly(),
+                    category.afterVictoryOnly());
         }
     }
 

@@ -10,9 +10,9 @@ import java.util.UUID;
 
 /**
  * An Export: an Installation's Games, Players and Plays as one JSON file, to use them elsewhere or
- * to bring them into another Installation by an Import (ADR 0019). It holds nothing about Accounts.
+ * to bring them into another Installation by an Import (ADR 0020). It holds nothing about Accounts.
  *
- * <p>This is version {@value #FORMAT} of the format, and every version stays importable (ADR 0021).
+ * <p>This is version {@value #FORMAT} of the format, and every version stays importable (ADR 0022).
  * A change that an older Board Keeper could not read raises {@link #FORMAT}, and Board Keeper keeps a
  * way to read the older versions; a sample file of each is kept with the tests. Adding a field that
  * may be absent changes nothing for an older Board Keeper, which ignores fields it doesn't know, so

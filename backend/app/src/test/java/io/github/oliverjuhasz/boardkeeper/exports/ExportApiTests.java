@@ -34,7 +34,7 @@ import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import tools.jackson.databind.JsonNode;
 
-/** Exports (ADR 0019): the Installation's Games, Players and Plays as one file, for Admins. */
+/** Exports (ADR 0020): the Installation's Games, Players and Plays as one file, for Admins. */
 @SpringBootTest
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)

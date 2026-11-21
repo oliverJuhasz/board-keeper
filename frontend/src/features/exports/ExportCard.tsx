@@ -27,7 +27,7 @@ function save(file: Blob, name: string) {
   setTimeout(() => URL.revokeObjectURL(url), 0)
 }
 
-/** Saves the Installation's Games, Players and Plays as an Export (ADR 0019). */
+/** Saves the Installation's Games, Players and Plays as an Export (ADR 0020). */
 export function ExportCard() {
   const { t } = useTranslation()
 

@@ -276,7 +276,7 @@ public class Plays {
     }
 
     /**
-     * Checks that this Installation can hold a Play copied from an Export as it was (ADR 0020):
+     * Checks that this Installation can hold a Play copied from an Export as it was (ADR 0021):
      * that the Game Module which scored it is installed and accepts what was entered, and that it
      * keeps the rules the core itself knows. Its Results are not compared with the module's: a
      * copy keeps those it was given. Its Game and Players are not looked up, because an Import may
@@ -300,7 +300,7 @@ public class Plays {
     }
 
     /**
-     * Stores a Play from an Export as it was where it was recorded (ADR 0020): with its id, what
+     * Stores a Play from an Export as it was where it was recorded (ADR 0021): with its id, what
      * was entered, the Results its Game Module calculated there, and who recorded it and when. Its
      * Game and its Players must exist here.
      *

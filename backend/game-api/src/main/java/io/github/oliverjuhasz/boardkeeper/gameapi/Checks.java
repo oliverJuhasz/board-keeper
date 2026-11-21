@@ -12,6 +12,17 @@ final class Checks {
 
     private Checks() {}
 
+    /** A Play has at least as many Players as the pad asks for, and no more than its Setup allows. */
+    static void playerCount(ScorePad pad, Map<String, String> setup, int players) {
+        if (players < pad.minPlayers()) {
+            throw new InvalidPlayException(Standard.TOO_FEW_PLAYERS);
+        }
+        Integer most = pad.maxPlayersFor(setup);
+        if (most != null && players > most) {
+            throw new InvalidPlayException(Standard.TOO_MANY_PLAYERS);
+        }
+    }
+
     /**
      * Every Variant and Expansion in the Setup has to be on the pad, with a value it allows. A
      * Variant for Solo Plays only belongs in the Setup of a Solo Play only, and a Variant that
@@ -31,16 +42,19 @@ final class Checks {
     }
 
     /**
-     * Every choice in a Player Setup has to be one of the pad's, with one of its options. A
-     * choice made once per Play cannot give two Players the same option.
+     * Every choice in a Player Setup has to be one of the pad's, with one of its options, and an
+     * option that comes with an Expansion needs a Play with that Expansion. A choice made once per
+     * Play cannot give two Players the same option.
      */
-    static void playerSetup(ScorePad pad, List<PlayerEntry> players) {
+    static void playerSetup(ScorePad pad, Map<String, String> setup, List<PlayerEntry> players) {
         for (PlayerEntry player : players) {
             player.setup().forEach((key, option) -> {
-                boolean known = pad.playerSetup().stream()
-                        .anyMatch(choice -> choice.key().equals(key) && choice.options().contains(option));
-                if (!known) {
-                    throw new InvalidPlayException(Standard.NOT_RECORDED);
+                PlayerSetupChoice choice = pad.playerSetup().stream()
+                        .filter(candidate -> candidate.key().equals(key) && candidate.options().contains(option))
+                        .findFirst()
+                        .orElseThrow(() -> new InvalidPlayException(Standard.NOT_RECORDED));
+                if (!choice.optionsFor(pad, setup).contains(option)) {
+                    throw new InvalidPlayException(Standard.NEEDS_EXPANSION);
                 }
             });
         }

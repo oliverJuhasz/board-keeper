@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * What an Import exchanges with the frontend (ADR 0020): the review of an Export before anything is
+ * What an Import exchanges with the frontend (ADR 0021): the review of an Export before anything is
  * written, the Admin's choice of who each of its Players is, and what the Import did.
  */
 final class Import {

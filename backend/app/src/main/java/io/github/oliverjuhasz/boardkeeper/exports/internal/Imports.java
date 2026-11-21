@@ -36,7 +36,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Brings the Plays of an Export into this Installation (ADR 0020), with the Players and Games they
+ * Brings the Plays of an Export into this Installation (ADR 0021), with the Players and Games they
  * need. A Play is copied as it was, and one that is here already is left as it is.
  *
  * <p>The review and the Import itself work the file out in the same way, so the Import does what the

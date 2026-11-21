@@ -35,9 +35,9 @@ import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ObjectNode;
 
 /**
- * Imports (ADR 0020): bringing the Plays of an Export into this Installation, as they were. Most
+ * Imports (ADR 0021): bringing the Plays of an Export into this Installation, as they were. Most
  * tests import {@code exports/format-1.json}, a file of the first version of the format, which
- * every later Board Keeper must still import (ADR 0021).
+ * every later Board Keeper must still import (ADR 0022).
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -141,7 +141,7 @@ class ImportApiTests {
                          "refused": [{"playId": "%s"}, {"playId": "%s"}]}
                         """.formatted(REFUSED_CALICO_PLAY, FANCY_PLAY));
         // Its Results stay as the file has them, though this module would place the lowest score
-        // first (ADR 0020). Who recorded it, and when, stay too.
+        // first (ADR 0021). Who recorded it, and when, stay too.
         assertThat(admin.get("/api/plays/" + GOLF_PLAY))
                 .hasStatusOk()
                 .bodyJson()

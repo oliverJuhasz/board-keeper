@@ -9,14 +9,18 @@ import {
 } from "@/components/ui/field"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
-/** A question with a few answers to pick one from, each with an optional hint. */
+/**
+ * A question with a few answers to pick one from. The question and each answer can have a hint.
+ */
 export function RadioField<Value extends string>({
   legend,
+  hint,
   value,
   onChange,
   options,
 }: {
   legend: string
+  hint?: ReactNode
   value: Value
   onChange: (value: Value) => void
   options: { value: Value; label: string; hint?: ReactNode }[]
@@ -26,6 +30,7 @@ export function RadioField<Value extends string>({
   return (
     <FieldSet>
       <FieldLegend variant="label">{legend}</FieldLegend>
+      {hint && <FieldDescription>{hint}</FieldDescription>}
       <RadioGroup value={value} onValueChange={(chosen) => onChange(chosen as Value)}>
         {options.map((option) => (
           <Field key={option.value} orientation="horizontal">

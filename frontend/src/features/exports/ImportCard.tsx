@@ -27,7 +27,7 @@ function reviewProblem(t: TFunction, error: unknown) {
 }
 
 /**
- * Brings the Plays of an Export into this Installation (ADR 0020): choose the file, review what
+ * Brings the Plays of an Export into this Installation (ADR 0021): choose the file, review what
  * it would do and who is who, then confirm. The browser keeps the file between the two steps;
  * the server keeps nothing.
  */

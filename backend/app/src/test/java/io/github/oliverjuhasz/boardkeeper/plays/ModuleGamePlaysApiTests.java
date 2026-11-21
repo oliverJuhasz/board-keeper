@@ -15,7 +15,9 @@ import io.github.oliverjuhasz.boardkeeper.gameapi.RecordingMode;
 import io.github.oliverjuhasz.boardkeeper.games.Game.RecordingDefaults;
 import io.github.oliverjuhasz.boardkeeper.games.Games;
 import io.github.oliverjuhasz.boardkeeper.players.Players;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -432,6 +434,24 @@ class ModuleGamePlaysApiTests {
                 .hasStatus(422)
                 .bodyJson()
                 .isLenientlyEqualTo("{\"reason\": \"plays.invalid.chosenTwice\"}");
+        // Petra comes with Cities.
+        String withoutCities = """
+                {"gameId": "%s", "playedOn": "2026-03-14", "recordingMode": "POINTS", "setup": {},
+                 "players": [
+                   {"playerId": "%s", "winner": false, "setup": {"wonder": "petra"},
+                    "scores": {"wonder": 10, "treasury": 3, "military": 6, "civilian": 15, "commercial": 5,
+                               "scientific": 13, "guilds": 7}},
+                   {"playerId": "%s", "winner": false,
+                    "scores": {"wonder": 7, "treasury": 2, "military": 5, "civilian": 20, "commercial": 8,
+                               "scientific": 1, "guilds": 4}},
+                   {"playerId": "%s", "winner": false,
+                    "scores": {"wonder": 3, "treasury": 6, "military": 0, "civilian": 12, "commercial": 2,
+                               "scientific": 25, "guilds": 6}}]}
+                """.formatted(sevenWonders, anna, bence, dora);
+        assertThat(member.post("/api/plays", withoutCities))
+                .hasStatus(422)
+                .bodyJson()
+                .isLenientlyEqualTo("{\"reason\": \"plays.invalid.needsExpansion\"}");
     }
 
     @Test
@@ -475,6 +495,88 @@ class ModuleGamePlaysApiTests {
                 .hasStatus(422)
                 .bodyJson()
                 .isLenientlyEqualTo("{\"reason\": \"plays.invalid.notRecorded\"}");
+    }
+
+    @Test
+    void aCooperativeGameThatScoresOnlyAVictoryHasNoScoreAfterADefeat() {
+        UUID lastBastion = gameOfModule("last-bastion");
+        String play = """
+                {"gameId": "%s", "playedOn": "2026-03-14", "recordingMode": "POINTS", "setup": {"difficulty": "heroic"},
+                 "players": [{"playerId": "%s", "winner": false, "setup": {"hero": "kazgin"}},
+                             {"playerId": "%s", "winner": false, "setup": {"hero": "twindalli"}}],
+                 "group": %s}
+                """;
+
+        // 20 for Heroic, + 5 Life tokens + 2 × 1 Call to Arms token − 3 × 1 dead hero − 4 × 2 tiles.
+        assertThat(member.post(
+                        "/api/plays",
+                        play.formatted(
+                                lastBastion,
+                                anna,
+                                dora,
+                                """
+                                {"won": true,
+                                 "scores": {"lifeTokens": 5, "callToArmsTokens": 1, "deadHeroes": 1, "graspOfEvilTiles": 2}}
+                                """)))
+                .hasStatusOk()
+                .bodyJson()
+                .isLenientlyEqualTo("{\"recordingMode\": \"POINTS\", \"group\": {\"won\": true, \"total\": 16}}");
+        MvcTestResult defeat = member.post("/api/plays", play.formatted(lastBastion, anna, dora, "{\"won\": false}"));
+        assertThat(defeat)
+                .hasStatusOk()
+                .bodyJson()
+                .isLenientlyEqualTo("{\"recordingMode\": \"POINTS\", \"group\": {\"won\": false, \"scores\": {}}}");
+        assertThat(member.get("/api/plays/" + idOf(defeat))).bodyJson().doesNotHavePath("$.group.total");
+        // Both heroes dead is a defeat, not a victory.
+        assertThat(member.post(
+                        "/api/plays",
+                        play.formatted(
+                                lastBastion,
+                                anna,
+                                dora,
+                                """
+                                {"won": true,
+                                 "scores": {"lifeTokens": 0, "callToArmsTokens": 0, "deadHeroes": 2, "graspOfEvilTiles": 0}}
+                                """)))
+                .hasStatus(422)
+                .bodyJson()
+                .isLenientlyEqualTo("{\"reason\": \"last-bastion.invalid.tooManyDeadHeroes\"}");
+    }
+
+    @Test
+    void anExpansionCanLetMorePlayersTakePart() {
+        UUID lordsOfWaterdeep = gameOfModule("lords-of-waterdeep");
+        List<UUID> six = List.of(
+                anna,
+                bence,
+                dora,
+                players.create("Eszter").id(),
+                players.create("Feri").id(),
+                players.create("Gabi").id());
+
+        // Lords of Waterdeep is for five, and six with either half of Scoundrels of Skullport.
+        assertThat(member.post("/api/plays", wonBy(lordsOfWaterdeep, "{}", six)))
+                .hasStatus(422)
+                .bodyJson()
+                .isLenientlyEqualTo("{\"reason\": \"plays.invalid.tooManyPlayers\"}");
+        assertThat(member.post("/api/plays", wonBy(lordsOfWaterdeep, "{\"undermountain\": \"true\"}", six)))
+                .hasStatusOk()
+                .bodyJson()
+                .isLenientlyEqualTo("""
+                        {"setup": {"undermountain": "true"},
+                         "results": [{"won": true}, {"won": false}, {"won": false}, {"won": false}, {"won": false},
+                                     {"won": false}]}
+                        """);
+    }
+
+    /** A Play recorded with only its winner: the first of these Players. */
+    private static String wonBy(UUID game, String setup, List<UUID> players) {
+        String rows = players.stream()
+                .map(player -> "{\"playerId\": \"%s\", \"winner\": %s}".formatted(player, player.equals(players.getFirst())))
+                .collect(Collectors.joining(", "));
+        return """
+                {"gameId": "%s", "playedOn": "2026-03-14", "recordingMode": "WINNER_ONLY", "setup": %s, "players": [%s]}
+                """.formatted(game, setup, rows);
     }
 
     /** The Game that appears in the catalogue for the Calico module. */

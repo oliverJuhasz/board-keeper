@@ -30,28 +30,34 @@ class CooperativeGameModuleTests {
             List.of(PlayerSetupChoice.of("knight", List.of("red", "blue", "green")).eachOptionOncePerPlay()),
             RecordingMode.WINNER_ONLY);
 
-    private final GameModule module = new CooperativeGameModule() {
-        @Override
-        public UUID id() {
-            return UUID.fromString("00000000-0000-7000-8000-000000000002");
-        }
+    private final GameModule module = module(CASTLE);
 
-        @Override
-        public String key() {
-            return "castle";
-        }
+    /** The made-up Game's module, with this score pad. A pad without a foe's level counts it as 0. */
+    private static GameModule module(ScorePad pad) {
+        return new CooperativeGameModule() {
+            @Override
+            public UUID id() {
+                return UUID.fromString("00000000-0000-7000-8000-000000000002");
+            }
 
-        @Override
-        public ScorePad scorePad() {
-            return CASTLE;
-        }
+            @Override
+            public String key() {
+                return "castle";
+            }
 
-        @Override
-        protected int groupScore(Map<String, String> setup, boolean won, Map<String, Integer> rows, int players) {
-            int level = Integer.parseInt(scorePad().valueOf("level", setup));
-            return (won ? 10 * rows.get("walls") + 5 * level : 0) - rows.get("towers");
-        }
-    };
+            @Override
+            public ScorePad scorePad() {
+                return pad;
+            }
+
+            @Override
+            protected int groupScore(Map<String, String> setup, boolean won, Map<String, Integer> rows, int players) {
+                boolean hasLevel = pad.variants().stream().anyMatch(variant -> variant.key().equals("level"));
+                int level = hasLevel ? Integer.parseInt(pad.valueOf("level", setup)) : 0;
+                return (won ? 10 * rows.get("walls") + 5 * level : 0) - rows.get("towers");
+            }
+        };
+    }
 
     private static final Map<String, String> DRAGON_3 = Map.of("foe", "dragon", "level", "3");
 
@@ -70,6 +76,34 @@ class CooperativeGameModuleTests {
                 .isEqualTo(new Outcome.Cooperative(true, 53));
         assertThat(module.score(entry(RecordingMode.POINTS, DRAGON_3, lost, knight("red"))))
                 .isEqualTo(new Outcome.Cooperative(false, -2));
+    }
+
+    @Test
+    void scoresOnlyAVictoryWhenItsRowsSaySo() {
+        GameModule victoriesOnly = module(ScorePad.cooperative(
+                1,
+                4,
+                List.of(),
+                List.of(),
+                List.of(ScoreCategory.of("walls").onlyAfterVictory(), ScoreCategory.of("towers").onlyAfterVictory()),
+                List.of(),
+                RecordingMode.POINTS));
+        GroupEntry won = new GroupEntry(true, Map.of("walls", 4, "towers", 2));
+
+        assertThat(CASTLE.groupCategoriesFor(Map.of(), false)).extracting(ScoreCategory::key).containsExactly("walls", "towers");
+        assertThat(victoriesOnly.scorePad().groupCategoriesFor(Map.of(), false)).isEmpty();
+        assertThat(victoriesOnly.score(entry(RecordingMode.POINTS, Map.of(), won, nobody())))
+                .isEqualTo(new Outcome.Cooperative(true, 38));
+        assertThat(victoriesOnly.score(entry(RecordingMode.POINTS, Map.of(), new GroupEntry(false, Map.of()), nobody())))
+                .isEqualTo(new Outcome.Cooperative(false, null));
+        assertRefused(
+                Standard.NOT_RECORDED,
+                victoriesOnly,
+                entry(RecordingMode.POINTS, Map.of(), new GroupEntry(false, Map.of("walls", 4, "towers", 2)), nobody()));
+        assertRefused(
+                Standard.SCORE_MISSING,
+                victoriesOnly,
+                entry(RecordingMode.POINTS, Map.of(), new GroupEntry(true, Map.of()), nobody()));
     }
 
     @Test
@@ -192,6 +226,10 @@ class CooperativeGameModuleTests {
     }
 
     private void assertRefused(Standard reason, PlayEntry entry) {
+        assertRefused(reason, module, entry);
+    }
+
+    private static void assertRefused(Standard reason, GameModule module, PlayEntry entry) {
         InvalidPlayException expected = new InvalidPlayException(reason);
         assertThatExceptionOfType(InvalidPlayException.class)
                 .isThrownBy(() -> module.score(entry))

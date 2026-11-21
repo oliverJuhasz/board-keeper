@@ -11,10 +11,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Admins can save every Game, Player and Play as an Export: one file, downloaded from "Export and import" in the account menu, to use elsewhere or to import into another Installation. It holds nothing about Accounts, so it is no backup of the Installation.
 - Admins can import an Export into another Installation, from the same page. A review first says what it would add and which Plays this Installation can't take, and asks who each of its Players is here. Plays keep their Results and who recorded them, and a Play that is already there is left as it is.
 - The Players of a Play can be put in another order while it is recorded or edited, by dragging or from the keyboard. The Score Pad's columns follow that order, and the Play keeps it.
+- A Game Module for Last Bastion, a Cooperative Game for one to four Players, each with a Hero. Its Difficulty is a Variant, and only a victory is scored: from the Life and Call to Arms tokens left, the dead heroes and the Bastion tiles in the Grasp of Evil.
+- A Game Module for Lords of Waterdeep, with the two halves of Scoundrels of Skullport, Undermountain and Skullport, as Expansions. Each Player's Lord of Waterdeep is their Player Setup. Either half lets six play, and brings three Lords of its own; Skullport adds a row for Corruption.
 
 ### Changed
 
 - "Record another play" on a Play's page starts the form with that Play's Players, Setup, date and location, so a second Play on the same day takes only its scores.
+- When a Play is recorded or edited, its Expansions come before its Players, because an Expansion can decide how many can play and what can be chosen for each Player.
+- 7 Wonders offers Roma and Abu Simbel only in a Play with Leaders, and Byzantium and Petra only with Cities. A Play recorded with one of them without its Expansion is refused when it is recalculated, until the Expansion is ticked or the Wonder board is changed.
 
 ### Fixed
 

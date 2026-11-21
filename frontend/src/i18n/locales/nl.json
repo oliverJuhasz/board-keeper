@@ -123,6 +123,7 @@
       "total": "Totaal",
       "placing": "Plaats",
       "playersFull": "Dit spel is voor hoogstens {{max}} spelers.",
+      "playersFullWithoutExpansion": "Dit spel is voor hoogstens {{max}} spelers, tenzij je speelt met een uitbreiding die meer toelaat.",
       "lost": "Verloren",
       "soloResult": "Uitslag",
       "offline": "Je bent offline. Deze partij wordt op dit apparaat bewaard en verstuurd zodra er verbinding is. De totalen en plaatsen worden dan uitgerekend.",
@@ -207,6 +208,7 @@
       "victoryTypeMissing": "Geef aan hoe de partij gewonnen is.",
       "oneWinnerOnly": "Een partij die zo gewonnen is, heeft één winnaar.",
       "chosenTwice": "Twee spelers kregen dezelfde keuze, terwijl die er maar één keer is, zoals een wereldwonder.",
+      "needsExpansion": "Een speler kreeg een keuze die hoort bij een uitbreiding waarmee niet gespeeld is.",
       "groupResultMissing": "Geef aan of de groep gewonnen of verloren heeft."
     },
     "waiting": {
@@ -332,6 +334,7 @@
     "locationTooLong": "Gebruik hoogstens 100 tekens.",
     "notesTooLong": "Gebruik hoogstens 2000 tekens.",
     "playersTooMany": "Dit spel is voor hoogstens {{max}} spelers.",
+    "playersTooManyWithoutExpansion": "Dit spel is voor hoogstens {{max}} spelers, tenzij je speelt met een uitbreiding die meer toelaat.",
     "scoreTooLow": "Vul {{min}} of meer in.",
     "scoreTooHigh": "Vul {{max}} of minder in.",
     "scoreStep": "Vul een veelvoud van {{step}} in.",
@@ -339,7 +342,8 @@
     "soloScoresOnly": "Een solopartij van dit spel wordt met de scores vastgelegd. Kies Punten.",
     "oneWinnerOnly": "Zo kan maar één speler winnen.",
     "chosenTwice": "Een andere speler heeft dit al als {{choice}}.",
-    "playerNameTaken": "Er is al een speler met deze naam."
+    "playerNameTaken": "Er is al een speler met deze naam.",
+    "needsExpansion": "Dit hoort bij {{expansion}}. Vink die aan bij de uitbreidingen, of kies iets anders als {{choice}}."
   },
   "problems": {
     "unknown": "Er ging iets mis. Probeer het opnieuw.",
