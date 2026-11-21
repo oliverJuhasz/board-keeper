@@ -65,6 +65,11 @@ export function AccountMenu() {
         {can("MANAGE_ROLES") && (
           <DropdownMenuItem render={<Link to="/roles" />}>{t("account.roles")}</DropdownMenuItem>
         )}
+        {can("EXPORT") && (
+          <DropdownMenuItem render={<Link to="/export-and-import" />}>
+            {t("account.exportAndImport")}
+          </DropdownMenuItem>
+        )}
         {/* The version that is running and where its source code is: Board Keeper's licence, the
             AGPL, asks that everyone using it can get its source (ADR 0016). */}
         <DropdownMenuItem render={<Link to="/about" />}>{t("account.about")}</DropdownMenuItem>

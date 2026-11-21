@@ -308,7 +308,8 @@
     "settings": "Settings",
     "accounts": "Accounts",
     "roles": "Roles",
-    "about": "About Board Keeper"
+    "about": "About Board Keeper",
+    "exportAndImport": "Export and import"
   },
   "password": {
     "show": "Show password",
@@ -624,6 +625,15 @@
       "confirm": "Disable account"
     }
   },
+  "exportAndImport": {
+    "title": "Export and import",
+    "description": "Move Board Keeper's games, players and plays to another installation.",
+    "export": {
+      "title": "Export",
+      "text": "Saves every game, player and play in one file, which another Board Keeper can import. It holds nothing about accounts, so it is no backup: back up the database for that. Should the database be lost all the same, importing an export brings back the plays.",
+      "download": "Download an export"
+    }
+  },
   "permissions": {
     "CREATE_PLAYERS": {
       "name": "Create players",
@@ -684,6 +694,10 @@
     "RECALCULATE_PLAYS": {
       "name": "Recalculate every play of a game",
       "hint": "Work out the results of every play of a game again, after the game's scoring changed."
+    },
+    "EXPORT": {
+      "name": "Export",
+      "hint": "Save every game, player and play in a file."
     }
   },
   "resetPassword": {

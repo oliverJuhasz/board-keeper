@@ -42,7 +42,9 @@ public enum Permission {
      * Recalculate every Play of a Game at once (ADR 0010). One Play can be recalculated by
      * whoever may change it.
      */
-    RECALCULATE_PLAYS(true);
+    RECALCULATE_PLAYS(true),
+    /** Save the Installation's Games, Players and Plays as an Export (ADR 0019). */
+    EXPORT(true);
 
     private final boolean adminOnly;
 

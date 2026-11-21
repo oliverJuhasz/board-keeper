@@ -308,7 +308,8 @@
     "settings": "Beállítások",
     "accounts": "Fiókok",
     "roles": "Szerepkörök",
-    "about": "A Board Keeperről"
+    "about": "A Board Keeperről",
+    "exportAndImport": "Exportálás és importálás"
   },
   "password": {
     "show": "Jelszó megjelenítése",
@@ -624,6 +625,15 @@
       "confirm": "Fiók letiltása"
     }
   },
+  "exportAndImport": {
+    "title": "Exportálás és importálás",
+    "description": "A Board Keeper játékainak, játékosainak és partijainak átvitele egy másik telepítésbe.",
+    "export": {
+      "title": "Exportálás",
+      "text": "Minden játékot, játékost és partit egyetlen fájlba ment, amit egy másik Board Keeper be tud importálni. A fiókokról semmit sem tartalmaz, ezért nem biztonsági mentés: arra az adatbázisról készíts mentést. Ha mégis elveszne az adatbázis, egy export importálása visszahozza a partikat.",
+      "download": "Export letöltése"
+    }
+  },
   "permissions": {
     "CREATE_PLAYERS": {
       "name": "Játékosok létrehozása",
@@ -684,6 +694,10 @@
     "RECALCULATE_PLAYS": {
       "name": "Egy játék összes partijának újraszámolása",
       "hint": "Egy játék összes partija eredményének újraszámolása, miután a játék pontozása megváltozott."
+    },
+    "EXPORT": {
+      "name": "Exportálás",
+      "hint": "Minden játék, játékos és parti mentése egy fájlba."
     }
   },
   "resetPassword": {

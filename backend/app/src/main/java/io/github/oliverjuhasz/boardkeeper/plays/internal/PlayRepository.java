@@ -104,6 +104,14 @@ public class PlayRepository {
         return page.fetch(PlayRepository::toPlay);
     }
 
+    /** Every Play, from the oldest day on, and within a day in the order they were recorded. */
+    public List<Play> findAll() {
+        return dsl.select(PLAY.asterisk(), RESULTS)
+                .from(PLAY)
+                .orderBy(PLAY.PLAYED_ON, PLAY.ID)
+                .fetch(PlayRepository::toPlay);
+    }
+
     public List<UUID> allIds() {
         return dsl.select(PLAY.ID).from(PLAY).fetch(row -> row.value1());
     }

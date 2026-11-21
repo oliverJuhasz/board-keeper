@@ -108,8 +108,10 @@ class ApiKeyTests {
                         Permission.MANAGE_ACCOUNTS.name(),
                         Permission.MANAGE_INVITES.name(),
                         Permission.MANAGE_ROLES.name(),
-                        Permission.RECALCULATE_PLAYS.name());
+                        Permission.RECALCULATE_PLAYS.name(),
+                        Permission.EXPORT.name());
         assertDeniedToApiKey(withApiKey(apiKey, HttpMethod.GET, "/api/accounts", null));
+        assertDeniedToApiKey(withApiKey(apiKey, HttpMethod.GET, "/api/export", null));
         UUID player = accounts.playerOf(accounts.member("bence"));
         assertDeniedToApiKey(
                 withApiKey(apiKey, HttpMethod.POST, "/api/reset-links", "{\"playerId\": \"%s\"}".formatted(player)));

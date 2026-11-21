@@ -122,6 +122,13 @@ export function appRoutes(): RouteObject[] {
           lazy: { Component: async () => (await import("./features/roles/RolesPage")).RolesPage },
         },
         {
+          path: "export-and-import",
+          lazy: {
+            Component: async () =>
+              (await import("./features/exports/ExportAndImportPage")).ExportAndImportPage,
+          },
+        },
+        {
           path: "settings",
           lazy: {
             Component: async () => (await import("./features/settings/SettingsPage")).SettingsPage,

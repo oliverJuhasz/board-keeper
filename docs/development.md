@@ -150,6 +150,20 @@ So a listener can see an event twice, and two listeners can run at once. Copying
 
 **The pages.** `GET /api/stats/games/{id}` and `GET /api/stats/players/{id}` feed the pages at `/games/<id>` and `/players/<id>` in `frontend/src/features/stats/`. The tables they share are in `StatsTables.tsx`: a Game's page has a row for each Player, a Player's page a row for each Game. On a phone too narrow for every column the table scrolls sideways, with the first column held in place.
 
+### Exports and Imports
+
+The `exports` module makes an Export, the file of an Installation's Games, Players and Plays (ADR 0019). It has no tables of its own: it reads through `Games`, `Players` and `Plays`. Both pages and endpoints are for Admins only, through admin-only Permissions, so API Keys can't use them (ADR 0017).
+
+**The format.** `Export` and the records inside it are the file. `GET /api/export` answers with one, so `api/openapi.json` describes the current format. `Export.FORMAT` is its version, and every version stays importable (ADR 0021):
+
+- A new field that may be absent needs nothing more. An older Board Keeper ignores fields it doesn't know.
+- Renaming or removing a field, changing what one means, or making an optional one required is a change an older Board Keeper can't read. Raise `Export.FORMAT`, keep a way to turn a file of each older version into the current records, and add a sample file of the new version to the tests.
+- A Game Module's keys are in every file, which is one reason they never change (see "Adding a Game Module").
+
+**Everything at one moment.** `Exports.export` reads the Games, the Players and the Plays in one read-only transaction with the isolation level `REPEATABLE_READ`. PostgreSQL then shows every query of the transaction the database as it was at the first one, so a Play recorded meanwhile can't name a Player that the file lacks.
+
+**Downloading.** The frontend asks for the Export with `parseAs: "blob"`, which keeps the answer as the file it is, and hands it to the browser through a link with a `download` attribute (`frontend/src/features/exports/ExportCard.tsx`). The server's `Content-Disposition` header names the file.
+
 ### Changing the database
 
 1. Add a file to `backend/app/src/main/resources/db/migration`, named `V<next number>__<what_it_does>.sql`, with two underscores after the number. Never edit a migration that has been applied to a real database.

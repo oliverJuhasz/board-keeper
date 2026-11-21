@@ -73,6 +73,11 @@ public class Plays {
         return repository.find(id);
     }
 
+    /** Every Play, the oldest first, as for an Export. */
+    public List<Play> all() {
+        return repository.findAll();
+    }
+
     /** The day each Game was last played on, by the Game's id. A Game without Plays is missing. */
     public Map<UUID, LocalDate> lastPlayedOn() {
         return repository.lastPlayedOnByGame();

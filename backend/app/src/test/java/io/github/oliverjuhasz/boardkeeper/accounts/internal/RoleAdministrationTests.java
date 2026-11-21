@@ -150,7 +150,7 @@ class RoleAdministrationTests {
 
     @Test
     void aRoleCannotHoldAPermissionThatIsForAdminsOnly() {
-        for (String adminOnly : new String[] {"MANAGE_ROLES", "MANAGE_ACCOUNTS", "MANAGE_INVITES", "RECALCULATE_PLAYS"}) {
+        for (String adminOnly : new String[] {"MANAGE_ROLES", "MANAGE_ACCOUNTS", "MANAGE_INVITES", "RECALCULATE_PLAYS", "EXPORT"}) {
             assertThat(admin.post("/api/roles", role("Sneaky", "CREATE_PLAYS", adminOnly)))
                     .as(adminOnly)
                     .hasStatus(409)

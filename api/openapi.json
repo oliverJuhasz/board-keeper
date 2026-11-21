@@ -159,7 +159,7 @@
           },
           "permissions" : {
             "items" : {
-              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "REMOVE_GAMES", "CREATE_PLAYS", "CHANGE_PLAYS_RECORDED", "CHANGE_PLAYS_TAKEN_PART_IN", "CHANGE_ANY_PLAY", "USE_API_KEYS", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES", "RECALCULATE_PLAYS" ],
+              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "REMOVE_GAMES", "CREATE_PLAYS", "CHANGE_PLAYS_RECORDED", "CHANGE_PLAYS_TAKEN_PART_IN", "CHANGE_ANY_PLAY", "USE_API_KEYS", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES", "RECALCULATE_PLAYS", "EXPORT" ],
               "type" : "string"
             },
             "type" : "array",
@@ -196,6 +196,267 @@
           }
         },
         "required" : [ "key" ],
+        "type" : "object"
+      },
+      "Export" : {
+        "description" : "An Installation's Games, Players and Plays. It holds nothing about Accounts, so it is no backup of the Installation. Every version of the format stays importable.",
+        "properties" : {
+          "exportedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "format" : {
+            "description" : "The version of the format, raised only by a change an older Board Keeper can't read",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "gameModules" : {
+            "description" : "The key of each Game Module the Games and Plays name, for people. A Game Module that the writing Installation didn't have is missing.",
+            "items" : {
+              "$ref" : "#/components/schemas/ExportedGameModule"
+            },
+            "type" : "array"
+          },
+          "games" : {
+            "description" : "Ordered by name",
+            "items" : {
+              "$ref" : "#/components/schemas/ExportedGame"
+            },
+            "type" : "array"
+          },
+          "players" : {
+            "description" : "Ordered by name",
+            "items" : {
+              "$ref" : "#/components/schemas/ExportedPlayer"
+            },
+            "type" : "array"
+          },
+          "plays" : {
+            "description" : "From the oldest day on, and within a day in the order they were recorded",
+            "items" : {
+              "$ref" : "#/components/schemas/ExportedPlay"
+            },
+            "type" : "array"
+          },
+          "writtenBy" : {
+            "$ref" : "#/components/schemas/ExportWrittenBy",
+            "description" : "Which Board Keeper wrote the file"
+          }
+        },
+        "required" : [ "exportedAt", "format", "gameModules", "games", "players", "plays", "writtenBy" ],
+        "type" : "object"
+      },
+      "ExportWrittenBy" : {
+        "properties" : {
+          "commit" : {
+            "description" : "The commit it was built from. Absent when it was built without git.",
+            "type" : "string"
+          },
+          "version" : {
+            "description" : "The release, such as 1.2.3. Absent for a Snapshot.",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ExportedGame" : {
+        "properties" : {
+          "gameModuleId" : {
+            "description" : "The Game Module that scores the Game. A Play may have been scored by another one.",
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "recordingDefaults" : {
+            "$ref" : "#/components/schemas/ExportedRecordingDefaults",
+            "description" : "How its Plays are recorded unless the recorder chooses otherwise. Only for a Game scored by the Generic Module: any other module brings its own."
+          }
+        },
+        "required" : [ "gameModuleId", "id", "name" ],
+        "type" : "object"
+      },
+      "ExportedGameModule" : {
+        "properties" : {
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "key" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "id", "key" ],
+        "type" : "object"
+      },
+      "ExportedGroupResult" : {
+        "properties" : {
+          "scores" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "As entered: the group's value for each Score Category",
+            "type" : "object"
+          },
+          "total" : {
+            "description" : "Absent when no score was recorded",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "won" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "scores", "won" ],
+        "type" : "object"
+      },
+      "ExportedPlay" : {
+        "properties" : {
+          "cooperative" : {
+            "description" : "Whether the Players won or lost together",
+            "type" : "boolean"
+          },
+          "gameId" : {
+            "description" : "One of the file's Games",
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "gameModuleId" : {
+            "description" : "The Game Module that scored the Play. The keys in \"setup\", \"scores\" and \"victoryType\" are its.",
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "group" : {
+            "$ref" : "#/components/schemas/ExportedGroupResult",
+            "description" : "For a Cooperative Play: how it ended for the group"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "location" : {
+            "type" : "string"
+          },
+          "notes" : {
+            "type" : "string"
+          },
+          "playedOn" : {
+            "format" : "date",
+            "type" : "string"
+          },
+          "recordedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "recordedBy" : {
+            "description" : "The file's Player who recorded it",
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "recordingMode" : {
+            "enum" : [ "POINTS", "WINNER_ONLY" ],
+            "type" : "string"
+          },
+          "results" : {
+            "description" : "One per Player, in the order they were entered",
+            "items" : {
+              "$ref" : "#/components/schemas/ExportedResult"
+            },
+            "type" : "array"
+          },
+          "setup" : {
+            "additionalProperties" : {
+              "type" : "string"
+            },
+            "description" : "The Setup: the value chosen for each Variant, and whether each Expansion was played with, by their keys",
+            "type" : "object"
+          },
+          "victoryType" : {
+            "description" : "How it was won, by the key of one of its Game Module's Victory Types. Absent for a Game that is won in one way only.",
+            "type" : "string"
+          }
+        },
+        "required" : [ "cooperative", "gameId", "gameModuleId", "id", "playedOn", "recordedAt", "recordedBy", "recordingMode", "results", "setup" ],
+        "type" : "object"
+      },
+      "ExportedPlayer" : {
+        "properties" : {
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "id", "name" ],
+        "type" : "object"
+      },
+      "ExportedRecordingDefaults" : {
+        "properties" : {
+          "cooperative" : {
+            "type" : "boolean"
+          },
+          "lowestScoreWins" : {
+            "type" : "boolean"
+          },
+          "recordingMode" : {
+            "enum" : [ "POINTS", "WINNER_ONLY" ],
+            "type" : "string"
+          }
+        },
+        "required" : [ "cooperative", "lowestScoreWins", "recordingMode" ],
+        "type" : "object"
+      },
+      "ExportedResult" : {
+        "description" : "What one Player got in a Play: what was entered for them, and what their Game Module worked out from it",
+        "properties" : {
+          "markedWinner" : {
+            "description" : "As entered: whether the recorder marked the Player as a winner",
+            "type" : "boolean"
+          },
+          "placing" : {
+            "description" : "Absent in a Cooperative Play and a Solo Play, and when only the winner was recorded",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "playerId" : {
+            "description" : "One of the file's Players",
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "scores" : {
+            "additionalProperties" : {
+              "format" : "int32",
+              "type" : "integer"
+            },
+            "description" : "As entered: the value for each Score Category",
+            "type" : "object"
+          },
+          "setup" : {
+            "additionalProperties" : {
+              "type" : "string"
+            },
+            "description" : "As entered: the Player Setup, the option chosen for each choice",
+            "type" : "object"
+          },
+          "total" : {
+            "description" : "Absent when no scores were recorded for the Player",
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "won" : {
+            "description" : "Absent in a Solo Play recorded for score only, which nobody wins or loses",
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "markedWinner", "playerId", "scores", "setup" ],
         "type" : "object"
       },
       "FieldProblem" : {
@@ -1305,7 +1566,7 @@
           },
           "permissions" : {
             "items" : {
-              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "REMOVE_GAMES", "CREATE_PLAYS", "CHANGE_PLAYS_RECORDED", "CHANGE_PLAYS_TAKEN_PART_IN", "CHANGE_ANY_PLAY", "USE_API_KEYS", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES", "RECALCULATE_PLAYS" ],
+              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "REMOVE_GAMES", "CREATE_PLAYS", "CHANGE_PLAYS_RECORDED", "CHANGE_PLAYS_TAKEN_PART_IN", "CHANGE_ANY_PLAY", "USE_API_KEYS", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES", "RECALCULATE_PLAYS", "EXPORT" ],
               "type" : "string"
             },
             "type" : "array",
@@ -1324,7 +1585,7 @@
           },
           "permissions" : {
             "items" : {
-              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "REMOVE_GAMES", "CREATE_PLAYS", "CHANGE_PLAYS_RECORDED", "CHANGE_PLAYS_TAKEN_PART_IN", "CHANGE_ANY_PLAY", "USE_API_KEYS", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES", "RECALCULATE_PLAYS" ],
+              "enum" : [ "CREATE_PLAYERS", "EDIT_PLAYERS", "REMOVE_PLAYERS", "CREATE_GAMES", "EDIT_GAMES", "REMOVE_GAMES", "CREATE_PLAYS", "CHANGE_PLAYS_RECORDED", "CHANGE_PLAYS_TAKEN_PART_IN", "CHANGE_ANY_PLAY", "USE_API_KEYS", "MANAGE_INVITES", "MANAGE_ACCOUNTS", "MANAGE_ROLES", "RECALCULATE_PLAYS", "EXPORT" ],
               "type" : "string"
             },
             "type" : "array",
@@ -2191,6 +2452,36 @@
         },
         "summary" : "Which Players have an Account",
         "tags" : [ "Claims" ]
+      }
+    },
+    "/api/export" : {
+      "get" : {
+        "description" : "The Installation's Games, Players and Plays, to use them elsewhere or to import them into another Installation. Nothing about Accounts. The answer is meant to be saved as a file, and suggests the name board-keeper-<date>.json. For Admins only.",
+        "operationId" : "getExport",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Export"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "The request could not be carried out"
+          }
+        },
+        "summary" : "Make an Export",
+        "tags" : [ "Export and import" ]
       }
     },
     "/api/game-modules" : {

@@ -308,7 +308,8 @@
     "settings": "Instellingen",
     "accounts": "Accounts",
     "roles": "Rollen",
-    "about": "Over Board Keeper"
+    "about": "Over Board Keeper",
+    "exportAndImport": "Exporteren en importeren"
   },
   "password": {
     "show": "Wachtwoord tonen",
@@ -624,6 +625,15 @@
       "confirm": "Account uitschakelen"
     }
   },
+  "exportAndImport": {
+    "title": "Exporteren en importeren",
+    "description": "Zet de spellen, spelers en partijen van Board Keeper over naar een andere installatie.",
+    "export": {
+      "title": "Exporteren",
+      "text": "Slaat alle spellen, spelers en partijen op in één bestand, dat een andere Board Keeper kan importeren. Er staat niets over accounts in, dus het is geen back-up: maak daarvoor een back-up van de database. Raakt de database toch kwijt, dan brengt het importeren van een export de partijen terug.",
+      "download": "Export downloaden"
+    }
+  },
   "permissions": {
     "CREATE_PLAYERS": {
       "name": "Spelers aanmaken",
@@ -684,6 +694,10 @@
     "RECALCULATE_PLAYS": {
       "name": "Alle partijen van een spel opnieuw berekenen",
       "hint": "De uitslag van alle partijen van een spel opnieuw berekenen, nadat de puntentelling van het spel veranderd is."
+    },
+    "EXPORT": {
+      "name": "Exporteren",
+      "hint": "Alle spellen, spelers en partijen in een bestand opslaan."
     }
   },
   "resetPassword": {
