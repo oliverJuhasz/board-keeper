@@ -306,12 +306,84 @@ export const spiritIslandModule: GameModule = {
   },
 }
 
+/**
+ * Won or lost together, scored after a victory only, at a difficulty that is Normal unless said
+ * otherwise: part of Last Bastion.
+ */
+export const lastBastionModule: GameModule = {
+  id: "e91e79b5-9868-4f88-af26-521b30849941",
+  key: "last-bastion",
+  scorePad: {
+    minPlayers: 1,
+    maxPlayers: 4,
+    expansions: [],
+    variants: [
+      {
+        key: "difficulty",
+        kind: "CHOICE",
+        options: ["novice", "normal", "difficult", "heroic"],
+        defaultValue: "normal",
+        soloOnly: false,
+      },
+    ],
+    categories: [
+      {
+        key: "lifeTokens",
+        countsTowardTotal: true,
+        min: 0,
+        step: 1,
+        soloOnly: false,
+        afterVictoryOnly: true,
+      },
+      {
+        key: "callToArmsTokens",
+        countsTowardTotal: true,
+        min: 0,
+        step: 1,
+        soloOnly: false,
+        afterVictoryOnly: true,
+      },
+      {
+        key: "deadHeroes",
+        countsTowardTotal: true,
+        min: 0,
+        max: 3,
+        step: 1,
+        soloOnly: false,
+        afterVictoryOnly: true,
+      },
+      {
+        key: "graspOfEvilTiles",
+        countsTowardTotal: true,
+        min: 0,
+        max: 2,
+        step: 1,
+        soloOnly: false,
+        afterVictoryOnly: true,
+      },
+    ],
+    recorderDecidesTies: false,
+    cooperative: true,
+    usualRecordingMode: "POINTS",
+    victoryTypes: [],
+    playerSetup: [
+      {
+        key: "hero",
+        options: ["kazgin", "sindara", "twindalli"],
+        oncePerPlay: true,
+        optionsOnlyWith: {},
+      },
+    ],
+  },
+}
+
 export const gameModules = [
   calicoModule,
   genericModule,
   duelModule,
   sevenWondersModule,
   spiritIslandModule,
+  lastBastionModule,
   wyrmspanModule,
 ]
 
@@ -369,6 +441,21 @@ export const gameModuleTexts: Record<string, string> = {
   "spirit-island.playerSetup.spirit.thunderspeaker": "Thunderspeaker",
   "spirit-island.playerSetup.spirit.oceansHungryGrasp": "Ocean's Hungry Grasp",
   "spirit-island.playerSetup.spirit.riverSurgesInSunlight": "River Surges in Sunlight",
+  "last-bastion.name": "Last Bastion",
+  "last-bastion.variant.difficulty": "Difficulty",
+  "last-bastion.variant.difficulty.hint": "A victory scores 5, 10, 15 or 20 points, by difficulty.",
+  "last-bastion.variant.difficulty.novice": "Novice",
+  "last-bastion.variant.difficulty.normal": "Normal",
+  "last-bastion.variant.difficulty.difficult": "Difficult",
+  "last-bastion.variant.difficulty.heroic": "Heroic",
+  "last-bastion.category.lifeTokens": "Life tokens",
+  "last-bastion.category.callToArmsTokens": "Call to Arms tokens",
+  "last-bastion.category.deadHeroes": "Dead heroes",
+  "last-bastion.category.graspOfEvilTiles": "Bastion tiles in the Grasp of Evil",
+  "last-bastion.playerSetup.hero": "Hero",
+  "last-bastion.playerSetup.hero.kazgin": "Kazgin",
+  "last-bastion.playerSetup.hero.sindara": "Sindara",
+  "last-bastion.playerSetup.hero.twindalli": "Twindalli",
   "wyrmspan.name": "Wyrmspan",
   "wyrmspan.variant.automaLevel": "Automa level",
   "wyrmspan.variant.automaLevel.1": "Level 1",

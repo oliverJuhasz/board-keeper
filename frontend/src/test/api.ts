@@ -15,6 +15,7 @@ import {
   calicoModule,
   duelModule,
   genericModule,
+  lastBastionModule,
   sevenWondersModule,
   spiritIslandModule,
   wyrmspanModule,
@@ -146,6 +147,18 @@ export const spiritIsland: Game = {
   hasOwnModule: true,
   cooperative: true,
   recordingMode: "WINNER_ONLY",
+  lowestScoreWins: false,
+}
+
+/** A Cooperative Game with a module of its own that scores only a victory. */
+export const lastBastion: Game = {
+  id: "0193a000-0000-7000-8000-0000000000ea",
+  name: "Last Bastion",
+  gameModuleId: lastBastionModule.id,
+  moduleKey: "last-bastion",
+  hasOwnModule: true,
+  cooperative: true,
+  recordingMode: "POINTS",
   lowestScoreWins: false,
 }
 

@@ -495,6 +495,52 @@ class ModuleGamePlaysApiTests {
                 .isLenientlyEqualTo("{\"reason\": \"plays.invalid.notRecorded\"}");
     }
 
+    @Test
+    void aCooperativeGameThatScoresOnlyAVictoryHasNoScoreAfterADefeat() {
+        UUID lastBastion = gameOfModule("last-bastion");
+        String play = """
+                {"gameId": "%s", "playedOn": "2026-03-14", "recordingMode": "POINTS", "setup": {"difficulty": "heroic"},
+                 "players": [{"playerId": "%s", "winner": false, "setup": {"hero": "kazgin"}},
+                             {"playerId": "%s", "winner": false, "setup": {"hero": "twindalli"}}],
+                 "group": %s}
+                """;
+
+        // 20 for Heroic, + 5 Life tokens + 2 × 1 Call to Arms token − 3 × 1 dead hero − 4 × 2 tiles.
+        assertThat(member.post(
+                        "/api/plays",
+                        play.formatted(
+                                lastBastion,
+                                anna,
+                                dora,
+                                """
+                                {"won": true,
+                                 "scores": {"lifeTokens": 5, "callToArmsTokens": 1, "deadHeroes": 1, "graspOfEvilTiles": 2}}
+                                """)))
+                .hasStatusOk()
+                .bodyJson()
+                .isLenientlyEqualTo("{\"recordingMode\": \"POINTS\", \"group\": {\"won\": true, \"total\": 16}}");
+        MvcTestResult defeat = member.post("/api/plays", play.formatted(lastBastion, anna, dora, "{\"won\": false}"));
+        assertThat(defeat)
+                .hasStatusOk()
+                .bodyJson()
+                .isLenientlyEqualTo("{\"recordingMode\": \"POINTS\", \"group\": {\"won\": false, \"scores\": {}}}");
+        assertThat(member.get("/api/plays/" + idOf(defeat))).bodyJson().doesNotHavePath("$.group.total");
+        // Both heroes dead is a defeat, not a victory.
+        assertThat(member.post(
+                        "/api/plays",
+                        play.formatted(
+                                lastBastion,
+                                anna,
+                                dora,
+                                """
+                                {"won": true,
+                                 "scores": {"lifeTokens": 0, "callToArmsTokens": 0, "deadHeroes": 2, "graspOfEvilTiles": 0}}
+                                """)))
+                .hasStatus(422)
+                .bodyJson()
+                .isLenientlyEqualTo("{\"reason\": \"last-bastion.invalid.tooManyDeadHeroes\"}");
+    }
+
     /** The Game that appears in the catalogue for the Calico module. */
     private UUID calicoFromItsModule() {
         return gameOfModule("calico");

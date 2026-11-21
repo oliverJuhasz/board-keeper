@@ -19,6 +19,7 @@ backend/
     calico/          the Game Module for Calico
     hadara/          the Game Module for Hadara
     harmonies/       the Game Module for Harmonies
+    last-bastion/    the Game Module for Last Bastion, a cooperative game that scores only a victory
     seven-wonders/   the Game Module for 7 Wonders, with Leaders and Cities
     seven-wonders-duel/  the Game Module for 7 Wonders Duel, with Pantheon and Agora
     spirit-island/   the Game Module for Spirit Island, a cooperative game
@@ -339,7 +340,7 @@ This writes `frontend/src/components/ui/dialog.tsx`. Run `npm run format` afterw
 
 ### Adding a Game Module
 
-`backend/games/calico` is the example to copy; `backend/games/harmonies` shows a Variant that is a choice, and rows that a Variant swaps; `backend/games/wyrmspan` shows a Game played alone against an automated opponent; `backend/games/hadara` shows a choice with many options, which the form offers as a drop-down instead of radio buttons once there are more than five; `backend/games/seven-wonders-duel` shows Expansions and a Game that can be won in more than one way; `backend/games/seven-wonders` shows a Player Setup and rows that can be negative; `backend/games/spirit-island` shows a cooperative Game whose module works out the group's score, and Variants that are numbers or depend on another choice. A module has three parts: an identity, a description of its Game's score pad, and its texts.
+`backend/games/calico` is the example to copy; `backend/games/harmonies` shows a Variant that is a choice, and rows that a Variant swaps; `backend/games/wyrmspan` shows a Game played alone against an automated opponent; `backend/games/hadara` shows a choice with many options, which the form offers as a drop-down instead of radio buttons once there are more than five; `backend/games/seven-wonders-duel` shows Expansions and a Game that can be won in more than one way; `backend/games/seven-wonders` shows a Player Setup and rows that can be negative; `backend/games/spirit-island` shows a cooperative Game whose module works out the group's score, and Variants that are numbers or depend on another choice; `backend/games/last-bastion` shows a cooperative Game that scores only a victory, and a choice whose default isn't its first option. A module has three parts: an identity, a description of its Game's score pad, and its texts.
 
 1. Copy `backend/games/calico` to `backend/games/<key>` and rename the artifact to `game-<key>`.
 2. Give the module a newly generated UUID. It is stored with every Play, so it never changes afterwards ([ADR 0012](adr/0012-game-module-uuid-and-key.md)).
@@ -380,7 +381,7 @@ Nothing else changes. When the application next starts, the Game is in the catal
 
 **Variants that are numbers, or depend on another choice.** `new Variant.Range(key, min, max)` is a whole number, such as an adversary's level from 0 to 6; the form offers its numbers, under the names the texts give them. A Variant can depend on the Setup with `onlyWhen`, as Spirit Island's level of England is only chosen once England is the adversary: the form shows it then, and only then is it sent.
 
-**Cooperative Games.** Make the score pad with `ScorePad.cooperative(...)` and extend `CooperativeGameModule`. The Players win or lose together; the pad's rows are the group's, entered once for the Play when it is recorded in points, and `groupScore` works out the group's score from them. The pad says which Recording Mode a Play starts with: Spirit Island's starts with only won or lost, because its rulebook calls scoring optional. A Game that scores only a victory marks its rows `onlyAfterVictory()`: the form shows them once "The group won" is chosen, and a defeat recorded in points has no rows and no score.
+**Cooperative Games.** Make the score pad with `ScorePad.cooperative(...)` and extend `CooperativeGameModule`. The Players win or lose together; the pad's rows are the group's, entered once for the Play when it is recorded in points, and `groupScore` works out the group's score from them. The pad says which Recording Mode a Play starts with: Spirit Island's starts with only won or lost, because its rulebook calls scoring optional. A Game that scores only a victory, such as Last Bastion, marks its rows `onlyAfterVictory()`: the form shows them once "The group won" is chosen, and a defeat recorded in points has no rows and no score.
 
 **Player Setup.** List what is chosen for each Player, such as their Wonder board and its side, as `PlayerSetupChoice`s. The form shows a drop-down for each in every Player's row, and a choice can be left open. Mark a choice `eachOptionOncePerPlay()` where each option exists once, as each Wonder board does: the form greys out what another Player has, and the module refuses a Play that gives two Players the same option. Name a choice so that it can't be mistaken for a row of the pad: 7 Wonders has a "Wonder" row, so its choice is the "Wonder board".
 

@@ -96,6 +96,17 @@ class GamesApiTests {
                               {"key": "animals"},
                               {"key": "naturesSpirit", "onlyWhen": {"key": "naturesSpirit", "value": "true"}}],
                             "expansions": [], "victoryTypes": []}},
+                         {"key": "last-bastion",
+                          "scorePad": {
+                            "minPlayers": 1, "maxPlayers": 4, "cooperative": true, "usualRecordingMode": "POINTS",
+                            "variants": [{"key": "difficulty", "kind": "CHOICE",
+                                          "options": ["novice", "normal", "difficult", "heroic"], "defaultValue": "normal"}],
+                            "categories": [
+                              {"key": "lifeTokens", "afterVictoryOnly": true},
+                              {"key": "callToArmsTokens", "afterVictoryOnly": true},
+                              {"key": "deadHeroes", "max": 3, "afterVictoryOnly": true},
+                              {"key": "graspOfEvilTiles", "max": 2, "afterVictoryOnly": true}],
+                            "playerSetup": [{"key": "hero", "oncePerPlay": true}]}},
                          {"key": "seven-wonders",
                           "scorePad": {
                             "minPlayers": 3, "maxPlayers": 7,
@@ -176,13 +187,14 @@ class GamesApiTests {
                          {"name": "Calico", "gameModuleId": "%s", "moduleKey": "calico", "hasOwnModule": true},
                          {"name": "Hadara", "moduleKey": "hadara", "hasOwnModule": true},
                          {"name": "Harmonies", "moduleKey": "harmonies", "hasOwnModule": true},
+                         {"name": "Last Bastion", "moduleKey": "last-bastion", "hasOwnModule": true},
                          {"name": "Spirit Island", "moduleKey": "spirit-island", "hasOwnModule": true},
                          {"name": "Wyrmspan", "moduleKey": "wyrmspan", "hasOwnModule": true}]
                         """.formatted(CALICO_MODULE_ID));
 
         // Bringing the catalogue in step again changes nothing.
         games.addGamesOfModules();
-        assertThat(games.all()).hasSize(7);
+        assertThat(games.all()).hasSize(8);
     }
 
     @Test
@@ -224,6 +236,7 @@ class GamesApiTests {
                          {"id": "%s", "name": "calico", "moduleKey": "calico", "hasOwnModule": true},
                          {"name": "Hadara", "moduleKey": "hadara", "hasOwnModule": true},
                          {"name": "Harmonies", "moduleKey": "harmonies", "hasOwnModule": true},
+                         {"name": "Last Bastion", "moduleKey": "last-bastion", "hasOwnModule": true},
                          {"name": "Spirit Island", "moduleKey": "spirit-island", "hasOwnModule": true},
                          {"name": "Wyrmspan", "moduleKey": "wyrmspan", "hasOwnModule": true}]
                         """.formatted(byHand));
