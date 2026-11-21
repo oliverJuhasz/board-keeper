@@ -141,8 +141,8 @@ One running Board Keeper, with its own database, Accounts, Players and Plays.
 _Avoid_: Instance, server, deployment
 
 **Export**:
-A file holding an Installation's Games, Players and Plays, to use them elsewhere or for an Import. It holds nothing about Accounts, so it is not a backup.
-_Avoid_: Backup, dump, archive
+A file holding an Installation's Games, Players and Plays, to use them elsewhere or for an Import. It holds nothing about Accounts, so it is no backup of the Installation, though an Import of it brings back the Plays if the database is lost.
+_Avoid_: Backup (a copy of the whole database), dump, archive
 
 **Import**:
 Adding the Plays of an Export to an Installation, together with the Players and Games they need. Plays already there are left as they are.
