@@ -46,6 +46,8 @@ Changing Plays without a connection, teams, unfinished plays, game nights, impor
 - Versioning the API, before Board Keeper is published. Until then the API changes along with the frontend, so a script that uses it may need changing after an update.
 - Moving to Maven 4 once it is released. Its new pom format no longer needs each module to repeat its parent's version.
 - An MCP server, so that AI agents can use Board Keeper through tools such as recording a Play. Until then they use the API with an API Key (ADR 0017).
+- Exporting part of the record, narrowed as the play history is: to a Game, a Player, a period or "my plays".
+- A CSV view of an export, to open in a spreadsheet. Only the JSON file can be imported.
 
 ## Milestones
 
@@ -123,6 +125,16 @@ Changing Plays without a connection, teams, unfinished plays, game nights, impor
 - Spirit Island is scored from the publisher's rulebook, without its expansions: "Scoring" on page 23 and the difficulty chart on page 28. It is cooperative, for one to four players, each with a Spirit of their own as their Player Setup. A Play starts with only whether the Spirits won, because scoring is optional. With a score, after a victory: 5 × Difficulty + 10 + 2 per Invader card left in the deck; after a defeat: 2 × Difficulty + 1 per Invader card no longer in the deck; either way, + 1 per X living Dahan and − 1 per X Blight, X being the number of players. The rulebook doesn't say how to round "per X", and no ruling could be found online, so only complete groups of X count. The Difficulty is the adversary's at its level (base level 0, or 1 to 6), plus the scenario's, plus 3 for the thematic map. The Invader cards row says which cards to count, after a win and after a loss.
 - Hadara is scored from the publisher's rulebook (page 10) and its solo rules (pages 2 and 3): Colonies, Statues, Silver medals, Gold medals, Cards and Remaining coins add up, and a tie goes to the most coins left over, then is shared. The leftover coins are not on the score pad, so the form asks who won a tie. A Solo Play is played against the NPC: its score is a row of the score pad, and the Play is won by beating it. A tie is won too: the solo rules follow the normal rules, and the NPC never has coins, so it can't win a tie. The NPC's level (1 to 11, or God mode) is a Variant of Solo Plays only. Which side of the setup cards was used changes nothing about the scoring and is not recorded.
 - **Recalculation** runs the Game Module over what was entered for a Play again, and replaces its Results if they came out differently. One Play is recalculated from its page, by whoever may change it. Every Play of a Game is recalculated from the Game's page, by an Admin only: the Permission for it is admin-only, so no other Role can be given it. Neither shows a preview first; afterwards, a Play's page says whether its Results changed, and a Game's page says how many Plays it went through, how many changed, and which ones the module refuses now. A refused Play keeps the Results it had, and links to its page so it can be corrected.
+
+## Settled for import and export
+
+Board Keeper's Games, Players and Plays can be exported to a file, for use elsewhere, and that file can be imported into another installation. Importing from other apps, such as BG Stats or BoardGameGeek, is not part of this. Neither is copying a whole installation, which is what a backup is for (ADR 0019).
+
+- **An export is one JSON file** of the whole shared record. It holds the Games (their name, their Game Module, and a Generic Game's recording defaults), the Players (their names only) and every Play: everything entered for it, who recorded it and when, and its Results. It holds nothing about Accounts and no statistics (ADR 0019).
+- The format allows a file that holds only some Plays, with just the Players and Games they need, so an export can be narrowed later without changing the format.
+- **An import keeps each Play as it was** at the source: its UUID and its Results (ADR 0020). This installation's Game Module checks what was entered, and a Play it refuses is left out and listed. A Play that is already here is skipped, never overwritten, so importing the same file twice changes nothing.
+- **Before anything is written, the importer says who is who.** A Game with a module of its own is matched by its module, and a Generic Game by its name. Each Player in the file is suggested to match the Player of the same name, or to become a new Player, and the importer can change each suggestion. The same step says how much the import adds, such as "43 Plays, 2 new Players, 1 new Game".
+- **Importing is for Admins only.** Its Permission is admin-only, like recalculating every Play of a Game.
 
 ## Details to settle when a milestone starts
 
