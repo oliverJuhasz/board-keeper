@@ -367,7 +367,8 @@ class StandardGameModuleTests {
     /**
      * The made-up Game with an Expansion, Hawks, that adds a row for hawks. It is usually won on
      * points, but a Player who gathers a full flock wins outright, and with Hawks, so does one
-     * whose hawks strike.
+     * whose hawks strike. Hawks lets up to six play, where the Game alone is for four, and lets a
+     * Player be a hawk.
      */
     private static ScorePad birdwatchWithHawks() {
         return new ScorePad(
@@ -378,11 +379,12 @@ class StandardGameModuleTests {
                 List.of(),
                 false,
                 null,
-                List.of(new Expansion("hawks")),
+                List.of(new Expansion("hawks").allowingUpTo(6)),
                 List.of(
                         VictoryType.onPoints("points"),
                         VictoryType.outright("flock"),
-                        VictoryType.outright("strike").onlyWhen("hawks", Expansion.WITH)));
+                        VictoryType.outright("strike").onlyWhen("hawks", Expansion.WITH)),
+                List.of(PlayerSetupChoice.of("bird", List.of("owl", "hawk", "wren")).onlyWith("hawks", List.of("hawk"))));
     }
 
     private static final Map<String, String> WITH_HAWKS = Map.of("hawks", "true");
@@ -409,6 +411,80 @@ class StandardGameModuleTests {
                     .extracting(ScoreCategory::key)
                     .containsExactly("birds", "hawks");
             assertRefused(Standard.NOT_RECORDED, module, victory("points", Map.of(), hawks(10, 5), hawks(12, 0)));
+        }
+
+        @Test
+        void canLetMorePlayersTakePart() {
+            ScorePad pad = birdwatchWithHawks();
+
+            assertThat(pad.maxPlayersFor(Map.of())).isEqualTo(4);
+            assertThat(pad.maxPlayersFor(WITH_HAWKS)).isEqualTo(6);
+            assertThat(pad.maxPlayersFor(Map.of("hawks", "false"))).isEqualTo(4);
+            assertRefused(
+                    Standard.TOO_MANY_PLAYERS,
+                    module,
+                    victory("points", Map.of(), birds(1), birds(2), birds(3), birds(4), birds(5)));
+            assertThat(onPoints(WITH_HAWKS, hawks(1, 0), hawks(2, 0), hawks(3, 0), hawks(4, 0), hawks(5, 0), hawks(6, 0)))
+                    .hasSize(6);
+            assertRefused(
+                    Standard.TOO_MANY_PLAYERS,
+                    module,
+                    victory(
+                            "points",
+                            WITH_HAWKS,
+                            hawks(1, 0), hawks(2, 0), hawks(3, 0), hawks(4, 0), hawks(5, 0), hawks(6, 0), hawks(7, 0)));
+        }
+
+        @Test
+        void canBringOptionsToAPlayerSetup() {
+            ScorePad pad = birdwatchWithHawks();
+            PlayerSetupChoice bird = pad.playerSetup().getFirst();
+
+            assertThat(bird.optionsFor(pad, Map.of())).containsExactly("owl", "wren");
+            assertThat(bird.optionsFor(pad, WITH_HAWKS)).containsExactly("owl", "hawk", "wren");
+            assertRefused(
+                    Standard.NEEDS_EXPANSION,
+                    module,
+                    victory("points", Map.of(), as(birds(10), "hawk"), birds(12)));
+            assertThat(onPoints(WITH_HAWKS, as(hawks(10, 5), "hawk"), as(hawks(12, 0), "owl"))).hasSize(2);
+        }
+
+        @Test
+        void declareWhatTheyChangeConsistently() {
+            List<Variant> noVariants = List.of();
+            List<ScoreCategory> birds = List.of(ScoreCategory.of("birds"));
+
+            // An Expansion can only raise the most Players, and only a pad that has a most.
+            assertThatIllegalArgumentException()
+                    .isThrownBy(() -> new ScorePad(
+                            2, 4, noVariants, birds, List.of(), false, null, List.of(new Expansion("hawks").allowingUpTo(4)),
+                            List.of()))
+                    .withMessageContaining("'hawks'");
+            assertThatIllegalArgumentException()
+                    .isThrownBy(() -> new ScorePad(
+                            2, null, noVariants, birds, List.of(), false, null, List.of(new Expansion("hawks").allowingUpTo(6)),
+                            List.of()))
+                    .withMessageContaining("'hawks'");
+            // A Player Setup option comes with an Expansion of the pad, and is an option of its choice.
+            List<PlayerSetupChoice> eagle = List.of(PlayerSetupChoice.of("bird", List.of("owl", "eagle"))
+                    .onlyWith("eagles", List.of("eagle")));
+            assertThatIllegalArgumentException()
+                    .isThrownBy(() -> new ScorePad(
+                            2, 4, noVariants, birds, List.of(), false, null, List.of(new Expansion("hawks")), List.of(), eagle))
+                    .withMessageContaining("'bird'");
+            assertThatIllegalArgumentException()
+                    .isThrownBy(() -> PlayerSetupChoice.of("bird", List.of("owl", "wren")).onlyWith("hawks", List.of("hawk")))
+                    .withMessageContaining("'bird'");
+        }
+
+        /** The Results of a Play won on points. */
+        private List<PlayerResult> onPoints(Map<String, String> setup, PlayerEntry... players) {
+            return ((Outcome.Competitive) module.score(victory("points", setup, players))).results();
+        }
+
+        /** A Player with this bird as their Player Setup. */
+        private static PlayerEntry as(PlayerEntry player, String bird) {
+            return new PlayerEntry(player.scores(), false, Map.of("bird", bird));
         }
 
         @Test
@@ -634,6 +710,18 @@ class StandardGameModuleTests {
         }
 
         @Test
+        void canGiveAChoiceAnotherDefaultThanItsFirstOption() {
+            Variant.Choice board = new Variant.Choice("board", List.of("front", "back"));
+
+            assertThat(board.defaultValue()).isEqualTo("front");
+            assertThat(board.byDefault("back").defaultValue()).isEqualTo("back");
+            assertThat(board.byDefault("back").inSoloPlaysOnly().defaultValue()).isEqualTo("back");
+            assertThatIllegalArgumentException()
+                    .isThrownBy(() -> board.byDefault("side"))
+                    .withMessageContaining("'board'");
+        }
+
+        @Test
         void hasToFitTogether() {
             List<Variant> noVariants = List.of();
             List<ScoreCategory> birds = List.of(ScoreCategory.of("birds"));
@@ -650,6 +738,10 @@ class StandardGameModuleTests {
                             2, 4, noVariants, List.of(ScoreCategory.of("birds"), ScoreCategory.of("birds")), List.of(), false))
                     .withMessageContaining("'birds'");
             assertThatIllegalArgumentException().isThrownBy(() -> new ScorePad(3, 2, noVariants, birds, List.of(), false));
+            // Only a cooperative pad scores some rows after a victory only.
+            assertThatIllegalArgumentException()
+                    .isThrownBy(() -> new ScorePad(
+                            2, 4, noVariants, List.of(ScoreCategory.of("birds").onlyAfterVictory()), List.of(), false));
         }
     }
 

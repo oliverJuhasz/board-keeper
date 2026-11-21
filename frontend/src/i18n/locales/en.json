@@ -123,6 +123,7 @@
       "total": "Total",
       "placing": "Placing",
       "playersFull": "This game is for at most {{max}} players.",
+      "playersFullWithoutExpansion": "This game is for at most {{max}} players, unless it's played with an Expansion that allows more.",
       "lost": "Lost",
       "soloResult": "Result",
       "offline": "You're offline. This play will be kept on this device and sent once there's a connection. Its totals and placings are worked out then.",
@@ -207,6 +208,7 @@
       "victoryTypeMissing": "Say how the play was won.",
       "oneWinnerOnly": "A play won this way has one winner.",
       "chosenTwice": "Two players were given the same choice where each one exists only once, such as a Wonder.",
+      "needsExpansion": "A player was given a choice that comes with an Expansion the play wasn't played with.",
       "groupResultMissing": "Say whether the group won or lost."
     },
     "waiting": {
@@ -331,13 +333,15 @@
     "locationTooLong": "Use at most 100 characters.",
     "notesTooLong": "Use at most 2000 characters.",
     "playersTooMany": "This game is for at most {{max}} players.",
+    "playersTooManyWithoutExpansion": "This game is for at most {{max}} players, unless it's played with an Expansion that allows more.",
     "scoreTooLow": "Enter {{min}} or more.",
     "scoreTooHigh": "Enter {{max}} or less.",
     "scoreStep": "Enter a multiple of {{step}}.",
     "tieUnanswered": "Say who won the tie, or that the win is shared.",
     "soloScoresOnly": "A solo play of this game is recorded with its scores. Choose Points.",
     "oneWinnerOnly": "Only one player can win this way.",
-    "chosenTwice": "Another player has this {{choice}} already."
+    "chosenTwice": "Another player has this {{choice}} already.",
+    "needsExpansion": "This {{choice}} comes with {{expansion}}. Tick it under Expansions, or choose another."
   },
   "problems": {
     "unknown": "Something went wrong. Try again.",

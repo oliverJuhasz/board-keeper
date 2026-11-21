@@ -66,30 +66,45 @@ public sealed interface Variant {
      * A choice between options, such as the side of a board. In a Setup it is the key of the
      * chosen option.
      *
-     * @param options the keys of the options, in the order to offer them; the first is the default
+     * <pre>{@code
+     * new Variant.Choice("difficulty", List.of("novice", "normal", "difficult", "heroic")).byDefault("normal")
+     * }</pre>
+     *
+     * @param options the keys of the options, in the order to offer them
+     * @param defaultOption the option when nothing was chosen; the first, unless {@link #byDefault}
+     *     names another
      * @param soloOnly see {@link Variant#soloOnly()}
      */
-    record Choice(String key, List<String> options, boolean soloOnly) implements Variant {
+    record Choice(String key, List<String> options, String defaultOption, boolean soloOnly) implements Variant {
 
         public Choice {
             options = List.copyOf(options);
             if (options.size() < 2) {
                 throw new IllegalArgumentException("The Variant '" + key + "' needs at least two options");
             }
+            if (!options.contains(defaultOption)) {
+                throw new IllegalArgumentException("The default of the Variant '" + key + "' has to be one of its options");
+            }
         }
 
+        /** A choice whose first option is the default. */
         public Choice(String key, List<String> options) {
-            this(key, options, false);
+            this(key, options, options.isEmpty() ? null : options.getFirst(), false);
+        }
+
+        /** The same choice, with this option as the default instead. */
+        public Choice byDefault(String option) {
+            return new Choice(key, options, option, soloOnly);
         }
 
         /** The same choice, made for Solo Plays only. */
         public Choice inSoloPlaysOnly() {
-            return new Choice(key, options, true);
+            return new Choice(key, options, defaultOption, true);
         }
 
         @Override
         public String defaultValue() {
-            return options.getFirst();
+            return defaultOption;
         }
 
         @Override

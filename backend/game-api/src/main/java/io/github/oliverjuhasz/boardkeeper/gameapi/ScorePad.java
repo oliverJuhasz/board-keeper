@@ -25,7 +25,8 @@ import java.util.Set;
  * </ul>
  *
  * @param minPlayers the fewest Players a Play can have
- * @param maxPlayers the most Players a Play can have; null when there is no limit
+ * @param maxPlayers the most Players a Play can have; null when there is no limit. An Expansion
+ *     can raise it for the Plays that are played with it.
  * @param variants the Variants a recorder chooses from, in the order to offer them
  * @param categories the Score Categories, in the order of the score pad
  * @param tieBreakers how Players with equal totals are put in order, first one first. Empty when
@@ -135,11 +136,26 @@ public record ScorePad(
         if (!victoryTypes.isEmpty() && victoryTypes.getFirst().onlyWhen() != null) {
             throw new IllegalArgumentException("The first Victory Type is the usual one, so it has to be always possible");
         }
+        Set<String> expansionKeys = new HashSet<>();
+        expansions.forEach(expansion -> expansionKeys.add(expansion.key()));
         Set<String> choiceKeys = new HashSet<>();
         for (PlayerSetupChoice choice : playerSetup) {
             if (!choiceKeys.add(choice.key())) {
                 throw new IllegalArgumentException("Two Player Setup choices have the key '" + choice.key() + "'");
             }
+            if (!expansionKeys.containsAll(choice.optionsOnlyWith().values())) {
+                throw new IllegalArgumentException("The Player Setup choice '" + choice.key()
+                        + "' has an option that comes with an Expansion that is not on the pad");
+            }
+        }
+        for (Expansion expansion : expansions) {
+            if (expansion.maxPlayers() != null && (maxPlayers == null || expansion.maxPlayers() <= maxPlayers)) {
+                throw new IllegalArgumentException("The Expansion '" + expansion.key()
+                        + "' can only raise the most Players a Play can have, to more than the pad's own maximum");
+            }
+        }
+        if (!cooperative && categories.stream().anyMatch(ScoreCategory::afterVictoryOnly)) {
+            throw new IllegalArgumentException("Only a cooperative score pad has rows that are scored after a victory only");
         }
         if (usualRecordingMode == null) {
             throw new IllegalArgumentException("A score pad says which Recording Mode a Play starts with");
@@ -254,6 +270,30 @@ public record ScorePad(
                 .filter(category -> soloPlay || !category.soloOnly())
                 .filter(category -> holds(category.onlyWhen(), setup))
                 .toList();
+    }
+
+    /**
+     * The group's rows of a cooperative pad for a Play with this Setup, after a victory or a
+     * defeat. Rows that are scored after a victory only are left out of a defeat.
+     */
+    public List<ScoreCategory> groupCategoriesFor(Map<String, String> setup, boolean won) {
+        return categoriesFor(setup, false).stream()
+                .filter(category -> won || !category.afterVictoryOnly())
+                .toList();
+    }
+
+    /**
+     * The most Players a Play with this Setup can have: the pad's own maximum, or more, if an
+     * Expansion it is played with allows more. Null when there is no limit.
+     */
+    public Integer maxPlayersFor(Map<String, String> setup) {
+        Integer most = maxPlayers;
+        for (Expansion expansion : expansions) {
+            if (expansion.maxPlayers() != null && Expansion.WITH.equals(valueOf(expansion.key(), setup))) {
+                most = Math.max(most, expansion.maxPlayers());
+            }
+        }
+        return most;
     }
 
     /**

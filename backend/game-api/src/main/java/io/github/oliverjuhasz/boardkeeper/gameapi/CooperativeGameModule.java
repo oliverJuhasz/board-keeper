@@ -11,6 +11,9 @@ import java.util.Map;
  * {@link #groupScore}. Nothing is recorded for the Players one by one, besides their Player
  * Setup.
  *
+ * <p>A Game that scores only a victory marks its rows {@link ScoreCategory#onlyAfterVictory()}. A
+ * defeat then has no rows on the pad, and no score, even with Recording Mode "Points".
+ *
  * <p>Its score pad is made with {@link ScorePad#cooperative}.
  */
 public abstract class CooperativeGameModule implements GameModule {
@@ -22,14 +25,9 @@ public abstract class CooperativeGameModule implements GameModule {
             throw new IllegalStateException("Game Module '" + key() + "' needs a cooperative score pad");
         }
         List<PlayerEntry> players = entry.players();
-        if (players.size() < pad.minPlayers()) {
-            throw new InvalidPlayException(Standard.TOO_FEW_PLAYERS);
-        }
-        if (pad.maxPlayers() != null && players.size() > pad.maxPlayers()) {
-            throw new InvalidPlayException(Standard.TOO_MANY_PLAYERS);
-        }
+        Checks.playerCount(pad, entry.setup(), players.size());
         Checks.setup(pad, entry.setup(), false);
-        Checks.playerSetup(pad, players);
+        Checks.playerSetup(pad, entry.setup(), players);
         if (entry.victoryType() != null
                 || players.stream().anyMatch(player -> !player.scores().isEmpty() || player.winner())) {
             throw new InvalidPlayException(Standard.NOT_RECORDED);
@@ -44,7 +42,12 @@ public abstract class CooperativeGameModule implements GameModule {
             }
             return new Outcome.Cooperative(group.won(), null);
         }
-        Checks.rows(pad.categoriesFor(entry.setup(), false), group.scores());
+        List<ScoreCategory> rows = pad.groupCategoriesFor(entry.setup(), group.won());
+        Checks.rows(rows, group.scores());
+        if (rows.isEmpty()) {
+            // A defeat of a Game that scores only a victory.
+            return new Outcome.Cooperative(group.won(), null);
+        }
         return new Outcome.Cooperative(group.won(), groupScore(entry.setup(), group.won(), group.scores(), players.size()));
     }
 
@@ -54,7 +57,8 @@ public abstract class CooperativeGameModule implements GameModule {
      *
      * @param setup the Play's Setup, as entered
      * @param won whether the group won
-     * @param rows the value of each of the group's rows on the pad for this Setup, all of them filled in
+     * @param rows the value of each of the group's rows on the pad for this Setup and outcome, all of
+     *     them filled in. There is at least one: without any, the group has no score.
      * @param players how many Players there were
      */
     protected abstract int groupScore(Map<String, String> setup, boolean won, Map<String, Integer> rows, int players);

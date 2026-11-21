@@ -37,7 +37,10 @@ import {
   entersScores,
   fewestPlayers,
   isCooperative,
+  moreWithAnotherExpansion,
+  mostPlayers,
   newPlayerRow,
+  optionsFor,
   playFormFor,
   SHARED,
   soloOf,
@@ -166,7 +169,11 @@ export function PlayEntryForm({
   const notYetAdded = allPlayers.filter(
     (player) => !play.players.some((entered) => entered.playerId === player.id),
   )
-  const full = pad.maxPlayers !== undefined && play.players.length >= pad.maxPlayers
+  // The most Players there can be: an Expansion can allow more than the Game alone.
+  const most = mostPlayers(module, play)
+  const full = most !== undefined && play.players.length >= most
+  const tooMany = most !== undefined && play.players.length > most
+  const moreWithExpansion = moreWithAnotherExpansion(module, play)
 
   /**
    * Adds a Player to the Play. Focus stays on the list of Players to add, ready for the next one.
@@ -174,7 +181,7 @@ export function PlayEntryForm({
    * moves on to the new Player's first entry instead.
    */
   function addPlayer(playerId: string) {
-    const seatLeft = pad.maxPlayers === undefined || play.players.length + 1 < pad.maxPlayers
+    const seatLeft = most === undefined || play.players.length + 1 < most
     const someoneLeft =
       can("CREATE_PLAYERS") || notYetAdded.some((player) => player.id !== playerId)
     // By default, append moves focus to the first field of the row it adds.
@@ -247,7 +254,15 @@ export function PlayEntryForm({
       : undefined
   }
 
-  const playersError = errors.players?.root?.message ?? errors.players?.message
+  // Too many Players can also come from taking an Expansion off: that is said at once.
+  const playersError =
+    errors.players?.root?.message ??
+    errors.players?.message ??
+    (tooMany
+      ? moreWithExpansion
+        ? "validation.playersTooManyWithoutExpansion"
+        : "validation.playersTooMany"
+      : undefined)
   // The messages for the pad, one line each: "Buttons of Anna: Enter a multiple of 3."
   const padProblems = drawnAsPad
     ? rows.fields.flatMap((row, index) =>
@@ -296,8 +311,24 @@ export function PlayEntryForm({
           />
         </div>
 
-        {/* Who played comes first: whether the Play is a Solo Play decides which Variants and
-            ways to win there are, and what the recording is called. */}
+        {/* The Expansions the Play was played with come first. Each can let more Players take
+            part, bring options of the Player Setup, add rows to the pad, or ways to win. */}
+        {pad.expansions.length > 0 && (
+          <FieldSet>
+            <FieldLegend variant="label">{t("plays.record.expansions")}</FieldLegend>
+            {pad.expansions.map((expansion) => (
+              <CheckboxField
+                key={expansion.key}
+                label={moduleText(`expansion.${expansion.key}`)}
+                checked={play.setup[expansion.key] === "true"}
+                onChange={(on) => form.setValue(`setup.${expansion.key}`, String(on), changed)}
+              />
+            ))}
+          </FieldSet>
+        )}
+
+        {/* Then who played: whether the Play is a Solo Play decides which Variants and ways to
+            win there are, and what the recording is called. */}
         <FieldSet>
           <FieldLegend variant="label">{t("plays.record.players")}</FieldLegend>
           {rows.fields.length === 0 ? (
@@ -386,6 +417,13 @@ export function PlayEntryForm({
                                     .filter((_, other) => other !== index)
                                     .map((other) => other.setup[choice.key])
                                 : []
+                              // Only the options of the Expansions that are ticked, and what was
+                              // chosen before one was taken off, which stays until it is changed.
+                              const chosenOption = play.players[index]?.setup[choice.key]
+                              const offered = optionsFor(module, play, choice)
+                              const options = choice.options.filter(
+                                (option) => offered.includes(option) || option === chosenOption,
+                              )
                               return (
                                 <NativeSelect
                                   key={choice.key}
@@ -399,7 +437,7 @@ export function PlayEntryForm({
                                   <NativeSelectOption value="">
                                     {moduleText(`playerSetup.${choice.key}`)}
                                   </NativeSelectOption>
-                                  {choice.options.map((option) => (
+                                  {options.map((option) => (
                                     <NativeSelectOption
                                       key={option}
                                       value={option}
@@ -415,12 +453,23 @@ export function PlayEntryForm({
                         )}
                         {scoreError && <FieldError className="text-right">{scoreError}</FieldError>}
                         {pad.playerSetup.map((choice) => {
-                          const message = errors.players?.[index]?.setup?.[choice.key]?.message
+                          const chosenOption = play.players[index]?.setup[choice.key]
+                          // An option that came with an Expansion that was taken off is said at once.
+                          const message =
+                            errors.players?.[index]?.setup?.[choice.key]?.message ??
+                            (chosenOption &&
+                            !optionsFor(module, play, choice).includes(chosenOption)
+                              ? "validation.needsExpansion"
+                              : undefined)
+                          const expansion = chosenOption && choice.optionsOnlyWith[chosenOption]
                           return (
                             message && (
                               <FieldError key={choice.key}>
-                                {t(message as "validation.chosenTwice", {
+                                {t(message as "validation.needsExpansion", {
                                   choice: moduleText(`playerSetup.${choice.key}`),
+                                  expansion: expansion
+                                    ? moduleText(`expansion.${expansion}`)
+                                    : undefined,
                                 })}
                               </FieldError>
                             )
@@ -435,7 +484,9 @@ export function PlayEntryForm({
           )}
           {full ? (
             <FieldDescription>
-              {t("plays.record.playersFull", { max: pad.maxPlayers })}
+              {moreWithExpansion
+                ? t("plays.record.playersFullWithoutExpansion", { max: most })
+                : t("plays.record.playersFull", { max: most })}
             </FieldDescription>
           ) : notYetAdded.length > 0 || can("CREATE_PLAYERS") ? (
             // Choosing a name adds that Player as a row; the list then goes back to its first line.
@@ -471,7 +522,7 @@ export function PlayEntryForm({
             <FieldError>
               {t(playersError as "validation.playersTooFew", {
                 min: fewestPlayers(module, play),
-                max: pad.maxPlayers,
+                max: most,
               })}
             </FieldError>
           )}
@@ -549,21 +600,6 @@ export function PlayEntryForm({
             <FieldError>{t(errors.recordingMode.message as "validation.required")}</FieldError>
           )}
         </div>
-
-        {/* The Expansions the Play was played with. Each can add rows to the pad, or ways to win. */}
-        {pad.expansions.length > 0 && (
-          <FieldSet>
-            <FieldLegend variant="label">{t("plays.record.expansions")}</FieldLegend>
-            {pad.expansions.map((expansion) => (
-              <CheckboxField
-                key={expansion.key}
-                label={moduleText(`expansion.${expansion.key}`)}
-                checked={play.setup[expansion.key] === "true"}
-                onChange={(on) => form.setValue(`setup.${expansion.key}`, String(on), changed)}
-              />
-            ))}
-          </FieldSet>
-        )}
 
         {/* The Variants of a Game with a module of its own. The Generic Module's two are the
             recording choices above. */}

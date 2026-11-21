@@ -103,15 +103,61 @@ export function isCooperative(module: GameModule, play: Pick<PlayFormValues, "se
 /**
  * The group's rows of the score pad, filled in for a cooperative Play in points of a Game with a
  * module of its own. The module works out the group's score from them. Empty otherwise: with the
- * Generic Module, the group's score is typed in as it is.
+ * Generic Module, the group's score is typed in as it is. A Game that scores only a victory, such
+ * as Last Bastion, has its rows on the pad once the group has won, and none after a defeat.
  */
 export function groupRowsOf(
   module: GameModule,
-  play: Pick<PlayFormValues, "setup" | "recordingMode">,
+  play: Pick<PlayFormValues, "setup" | "recordingMode" | "groupOutcome">,
 ) {
   return module.scorePad.cooperative && play.recordingMode === "POINTS"
-    ? categoriesOnPad(module.scorePad, play.setup)
+    ? categoriesOnPad(module.scorePad, play.setup).filter(
+        (category) => play.groupOutcome === "won" || !category.afterVictoryOnly,
+      )
     : []
+}
+
+/**
+ * The most Players a Play with these choices can have: the Game's own most, or more if it is
+ * played with an Expansion that allows more, as six can play Lords of Waterdeep with Scoundrels
+ * of Skullport. Undefined when there is no limit.
+ */
+export function mostPlayers(module: GameModule, play: Pick<PlayFormValues, "setup">) {
+  const pad = module.scorePad
+  const own = pad.maxPlayers
+  if (own === undefined) {
+    return undefined
+  }
+  return Math.max(
+    own,
+    ...pad.expansions
+      .filter((expansion) => chosen(pad, play.setup, expansion.key) === "true")
+      .map((expansion) => expansion.maxPlayers ?? own),
+  )
+}
+
+/** Whether an Expansion that isn't ticked would let more Players take part. */
+export function moreWithAnotherExpansion(module: GameModule, play: Pick<PlayFormValues, "setup">) {
+  const most = mostPlayers(module, play)
+  return module.scorePad.expansions.some(
+    (expansion) => most !== undefined && (expansion.maxPlayers ?? 0) > most,
+  )
+}
+
+/**
+ * The options of a Player Setup choice that can be chosen with these Expansions, in the order to
+ * offer them. An option that comes with an Expansion, such as Petra with Cities in 7 Wonders, is
+ * only there when the Play is played with it.
+ */
+export function optionsFor(
+  module: GameModule,
+  play: Pick<PlayFormValues, "setup">,
+  choice: ScorePad["playerSetup"][number],
+) {
+  return choice.options.filter((option) => {
+    const expansion = choice.optionsOnlyWith[option]
+    return expansion === undefined || chosen(module.scorePad, play.setup, expansion) === "true"
+  })
 }
 
 /**
@@ -260,8 +306,13 @@ export function entryProblems(module: GameModule, play: PlayFormValues) {
       path: ["players"],
       message: fewest === 1 ? "validation.playerRequired" : "validation.playersTooFew",
     })
-  } else if (pad.maxPlayers !== undefined && play.players.length > pad.maxPlayers) {
-    problems.push({ path: ["players"], message: "validation.playersTooMany" })
+  } else if (play.players.length > (mostPlayers(module, play) ?? Infinity)) {
+    problems.push({
+      path: ["players"],
+      message: moreWithAnotherExpansion(module, play)
+        ? "validation.playersTooManyWithoutExpansion"
+        : "validation.playersTooMany",
+    })
   }
 
   // An option that is there once, such as a Wonder board, can't be given to a second Player.
@@ -273,6 +324,20 @@ export function entryProblems(module: GameModule, play: PlayFormValues) {
         problems.push({
           path: ["players", index, "setup", choice.key],
           message: "validation.chosenTwice",
+        })
+      }
+    })
+  }
+
+  // An option that comes with an Expansion, such as Petra with Cities, needs a Play with it.
+  for (const choice of pad.playerSetup) {
+    const offered = optionsFor(module, play, choice)
+    play.players.forEach((player, index) => {
+      const option = player.setup[choice.key]
+      if (option && !offered.includes(option)) {
+        problems.push({
+          path: ["players", index, "setup", choice.key],
+          message: "validation.needsExpansion",
         })
       }
     })
@@ -482,7 +547,10 @@ export function blankPlay(module: GameModule, game: Game, firstPlayerId?: string
   }
 }
 
-/** The group's rows as the form holds them: every row of a cooperative pad, empty where not filled in. */
+/**
+ * The group's rows as the form holds them: every row of a cooperative pad, empty where not filled
+ * in, even those that are only on the pad after a victory.
+ */
 function groupScoresFrom(pad: ScorePad, from: Record<string, number> | undefined) {
   return pad.cooperative
     ? Object.fromEntries(

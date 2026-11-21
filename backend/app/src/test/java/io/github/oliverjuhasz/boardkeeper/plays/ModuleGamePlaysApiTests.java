@@ -432,6 +432,24 @@ class ModuleGamePlaysApiTests {
                 .hasStatus(422)
                 .bodyJson()
                 .isLenientlyEqualTo("{\"reason\": \"plays.invalid.chosenTwice\"}");
+        // Petra comes with Cities.
+        String withoutCities = """
+                {"gameId": "%s", "playedOn": "2026-03-14", "recordingMode": "POINTS", "setup": {},
+                 "players": [
+                   {"playerId": "%s", "winner": false, "setup": {"wonder": "petra"},
+                    "scores": {"wonder": 10, "treasury": 3, "military": 6, "civilian": 15, "commercial": 5,
+                               "scientific": 13, "guilds": 7}},
+                   {"playerId": "%s", "winner": false,
+                    "scores": {"wonder": 7, "treasury": 2, "military": 5, "civilian": 20, "commercial": 8,
+                               "scientific": 1, "guilds": 4}},
+                   {"playerId": "%s", "winner": false,
+                    "scores": {"wonder": 3, "treasury": 6, "military": 0, "civilian": 12, "commercial": 2,
+                               "scientific": 25, "guilds": 6}}]}
+                """.formatted(sevenWonders, anna, bence, dora);
+        assertThat(member.post("/api/plays", withoutCities))
+                .hasStatus(422)
+                .bodyJson()
+                .isLenientlyEqualTo("{\"reason\": \"plays.invalid.needsExpansion\"}");
     }
 
     @Test

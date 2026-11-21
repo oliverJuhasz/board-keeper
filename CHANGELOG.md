@@ -13,6 +13,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 
 - "Record another play" on a Play's page starts the form with that Play's Players, Setup, date and location, so a second Play on the same day takes only its scores.
+- When a Play is recorded or edited, its Expansions come before its Players, because an Expansion can decide how many can play and what can be chosen for each Player.
+- 7 Wonders offers Roma and Abu Simbel only in a Play with Leaders, and Byzantium and Petra only with Cities. A Play recorded with one of them without its Expansion is refused when it is recalculated, until the Expansion is ticked or the Wonder board is changed.
 
 ### Fixed
 
