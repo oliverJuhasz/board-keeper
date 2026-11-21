@@ -20,6 +20,7 @@ backend/
     hadara/          the Game Module for Hadara
     harmonies/       the Game Module for Harmonies
     last-bastion/    the Game Module for Last Bastion, a cooperative game that scores only a victory
+    lords-of-waterdeep/  the Game Module for Lords of Waterdeep, with Scoundrels of Skullport
     seven-wonders/   the Game Module for 7 Wonders, with Leaders and Cities
     seven-wonders-duel/  the Game Module for 7 Wonders Duel, with Pantheon and Agora
     spirit-island/   the Game Module for Spirit Island, a cooperative game
@@ -340,7 +341,7 @@ This writes `frontend/src/components/ui/dialog.tsx`. Run `npm run format` afterw
 
 ### Adding a Game Module
 
-`backend/games/calico` is the example to copy; `backend/games/harmonies` shows a Variant that is a choice, and rows that a Variant swaps; `backend/games/wyrmspan` shows a Game played alone against an automated opponent; `backend/games/hadara` shows a choice with many options, which the form offers as a drop-down instead of radio buttons once there are more than five; `backend/games/seven-wonders-duel` shows Expansions and a Game that can be won in more than one way; `backend/games/seven-wonders` shows a Player Setup and rows that can be negative; `backend/games/spirit-island` shows a cooperative Game whose module works out the group's score, and Variants that are numbers or depend on another choice; `backend/games/last-bastion` shows a cooperative Game that scores only a victory, and a choice whose default isn't its first option. A module has three parts: an identity, a description of its Game's score pad, and its texts.
+`backend/games/calico` is the example to copy; `backend/games/harmonies` shows a Variant that is a choice, and rows that a Variant swaps; `backend/games/wyrmspan` shows a Game played alone against an automated opponent; `backend/games/hadara` shows a choice with many options, which the form offers as a drop-down instead of radio buttons once there are more than five; `backend/games/seven-wonders-duel` shows Expansions and a Game that can be won in more than one way; `backend/games/seven-wonders` shows a Player Setup and rows that can be negative; `backend/games/spirit-island` shows a cooperative Game whose module works out the group's score, and Variants that are numbers or depend on another choice; `backend/games/last-bastion` shows a cooperative Game that scores only a victory, and a choice whose default isn't its first option; `backend/games/lords-of-waterdeep` shows Expansions that let more Players take part and bring options to the Player Setup, and a Tie-breaker that decides part of a tie before the recorder is asked. A module has three parts: an identity, a description of its Game's score pad, and its texts.
 
 1. Copy `backend/games/calico` to `backend/games/<key>` and rename the artifact to `game-<key>`.
 2. Give the module a newly generated UUID. It is stored with every Play, so it never changes afterwards ([ADR 0012](adr/0012-game-module-uuid-and-key.md)).

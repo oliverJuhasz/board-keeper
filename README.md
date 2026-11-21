@@ -42,7 +42,7 @@ Milestones M0 to M6 are done, which are all the milestones planned for v1. Board
 - Players, who exist with or without an Account
 - a catalogue of Games, each with how its Plays are recorded by default
 - recording Plays of any Game in the catalogue: competitive or Cooperative, in points or with only the winner, with Placings and shared wins
-- Game Modules that bring a Game with its own score pad, Expansions, Variants, choices for each Player, tie rules, ways to win and way of playing alone: 7 Wonders (with Leaders and Cities), 7 Wonders Duel (with Pantheon and Agora), Calico, Hadara, Harmonies, Last Bastion, Spirit Island and Wyrmspan
+- Game Modules that bring a Game with its own score pad, Expansions, Variants, choices for each Player, tie rules, ways to win and way of playing alone: 7 Wonders (with Leaders and Cities), 7 Wonders Duel (with Pantheon and Agora), Calico, Hadara, Harmonies, Last Bastion, Lords of Waterdeep (with Scoundrels of Skullport), Spirit Island and Wyrmspan
 - a start page that gets to recording a Play in one or two taps: recent Plays to play again, and the most recently played Games first
 - the play history, filterable by "my plays", Game, Player and date, with editing and deleting Plays according to Permissions
 - Recalculation: scoring a Play again with its Game Module as it is now, or, for an Admin, every Play of a Game at once

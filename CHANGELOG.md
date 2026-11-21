@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - The Players of a Play can be put in another order while it is recorded or edited, by dragging or from the keyboard. The Score Pad's columns follow that order, and the Play keeps it.
 - A Game Module for Last Bastion, a Cooperative Game for one to four Players, each with a Hero. Its Difficulty is a Variant, and only a victory is scored: from the Life and Call to Arms tokens left, the dead heroes and the Bastion tiles in the Grasp of Evil.
+- A Game Module for Lords of Waterdeep, with the two halves of Scoundrels of Skullport, Undermountain and Skullport, as Expansions. Each Player's Lord of Waterdeep is their Player Setup. Either half lets six play, and brings three Lords of its own; Skullport adds a row for Corruption.
 
 ### Changed
 

@@ -15,7 +15,9 @@ import io.github.oliverjuhasz.boardkeeper.gameapi.RecordingMode;
 import io.github.oliverjuhasz.boardkeeper.games.Game.RecordingDefaults;
 import io.github.oliverjuhasz.boardkeeper.games.Games;
 import io.github.oliverjuhasz.boardkeeper.players.Players;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -539,6 +541,42 @@ class ModuleGamePlaysApiTests {
                 .hasStatus(422)
                 .bodyJson()
                 .isLenientlyEqualTo("{\"reason\": \"last-bastion.invalid.tooManyDeadHeroes\"}");
+    }
+
+    @Test
+    void anExpansionCanLetMorePlayersTakePart() {
+        UUID lordsOfWaterdeep = gameOfModule("lords-of-waterdeep");
+        List<UUID> six = List.of(
+                anna,
+                bence,
+                dora,
+                players.create("Eszter").id(),
+                players.create("Feri").id(),
+                players.create("Gabi").id());
+
+        // Lords of Waterdeep is for five, and six with either half of Scoundrels of Skullport.
+        assertThat(member.post("/api/plays", wonBy(lordsOfWaterdeep, "{}", six)))
+                .hasStatus(422)
+                .bodyJson()
+                .isLenientlyEqualTo("{\"reason\": \"plays.invalid.tooManyPlayers\"}");
+        assertThat(member.post("/api/plays", wonBy(lordsOfWaterdeep, "{\"undermountain\": \"true\"}", six)))
+                .hasStatusOk()
+                .bodyJson()
+                .isLenientlyEqualTo("""
+                        {"setup": {"undermountain": "true"},
+                         "results": [{"won": true}, {"won": false}, {"won": false}, {"won": false}, {"won": false},
+                                     {"won": false}]}
+                        """);
+    }
+
+    /** A Play recorded with only its winner: the first of these Players. */
+    private static String wonBy(UUID game, String setup, List<UUID> players) {
+        String rows = players.stream()
+                .map(player -> "{\"playerId\": \"%s\", \"winner\": %s}".formatted(player, player.equals(players.getFirst())))
+                .collect(Collectors.joining(", "));
+        return """
+                {"gameId": "%s", "playedOn": "2026-03-14", "recordingMode": "WINNER_ONLY", "setup": %s, "players": [%s]}
+                """.formatted(game, setup, rows);
     }
 
     /** The Game that appears in the catalogue for the Calico module. */

@@ -483,11 +483,14 @@ export function PlayEntryForm({
             </SortableList>
           )}
           {full ? (
-            <FieldDescription>
-              {moreWithExpansion
-                ? t("plays.record.playersFullWithoutExpansion", { max: most })
-                : t("plays.record.playersFull", { max: most })}
-            </FieldDescription>
+            // With too many, as after taking an Expansion off, the message below says it instead.
+            !tooMany && (
+              <FieldDescription>
+                {moreWithExpansion
+                  ? t("plays.record.playersFullWithoutExpansion", { max: most })
+                  : t("plays.record.playersFull", { max: most })}
+              </FieldDescription>
+            )
           ) : notYetAdded.length > 0 || can("CREATE_PLAYERS") ? (
             // Choosing a name adds that Player as a row; the list then goes back to its first line.
             <NativeSelect
@@ -617,6 +620,7 @@ export function PlayEntryForm({
               <ChoiceField
                 key={variant.key}
                 label={moduleText(`variant.${variant.key}`)}
+                hint={moduleText(`variant.${variant.key}.hint`)}
                 value={play.setup[variant.key]}
                 onChange={(option) => form.setValue(`setup.${variant.key}`, option, changed)}
                 options={choicesOf(variant).map((option) => ({
@@ -883,18 +887,20 @@ function choicesOf(variant: GameModule["scorePad"]["variants"][number]) {
 /** A choice of a few options as radio buttons, and of many as a drop-down. */
 function ChoiceField({
   label,
+  hint,
   value,
   onChange,
   options,
 }: {
   label: string
+  hint?: string
   value: string
   onChange: (value: string) => void
   options: { value: string; label: string }[]
 }) {
   return options.length > RADIO_BUTTONS_AT_MOST ? (
-    <SelectField label={label} value={value} onChange={onChange} options={options} />
+    <SelectField label={label} hint={hint} value={value} onChange={onChange} options={options} />
   ) : (
-    <RadioField legend={label} value={value} onChange={onChange} options={options} />
+    <RadioField legend={label} hint={hint} value={value} onChange={onChange} options={options} />
   )
 }

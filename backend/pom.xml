@@ -53,6 +53,7 @@
         <module>games/seven-wonders-duel</module>
         <module>games/spirit-island</module>
         <module>games/last-bastion</module>
+        <module>games/lords-of-waterdeep</module>
         <module>app</module>
     </modules>
 
@@ -156,6 +157,11 @@
             <dependency>
                 <groupId>io.github.oliverjuhasz.boardkeeper</groupId>
                 <artifactId>game-last-bastion</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.oliverjuhasz.boardkeeper</groupId>
+                <artifactId>game-lords-of-waterdeep</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

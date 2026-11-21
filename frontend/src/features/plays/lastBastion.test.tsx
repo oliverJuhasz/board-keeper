@@ -114,6 +114,9 @@ test("a victory is scored from the group's rows, at Normal difficulty unless sai
 
   expect(screen.getByText("Points")).toBeInTheDocument()
   expect(screen.getByRole("radio", { name: "Normal" })).toBeChecked()
+  expect(
+    screen.getByText("A victory scores 5, 10, 15 or 20 points, by difficulty."),
+  ).toBeInTheDocument()
   // The rows are there once the group has won.
   expect(screen.queryByLabelText("Life tokens")).not.toBeInTheDocument()
   await userEvent.click(screen.getByRole("radio", { name: "The group won" }))

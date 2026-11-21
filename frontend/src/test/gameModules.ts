@@ -377,6 +377,63 @@ export const lastBastionModule: GameModule = {
   },
 }
 
+/**
+ * For two to five Players, and six with either half of Scoundrels of Skullport, whose Lords come
+ * with that half; Skullport adds a row: part of Lords of Waterdeep.
+ */
+export const lordsOfWaterdeepModule: GameModule = {
+  id: "1352e3c2-fb6b-4be5-bc24-762320ed8894",
+  key: "lords-of-waterdeep",
+  scorePad: {
+    minPlayers: 2,
+    maxPlayers: 5,
+    expansions: [
+      { key: "undermountain", maxPlayers: 6 },
+      { key: "skullport", maxPlayers: 6 },
+    ],
+    variants: [],
+    categories: [
+      {
+        key: "scoringTrack",
+        countsTowardTotal: true,
+        min: 0,
+        step: 1,
+        soloOnly: false,
+        afterVictoryOnly: false,
+      },
+      {
+        key: "gold",
+        countsTowardTotal: true,
+        min: 0,
+        step: 1,
+        soloOnly: false,
+        afterVictoryOnly: false,
+      },
+      {
+        key: "corruption",
+        countsTowardTotal: true,
+        max: 0,
+        step: 1,
+        onlyWhen: { key: "skullport", value: "true" },
+        soloOnly: false,
+        afterVictoryOnly: false,
+      },
+    ],
+    recorderDecidesTies: true,
+    cooperative: false,
+    usualRecordingMode: "POINTS",
+    victoryTypes: [],
+    playerSetup: [
+      {
+        key: "lord",
+        options: ["mirtTheMoneylender", "larissaNeathal", "trobriand", "theXanathar"],
+        oncePerPlay: true,
+        optionsOnlyWith: { trobriand: "undermountain", theXanathar: "skullport" },
+      },
+    ],
+  },
+}
+
 export const gameModules = [
   calicoModule,
   genericModule,
@@ -384,6 +441,7 @@ export const gameModules = [
   sevenWondersModule,
   spiritIslandModule,
   lastBastionModule,
+  lordsOfWaterdeepModule,
   wyrmspanModule,
 ]
 
@@ -456,6 +514,18 @@ export const gameModuleTexts: Record<string, string> = {
   "last-bastion.playerSetup.hero.kazgin": "Kazgin",
   "last-bastion.playerSetup.hero.sindara": "Sindara",
   "last-bastion.playerSetup.hero.twindalli": "Twindalli",
+  "lords-of-waterdeep.name": "Lords of Waterdeep",
+  "lords-of-waterdeep.expansion.undermountain": "Scoundrels of Skullport: Undermountain",
+  "lords-of-waterdeep.expansion.skullport": "Scoundrels of Skullport: Skullport",
+  "lords-of-waterdeep.category.scoringTrack": "Victory Points on the scoring track",
+  "lords-of-waterdeep.category.gold": "Gold in the Tavern (1 per 2)",
+  "lords-of-waterdeep.category.corruption": "Corruption (tokens × the farthest empty space)",
+  "lords-of-waterdeep.tie": "The player with the most Gold in their Tavern wins the tie.",
+  "lords-of-waterdeep.playerSetup.lord": "Lord of Waterdeep",
+  "lords-of-waterdeep.playerSetup.lord.mirtTheMoneylender": "Mirt the Moneylender",
+  "lords-of-waterdeep.playerSetup.lord.larissaNeathal": "Larissa Neathal",
+  "lords-of-waterdeep.playerSetup.lord.trobriand": "Trobriand",
+  "lords-of-waterdeep.playerSetup.lord.theXanathar": "The Xanathar",
   "wyrmspan.name": "Wyrmspan",
   "wyrmspan.variant.automaLevel": "Automa level",
   "wyrmspan.variant.automaLevel.1": "Level 1",
