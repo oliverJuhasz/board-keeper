@@ -39,7 +39,6 @@ Changing Plays without a connection, teams, unfinished plays, game nights, impor
 - Merging duplicate Players. The model must not rule it out.
 - Rulebooks for each Game, readable in Board Keeper. Parked during M6 until it is clear how they are best uploaded. They are copyrighted and may only be used privately, so they will be uploaded to each installation, never shipped in the repository or the container image.
 - Head-to-head records, streaks and charts.
-- Playwright end-to-end tests, once the frontend is functionally complete and settled.
 - Signing in through an outside provider.
 - Limits on the number of sign-in attempts. Left out while the app sits on a private network.
 - Before publishing the repository: ARM images.
@@ -146,6 +145,37 @@ An Installation's Games, Players and Plays can be saved as an Export, for use el
 - **Before anything is written, the Admin reviews the Import.** A Game with a module of its own is matched by its module. A Generic Game is matched by its name, also to a module's Game of that name, as the catalogue does when a module arrives; its Plays keep the Generic Module and their totals. Each Player in the file is suggested to match the Player in their place in a Play that is here already, as when the same file is imported again, else the Player of the same name, else to become a new Player. The Admin can change each suggestion. A new Player needs a name that is free here, and the step asks for another where it isn't. Each Player here can be matched by at most one Player in the file, because merging duplicate Players is a feature of its own (see Later). The same step checks every Play with this Installation's Game Modules, lists those that would be refused, including all Plays of a Game whose module this Installation doesn't have, and says how much the Import adds, such as "43 Plays, 2 new Players, 1 new Game".
 - **Confirming writes everything else at once**, or nothing if something fails part-way. The server keeps nothing between the review and confirming: the browser sends the file again with the Admin's choices, and everything is checked again. An Import can't be undone, so the page advises making a backup first.
 - It is delivered in two slices: Export, then Import. Each adds a line to the changelog, and the self-hosting guide gets a section on moving Plays to another Installation. Its Backups section names `pg_dump` as the backup, and an Export as a second line of defence for the Plays: after an Import into an empty Installation, only the Accounts have to be set up again.
+
+## Settled for end-to-end tests
+
+Playwright tests that drive Board Keeper in a real browser, against the real backend and database. The Vitest tests check pages with the API mocked, and the backend's tests call the API without a browser, so neither shows that the two halves work together.
+
+- **1.0.0 waits for them.** Its release was stopped before anything was published. When it is made, after the end-to-end tests, the Unreleased lines join its changelog section, the Changed and Fixed lines about a version nobody had are dropped, and the section gets the new date: that is the "Release 1.0.0" commit.
+- **They cover the main journeys**, each across the frontend and the backend, and what only a real browser can do. Details of single pages stay in the Vitest tests. The journeys:
+  1. signing in and out with a password;
+  2. an Invite: an Admin creates it, and a new Account registers through it, claims its Player and signs in;
+  3. a Reset Link: an Admin creates it, and its owner chooses a new password and signs in with it;
+  4. a competitive Play of a Generic Game, then in the play history and in the Game's statistics;
+  5. a Play of 7 Wonders with Leaders, Roma as a Player Setup, and a tie the recorder decides;
+  6. a Cooperative Play of Spirit Island, with its group score worked out;
+  7. the Players of a Play put in another order, which the Score Pad's columns and the saved Play follow;
+  8. editing and deleting a Play, and a Member not offered either on someone else's Play;
+  9. a Passkey added in Settings, then used to sign in;
+  10. a Play recorded without a connection, which waits on the device and is sent once the connection is back;
+  11. an Export downloaded, and an Import of a sample Export: the review, matching its Players, confirming;
+  12. switching to Hungarian, which survives a reload;
+  13. the first Admin created through the Setup Link;
+  14. the play history with 120 Plays: the newest 50, and "Show more" for the rest, each once and in order.
+- **They run against the container image** that CI is about to publish, with PostgreSQL, through `deploy/compose.yaml` (ADR 0024): under a project name of their own, on port 8180, with `BOARD_KEEPER_IMAGE` naming the image (`board-keeper:local` unless set). Playwright's global setup starts it, and its global teardown removes it with its data.
+- **A setup project starts every run.** It creates the first Admin through the Setup Link in the log (journey 13), then, through the screens, a Member who registered through an Invite, the Players Anna, Bence and Csilla, and a Generic Game, and saves how both Accounts are signed in. PostgreSQL then copies the database, and before every test the copy is put back. If the application can't cope with its database being replaced while it runs, a reset empties the tables instead and copies their rows back from clean copies kept in a schema of their own. Restarting the application after each reset comes last.
+- **Tests make their data through the screens**, like a person, except a lot of it at once, such as the 120 Plays of journey 14. Those are made through the API as the Admin, with request bodies typed from `api/openapi.json`.
+- **Tests find elements by test id** (ADR 0023), and check text, in English, only where the text is what they test. axe checks the main page of each journey and fails on problems it calls serious or critical. The Vitest tests move to test ids in a pull request of their own, after the end-to-end tests. An ESLint rule then forbids the role, text and label queries in both.
+- **They are a package of their own, `e2e/`**, beside `frontend/` and `backend/`, because they test the whole application.
+- **Chromium only, at desktop size and as a Pixel 7.** Passkeys use Chromium's virtual authenticator. On the phone, the Players of journey 7 are dragged with a finger, through Chromium's DevTools protocol.
+- **One worker, against one Installation.** An Installation per worker waits until a run is too slow.
+- **No retries locally, one on CI.** A test that passes only when run again is a bug to fix.
+- **CI runs them on every push.** It builds the image without publishing it, runs the tests against it, and publishes the same image only if they pass. When tests fail, it keeps Playwright's report with its traces.
+- **The pull request also updates** `docs/development.md` (building the image, running the tests, reading a trace), `CLAUDE.md` (the command, and a test id on everything a test touches) and the README's Tests row. Tests stay out of the changelog.
 
 ## Details to settle when a milestone starts
 
