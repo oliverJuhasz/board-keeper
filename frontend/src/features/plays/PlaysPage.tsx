@@ -184,6 +184,7 @@ export function PlaysPage() {
                 <Button
                   variant="outline"
                   disabled={history.isFetchingNextPage}
+                  data-testid="show-more"
                   onClick={() => void history.fetchNextPage()}
                 >
                   {t("plays.history.showMore")}
@@ -225,7 +226,11 @@ function PlaySummary({ play }: { play: Play }) {
   )
 
   return (
-    <Link to={`/plays/${play.id}`} className="block space-y-1 px-3 py-2.5 hover:bg-muted/50">
+    <Link
+      to={`/plays/${play.id}`}
+      className="block space-y-1 px-3 py-2.5 hover:bg-muted/50"
+      data-testid="play-summary"
+    >
       <div className="flex items-baseline justify-between gap-3">
         <span>
           <span className="font-medium">{gameName(play.game)}</span>

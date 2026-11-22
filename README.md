@@ -26,7 +26,7 @@ Board Keeper is a learning project first ([ADR 0001](docs/adr/0001-learning-proj
 | Forms and validation | React Hook Form, Zod |
 | Styling and components | Tailwind CSS v4, shadcn/ui (on Base UI) |
 | PWA | vite-plugin-pwa |
-| Tests | Vitest, React Testing Library, Mock Service Worker; Playwright end-to-end tests once the frontend is complete |
+| Tests | Vitest, React Testing Library, Mock Service Worker; Playwright end-to-end tests against the container image |
 | Lint and format | ESLint, Prettier |
 
 **Deployment:** GitHub Actions builds and tests every push and publishes the container image to GitHub Container Registry: every change on `main` as a snapshot, and every release, which is a git tag such as `1.2.3` ([ADR 0018](docs/adr/0018-releases-are-git-tags.md)). It runs as one app container (Spring Boot serves both the API and the built frontend) plus one PostgreSQL container. The repository provides the image, an example compose file and a [self-hosting guide](docs/self-hosting.md). Anything specific to one installation is out of scope: network access, reverse proxy, automatic updates and backup scheduling. On first start, with no accounts yet, the app writes a one-time link to its log for creating the first Admin. If the only Admin forgets their password, a command run on the container writes a Reset Link for them.

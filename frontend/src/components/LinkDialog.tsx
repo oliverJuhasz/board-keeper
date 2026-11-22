@@ -65,6 +65,7 @@ export function LinkDialog({
                 id={linkFieldId}
                 readOnly
                 value={ready.link}
+                data-testid="link"
                 onFocus={(event) => event.target.select()}
               />
             </Field>
@@ -73,7 +74,9 @@ export function LinkDialog({
                 {copied ? <CheckIcon /> : <CopyIcon />}
                 {copied ? t("link.copied") : t("link.copy")}
               </Button>
-              <DialogClose render={<Button />}>{t("link.done")}</DialogClose>
+              <DialogClose render={<Button data-testid="link-done" />}>
+                {t("link.done")}
+              </DialogClose>
             </DialogFooter>
           </FieldGroup>
         ) : (
@@ -86,7 +89,7 @@ export function LinkDialog({
             {children}
             <DialogFooter>
               <DialogClose render={<Button variant="outline" />}>{t("common.cancel")}</DialogClose>
-              <Button disabled={creating} onClick={onCreate}>
+              <Button disabled={creating} onClick={onCreate} data-testid="create-link">
                 {ask.submit}
               </Button>
             </DialogFooter>

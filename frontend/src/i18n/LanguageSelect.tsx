@@ -13,6 +13,7 @@ export function LanguageSelect() {
     <NativeSelect
       size="sm"
       aria-label={t("language.label")}
+      data-testid="language"
       value={currentLanguage()}
       onChange={(event) => changeLanguage(event.target.value as LanguageCode)}
     >

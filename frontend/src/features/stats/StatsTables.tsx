@@ -81,19 +81,19 @@ export function ResultsTable({
         </TableHeader>
         <TableBody>
           {rows.map((row) => (
-            <TableRow key={row.key}>
+            <TableRow key={row.key} data-testid="stats-row">
               <TableCell className={cn(LABEL_COLUMN, "font-medium whitespace-normal")}>
                 {row.label}
               </TableCell>
-              <TableCell className="text-right tabular-nums">
+              <TableCell className="text-right tabular-nums" data-testid="wins">
                 {t("stats.winsOf", { wins: row.wins, plays: row.plays })}
                 <span className="block text-xs text-muted-foreground">
                   {formatShare(row.wins / row.plays)}
                 </span>
               </TableCell>
-              {scored && <NumberCell value={row.bestScore} />}
-              {scored && <NumberCell value={row.averageScore} />}
-              {placed && <NumberCell value={row.averagePlacing} />}
+              {scored && <NumberCell value={row.bestScore} testId="best-score" />}
+              {scored && <NumberCell value={row.averageScore} testId="average-score" />}
+              {placed && <NumberCell value={row.averagePlacing} testId="average-placing" />}
             </TableRow>
           ))}
         </TableBody>
@@ -159,9 +159,9 @@ function NumberHead({ children }: { children: string }) {
 }
 
 /** A number in a table: whole numbers as they are, averages with at most one decimal. */
-export function NumberCell({ value }: { value?: number }) {
+export function NumberCell({ value, testId }: { value?: number; testId?: string }) {
   return (
-    <TableCell className="text-right text-muted-foreground tabular-nums">
+    <TableCell className="text-right text-muted-foreground tabular-nums" data-testid={testId}>
       {value === undefined ? NONE : formatAverage(value)}
     </TableCell>
   )

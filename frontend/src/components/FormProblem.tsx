@@ -20,7 +20,7 @@ export function FormProblem({
     return null
   }
   return (
-    <Alert variant="destructive">
+    <Alert variant="destructive" data-testid="problem">
       <AlertDescription>{explainProblem(t, error, reasons)}</AlertDescription>
     </Alert>
   )

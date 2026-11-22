@@ -42,7 +42,12 @@ export function ConfirmDialog({
         <FormProblem error={error} />
         <AlertDialogFooter>
           <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-          <AlertDialogAction variant="destructive" disabled={pending} onClick={onConfirm}>
+          <AlertDialogAction
+            variant="destructive"
+            disabled={pending}
+            onClick={onConfirm}
+            data-testid="confirm"
+          >
             {confirm}
           </AlertDialogAction>
         </AlertDialogFooter>

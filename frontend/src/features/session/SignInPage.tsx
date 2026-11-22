@@ -77,6 +77,7 @@ export function SignInPage() {
           autoCapitalize="none"
           autoFocus
           error={form.formState.errors.username}
+          data-testid="username"
           {...form.register("username")}
         />
         <TextField
@@ -84,6 +85,7 @@ export function SignInPage() {
           type="password"
           autoComplete="current-password"
           error={form.formState.errors.password}
+          data-testid="password"
           {...form.register("password")}
         />
         {/* The checkbox isn't a plain input, so Controller connects it to the form. */}
@@ -94,6 +96,7 @@ export function SignInPage() {
             <Field orientation="horizontal">
               <Checkbox
                 id="stay-signed-in"
+                data-testid="stay-signed-in"
                 checked={field.value}
                 onCheckedChange={(checked) => field.onChange(checked)}
               />
@@ -104,7 +107,7 @@ export function SignInPage() {
             </Field>
           )}
         />
-        <Button type="submit" disabled={signIn.isPending}>
+        <Button type="submit" disabled={signIn.isPending} data-testid="sign-in">
           {t("signIn.submit")}
         </Button>
         {passkey.offered && (
@@ -112,6 +115,7 @@ export function SignInPage() {
             type="button"
             variant="outline"
             disabled={passkey.pending}
+            data-testid="sign-in-with-passkey"
             onClick={() => void passkey.signIn()}
           >
             <KeyRoundIcon />

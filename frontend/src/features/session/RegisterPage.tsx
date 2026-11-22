@@ -72,6 +72,7 @@ export function RegisterPage() {
           autoCapitalize="none"
           autoFocus
           error={form.formState.errors.username}
+          data-testid="username"
           {...form.register("username")}
         />
         <TextField
@@ -80,9 +81,10 @@ export function RegisterPage() {
           type="password"
           autoComplete="new-password"
           error={form.formState.errors.password}
+          data-testid="password"
           {...form.register("password")}
         />
-        <Button type="submit" disabled={register.isPending}>
+        <Button type="submit" disabled={register.isPending} data-testid="register">
           {t("register.submit")}
         </Button>
       </FieldGroup>

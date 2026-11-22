@@ -27,6 +27,7 @@ backend/
     wyrmspan/        the Game Module for Wyrmspan
   app/               the Spring Boot application
 frontend/            the React app
+e2e/                 the end-to-end tests: Playwright, driving the container image in Chromium
 deploy/              an example Docker Compose setup
 Dockerfile           packages the built application as a container image
 CHANGELOG.md         what changed in each release
@@ -73,6 +74,8 @@ This serves the frontend on http://localhost:5173 and reloads it as you edit. Ca
 | `frontend/` | `npm run lint` | Looks for likely mistakes with ESLint |
 | `frontend/` | `npm run typecheck` | Checks the TypeScript types |
 | `frontend/` | `npm run format` | Reformats the code with Prettier |
+| `e2e/` | `npm test` | Runs the end-to-end tests against the image `board-keeper:local`: build it first, as below |
+| `e2e/` | `npm run lint`, `npm run typecheck`, `npm run format` | The same checks for the end-to-end tests |
 
 ### Build the whole application
 
@@ -93,6 +96,34 @@ docker build -t board-keeper:local .
 To run that image, copy `deploy/.env.example` to `deploy/.env`, set `BOARD_KEEPER_IMAGE=board-keeper:local` in it, and run `docker compose up -d` in `deploy/`.
 
 The image cannot be built from source inside `docker build`, because generating the jOOQ code needs Docker itself. That is why the Dockerfile packages a jar that already exists.
+
+### Run the end-to-end tests
+
+They drive the image built above, so build it first, after every change you want them to see. While writing tests, `./mvnw package -DskipTests` builds the jar without running the backend's tests. Then, once:
+
+```bash
+cd e2e && npm ci && npx playwright install chromium
+```
+
+And every time:
+
+```bash
+npm test
+```
+
+This starts the image with PostgreSQL on http://localhost:8180, runs every test at desktop size and as a phone, and removes it all again. A run takes a few minutes. Some ways to run fewer, or to watch:
+
+| Command | What it does |
+|---|---|
+| `npm test -- tests/passkeys.spec.ts` | Runs one file (the setup project always runs first) |
+| `npm test -- --project=desktop` | Runs everything at desktop size only |
+| `npm test -- --headed` | Shows the browser while it works |
+| `npm test -- --ui` | Opens Playwright's UI mode: pick tests, run them, and step through each one |
+| `npm run report` | Opens the report of the last run |
+
+**When a test fails**, the report has its trace: a recording of every step, with the page as it was before and after, the network requests and the console. Open it from the report, or with `npx playwright show-trace` and the path the failure prints. CI keeps the report of a failed run for two weeks, under Artifacts on the run's page.
+
+Set `BOARD_KEEPER_IMAGE` to test another image, such as `ghcr.io/oliverjuhasz/board-keeper:snapshot`, and `BOARD_KEEPER_PORT` if 8180 is taken.
 
 ## How the parts fit together
 
@@ -151,6 +182,35 @@ So a listener can see an event twice, and two listeners can run at once. Copying
 **Testing.** Because the listeners run on other threads, a test that records a Play and then reads statistics waits for them with Awaitility, which retries an assertion until it holds: see `StatsApiTests`.
 
 **The pages.** `GET /api/stats/games/{id}` and `GET /api/stats/players/{id}` feed the pages at `/games/<id>` and `/players/<id>` in `frontend/src/features/stats/`. The tables they share are in `StatsTables.tsx`: a Game's page has a row for each Player, a Player's page a row for each Game. On a phone too narrow for every column the table scrolls sideways, with the first column held in place.
+
+### End-to-end tests
+
+The tests in `e2e/` use Board Keeper as a person does: in Chromium, against the container image that CI is about to publish, with its PostgreSQL ([ADR 0024](adr/0024-end-to-end-tests-run-against-the-container-image.md)). They cover the main journeys listed in the [roadmap](roadmap.md#settled-for-end-to-end-tests), and what only a real browser can do, such as Passkeys, recording without a connection and dragging Players into another order. What one page shows in every case stays in the frontend's Vitest tests, which are much quicker.
+
+**The Installation.** `support/global-setup.ts` starts it with `deploy/compose.yaml`, under the project name `board-keeper-e2e`, and `support/global-teardown.ts` removes it with its data. Nothing in the image is there for the tests, so the first Admin comes from the real Setup Link in the log. `support/installation.ts` holds everything that runs `docker compose`.
+
+**The setup project** (`tests/installation.setup.ts`) runs before every other test. It creates the first Admin through the Setup Link, then, through the screens, the Players Anna, Bence and Csilla, the Member Erik, who registers through an Invite, and the Generic Game Azul. It saves how the Admin and the Member are signed in under `e2e/.auth/`: their cookies, which Playwright calls a "storage state". It leaves out what Board Keeper keeps on the device, such as its copy of who is signed in, so that every test starts like a phone that has just signed in rather than one used during the setup. Then PostgreSQL copies the database, while the application is stopped for a moment. `support/cast.ts` names all of them.
+
+**Every test starts from that copy.** The `freshDatabase` fixture in `support/fixtures.ts` drops the database and creates it again from the copy before each test, in about a second, while the application keeps running. Its connection pool replaces the connections that were cut, once it checks them, so the fixture waits half a second for that. Sessions live in the database ([ADR 0013](adr/0013-sessions-in-postgresql.md)), so a saved storage state still signs in after every restore, and a test may sign out, change a password or delete anything: the next test gets it all back. Because there is one database, tests run one at a time.
+
+**Writing a test.** Import `test` and `expect` from `support/fixtures.ts`, not from `@playwright/test`. A test starts as the Admin; `test.use({ storageState: MEMBER.state })` makes it start as the Member, and `SIGNED_OUT` signed out. The fixtures a test can ask for:
+
+- `pageAs(storageState)`: a second browser, as another Account or signed out, for a journey with two people in it, such as an Invite;
+- `api`: requests to the API as the Admin, typed from `api/openapi.json` (`npm run generate:api`), only for making a lot of data at once, such as the 120 Plays of the play history. Everything else is made through the screens.
+
+`support/playForm.ts` has the steps of the form for a Play that many tests share, and `expectAccessible(page)` in `support/accessibility.ts` checks a page with axe, which looks for what makes it hard to use with a screen reader or a keyboard, or hard to read. Each journey checks its main pages, and fails on what axe calls serious or critical.
+
+**Finding elements.** Tests find what they work with by its `data-testid` ([ADR 0023](adr/0023-tests-find-elements-by-test-id.md)), never by its role, text, label or CSS: an ESLint rule refuses those. So an element a test touches needs a test id:
+
+- Name it in kebab-case, in the glossary's terms, for what it is rather than where it is: `score-pad`, `player-row`, `save-play`.
+- Repeated items share one id and are told apart by what is in them: `page.getByTestId("player-row").filter({ hasText: "Anna" })`. Where the item has no text of its own, such as a radio button, its id names it: Variants and Score Categories by their key (`variant-difficulty-normal`, `score-cats`), and the answers to a tie by the Player's name (`tie-winner-Anna`).
+- The building blocks in `frontend/src/components/` take a `testId`, or pass `data-testid` on to their input.
+
+A test then checks what a person sees, in English, where that is the point: a Player's Placing, a total.
+
+**Waiting.** Every `expect` on a locator, such as `toHaveText`, retries until it holds or five seconds pass, so a test never sleeps. Where the page itself must be loaded again, as for statistics, which catch up a moment after a Play is recorded, wrap the steps in `expect(async () => { … }).toPass()`.
+
+**Chromium only.** The `desktop` and `phone` projects (a Pixel 7) both run Chromium. Passkeys use its built-in pretend authenticator, and a finger drag on the phone is sent through its DevTools protocol, the interface its developer tools use; both are Chromium features.
 
 ### Exports and Imports
 
@@ -496,7 +556,7 @@ git tag -d 1.2.3
 
 ## Continuous integration
 
-`.github/workflows/ci.yml` runs on every push. It checks and tests the frontend, builds it, builds and tests the backend, and builds the container image. It publishes the image to GitHub Container Registry as `ghcr.io/oliverjuhasz/board-keeper`: from `main` tagged `sha-<commit>` and `snapshot`, and for a release tagged with its version and `latest`. A second job then creates the GitHub Release; it is apart so that only that job may write to the repository.
+`.github/workflows/ci.yml` runs on every push. It checks and tests the frontend, builds it, builds and tests the backend, builds the container image, and runs the end-to-end tests against that image; if they fail, it keeps their report. Only then does it publish the image to GitHub Container Registry as `ghcr.io/oliverjuhasz/board-keeper`: from `main` tagged `sha-<commit>` and `snapshot`, and for a release tagged with its version and `latest`. A second job then creates the GitHub Release; it is apart so that only that job may write to the repository.
 
 ## Tooling notes
 

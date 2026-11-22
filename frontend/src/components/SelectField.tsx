@@ -13,12 +13,15 @@ export function SelectField<Value extends string>({
   value,
   onChange,
   options,
+  testId,
 }: {
   label: string
   hint?: ReactNode
   value: Value
   onChange: (value: Value) => void
   options: { value: Value; label: string }[]
+  /** The drop-down's test id, for the end-to-end tests (ADR 0023). */
+  testId?: string
 }) {
   const id = useId()
 
@@ -28,6 +31,7 @@ export function SelectField<Value extends string>({
       <NativeSelect
         id={id}
         value={value}
+        data-testid={testId}
         aria-describedby={hint ? `${id}-hint` : undefined}
         onChange={(event) => onChange(event.target.value as Value)}
       >

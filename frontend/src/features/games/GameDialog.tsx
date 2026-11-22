@@ -94,6 +94,7 @@ export function GameDialog({
               autoComplete="off"
               autoFocus
               error={form.formState.errors.name}
+              data-testid="game-name"
               {...form.register("name")}
             />
             <RecordingChoices value={recording} onChange={setRecording} />
@@ -101,7 +102,11 @@ export function GameDialog({
               <DialogClose render={<Button type="button" variant="outline" />}>
                 {t("common.cancel")}
               </DialogClose>
-              <Button type="submit" disabled={create.isPending || update.isPending}>
+              <Button
+                type="submit"
+                disabled={create.isPending || update.isPending}
+                data-testid="save-game"
+              >
                 {game ? t("games.dialog.submitEdit") : t("games.dialog.submitAdd")}
               </Button>
             </DialogFooter>

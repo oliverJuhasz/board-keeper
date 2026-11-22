@@ -9,12 +9,15 @@ export function CheckboxField({
   checked,
   disabled,
   onChange,
+  testId,
 }: {
   label: string
   hint?: ReactNode
   checked: boolean
   disabled?: boolean
   onChange: (checked: boolean) => void
+  /** The checkbox's test id, for the end-to-end tests (ADR 0023). */
+  testId?: string
 }) {
   const id = useId()
 
@@ -24,6 +27,7 @@ export function CheckboxField({
         id={id}
         checked={checked}
         disabled={disabled}
+        data-testid={testId}
         onCheckedChange={(value) => onChange(value)}
       />
       <FieldContent>

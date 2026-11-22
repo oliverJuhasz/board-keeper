@@ -67,7 +67,11 @@ export function PasskeysCard() {
             ) : (
               <ul className="divide-y">
                 {passkeys.data?.map((passkey) => (
-                  <li key={passkey.id} className="flex items-center gap-3 py-2">
+                  <li
+                    key={passkey.id}
+                    className="flex items-center gap-3 py-2"
+                    data-testid="passkey"
+                  >
                     <KeyRoundIcon aria-hidden className="size-4 shrink-0 text-muted-foreground" />
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-medium">{passkey.label}</p>
@@ -101,7 +105,12 @@ export function PasskeysCard() {
         </QueryState>
         {/* A browser without passkeys can still see and remove the ones made elsewhere. */}
         {browserHasPasskeys() ? (
-          <Button ref={addButton} variant="outline" onClick={() => setAdding(true)}>
+          <Button
+            ref={addButton}
+            variant="outline"
+            onClick={() => setAdding(true)}
+            data-testid="add-passkey"
+          >
             <PlusIcon />
             {t("settings.passkeys.add")}
           </Button>
@@ -194,13 +203,14 @@ function AddPasskeyDialog({
               autoComplete="off"
               autoFocus
               error={form.formState.errors.label}
+              data-testid="passkey-label"
               {...form.register("label")}
             />
             <DialogFooter>
               <DialogClose render={<Button type="button" variant="outline" />}>
                 {t("common.cancel")}
               </DialogClose>
-              <Button type="submit" disabled={add.isPending}>
+              <Button type="submit" disabled={add.isPending} data-testid="save-passkey">
                 {t("settings.passkeys.addDialog.submit")}
               </Button>
             </DialogFooter>

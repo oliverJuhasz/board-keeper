@@ -38,14 +38,15 @@ export function AppLayout() {
               <NavLink
                 to="/"
                 end
+                data-testid="nav-games"
                 className={({ isActive }) => navLink({ isActive: isActive || onGamePage })}
               >
                 {t("nav.games")}
               </NavLink>
-              <NavLink to="/plays" className={navLink}>
+              <NavLink to="/plays" className={navLink} data-testid="nav-plays">
                 {t("nav.plays")}
               </NavLink>
-              <NavLink to="/players" className={navLink}>
+              <NavLink to="/players" className={navLink} data-testid="nav-players">
                 {t("nav.players")}
               </NavLink>
             </nav>
@@ -54,7 +55,11 @@ export function AppLayout() {
         </div>
       </header>
       {!online && (
-        <p role="status" className="bg-muted px-4 py-2 text-center text-sm text-muted-foreground">
+        <p
+          role="status"
+          data-testid="offline"
+          className="bg-muted px-4 py-2 text-center text-sm text-muted-foreground"
+        >
           {t("app.offline")}
         </p>
       )}

@@ -64,9 +64,10 @@ export function ResetPasswordPage() {
           autoComplete="new-password"
           autoFocus
           error={form.formState.errors.password}
+          data-testid="password"
           {...form.register("password")}
         />
-        <Button type="submit" disabled={save.isPending}>
+        <Button type="submit" disabled={save.isPending} data-testid="save-password">
           {t("resetPassword.submit")}
         </Button>
       </FieldGroup>

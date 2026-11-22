@@ -90,6 +90,7 @@ export function ImportCard() {
                 type="file"
                 accept=".json,application/json"
                 disabled={review.isPending}
+                data-testid="import-file"
                 aria-describedby={`${fileId}-hint`}
                 onChange={(event) => {
                   const chosen = event.target.files?.[0]
@@ -122,7 +123,7 @@ function ImportDone({ result, onAgain }: { result: ImportResult; onAgain: () => 
 
   return (
     <>
-      <Alert>
+      <Alert data-testid="import-done">
         <AlertTitle>{t("exportAndImport.import.done", { count: result.added })}</AlertTitle>
         <AlertDescription>
           <ul className="list-disc space-y-1 pl-5">
