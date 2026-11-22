@@ -134,6 +134,7 @@ export function SortableItem({
   label,
   movable = true,
   className,
+  testId,
   children,
 }: {
   /** Stays the same while the item moves, such as the id useFieldArray gives each row. */
@@ -145,6 +146,8 @@ export function SortableItem({
   /** False where moving makes no sense, such as for the only item: the handle is then hidden. */
   movable?: boolean
   className?: string
+  /** The item's test id, for the end-to-end tests (ADR 0023). */
+  testId?: string
   children: (handle: ReactNode) => ReactNode
 }) {
   const { t } = useTranslation()
@@ -161,6 +164,7 @@ export function SortableItem({
       variant="ghost"
       size="icon-sm"
       hidden={!movable}
+      data-testid="move-handle"
       className="cursor-grab touch-none text-muted-foreground"
       aria-label={t("sortable.move", { name: label })}
       // How screen readers name the handle. dnd-kit would otherwise use an English word.
@@ -171,7 +175,7 @@ export function SortableItem({
   )
 
   return (
-    <li ref={ref}>
+    <li ref={ref} data-testid={testId}>
       {/* While it is dragged, dnd-kit lifts the item above the page and takes away its own
           background, so the look is drawn inside it. */}
       <div

@@ -300,6 +300,7 @@ export function PlayEntryForm({
             type="date"
             max={todayIso()}
             error={errors.playedOn}
+            data-testid="played-on"
             {...form.register("playedOn")}
           />
           <TextField
@@ -307,6 +308,7 @@ export function PlayEntryForm({
             hint={t("plays.record.locationHint")}
             autoComplete="off"
             error={errors.location}
+            data-testid="location"
             {...form.register("location")}
           />
         </div>
@@ -322,6 +324,7 @@ export function PlayEntryForm({
                 label={moduleText(`expansion.${expansion.key}`)}
                 checked={play.setup[expansion.key] === "true"}
                 onChange={(on) => form.setValue(`setup.${expansion.key}`, String(on), changed)}
+                testId={`expansion-${expansion.key}`}
               />
             ))}
           </FieldSet>
@@ -351,6 +354,7 @@ export function PlayEntryForm({
                     label={name}
                     movable={rows.fields.length > 1}
                     className="space-y-1 px-3 py-2"
+                    testId="player-row"
                   >
                     {(handle) => (
                       <>
@@ -368,6 +372,7 @@ export function PlayEntryForm({
                                 name,
                               })}
                               aria-invalid={scoreError ? true : undefined}
+                              data-testid="score"
                               {...form.register(`players.${index}.scores.${only.key}`)}
                             />
                           )}
@@ -389,6 +394,7 @@ export function PlayEntryForm({
                                       }
                                     }}
                                     aria-label={t("plays.record.wonBy", { name })}
+                                    data-testid="won"
                                   />
                                 )}
                               />
@@ -400,6 +406,7 @@ export function PlayEntryForm({
                             variant="ghost"
                             size="icon-sm"
                             aria-label={t("plays.record.removePlayer", { name })}
+                            data-testid="remove-player"
                             onClick={() => rows.remove(index)}
                           >
                             <XIcon />
@@ -432,6 +439,7 @@ export function PlayEntryForm({
                                     category: moduleText(`playerSetup.${choice.key}`),
                                     name,
                                   })}
+                                  data-testid={`player-setup-${choice.key}`}
                                   {...form.register(`players.${index}.setup.${choice.key}`)}
                                 >
                                   <NativeSelectOption value="">
@@ -497,6 +505,7 @@ export function PlayEntryForm({
               ref={addPlayerList}
               value=""
               aria-label={t("plays.record.addPlayer")}
+              data-testid="players-to-add"
               onChange={(event) => {
                 if (event.target.value === NEW_PLAYER) {
                   setAddingPlayer(true)
@@ -535,7 +544,7 @@ export function PlayEntryForm({
           <div className="flex items-center justify-between gap-3">
             <p className="text-sm">
               <span className="text-muted-foreground">{t("plays.record.recordedAs")}: </span>
-              <span className="font-medium">
+              <span className="font-medium" data-testid="recorded-as">
                 {generic
                   ? recordedAs(recording)
                   : points
@@ -552,6 +561,7 @@ export function PlayEntryForm({
                 variant="outline"
                 size="sm"
                 onClick={() => setChangingRecording(true)}
+                data-testid="change-recording"
               >
                 {t("plays.record.change")}
               </Button>
@@ -573,6 +583,7 @@ export function PlayEntryForm({
               ) : (
                 <RadioField
                   legend={t("recording.recording")}
+                  testId="recording-mode"
                   value={play.recordingMode}
                   onChange={(recordingMode) =>
                     form.setValue("recordingMode", recordingMode, changed)
@@ -615,12 +626,14 @@ export function PlayEntryForm({
                 hint={moduleText(`variant.${variant.key}.hint`)}
                 checked={play.setup[variant.key] === "true"}
                 onChange={(on) => form.setValue(`setup.${variant.key}`, String(on), changed)}
+                testId={`variant-${variant.key}`}
               />
             ) : (
               <ChoiceField
                 key={variant.key}
                 label={moduleText(`variant.${variant.key}`)}
                 hint={moduleText(`variant.${variant.key}.hint`)}
+                testId={`variant-${variant.key}`}
                 value={play.setup[variant.key]}
                 onChange={(option) => form.setValue(`setup.${variant.key}`, option, changed)}
                 options={choicesOf(variant).map((option) => ({
@@ -638,6 +651,7 @@ export function PlayEntryForm({
           <div className="space-y-2">
             <RadioField
               legend={t("plays.record.victoryType")}
+              testId="victory-type"
               value={victoryType?.key ?? ""}
               onChange={(key) => form.setValue("victoryType", key, changed)}
               options={victoryTypes.map((option) => ({
@@ -654,7 +668,11 @@ export function PlayEntryForm({
             {/* Like the paper pad: a row for each Score Category and a column for each Player.
                 It scrolls sideways if the Players don't fit. */}
             <div className="overflow-x-auto rounded-lg border">
-              <table className="w-full text-sm" aria-label={t("plays.record.pad")}>
+              <table
+                className="w-full text-sm"
+                aria-label={t("plays.record.pad")}
+                data-testid="score-pad"
+              >
                 <thead>
                   <tr>
                     <td />
@@ -663,6 +681,7 @@ export function PlayEntryForm({
                         key={row.id}
                         scope="col"
                         className="max-w-24 truncate px-2 py-2 text-right font-medium"
+                        data-testid="score-pad-player"
                       >
                         {nameOf(row.playerId)}
                       </th>
@@ -697,6 +716,7 @@ export function PlayEntryForm({
                             aria-invalid={
                               errors.players?.[index]?.scores?.[category.key] ? true : undefined
                             }
+                            data-testid={`score-${category.key}`}
                             {...form.register(`players.${index}.scores.${category.key}`)}
                           />
                         </td>
@@ -711,7 +731,11 @@ export function PlayEntryForm({
                       {t("plays.record.total")}
                     </th>
                     {rows.fields.map((row) => (
-                      <td key={row.id} className="px-2 py-2 pr-5 text-right tabular-nums">
+                      <td
+                        key={row.id}
+                        className="px-2 py-2 pr-5 text-right tabular-nums"
+                        data-testid="total"
+                      >
                         {preview?.results.find((result) => result.playerId === row.playerId)
                           ?.total ?? "–"}
                       </td>
@@ -725,7 +749,11 @@ export function PlayEntryForm({
                         {t("plays.record.placing")}
                       </th>
                       {rows.fields.map((row) => (
-                        <td key={row.id} className="px-2 py-2 pr-5 text-right tabular-nums">
+                        <td
+                          key={row.id}
+                          className="px-2 py-2 pr-5 text-right tabular-nums"
+                          data-testid="placing"
+                        >
                           {placingOf(row.playerId) ?? "–"}
                         </td>
                       ))}
@@ -763,13 +791,19 @@ export function PlayEntryForm({
           <div className="space-y-2">
             <RadioField
               legend={t("plays.record.tie.legend")}
+              testId="tie-winner"
               value={tieAnswer}
               onChange={(answer) => {
                 form.setValue("tieWinner", answer, { shouldDirty: true })
                 form.clearErrors("tieWinner")
               }}
               options={[
-                ...tie.map((playerId) => ({ value: playerId, label: nameOf(playerId) })),
+                // A test knows the Players by name, not by id.
+                ...tie.map((playerId) => ({
+                  value: playerId,
+                  label: nameOf(playerId),
+                  testId: `tie-winner-${nameOf(playerId)}`,
+                })),
                 { value: SHARED, label: t("plays.record.tie.shared") },
               ]}
             />
@@ -786,6 +820,7 @@ export function PlayEntryForm({
             <div className="space-y-2">
               <RadioField
                 legend={t("plays.record.outcome")}
+                testId="group-outcome"
                 value={play.groupOutcome}
                 onChange={(outcome) => form.setValue("groupOutcome", outcome, changed)}
                 options={[
@@ -804,6 +839,7 @@ export function PlayEntryForm({
                 type="number"
                 step={1}
                 error={errors.groupScore}
+                data-testid="group-score"
                 {...form.register("groupScore")}
               />
             )}
@@ -827,11 +863,12 @@ export function PlayEntryForm({
                       }
                     : undefined
                 }
+                data-testid={`group-score-${category.key}`}
                 {...form.register(`groupScores.${category.key}`)}
               />
             ))}
             {groupRowsOf(module, play).length > 0 && (
-              <p className="font-medium">
+              <p className="font-medium" data-testid="group-total">
                 {t("plays.page.groupScore", { score: preview?.group?.total ?? "–" })}
               </p>
             )}
@@ -842,11 +879,12 @@ export function PlayEntryForm({
           label={t("plays.record.notes")}
           hint={t("plays.record.notesHint")}
           error={errors.notes}
+          data-testid="notes"
           {...form.register("notes")}
         />
 
         <div className="flex gap-2">
-          <Button type="submit" disabled={pending}>
+          <Button type="submit" disabled={pending} data-testid="save-play">
             {submitLabel}
           </Button>
           <LinkButton to={cancelTo}>{t("common.cancel")}</LinkButton>
@@ -891,16 +929,32 @@ function ChoiceField({
   value,
   onChange,
   options,
+  testId,
 }: {
   label: string
   hint?: string
   value: string
   onChange: (value: string) => void
   options: { value: string; label: string }[]
+  testId?: string
 }) {
   return options.length > RADIO_BUTTONS_AT_MOST ? (
-    <SelectField label={label} hint={hint} value={value} onChange={onChange} options={options} />
+    <SelectField
+      label={label}
+      hint={hint}
+      value={value}
+      onChange={onChange}
+      options={options}
+      testId={testId}
+    />
   ) : (
-    <RadioField legend={label} hint={hint} value={value} onChange={onChange} options={options} />
+    <RadioField
+      legend={label}
+      hint={hint}
+      value={value}
+      onChange={onChange}
+      options={options}
+      testId={testId}
+    />
   )
 }

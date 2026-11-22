@@ -96,13 +96,18 @@ export function PlayerNameDialog({
               autoComplete="off"
               autoFocus
               error={form.formState.errors.name}
+              data-testid="player-name"
               {...form.register("name")}
             />
             <DialogFooter>
               <DialogClose render={<Button type="button" variant="outline" />}>
                 {t("common.cancel")}
               </DialogClose>
-              <Button type="submit" disabled={create.isPending || rename.isPending}>
+              <Button
+                type="submit"
+                disabled={create.isPending || rename.isPending}
+                data-testid="save-player"
+              >
                 {player ? t("players.renameDialog.submit") : t("players.addDialog.submit")}
               </Button>
             </DialogFooter>

@@ -41,20 +41,29 @@ export function AccountMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        render={<Button variant="ghost" size="icon" aria-label={t("account.menu")} />}
+        render={
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={t("account.menu")}
+            data-testid="account-menu"
+          />
+        }
       >
         <CircleUserRoundIcon />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-auto min-w-48">
         <DropdownMenuGroup>
           <DropdownMenuLabel>
-            <div className="text-foreground">{account.playerName}</div>
+            <div className="text-foreground" data-testid="signed-in-player">
+              {account.playerName}
+            </div>
             <div>{t("account.signedInAs", { username: account.username })}</div>
           </DropdownMenuLabel>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         {/* `render` makes the menu item a link, so it works like any other link in the app. */}
-        <DropdownMenuItem render={<Link to="/settings" />}>
+        <DropdownMenuItem render={<Link to="/settings" />} data-testid="settings">
           {t("account.settings")}
         </DropdownMenuItem>
         {can("MANAGE_ACCOUNTS") && (
@@ -66,7 +75,10 @@ export function AccountMenu() {
           <DropdownMenuItem render={<Link to="/roles" />}>{t("account.roles")}</DropdownMenuItem>
         )}
         {(can("EXPORT") || can("IMPORT")) && (
-          <DropdownMenuItem render={<Link to="/export-and-import" />}>
+          <DropdownMenuItem
+            render={<Link to="/export-and-import" />}
+            data-testid="export-and-import"
+          >
             {t("account.exportAndImport")}
           </DropdownMenuItem>
         )}
@@ -74,7 +86,7 @@ export function AccountMenu() {
             AGPL, asks that everyone using it can get its source (ADR 0016). */}
         <DropdownMenuItem render={<Link to="/about" />}>{t("account.about")}</DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => signOut.mutate({})}>
+        <DropdownMenuItem onClick={() => signOut.mutate({})} data-testid="sign-out">
           {t("account.signOut")}
         </DropdownMenuItem>
       </DropdownMenuContent>

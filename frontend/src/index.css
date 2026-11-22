@@ -63,7 +63,10 @@
   --muted-foreground: oklch(0.556 0 0);
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
+  /* One shade darker than shadcn/ui's red (Tailwind's red-700 rather than red-600): its red text on
+     the pale red of a destructive button, such as "Delete" before something can't be undone,
+     was too faint to read easily (WCAG asks for a contrast of 4.5 to 1). */
+  --destructive: oklch(0.505 0.213 27.518);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);

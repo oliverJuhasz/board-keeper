@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Adding a Player to a Play no longer moves the cursor to their points. It stays on the list of Players, ready for the next one, until nobody more can be added. Closing the dialog for a new Player brings it back there too.
 - Closing the dialog for adding a Player, a Game, an API Key or a Passkey leaves the cursor on the button that opened it, instead of at the top of the page.
+- Red buttons, such as Delete before something that can't be undone, and the notice that there is no connection, are easier to read: their text stood out too little from its background.
 
 ## [1.0.0] - 2026-11-16
 

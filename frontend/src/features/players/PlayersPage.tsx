@@ -64,7 +64,11 @@ export function PlayersPage() {
           <p className="text-muted-foreground">{t("players.description")}</p>
         </div>
         {can("CREATE_PLAYERS") && (
-          <Button ref={addButton} onClick={() => setDialog({ kind: "add" })}>
+          <Button
+            ref={addButton}
+            onClick={() => setDialog({ kind: "add" })}
+            data-testid="add-player"
+          >
             <PlusIcon />
             {t("players.add")}
           </Button>
@@ -92,7 +96,7 @@ export function PlayersPage() {
               const invite = inviteOf.get(player.id)
               const hasAccount = claimed.has(player.id)
               return (
-                <TableRow key={player.id}>
+                <TableRow key={player.id} data-testid="player-row">
                   <TableCell className="font-medium">
                     {/* The name leads to the Player's statistics. */}
                     <QuietLink to={`/players/${player.id}`}>{player.name}</QuietLink>
@@ -135,7 +139,11 @@ export function PlayersPage() {
 function PlayerStatus({ hasAccount, invite }: { hasAccount: boolean; invite?: Invite }) {
   const { t } = useTranslation()
   if (hasAccount) {
-    return <Badge variant="secondary">{t("players.hasAccount")}</Badge>
+    return (
+      <Badge variant="secondary" data-testid="has-account">
+        {t("players.hasAccount")}
+      </Badge>
+    )
   }
   if (invite) {
     return (
@@ -179,6 +187,7 @@ function PlayerActions({
             variant="ghost"
             size="icon-sm"
             aria-label={t("players.actions", { name: player.name })}
+            data-testid="player-actions"
           />
         }
       >
@@ -191,7 +200,7 @@ function PlayerActions({
           </DropdownMenuItem>
         )}
         {mayInvite && (
-          <DropdownMenuItem onClick={() => onOpen({ kind: "invite", player })}>
+          <DropdownMenuItem onClick={() => onOpen({ kind: "invite", player })} data-testid="invite">
             {invite ? t("players.inviteAgain") : t("players.invite")}
           </DropdownMenuItem>
         )}
@@ -201,7 +210,10 @@ function PlayerActions({
           </DropdownMenuItem>
         )}
         {mayResetPassword && (
-          <DropdownMenuItem onClick={() => onOpen({ kind: "resetPassword", player })}>
+          <DropdownMenuItem
+            onClick={() => onOpen({ kind: "resetPassword", player })}
+            data-testid="create-reset-link"
+          >
             {t("players.resetPassword")}
           </DropdownMenuItem>
         )}

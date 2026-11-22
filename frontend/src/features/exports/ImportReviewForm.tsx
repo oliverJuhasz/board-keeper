@@ -124,7 +124,7 @@ function ReviewForm({
 
   return (
     <form onSubmit={(event) => void submit(event)} noValidate className="space-y-6">
-      <ul className="list-disc space-y-1 pl-5">
+      <ul className="list-disc space-y-1 pl-5" data-testid="import-summary">
         <li>{t("exportAndImport.import.toAdd", { count: toAdd })}</li>
         {review.alreadyHere > 0 && (
           <li>{t("exportAndImport.import.alreadyHere", { count: review.alreadyHere })}</li>
@@ -154,13 +154,14 @@ function ReviewForm({
               choices.filter((_, other) => other !== index).map((other) => other.choice),
             )
             return (
-              <div key={row.id} className="space-y-3">
+              <div key={row.id} className="space-y-3" data-testid="import-player">
                 <Controller
                   control={form.control}
                   name={`players.${index}.choice`}
                   render={({ field }) => (
                     <SelectField
                       label={player.name}
+                      testId="import-player-choice"
                       value={field.value}
                       onChange={field.onChange}
                       options={[
@@ -188,7 +189,7 @@ function ReviewForm({
       <p className="text-muted-foreground">{t("exportAndImport.import.backupFirst")}</p>
       <FormProblem error={importFile.error} />
       <div className="flex flex-wrap gap-2">
-        <Button type="submit" disabled={importFile.isPending}>
+        <Button type="submit" disabled={importFile.isPending} data-testid="confirm-import">
           {t("exportAndImport.import.confirm")}
         </Button>
         <Button type="button" variant="outline" onClick={onCancel}>

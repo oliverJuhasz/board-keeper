@@ -52,7 +52,11 @@ export function ExportCard() {
       </CardHeader>
       <CardContent className="space-y-4">
         <FormProblem error={download.error} />
-        <Button onClick={() => download.mutate()} disabled={download.isPending}>
+        <Button
+          onClick={() => download.mutate()}
+          disabled={download.isPending}
+          data-testid="download-export"
+        >
           <DownloadIcon />
           {t("exportAndImport.export.download")}
         </Button>

@@ -173,15 +173,21 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
           <div className="flex items-center gap-1">
             {can("CREATE_PLAYS") && (
               // The form starts with this Play's Players, Setup, date and location.
-              <LinkButton to={`/plays/new?game=${play.game.id}&another=${play.id}`}>
+              <LinkButton
+                to={`/plays/new?game=${play.game.id}&another=${play.id}`}
+                data-testid="record-another"
+              >
                 {t("plays.page.recordAnother")}
               </LinkButton>
             )}
             {/* The server says whether this Account may change this particular Play: that
                 depends on who recorded it and who played in it, not on a Permission alone. */}
             {play.canChange && (
-              <ActionsMenu label={t("plays.page.actions")}>
-                <DropdownMenuItem render={<Link to={`/plays/${play.id}/edit`} />}>
+              <ActionsMenu label={t("plays.page.actions")} testId="play-actions">
+                <DropdownMenuItem
+                  render={<Link to={`/plays/${play.id}/edit`} />}
+                  data-testid="edit-play"
+                >
                   {t("plays.page.edit")}
                 </DropdownMenuItem>
                 <DropdownMenuItem
@@ -189,7 +195,11 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
                 >
                   {t("plays.page.recalculate")}
                 </DropdownMenuItem>
-                <DropdownMenuItem variant="destructive" onClick={() => setDeleting(true)}>
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => setDeleting(true)}
+                  data-testid="delete-play"
+                >
                   {t("plays.page.delete")}
                 </DropdownMenuItem>
               </ActionsMenu>
@@ -220,11 +230,11 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
       {play.group ? (
         <section className="space-y-3">
           <div className="flex items-baseline gap-3">
-            <p className="font-heading text-lg font-semibold">
+            <p className="font-heading text-lg font-semibold" data-testid="group-outcome">
               {play.group.won ? t("plays.page.wonTogether") : t("plays.page.lostTogether")}
             </p>
             {play.group.total !== undefined && (
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground" data-testid="group-total">
                 {t("plays.page.groupScore", { score: play.group.total })}
               </p>
             )}
@@ -250,7 +260,7 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
             <h2 className="text-sm font-medium">{t("plays.page.players")}</h2>
             <ul className="text-muted-foreground">
               {play.results.map((result) => (
-                <li key={result.player.id}>
+                <li key={result.player.id} data-testid="result-row">
                   {[result.player.name, setupOf(result)].filter(Boolean).join(" · ")}
                 </li>
               ))}
@@ -278,8 +288,8 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
             </TableHeader>
             <TableBody>
               {ranked.map((result) => (
-                <TableRow key={result.player.id}>
-                  {points && !solo && <TableCell>{result.placing}</TableCell>}
+                <TableRow key={result.player.id} data-testid="result-row">
+                  {points && !solo && <TableCell data-testid="placing">{result.placing}</TableCell>}
                   <TableCell className="font-medium">
                     <span className="flex items-center gap-2">
                       {result.player.name}
@@ -291,15 +301,26 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
                               {result.won ? t("plays.page.won") : t("plays.page.lost")}
                             </Badge>
                           )
-                        : result.won && <Badge variant="secondary">{t("plays.page.winner")}</Badge>}
+                        : result.won && (
+                            <Badge variant="secondary" data-testid="winner">
+                              {t("plays.page.winner")}
+                            </Badge>
+                          )}
                     </span>
                     {setupOf(result) && (
-                      <span className="block text-sm font-normal text-muted-foreground">
+                      <span
+                        className="block text-sm font-normal text-muted-foreground"
+                        data-testid="player-setup"
+                      >
                         {setupOf(result)}
                       </span>
                     )}
                   </TableCell>
-                  {points && <TableCell className="text-right">{result.total}</TableCell>}
+                  {points && (
+                    <TableCell className="text-right" data-testid="total">
+                      {result.total}
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
@@ -368,7 +389,9 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
         <section className="space-y-1">
           <h2 className="text-sm font-medium">{t("plays.page.notes")}</h2>
           {/* Keeps the line breaks the recorder typed. */}
-          <p className="whitespace-pre-wrap text-muted-foreground">{play.notes}</p>
+          <p className="whitespace-pre-wrap text-muted-foreground" data-testid="notes">
+            {play.notes}
+          </p>
         </section>
       )}
 

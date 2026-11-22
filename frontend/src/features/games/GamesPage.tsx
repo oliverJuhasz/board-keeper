@@ -75,7 +75,11 @@ export function GamesPage() {
         description={records ? t("games.startDescription") : t("games.description")}
         action={
           can("CREATE_GAMES") && (
-            <Button ref={addButton} onClick={() => setDialog({ kind: "add" })}>
+            <Button
+              ref={addButton}
+              onClick={() => setDialog({ kind: "add" })}
+              data-testid="add-game"
+            >
               <PlusIcon />
               {t("games.add")}
             </Button>
@@ -113,12 +117,13 @@ export function GamesPage() {
                   {recentFirst.map((game) => (
                     // "relative" lets the Game's link stretch over the whole row, so a tap
                     // anywhere on it opens the form. The menu is lifted above the link.
-                    <TableRow key={game.id} className="relative">
+                    <TableRow key={game.id} className="relative" data-testid="game-row">
                       <TableCell>
                         {records ? (
                           <Link
                             to={`/plays/new?game=${game.id}`}
                             aria-label={t("plays.record.actionFor", { name: gameName(game) })}
+                            data-testid="record-play"
                             className="font-medium outline-none after:absolute after:inset-0 after:rounded-md focus-visible:after:ring-2 focus-visible:after:ring-ring"
                           >
                             {gameName(game)}
@@ -140,8 +145,14 @@ export function GamesPage() {
                       </TableCell>
                       <TableCell>
                         <div className="relative z-10 flex items-center justify-end gap-1">
-                          <ActionsMenu label={t("games.actions", { name: gameName(game) })}>
-                            <DropdownMenuItem render={<Link to={`/games/${game.id}`} />}>
+                          <ActionsMenu
+                            label={t("games.actions", { name: gameName(game) })}
+                            testId="game-actions"
+                          >
+                            <DropdownMenuItem
+                              render={<Link to={`/games/${game.id}`} />}
+                              data-testid="game-statistics"
+                            >
                               {t("games.statistics")}
                             </DropdownMenuItem>
                             {/* A Game with a module of its own is named by the module and stays

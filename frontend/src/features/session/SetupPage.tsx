@@ -68,6 +68,7 @@ export function SetupPage() {
           autoComplete="name"
           autoFocus
           error={form.formState.errors.playerName}
+          data-testid="player-name"
           {...form.register("playerName")}
         />
         <TextField
@@ -76,6 +77,7 @@ export function SetupPage() {
           autoComplete="username"
           autoCapitalize="none"
           error={form.formState.errors.username}
+          data-testid="username"
           {...form.register("username")}
         />
         <TextField
@@ -84,9 +86,10 @@ export function SetupPage() {
           type="password"
           autoComplete="new-password"
           error={form.formState.errors.password}
+          data-testid="password"
           {...form.register("password")}
         />
-        <Button type="submit" disabled={setUp.isPending}>
+        <Button type="submit" disabled={setUp.isPending} data-testid="set-up">
           {t("setup.submit")}
         </Button>
       </FieldGroup>

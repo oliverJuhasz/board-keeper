@@ -43,7 +43,7 @@ export function WaitingPlays() {
       </div>
       <ul className="divide-y rounded-md border">
         {waiting.map((item) => (
-          <li key={item.play.id} className="flex items-center gap-3 p-3">
+          <li key={item.play.id} className="flex items-center gap-3 p-3" data-testid="waiting-play">
             <div className="min-w-0 flex-1">
               <p className="font-medium">
                 {nameOfGame(item.play.gameId)} · {formatDay(item.play.playedOn)}
