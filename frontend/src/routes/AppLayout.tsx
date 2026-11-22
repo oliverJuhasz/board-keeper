@@ -58,7 +58,7 @@ export function AppLayout() {
         <p
           role="status"
           data-testid="offline"
-          className="bg-muted px-4 py-2 text-center text-sm text-muted-foreground"
+          className="bg-muted px-4 py-2 text-center text-sm text-foreground"
         >
           {t("app.offline")}
         </p>
