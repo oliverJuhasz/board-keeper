@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react"
+import { waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { http, HttpResponse } from "msw"
 import { expect, test } from "vitest"
@@ -14,6 +14,8 @@ import {
   spiritIsland,
 } from "@/test/api"
 import { spiritIslandModule } from "@/test/gameModules"
+import { playerRow } from "@/test/playForm"
+import { page } from "@/test/queries"
 import { renderApp } from "@/test/renderApp"
 import { server } from "@/test/server"
 
@@ -94,29 +96,35 @@ async function startRecording() {
   gamesAre([spiritIsland])
   playCanBeEntered()
   renderApp(`/plays/new?game=${spiritIsland.id}`)
-  await userEvent.selectOptions(await screen.findByLabelText("Add a player"), "Dora")
-  await userEvent.selectOptions(screen.getByLabelText("Spirit of Bence"), "Thunderspeaker")
-  await userEvent.selectOptions(screen.getByLabelText("Spirit of Dora"), "Ocean's Hungry Grasp")
+  await userEvent.selectOptions(await page.findByTestId("players-to-add"), "Dora")
+  await userEvent.selectOptions(
+    playerRow("Bence").getByTestId("player-setup-spirit"),
+    "Thunderspeaker",
+  )
+  await userEvent.selectOptions(
+    playerRow("Dora").getByTestId("player-setup-spirit"),
+    "Ocean's Hungry Grasp",
+  )
 }
 
 test("a play starts with only whether the spirits won, against an adversary at its level", async () => {
   const sent = playsCanBeRecorded(spiritPlay({ recordingMode: "WINNER_ONLY" }))
   await startRecording()
 
-  expect(screen.getByText("Won or lost only")).toBeInTheDocument()
+  expect(page.getByTestId("recorded-as")).toHaveTextContent("Won or lost only")
   // The level is chosen once there is an adversary, and only that adversary's.
-  expect(screen.queryByLabelText("Level of England")).not.toBeInTheDocument()
-  await userEvent.click(screen.getByRole("radio", { name: "England" }))
-  const level = screen.getByLabelText("Level of England")
+  expect(page.queryByTestId("variant-englandLevel")).not.toBeInTheDocument()
+  await userEvent.click(page.getByTestId("variant-adversary-england"))
+  const level = page.getByTestId("variant-englandLevel")
   expect(level).toHaveValue("0")
-  expect(screen.getByRole("option", { name: "Base level" })).toBeInTheDocument()
-  expect(screen.queryByLabelText("Level of Sweden")).not.toBeInTheDocument()
+  expect(level).toHaveTextContent("Base level")
+  expect(page.queryByTestId("variant-swedenLevel")).not.toBeInTheDocument()
   await userEvent.selectOptions(level, "3")
 
-  await userEvent.click(screen.getByRole("radio", { name: "The group won" }))
-  await userEvent.click(screen.getByRole("button", { name: "Record play" }))
+  await userEvent.click(page.getByTestId("group-outcome-won"))
+  await userEvent.click(page.getByTestId("save-play"))
 
-  await screen.findByRole("heading", { name: "Spirit Island" })
+  await page.findByTestIdWith("page-title", "Spirit Island")
   expect(sent[0]).toMatchObject({
     recordingMode: "WINNER_ONLY",
     setup: { adversary: "england", englandLevel: "3", thematicMap: "false" },
@@ -134,21 +142,26 @@ test("with points, the group's rows are filled in and the score is worked out", 
   scoreCanBePreviewed()
   const sent = playsCanBeRecorded(spiritPlay())
   await startRecording()
-  await userEvent.click(screen.getByRole("radio", { name: "England" }))
-  await userEvent.selectOptions(screen.getByLabelText("Level of England"), "3")
-  await userEvent.click(screen.getByRole("button", { name: "Change" }))
-  await userEvent.click(screen.getByRole("radio", { name: /^Points/ }))
+  await userEvent.click(page.getByTestId("variant-adversary-england"))
+  await userEvent.selectOptions(page.getByTestId("variant-englandLevel"), "3")
+  await userEvent.click(page.getByTestId("change-recording"))
+  await userEvent.click(page.getByTestId("recording-mode-POINTS"))
 
   // The Invader cards are counted differently after a win and after a loss.
-  await userEvent.click(screen.getByRole("radio", { name: "The group lost" }))
-  expect(screen.getByLabelText("Invader cards no longer in the deck")).toBeInTheDocument()
-  await userEvent.click(screen.getByRole("radio", { name: "The group won" }))
-  await userEvent.type(screen.getByLabelText("Invader cards left in the deck"), "4")
-  await userEvent.type(screen.getByLabelText("Living Dahan"), "7")
-  await userEvent.type(screen.getByLabelText("Blight on the island"), "5")
+  await userEvent.click(page.getByTestId("group-outcome-lost"))
+  expect(page.getByTestId("group-score-invaderCards")).toHaveAccessibleName(
+    "Invader cards no longer in the deck",
+  )
+  await userEvent.click(page.getByTestId("group-outcome-won"))
+  expect(page.getByTestId("group-score-invaderCards")).toHaveAccessibleName(
+    "Invader cards left in the deck",
+  )
+  await userEvent.type(page.getByTestId("group-score-invaderCards"), "4")
+  await userEvent.type(page.getByTestId("group-score-dahan"), "7")
+  await userEvent.type(page.getByTestId("group-score-blight"), "5")
 
-  expect(await screen.findByText("Score: 49")).toBeInTheDocument()
-  await userEvent.click(screen.getByRole("button", { name: "Record play" }))
+  expect(await page.findByTestIdWith("group-total", "Score: 49")).toBeInTheDocument()
+  await userEvent.click(page.getByTestId("save-play"))
   await waitFor(() => expect(sent).toHaveLength(1))
   expect(sent[0]).toMatchObject({
     recordingMode: "POINTS",
@@ -161,8 +174,10 @@ test("a play's page shows the group's rows, the score and the adversary's level"
   playIs(spiritPlay())
   renderApp(`/plays/${spiritPlay().id}`)
 
-  expect(await screen.findByText("Score: 49")).toBeInTheDocument()
-  expect(screen.getByText("Invader cards left in the deck")).toBeInTheDocument()
-  expect(screen.getByText("Bence · Thunderspeaker")).toBeInTheDocument()
-  expect(screen.getByText(/^Points, Adversary: England, Level of England: 3\./)).toBeInTheDocument()
+  expect(await page.findByTestId("group-total")).toHaveTextContent("Score: 49")
+  expect(page.getByTestId("group-rows")).toHaveTextContent("Invader cards left in the deck")
+  expect(page.getByTestIdWith("result-row", "Bence · Thunderspeaker")).toBeInTheDocument()
+  expect(page.getByTestId("recorded-by")).toHaveTextContent(
+    /^Points, Adversary: England, Level of England: 3\./,
+  )
 })

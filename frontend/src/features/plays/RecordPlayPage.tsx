@@ -74,7 +74,11 @@ export function RecordPlayPage() {
           return (
             <PageMessage title={t("plays.record.noGame.title")}>
               <p>{t("plays.record.noGame.text")}</p>
-              <Link to="/" className="text-foreground underline underline-offset-4">
+              <Link
+                to="/"
+                className="text-foreground underline underline-offset-4"
+                data-testid="go-to-games"
+              >
                 {t("plays.record.noGame.link")}
               </Link>
             </PageMessage>

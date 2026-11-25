@@ -20,7 +20,9 @@ export function AboutPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-heading text-xl font-semibold">{t("about.title")}</h1>
+      <h1 className="font-heading text-xl font-semibold" data-testid="page-title">
+        {t("about.title")}
+      </h1>
 
       <QueryState queries={[about]} loading={t("about.loading")} failed={t("about.loadFailed")}>
         {() => about.data && <VersionCard about={about.data} />}

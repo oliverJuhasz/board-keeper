@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react"
+import { waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { http, HttpResponse } from "msw"
 import { beforeEach, expect, test } from "vitest"
@@ -16,6 +16,8 @@ import {
   playsCanBePreviewed,
   signedInAs,
 } from "@/test/api"
+import { findScoreField, playerRow, scoreField } from "@/test/playForm"
+import { page } from "@/test/queries"
 import { renderApp } from "@/test/renderApp"
 import { server } from "@/test/server"
 import { announcements, sortableListsCanBeUsed } from "@/test/sortable"
@@ -42,13 +44,13 @@ function playsCanBeRecorded() {
 }
 
 async function addPlayer(name: string) {
-  await userEvent.selectOptions(await screen.findByLabelText("Add a player"), name)
+  await userEvent.selectOptions(await page.findByTestId("players-to-add"), name)
 }
 
 /** The names of the Players in the form, in their order, read from their handles. */
 function playersInOrder() {
-  return screen
-    .getAllByRole("button", { name: /^Move / })
+  return page
+    .getAllByTestId("move-handle")
     .map((handle) => handle.getAttribute("aria-label")?.replace("Move ", ""))
 }
 
@@ -57,13 +59,13 @@ test("players can be put in another order from the keyboard, and are recorded in
   renderApp(`/plays/new?game=${azul.id}`)
   await addPlayer("Anna")
   await addPlayer("Dora")
-  await userEvent.type(screen.getByLabelText("Score of Bence"), "48")
-  await userEvent.type(screen.getByLabelText("Score of Anna"), "52")
-  await userEvent.type(screen.getByLabelText("Score of Dora"), "61")
+  await userEvent.type(scoreField("Bence"), "48")
+  await userEvent.type(scoreField("Anna"), "52")
+  await userEvent.type(scoreField("Dora"), "61")
   const said = announcements()
 
   // Space picks Dora up, the arrow moves her up past Anna, and Space puts her down.
-  screen.getByRole("button", { name: "Move Dora" }).focus()
+  playerRow("Dora").getByTestId("move-handle").focus()
   await userEvent.keyboard(" ")
   await userEvent.keyboard("{ArrowUp}")
   // A screen reader is told where she is once she stays there a moment.
@@ -77,11 +79,11 @@ test("players can be put in another order from the keyboard, and are recorded in
     "Put down Dora as number 2 of 3.",
   ])
   // Her handle keeps the focus, so she can be moved on, and her score went with her.
-  expect(screen.getByRole("button", { name: "Move Dora" })).toHaveFocus()
-  expect(screen.getByLabelText("Score of Dora")).toHaveValue(61)
+  expect(playerRow("Dora").getByTestId("move-handle")).toHaveFocus()
+  expect(scoreField("Dora")).toHaveValue(61)
 
-  await userEvent.click(screen.getByRole("button", { name: "Record play" }))
-  await screen.findByRole("heading", { name: "Azul" })
+  await userEvent.click(page.getByTestId("save-play"))
+  await page.findByTestIdWith("page-title", "Azul")
   expect(sent[0].players.map(({ playerId, scores }) => ({ playerId, scores }))).toEqual([
     { playerId: bencePlayer.id, scores: { total: 48 } },
     { playerId: doraPlayer.id, scores: { total: 61 } },
@@ -94,7 +96,7 @@ test("Escape puts a player back where they were", async () => {
   await addPlayer("Anna")
   const said = announcements()
 
-  screen.getByRole("button", { name: "Move Anna" }).focus()
+  playerRow("Anna").getByTestId("move-handle").focus()
   await userEvent.keyboard(" ")
   await userEvent.keyboard("{ArrowUp}")
   await waitFor(() => expect(said).toContain("Anna is now number 1 of 2."))
@@ -108,11 +110,12 @@ test("a player on their own has nothing to be moved past", async () => {
   renderApp(`/plays/new?game=${azul.id}`)
 
   // Whoever records is put in as the first player.
-  expect(await screen.findByLabelText("Score of Bence")).toBeInTheDocument()
-  expect(screen.queryByRole("button", { name: "Move Bence" })).not.toBeInTheDocument()
+  expect(await findScoreField("Bence")).toBeInTheDocument()
+  // The handle is hidden, so screen readers aren't offered it either.
+  expect(playerRow("Bence").getByTestId("move-handle")).not.toBeVisible()
 
   await addPlayer("Anna")
   expect(playersInOrder()).toEqual(["Bence", "Anna"])
   // Only the handle moves a Player; the row stays a plain row.
-  expect(screen.getByLabelText("Score of Bence").closest("li")).not.toHaveAttribute("role")
+  expect(scoreField("Bence").closest("li")).not.toHaveAttribute("role")
 })

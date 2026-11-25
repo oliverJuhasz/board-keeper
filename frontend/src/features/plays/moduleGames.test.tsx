@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from "@testing-library/react"
+import { waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { http, HttpResponse } from "msw"
 import { expect, test } from "vitest"
@@ -19,6 +19,8 @@ import {
   signedInAs,
 } from "@/test/api"
 import { calicoModule, genericModule } from "@/test/gameModules"
+import { findScoreField, padFoot, playerRow, queryScoreField, scoreField } from "@/test/playForm"
+import { inside, page } from "@/test/queries"
 import { renderApp } from "@/test/renderApp"
 import { server } from "@/test/server"
 
@@ -73,18 +75,9 @@ function playsCanBeRecorded() {
 
 /** Types a Player's column of the pad: design goals, cats, buttons. */
 async function fillPad(name: string, designGoals: string, cats: string, buttons: string) {
-  await userEvent.type(await screen.findByLabelText(`Design goals of ${name}`), designGoals)
-  await userEvent.type(screen.getByLabelText(`Cats of ${name}`), cats)
-  await userEvent.type(screen.getByLabelText(`Buttons of ${name}`), buttons)
-}
-
-/** What a row of the pad says, cell by cell. */
-function padRow(name: string) {
-  const pad = screen.getByRole("table", { name: "Score pad" })
-  const row = within(pad).getByRole("row", { name: new RegExp(`^${name}`) })
-  return within(row)
-    .getAllByRole("cell")
-    .map((cell) => cell.textContent)
+  await userEvent.type(await findScoreField(name, "designGoals"), designGoals)
+  await userEvent.type(scoreField(name, "cats"), cats)
+  await userEvent.type(scoreField(name, "buttons"), buttons)
 }
 
 async function startCalico() {
@@ -94,7 +87,7 @@ async function startCalico() {
   const asked = playsCanBePreviewed()
   const sent = playsCanBeRecorded()
   renderApp(`/plays/new?game=${calico.id}`)
-  await screen.findByRole("heading", { name: "Record a play" })
+  await page.findByTestIdWith("page-title", "Record a play")
   return { asked, sent }
 }
 
@@ -103,30 +96,30 @@ test("a game with its own module is listed under the module's name and can't be 
   gamesAre([azul, calico])
   renderApp("/")
 
-  const row = await screen.findByRole("row", { name: /Calico/ })
-  expect(within(row).getByText("Its own score pad")).toBeInTheDocument()
-  expect(within(row).getByRole("link", { name: "Record a play of Calico" })).toBeInTheDocument()
+  const row = inside(await page.findByTestIdWith("game-row", "Calico"))
+  expect(row.getByTestId("recorded-as")).toHaveTextContent("Its own score pad")
+  expect(row.getByTestId("record-play")).toHaveTextContent("Calico")
   // Its menu leads to its statistics, and has nothing to edit or remove.
-  await userEvent.click(within(row).getByRole("button", { name: "Actions for Calico" }))
-  expect(await screen.findByRole("menuitem", { name: "Statistics" })).toBeInTheDocument()
-  expect(screen.queryByRole("menuitem", { name: "Edit" })).not.toBeInTheDocument()
-  expect(screen.queryByRole("menuitem", { name: "Remove" })).not.toBeInTheDocument()
+  await userEvent.click(row.getByTestId("game-actions"))
+  expect(await page.findByTestId("game-statistics")).toBeInTheDocument()
+  expect(page.queryByTestId("edit-game")).not.toBeInTheDocument()
+  expect(page.queryByTestId("remove-game")).not.toBeInTheDocument()
 })
 
 test("the form is the game's score pad, and the server adds it up", async () => {
   const { sent } = await startCalico()
 
-  await userEvent.selectOptions(screen.getByLabelText("Add a player"), "Anna")
+  await userEvent.selectOptions(page.getByTestId("players-to-add"), "Anna")
   await fillPad("Bence", "28", "23", "21")
   // Nothing is worked out until the pad is complete.
-  expect(padRow("Total")).toEqual(["–", "–"])
+  expect(padFoot("total")).toEqual(["–", "–"])
   await fillPad("Anna", "21", "19", "18")
 
-  await waitFor(() => expect(padRow("Total")).toEqual(["72", "58"]))
-  expect(padRow("Placing")).toEqual(["1", "2"])
-  await userEvent.click(screen.getByRole("button", { name: "Record play" }))
+  await waitFor(() => expect(padFoot("total")).toEqual(["72", "58"]))
+  expect(padFoot("placing")).toEqual(["1", "2"])
+  await userEvent.click(page.getByTestId("save-play"))
 
-  await screen.findByRole("heading", { name: "Calico" })
+  await page.findByTestIdWith("page-title", "Calico")
   expect(sent).toEqual([
     {
       id: aNewPlayId,
@@ -154,23 +147,23 @@ test("the form is the game's score pad, and the server adds it up", async () => 
 
 test("a variant of the game changes the pad", async () => {
   const { sent } = await startCalico()
-  await userEvent.selectOptions(screen.getByLabelText("Add a player"), "Anna")
-  expect(screen.getByLabelText("Design goals of Anna")).toBeInTheDocument()
+  await userEvent.selectOptions(page.getByTestId("players-to-add"), "Anna")
+  expect(scoreField("Anna", "designGoals")).toBeInTheDocument()
 
   // The module explains its variant in its own words.
-  await userEvent.click(screen.getByRole("checkbox", { name: "Family variant" }))
-  expect(
-    screen.getByText("The design goal tiles lie face down and score nothing."),
-  ).toBeInTheDocument()
+  await userEvent.click(page.getByTestId("variant-family"))
+  expect(page.getByTestId("variant-family-hint")).toHaveTextContent(
+    "The design goal tiles lie face down and score nothing.",
+  )
 
-  expect(screen.queryByLabelText("Design goals of Anna")).not.toBeInTheDocument()
-  await userEvent.type(screen.getByLabelText("Cats of Bence"), "23")
-  await userEvent.type(screen.getByLabelText("Buttons of Bence"), "21")
-  await userEvent.type(screen.getByLabelText("Cats of Anna"), "25")
-  await userEvent.type(screen.getByLabelText("Buttons of Anna"), "24")
-  await userEvent.click(screen.getByRole("button", { name: "Record play" }))
+  expect(queryScoreField("Anna", "designGoals")).not.toBeInTheDocument()
+  await userEvent.type(scoreField("Bence", "cats"), "23")
+  await userEvent.type(scoreField("Bence", "buttons"), "21")
+  await userEvent.type(scoreField("Anna", "cats"), "25")
+  await userEvent.type(scoreField("Anna", "buttons"), "24")
+  await userEvent.click(page.getByTestId("save-play"))
 
-  await screen.findByRole("heading", { name: "Calico" })
+  await page.findByTestIdWith("page-title", "Calico")
   expect(sent[0]).toMatchObject({
     setup: { family: "true" },
     players: [{ scores: { cats: 23, buttons: 21 } }, { scores: { cats: 25, buttons: 24 } }],
@@ -179,31 +172,33 @@ test("a variant of the game changes the pad", async () => {
 
 test("each row of the pad has its own limits", async () => {
   const { asked, sent } = await startCalico()
-  await userEvent.selectOptions(screen.getByLabelText("Add a player"), "Anna")
+  await userEvent.selectOptions(page.getByTestId("players-to-add"), "Anna")
   await fillPad("Bence", "28", "23", "20")
   await fillPad("Anna", "21", "19", "18")
-  await userEvent.click(screen.getByRole("button", { name: "Record play" }))
+  await userEvent.click(page.getByTestId("save-play"))
 
   // A button is worth 3 points, so 20 can't be right. The server was never asked.
-  expect(await screen.findByText("Buttons of Bence: Enter a multiple of 3.")).toBeInTheDocument()
+  expect(
+    await page.findByTestIdWith("field-error", "Buttons of Bence: Enter a multiple of 3."),
+  ).toBeInTheDocument()
   expect(asked).toEqual([])
   expect(sent).toEqual([])
 
-  await userEvent.clear(screen.getByLabelText("Buttons of Bence"))
-  await userEvent.type(screen.getByLabelText("Buttons of Bence"), "21")
-  expect(screen.queryByText(/Enter a multiple of 3/)).not.toBeInTheDocument()
+  await userEvent.clear(scoreField("Bence", "buttons"))
+  await userEvent.type(scoreField("Bence", "buttons"), "21")
+  expect(page.queryByTestIdWith("field-error", /Enter a multiple of 3/)).not.toBeInTheDocument()
 })
 
 test("a game says how many can play", async () => {
   await startCalico()
   // Calico can be played alone, so the recorder on their own is enough. Nobody isn't.
-  await userEvent.click(screen.getByRole("button", { name: "Remove Bence" }))
+  await userEvent.click(playerRow("Bence").getByTestId("remove-player"))
 
-  await userEvent.click(screen.getByRole("button", { name: "Record play" }))
-  expect(await screen.findByText("Add at least one player.")).toBeInTheDocument()
+  await userEvent.click(page.getByTestId("save-play"))
+  expect(await page.findByTestIdWith("field-error", "Add at least one player.")).toBeInTheDocument()
 
-  await userEvent.selectOptions(screen.getByLabelText("Add a player"), "Anna")
-  expect(screen.queryByText("Add at least one player.")).not.toBeInTheDocument()
+  await userEvent.selectOptions(page.getByTestId("players-to-add"), "Anna")
+  expect(page.queryByTestIdWith("field-error", "Add at least one player.")).not.toBeInTheDocument()
 })
 
 test("focus stays on the list of players until the game is full, then moves on to the pad", async () => {
@@ -212,49 +207,53 @@ test("focus stays on the list of players until the game is full, then moves on t
   server.use(http.post("*/api/players", () => HttpResponse.json(eszter)))
 
   // Someone else may still join, so the pad can wait.
-  await userEvent.selectOptions(screen.getByLabelText("Add a player"), "Anna")
-  expect(screen.getByLabelText("Design goals of Anna")).toBeInTheDocument()
-  expect(screen.getByLabelText("Add a player")).toHaveFocus()
-  await userEvent.selectOptions(screen.getByLabelText("Add a player"), "Dora")
-  expect(screen.getByLabelText("Add a player")).toHaveFocus()
+  await userEvent.selectOptions(page.getByTestId("players-to-add"), "Anna")
+  expect(scoreField("Anna", "designGoals")).toBeInTheDocument()
+  expect(page.getByTestId("players-to-add")).toHaveFocus()
+  await userEvent.selectOptions(page.getByTestId("players-to-add"), "Dora")
+  expect(page.getByTestId("players-to-add")).toHaveFocus()
 
   // Calico is for at most four: the last one fills the game, so their column is next.
-  await userEvent.selectOptions(screen.getByLabelText("Add a player"), "Add a new player…")
-  const dialog = await screen.findByRole("dialog", { name: "Add a player" })
-  await userEvent.type(within(dialog).getByLabelText("Name"), "Eszter{Enter}")
-  expect(await screen.findByText("This game is for at most 4 players.")).toBeInTheDocument()
-  await waitFor(() => expect(screen.getByLabelText("Design goals of Eszter")).toHaveFocus())
+  await userEvent.selectOptions(page.getByTestId("players-to-add"), "Add a new player…")
+  await page.findByTestId("player-name-dialog")
+  await userEvent.type(page.getByTestId("player-name"), "Eszter{Enter}")
+  expect(await page.findByTestId("players-full")).toHaveTextContent(
+    "This game is for at most 4 players.",
+  )
+  await waitFor(() => expect(scoreField("Eszter", "designGoals")).toHaveFocus())
 })
 
 test("a tie is explained in the game's own words", async () => {
   const { sent } = await startCalico()
-  await userEvent.selectOptions(screen.getByLabelText("Add a player"), "Anna")
+  await userEvent.selectOptions(page.getByTestId("players-to-add"), "Anna")
   await fillPad("Bence", "28", "23", "21")
   await fillPad("Anna", "30", "21", "21")
 
   // 72 each. Calico decides that by cat tokens, which are not on the pad.
-  expect(await screen.findByText("Tie for first place")).toBeInTheDocument()
-  expect(screen.getByText("The player with the most cat tokens wins the tie.")).toBeInTheDocument()
-  await userEvent.click(screen.getByRole("radio", { name: "Anna" }))
+  expect(await page.findByTestIdWith("tie-winner", "Tie for first place")).toBeInTheDocument()
+  expect(page.getByTestId("tie-explanation")).toHaveTextContent(
+    "The player with the most cat tokens wins the tie.",
+  )
+  await userEvent.click(page.getByTestId("tie-winner-Anna"))
   // The pad shows the Placings as they will be recorded.
-  expect(padRow("Placing")).toEqual(["2", "1"])
-  await userEvent.click(screen.getByRole("button", { name: "Record play" }))
+  expect(padFoot("placing")).toEqual(["2", "1"])
+  await userEvent.click(page.getByTestId("save-play"))
 
-  await screen.findByRole("heading", { name: "Calico" })
+  await page.findByTestIdWith("page-title", "Calico")
   expect(sent[0].players.map((player) => player.winner)).toEqual([false, true])
 })
 
 test("only the winner can be recorded for a game with its own module, too", async () => {
   const { asked, sent } = await startCalico()
-  await userEvent.selectOptions(screen.getByLabelText("Add a player"), "Dora")
+  await userEvent.selectOptions(page.getByTestId("players-to-add"), "Dora")
 
-  await userEvent.click(screen.getByRole("button", { name: "Change" }))
-  await userEvent.click(screen.getByRole("radio", { name: "Winner only" }))
-  expect(screen.queryByRole("table", { name: "Score pad" })).not.toBeInTheDocument()
-  await userEvent.click(screen.getByRole("checkbox", { name: "Dora won" }))
-  await userEvent.click(screen.getByRole("button", { name: "Record play" }))
+  await userEvent.click(page.getByTestId("change-recording"))
+  await userEvent.click(page.getByTestId("recording-mode-WINNER_ONLY"))
+  expect(page.queryByTestId("score-pad")).not.toBeInTheDocument()
+  await userEvent.click(playerRow("Dora").getByTestId("won"))
+  await userEvent.click(page.getByTestId("save-play"))
 
-  await screen.findByRole("heading", { name: "Calico" })
+  await page.findByTestIdWith("page-title", "Calico")
   expect(sent[0]).toMatchObject({
     recordingMode: "WINNER_ONLY",
     setup: { family: "false" },
@@ -271,23 +270,21 @@ test("a play's page shows every row of the pad", async () => {
   playIs(calicoPlay)
   renderApp(`/plays/${calicoPlay.id}`)
 
-  expect(await screen.findByRole("heading", { name: "Calico" })).toBeInTheDocument()
-  const results = within(screen.getByRole("table", { name: "Results" })).getAllByRole("row")
-  expect(results.map((row) => row.textContent)).toEqual([
-    "PlacingPlayerTotal",
+  expect(await page.findByTestIdWith("page-title", "Calico")).toBeInTheDocument()
+  expect(page.getByTestId("results-header")).toHaveTextContent("PlacingPlayerTotal")
+  expect(page.getAllByTestId("result-row").map((row) => row.textContent)).toEqual([
     "1BenceWinner72",
     "2Anna58",
   ])
   // The pad as it was filled in: a row for each category, a column for each player.
-  const pad = within(screen.getByRole("table", { name: "Score pad" })).getAllByRole("row")
-  expect(pad.map((row) => row.textContent)).toEqual([
-    "BenceAnna",
+  expect(page.getByTestId("pad-players")).toHaveTextContent("BenceAnna")
+  expect(page.getAllByTestId("pad-row").map((row) => row.textContent)).toEqual([
     "Design goals2821",
     "Cats2319",
     "Buttons2118",
-    "Total7258",
   ])
-  expect(screen.getByText(/^Points\. Recorded by Bence/)).toBeInTheDocument()
+  expect(page.getByTestId("pad-total")).toHaveTextContent("Total7258")
+  expect(page.getByTestId("recorded-by")).toHaveTextContent(/^Points\. Recorded by Bence/)
 })
 
 test("a play's page names the variants it was played with", async () => {
@@ -303,9 +300,11 @@ test("a play's page names the variants it was played with", async () => {
   playIs(family)
   renderApp(`/plays/${family.id}`)
 
-  expect(await screen.findByText(/^Points, Family variant\. Recorded by/)).toBeInTheDocument()
-  expect(screen.getByRole("rowheader", { name: "Cats" })).toBeInTheDocument()
-  expect(screen.queryByRole("rowheader", { name: "Design goals" })).not.toBeInTheDocument()
+  expect(await page.findByTestId("recorded-by")).toHaveTextContent(
+    /^Points, Family variant\. Recorded by/,
+  )
+  expect(page.getByTestIdWith("pad-row", "Cats")).toBeInTheDocument()
+  expect(page.queryByTestIdWith("pad-row", "Design goals")).not.toBeInTheDocument()
 })
 
 test("a play from before the module arrived is edited as it was recorded", async () => {
@@ -325,6 +324,6 @@ test("a play from before the module arrived is edited as it was recorded", async
   playsCanBePreviewed()
   renderApp(`/plays/${old.id}/edit`)
 
-  expect(await screen.findByLabelText("Score of Bence")).toHaveValue(72)
-  expect(screen.queryByRole("table", { name: "Score pad" })).not.toBeInTheDocument()
+  expect(await findScoreField("Bence")).toHaveValue(72)
+  expect(page.queryByTestId("score-pad")).not.toBeInTheDocument()
 })

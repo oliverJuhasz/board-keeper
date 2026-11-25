@@ -41,7 +41,11 @@ export function SelectField<Value extends string>({
           </NativeSelectOption>
         ))}
       </NativeSelect>
-      {hint && <FieldDescription id={`${id}-hint`}>{hint}</FieldDescription>}
+      {hint && (
+        <FieldDescription id={`${id}-hint`} data-testid={testId && `${testId}-hint`}>
+          {hint}
+        </FieldDescription>
+      )}
     </Field>
   )
 }

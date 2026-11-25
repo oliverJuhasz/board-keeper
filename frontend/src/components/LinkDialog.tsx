@@ -57,7 +57,9 @@ export function LinkDialog({
           <FieldGroup>
             <DialogHeader>
               <DialogTitle>{ready.title}</DialogTitle>
-              <DialogDescription>{ready.description}</DialogDescription>
+              <DialogDescription data-testid="link-description">
+                {ready.description}
+              </DialogDescription>
             </DialogHeader>
             <Field>
               <FieldLabel htmlFor={linkFieldId}>{ready.label}</FieldLabel>
@@ -70,7 +72,11 @@ export function LinkDialog({
               />
             </Field>
             <DialogFooter>
-              <Button variant="outline" onClick={() => void copy(ready.link)}>
+              <Button
+                variant="outline"
+                onClick={() => void copy(ready.link)}
+                data-testid="copy-link"
+              >
                 {copied ? <CheckIcon /> : <CopyIcon />}
                 {copied ? t("link.copied") : t("link.copy")}
               </Button>

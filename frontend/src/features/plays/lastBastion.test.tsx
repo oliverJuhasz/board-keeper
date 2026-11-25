@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react"
+import { waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { http, HttpResponse } from "msw"
 import { expect, test } from "vitest"
@@ -14,6 +14,8 @@ import {
   signedInAs,
 } from "@/test/api"
 import { lastBastionModule } from "@/test/gameModules"
+import { playerRow } from "@/test/playForm"
+import { page } from "@/test/queries"
 import { renderApp } from "@/test/renderApp"
 import { server } from "@/test/server"
 
@@ -94,9 +96,9 @@ async function startRecording() {
   gamesAre([lastBastion])
   playCanBeEntered()
   renderApp(`/plays/new?game=${lastBastion.id}`)
-  await userEvent.selectOptions(await screen.findByLabelText("Add a player"), "Dora")
-  await userEvent.selectOptions(screen.getByLabelText("Hero of Bence"), "Kazgin")
-  await userEvent.selectOptions(screen.getByLabelText("Hero of Dora"), "Sindara")
+  await userEvent.selectOptions(await page.findByTestId("players-to-add"), "Dora")
+  await userEvent.selectOptions(playerRow("Bence").getByTestId("player-setup-hero"), "Kazgin")
+  await userEvent.selectOptions(playerRow("Dora").getByTestId("player-setup-hero"), "Sindara")
 }
 
 test("a victory is scored from the group's rows, at Normal difficulty unless said otherwise", async () => {
@@ -112,21 +114,21 @@ test("a victory is scored from the group's rows, at Normal difficulty unless sai
   )
   await startRecording()
 
-  expect(screen.getByText("Points")).toBeInTheDocument()
-  expect(screen.getByRole("radio", { name: "Normal" })).toBeChecked()
-  expect(
-    screen.getByText("A victory scores 5, 10, 15 or 20 points, by difficulty."),
-  ).toBeInTheDocument()
+  expect(page.getByTestId("recorded-as")).toHaveTextContent("Points")
+  expect(page.getByTestId("variant-difficulty-normal")).toBeChecked()
+  expect(page.getByTestId("variant-difficulty-hint")).toHaveTextContent(
+    "A victory scores 5, 10, 15 or 20 points, by difficulty.",
+  )
   // The rows are there once the group has won.
-  expect(screen.queryByLabelText("Life tokens")).not.toBeInTheDocument()
-  await userEvent.click(screen.getByRole("radio", { name: "The group won" }))
-  await userEvent.type(screen.getByLabelText("Life tokens"), "6")
-  await userEvent.type(screen.getByLabelText("Call to Arms tokens"), "2")
-  await userEvent.type(screen.getByLabelText("Dead heroes"), "1")
-  await userEvent.type(screen.getByLabelText("Bastion tiles in the Grasp of Evil"), "2")
+  expect(page.queryByTestId("group-score-lifeTokens")).not.toBeInTheDocument()
+  await userEvent.click(page.getByTestId("group-outcome-won"))
+  await userEvent.type(page.getByTestId("group-score-lifeTokens"), "6")
+  await userEvent.type(page.getByTestId("group-score-callToArmsTokens"), "2")
+  await userEvent.type(page.getByTestId("group-score-deadHeroes"), "1")
+  await userEvent.type(page.getByTestId("group-score-graspOfEvilTiles"), "2")
 
-  expect(await screen.findByText("Score: 9")).toBeInTheDocument()
-  await userEvent.click(screen.getByRole("button", { name: "Record play" }))
+  expect(await page.findByTestIdWith("group-total", "Score: 9")).toBeInTheDocument()
+  await userEvent.click(page.getByTestId("save-play"))
   await waitFor(() => expect(sent).toHaveLength(1))
   expect(sent[0]).toMatchObject({
     recordingMode: "POINTS",
@@ -142,14 +144,14 @@ test("a defeat has no rows and no score", async () => {
   const sent = playsCanBeRecorded(bastionPlay())
   await startRecording()
 
-  await userEvent.click(screen.getByRole("radio", { name: "The group won" }))
-  await userEvent.type(screen.getByLabelText("Life tokens"), "6")
-  await userEvent.click(screen.getByRole("radio", { name: "The group lost" }))
-  expect(screen.queryByLabelText("Life tokens")).not.toBeInTheDocument()
-  expect(screen.queryByText(/^Score:/)).not.toBeInTheDocument()
+  await userEvent.click(page.getByTestId("group-outcome-won"))
+  await userEvent.type(page.getByTestId("group-score-lifeTokens"), "6")
+  await userEvent.click(page.getByTestId("group-outcome-lost"))
+  expect(page.queryByTestId("group-score-lifeTokens")).not.toBeInTheDocument()
+  expect(page.queryByTestId("group-total")).not.toBeInTheDocument()
 
-  await userEvent.click(screen.getByRole("button", { name: "Record play" }))
-  await screen.findByRole("heading", { name: "Last Bastion" })
+  await userEvent.click(page.getByTestId("save-play"))
+  await page.findByTestIdWith("page-title", "Last Bastion")
   expect(sent[0]).toMatchObject({ recordingMode: "POINTS", group: { won: false } })
   expect(sent[0].group?.scores).toBeUndefined()
 })

@@ -47,7 +47,7 @@ export function PlayAgain({ games }: { games: Game[] }) {
     return null
   }
   return (
-    <section className="space-y-2">
+    <section className="space-y-2" data-testid="play-again">
       <h2 className="text-sm font-medium">{t("games.playAgain")}</h2>
       <ul className="divide-y rounded-lg border">
         {offers.map((play) => {
@@ -60,6 +60,7 @@ export function PlayAgain({ games }: { games: Game[] }) {
                 to={`/plays/new?game=${play.game.id}&again=${play.id}`}
                 aria-label={t("games.playAgainWith", { game: gameName(play.game), players: names })}
                 className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted/50"
+                data-testid="play-again-offer"
               >
                 <RotateCcwIcon aria-hidden className="size-4 shrink-0 text-muted-foreground" />
                 <span className="min-w-0 flex-1">

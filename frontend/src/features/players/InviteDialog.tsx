@@ -53,6 +53,7 @@ export function InviteDialog({ player, onClose }: { player: Player; onClose: () 
           <NativeSelect
             id={roleFieldId}
             className="w-full"
+            data-testid="invite-role"
             value={chosenRoleId ?? memberRoleId}
             onChange={(event) => setChosenRoleId(event.target.value)}
           >

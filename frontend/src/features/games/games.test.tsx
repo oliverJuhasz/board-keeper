@@ -1,18 +1,21 @@
-import { screen, waitFor, within } from "@testing-library/react"
+import { waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { http, HttpResponse } from "msw"
 import { expect, test } from "vitest"
 import type { Game } from "@/api/client"
 import { anna, bence, azul, gamesAre, pandemic, problem, signedInAs } from "@/test/api"
+import { inside, page } from "@/test/queries"
 import { renderApp } from "@/test/renderApp"
 import { server } from "@/test/server"
 
 function rowOf(name: string) {
-  return screen.getByRole("row", { name: new RegExp(name) })
+  return inside(page.getByTestIdWith("game-row", name))
 }
 
 async function openActionsFor(name: string) {
-  await userEvent.click(await screen.findByRole("button", { name: `Actions for ${name}` }))
+  await userEvent.click(
+    await inside(await page.findByTestIdWith("game-row", name)).findByTestId("game-actions"),
+  )
 }
 
 /** Answers "add a game" by adding what was sent to the list, and remembers what was sent. */
@@ -40,24 +43,24 @@ test("lists the games and how their plays are recorded", async () => {
 
   renderApp("/")
 
-  await screen.findByRole("row", { name: /Azul/ })
-  expect(within(rowOf("Azul")).getByText("Points, highest wins")).toBeInTheDocument()
-  expect(within(rowOf("Golf")).getByText("Points, lowest wins")).toBeInTheDocument()
-  expect(within(rowOf("Pandemic")).getByText("Cooperative, won or lost")).toBeInTheDocument()
+  await page.findByTestIdWith("game-row", "Azul")
+  expect(rowOf("Azul").getByTestId("recorded-as")).toHaveTextContent("Points, highest wins")
+  expect(rowOf("Golf").getByTestId("recorded-as")).toHaveTextContent("Points, lowest wins")
+  expect(rowOf("Pandemic").getByTestId("recorded-as")).toHaveTextContent("Cooperative, won or lost")
 })
 
 test("says so when there are no games yet, or when they can't be loaded", async () => {
   signedInAs(anna)
   gamesAre([])
   const { unmount } = renderApp("/")
-  expect(await screen.findByText("No games yet.")).toBeInTheDocument()
+  expect(await page.findByTestId("no-games")).toHaveTextContent("No games yet.")
   unmount()
 
   server.use(http.get("*/api/games", () => problem(500, "unexpected")))
   const { queryClient } = await import("@/api/queryClient")
   queryClient.clear()
   renderApp("/")
-  expect(await screen.findByText("Couldn't load the games")).toBeInTheDocument()
+  expect(await page.findByTestId("load-failed")).toHaveTextContent("Couldn't load the games")
 })
 
 test("a member can add and edit games, but not remove them", async () => {
@@ -65,10 +68,10 @@ test("a member can add and edit games, but not remove them", async () => {
   gamesAre([azul])
   renderApp("/")
 
-  expect(await screen.findByRole("button", { name: "Add game" })).toBeInTheDocument()
+  expect(await page.findByTestId("add-game")).toBeInTheDocument()
   await openActionsFor("Azul")
-  expect(await screen.findByRole("menuitem", { name: "Edit" })).toBeInTheDocument()
-  expect(screen.queryByRole("menuitem", { name: "Remove" })).not.toBeInTheDocument()
+  expect(await page.findByTestId("edit-game")).toBeInTheDocument()
+  expect(page.queryByTestId("remove-game")).not.toBeInTheDocument()
 })
 
 test("adds a game that is recorded in points, highest wins, unless told otherwise", async () => {
@@ -76,17 +79,17 @@ test("adds a game that is recorded in points, highest wins, unless told otherwis
   const sent = gamesCanBeAdded(gamesAre([]))
   renderApp("/")
 
-  await userEvent.click(await screen.findByRole("button", { name: "Add game" }))
-  const dialog = await screen.findByRole("dialog", { name: "Add a game" })
-  await userEvent.type(within(dialog).getByLabelText("Name"), "Cascadia")
-  await userEvent.click(within(dialog).getByRole("button", { name: "Add game" }))
+  await userEvent.click(await page.findByTestId("add-game"))
+  expect(await page.findByTestId("game-dialog")).toHaveAccessibleName("Add a game")
+  await userEvent.type(page.getByTestId("game-name"), "Cascadia")
+  await userEvent.click(page.getByTestId("save-game"))
 
-  expect(await screen.findByRole("row", { name: /Cascadia/ })).toBeInTheDocument()
+  expect(await page.findByTestIdWith("game-row", "Cascadia")).toBeInTheDocument()
   expect(sent).toEqual([
     { name: "Cascadia", cooperative: false, recordingMode: "POINTS", lowestScoreWins: false },
   ])
   // The keyboard carries on from the button, not from the top of the page.
-  await waitFor(() => expect(screen.getByRole("button", { name: "Add game" })).toHaveFocus())
+  await waitFor(() => expect(page.getByTestId("add-game")).toHaveFocus())
 })
 
 test("cancelling the dialog for a new game gives focus back to its button", async () => {
@@ -94,10 +97,10 @@ test("cancelling the dialog for a new game gives focus back to its button", asyn
   gamesAre([])
   renderApp("/")
 
-  const add = await screen.findByRole("button", { name: "Add game" })
+  const add = await page.findByTestId("add-game")
   add.focus()
   await userEvent.keyboard("{Enter}")
-  await screen.findByRole("dialog", { name: "Add a game" })
+  await page.findByTestId("game-dialog")
   await userEvent.keyboard("{Escape}")
 
   await waitFor(() => expect(add).toHaveFocus())
@@ -108,17 +111,14 @@ test("adds a game where the lowest score wins", async () => {
   const sent = gamesCanBeAdded(gamesAre([]))
   renderApp("/")
 
-  await userEvent.click(await screen.findByRole("button", { name: "Add game" }))
-  const dialog = await screen.findByRole("dialog")
-  await userEvent.type(within(dialog).getByLabelText("Name"), "Golf")
-  await userEvent.click(within(dialog).getByRole("radio", { name: "The lowest score" }))
-  await userEvent.click(within(dialog).getByRole("button", { name: "Add game" }))
+  await userEvent.click(await page.findByTestId("add-game"))
+  await userEvent.type(await page.findByTestId("game-name"), "Golf")
+  await userEvent.click(page.getByTestId("recording-winner-lowest"))
+  await userEvent.click(page.getByTestId("save-game"))
 
   expect(
-    await within(await screen.findByRole("row", { name: /Golf/ })).findByText(
-      "Points, lowest wins",
-    ),
-  ).toBeInTheDocument()
+    await inside(await page.findByTestIdWith("game-row", "Golf")).findByTestId("recorded-as"),
+  ).toHaveTextContent("Points, lowest wins")
   expect(sent).toEqual([
     { name: "Golf", cooperative: false, recordingMode: "POINTS", lowestScoreWins: true },
   ])
@@ -129,16 +129,16 @@ test("a cooperative game is won or lost, and nobody is asked who wins", async ()
   const sent = gamesCanBeAdded(gamesAre([]))
   renderApp("/")
 
-  await userEvent.click(await screen.findByRole("button", { name: "Add game" }))
-  const dialog = await screen.findByRole("dialog")
-  await userEvent.type(within(dialog).getByLabelText("Name"), "Pandemic")
-  expect(within(dialog).getByText("Who wins")).toBeInTheDocument()
-  await userEvent.click(within(dialog).getByRole("radio", { name: "Cooperative" }))
-  expect(within(dialog).queryByText("Who wins")).not.toBeInTheDocument()
-  await userEvent.click(within(dialog).getByRole("radio", { name: "Won or lost only" }))
-  await userEvent.click(within(dialog).getByRole("button", { name: "Add game" }))
+  await userEvent.click(await page.findByTestId("add-game"))
+  await userEvent.type(await page.findByTestId("game-name"), "Pandemic")
+  expect(page.getByTestId("recording-winner")).toHaveTextContent("Who wins")
+  await userEvent.click(page.getByTestId("recording-kind-cooperative"))
+  expect(page.queryByTestId("recording-winner")).not.toBeInTheDocument()
+  expect(page.getByTestId("recording-mode")).toHaveTextContent("Won or lost only")
+  await userEvent.click(page.getByTestId("recording-mode-WINNER_ONLY"))
+  await userEvent.click(page.getByTestId("save-game"))
 
-  await screen.findByRole("row", { name: /Pandemic/ })
+  await page.findByTestIdWith("game-row", "Pandemic")
   expect(sent).toEqual([
     { name: "Pandemic", cooperative: true, recordingMode: "WINNER_ONLY", lowestScoreWins: false },
   ])
@@ -159,17 +159,19 @@ test("edits a game, starting from what it is now", async () => {
   renderApp("/")
 
   await openActionsFor("Pandemic")
-  await userEvent.click(await screen.findByRole("menuitem", { name: "Edit" }))
-  const dialog = await screen.findByRole("dialog", { name: "Edit Pandemic" })
-  expect(within(dialog).getByLabelText("Name")).toHaveValue("Pandemic")
-  expect(within(dialog).getByRole("radio", { name: "Cooperative" })).toBeChecked()
-  expect(within(dialog).getByRole("radio", { name: "Won or lost only" })).toBeChecked()
-  await userEvent.click(within(dialog).getByRole("radio", { name: "Points" }))
-  await userEvent.click(within(dialog).getByRole("button", { name: "Save game" }))
+  await userEvent.click(await page.findByTestId("edit-game"))
+  expect(await page.findByTestId("game-dialog")).toHaveAccessibleName("Edit Pandemic")
+  expect(page.getByTestId("game-name")).toHaveValue("Pandemic")
+  expect(page.getByTestId("recording-kind-cooperative")).toBeChecked()
+  expect(page.getByTestId("recording-mode-WINNER_ONLY")).toBeChecked()
+  await userEvent.click(page.getByTestId("recording-mode-POINTS"))
+  await userEvent.click(page.getByTestId("save-game"))
 
-  expect(
-    await within(rowOf("Pandemic")).findByText("Cooperative, with a score"),
-  ).toBeInTheDocument()
+  await waitFor(() =>
+    expect(rowOf("Pandemic").getByTestId("recorded-as")).toHaveTextContent(
+      "Cooperative, with a score",
+    ),
+  )
   expect(sent).toEqual({
     id: pandemic.id,
     body: { name: "Pandemic", cooperative: true, recordingMode: "POINTS", lowestScoreWins: false },
@@ -182,13 +184,14 @@ test("says so when a game's name is taken, and keeps the dialog open", async () 
   server.use(http.post("*/api/games", () => problem(409, "games.nameTaken")))
   renderApp("/")
 
-  await userEvent.click(await screen.findByRole("button", { name: "Add game" }))
-  const dialog = await screen.findByRole("dialog")
-  await userEvent.type(within(dialog).getByLabelText("Name"), "azul")
-  await userEvent.click(within(dialog).getByRole("button", { name: "Add game" }))
+  await userEvent.click(await page.findByTestId("add-game"))
+  await userEvent.type(await page.findByTestId("game-name"), "azul")
+  await userEvent.click(page.getByTestId("save-game"))
 
-  expect(await screen.findByText("There is already a game with this name.")).toBeInTheDocument()
-  expect(screen.getByRole("dialog")).toBeInTheDocument()
+  expect(await page.findByTestId("problem")).toHaveTextContent(
+    "There is already a game with this name.",
+  )
+  expect(page.getByTestId("game-dialog")).toBeInTheDocument()
 })
 
 test("an admin removes a game only after being asked", async () => {
@@ -203,13 +206,13 @@ test("an admin removes a game only after being asked", async () => {
   renderApp("/")
 
   await openActionsFor("Azul")
-  await userEvent.click(await screen.findByRole("menuitem", { name: "Remove" }))
-  expect(await screen.findByRole("alertdialog", { name: "Remove Azul?" })).toBeInTheDocument()
+  await userEvent.click(await page.findByTestId("remove-game"))
+  expect(await page.findByTestId("confirm-dialog")).toHaveAccessibleName("Remove Azul?")
   expect(state.games).toHaveLength(2)
-  await userEvent.click(screen.getByRole("button", { name: "Remove game" }))
+  await userEvent.click(page.getByTestId("confirm"))
 
-  await expect.poll(() => screen.queryByRole("row", { name: /Azul/ })).not.toBeInTheDocument()
-  expect(screen.getByRole("row", { name: /Pandemic/ })).toBeInTheDocument()
+  await expect.poll(() => page.queryByTestIdWith("game-row", "Azul")).not.toBeInTheDocument()
+  expect(page.getByTestIdWith("game-row", "Pandemic")).toBeInTheDocument()
 })
 
 test("shows a not-found page for an unknown address", async () => {
@@ -217,5 +220,5 @@ test("shows a not-found page for an unknown address", async () => {
 
   renderApp("/no-such-page")
 
-  expect(await screen.findByRole("heading", { name: "Page not found" })).toBeInTheDocument()
+  expect(await page.findByTestIdWith("page-title", "Page not found")).toBeInTheDocument()
 })

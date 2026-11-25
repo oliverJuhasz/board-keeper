@@ -75,7 +75,7 @@ export function GameDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent finalFocus={finalFocus}>
+      <DialogContent finalFocus={finalFocus} data-testid="game-dialog">
         <form onSubmit={submit} noValidate>
           <FieldGroup>
             <DialogHeader>

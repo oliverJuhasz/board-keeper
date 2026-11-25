@@ -58,7 +58,9 @@ export function SetupPage() {
     >
       <FieldGroup>
         <div className="space-y-1">
-          <h1 className="font-heading text-xl font-semibold">{t("setup.title")}</h1>
+          <h1 className="font-heading text-xl font-semibold" data-testid="page-title">
+            {t("setup.title")}
+          </h1>
           <p className="text-muted-foreground">{t("setup.intro")}</p>
         </div>
         <FormProblem error={setUp.error} />

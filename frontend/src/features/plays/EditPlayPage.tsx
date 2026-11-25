@@ -46,6 +46,7 @@ export function EditPlayPage() {
               <Link
                 to={`/plays/${play.data.id}`}
                 className="text-foreground underline underline-offset-4"
+                data-testid="back-to-play"
               >
                 {t("plays.edit.notAllowed.link")}
               </Link>

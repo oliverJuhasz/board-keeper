@@ -60,7 +60,9 @@ export function PlayersPage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="font-heading text-xl font-semibold">{t("players.title")}</h1>
+          <h1 className="font-heading text-xl font-semibold" data-testid="page-title">
+            {t("players.title")}
+          </h1>
           <p className="text-muted-foreground">{t("players.description")}</p>
         </div>
         {can("CREATE_PLAYERS") && (
@@ -78,7 +80,7 @@ export function PlayersPage() {
       {players.isPending ? (
         <LoadingRows label={t("players.loading")} />
       ) : players.isError ? (
-        <Alert variant="destructive">
+        <Alert variant="destructive" data-testid="load-failed">
           <AlertTitle>{t("players.loadFailed")}</AlertTitle>
           <AlertDescription>{t("common.reloadToRetry")}</AlertDescription>
         </Alert>
@@ -101,7 +103,7 @@ export function PlayersPage() {
                     {/* The name leads to the Player's statistics. */}
                     <QuietLink to={`/players/${player.id}`}>{player.name}</QuietLink>
                     {player.id === account.playerId && (
-                      <Badge variant="outline" className="ml-2">
+                      <Badge variant="outline" className="ml-2" data-testid="you">
                         {t("players.you")}
                       </Badge>
                     )}
@@ -147,7 +149,7 @@ function PlayerStatus({ hasAccount, invite }: { hasAccount: boolean; invite?: In
   }
   if (invite) {
     return (
-      <Badge variant="outline">
+      <Badge variant="outline" data-testid="invited">
         {invite.expired ? t("players.inviteExpired") : t("players.invited")}
       </Badge>
     )
@@ -195,7 +197,10 @@ function PlayerActions({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-auto min-w-40">
         {can("EDIT_PLAYERS") && (
-          <DropdownMenuItem onClick={() => onOpen({ kind: "rename", player })}>
+          <DropdownMenuItem
+            onClick={() => onOpen({ kind: "rename", player })}
+            data-testid="rename-player"
+          >
             {t("players.rename")}
           </DropdownMenuItem>
         )}
@@ -205,7 +210,7 @@ function PlayerActions({
           </DropdownMenuItem>
         )}
         {mayInvite && invite && (
-          <DropdownMenuItem onClick={() => onCancelInvite(invite.id)}>
+          <DropdownMenuItem onClick={() => onCancelInvite(invite.id)} data-testid="cancel-invite">
             {t("players.cancelInvite")}
           </DropdownMenuItem>
         )}
@@ -221,6 +226,7 @@ function PlayerActions({
           <DropdownMenuItem
             variant="destructive"
             onClick={() => onOpen({ kind: "remove", player })}
+            data-testid="remove-player"
           >
             {t("players.remove")}
           </DropdownMenuItem>

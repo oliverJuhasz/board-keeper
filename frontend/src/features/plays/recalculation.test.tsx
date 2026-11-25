@@ -1,10 +1,10 @@
-import { screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { http, HttpResponse } from "msw"
 import { expect, test } from "vitest"
 import type { GameRecalculation, GameStats } from "@/api/client"
 import { anna, azul, azulPlay, bence, gamesAre, playIs, problem, signedInAs } from "@/test/api"
 import { genericModule } from "@/test/gameModules"
+import { inside, page } from "@/test/queries"
 import { renderApp } from "@/test/renderApp"
 import { server } from "@/test/server"
 
@@ -24,8 +24,8 @@ function recalculationAnswers(changed: boolean, total: number) {
 }
 
 async function recalculateFromTheMenu() {
-  await userEvent.click(await screen.findByRole("button", { name: "Actions for this play" }))
-  await userEvent.click(await screen.findByRole("menuitem", { name: "Recalculate" }))
+  await userEvent.click(await page.findByTestId("play-actions"))
+  await userEvent.click(await page.findByTestId("recalculate-play"))
 }
 
 test("a play is recalculated from its menu, and says whether its results changed", async () => {
@@ -36,9 +36,10 @@ test("a play is recalculated from its menu, and says whether its results changed
 
   await recalculateFromTheMenu()
 
-  expect(await screen.findByText("Recalculated: the results changed.")).toBeInTheDocument()
-  const results = screen.getByRole("table", { name: "Results" })
-  expect(within(results).getByText("52")).toBeInTheDocument()
+  expect(await page.findByTestId("recalculated")).toHaveTextContent(
+    "Recalculated: the results changed.",
+  )
+  expect(page.getAllByTestId("total").map((total) => total.textContent)).toContain("52")
 })
 
 test("a play whose results still hold says so", async () => {
@@ -49,7 +50,9 @@ test("a play whose results still hold says so", async () => {
 
   await recalculateFromTheMenu()
 
-  expect(await screen.findByText("Recalculated: the results are the same.")).toBeInTheDocument()
+  expect(await page.findByTestId("recalculated")).toHaveTextContent(
+    "Recalculated: the results are the same.",
+  )
 })
 
 test("a play the game's rules refuse now keeps its results, and says why", async () => {
@@ -67,11 +70,9 @@ test("a play the game's rules refuse now keeps its results, and says why", async
 
   await recalculateFromTheMenu()
 
-  expect(
-    await screen.findByText(
-      "This play kept its results, because the game's rules refuse it now: One of the scores isn't possible in its row of the score pad.",
-    ),
-  ).toBeInTheDocument()
+  expect(await page.findByTestId("recalculation-refused")).toHaveTextContent(
+    "This play kept its results, because the game's rules refuse it now: One of the scores isn't possible in its row of the score pad.",
+  )
 })
 
 /** Statistics of Azul with three Plays, for the Game's page. */
@@ -113,19 +114,17 @@ test("an admin recalculates every play of a game and reads what changed", async 
   )
   renderApp(`/games/${azul.id}`)
 
-  await userEvent.click(await screen.findByRole("button", { name: "Actions for this game" }))
-  await userEvent.click(await screen.findByRole("menuitem", { name: "Recalculate every play" }))
+  await userEvent.click(await page.findByTestId("game-actions"))
+  await userEvent.click(await page.findByTestId("recalculate-game"))
 
-  expect(
-    await screen.findByText("Recalculated the game's 3 plays. 1 play got new results."),
-  ).toBeInTheDocument()
-  expect(
-    screen.getByText("This play kept its results, because the game's rules refuse it now:"),
-  ).toBeInTheDocument()
-  expect(screen.getByRole("link", { name: "14 March 2026" })).toHaveAttribute(
-    "href",
-    `/plays/${azulPlay.id}`,
+  const said = await page.findByTestId("recalculation-report")
+  expect(said).toHaveTextContent("Recalculated the game's 3 plays. 1 play got new results.")
+  expect(said).toHaveTextContent(
+    "This play kept its results, because the game's rules refuse it now:",
   )
+  const refused = inside(page.getByTestId("refused-play")).getByTestId("play-link")
+  expect(refused).toHaveTextContent("14 March 2026")
+  expect(refused).toHaveAttribute("href", `/plays/${azulPlay.id}`)
   expect(asked).toBe(azul.id)
 })
 
@@ -135,7 +134,7 @@ test("only admins can recalculate every play of a game", async () => {
   statsOfAzul()
   renderApp(`/games/${azul.id}`)
 
-  await screen.findByText("Played 3 times · Last played 15 March 2026")
-  expect(screen.queryByRole("button", { name: "Actions for this game" })).not.toBeInTheDocument()
+  await page.findByTestIdWith("page-description", "Played 3 times · Last played 15 March 2026")
+  expect(page.queryByTestId("game-actions")).not.toBeInTheDocument()
   expect(problem).toBeDefined()
 })

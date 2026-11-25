@@ -123,9 +123,10 @@ function GameStatsDetails({
             )}
             {/* For Admins only: running the Game Module over every Play of the Game again. */}
             {can("RECALCULATE_PLAYS") && (
-              <ActionsMenu label={t("stats.game.actions")}>
+              <ActionsMenu label={t("stats.game.actions")} testId="game-actions">
                 <DropdownMenuItem
                   onClick={() => recalculate.mutate({ params: { query: { gameId: game.id } } })}
+                  data-testid="recalculate-game"
                 >
                   {t("stats.game.recalculate")}
                 </DropdownMenuItem>
@@ -223,7 +224,7 @@ function RecalculationReport({ report }: { report: GameRecalculation }) {
   const texts = useGameModuleTexts()
 
   return (
-    <Alert>
+    <Alert data-testid="recalculation-report">
       <AlertDescription className="space-y-2">
         <p>
           {t("stats.game.recalculated", { count: report.plays })}{" "}
@@ -236,8 +237,8 @@ function RecalculationReport({ report }: { report: GameRecalculation }) {
             <p>{t("stats.game.refused", { count: report.refused.length })}</p>
             <ul className="list-disc pl-5">
               {report.refused.map((refused) => (
-                <li key={refused.playId}>
-                  <QuietLink to={`/plays/${refused.playId}`}>
+                <li key={refused.playId} data-testid="refused-play">
+                  <QuietLink to={`/plays/${refused.playId}`} data-testid="play-link">
                     {formatDay(refused.playedOn)}
                   </QuietLink>
                   {": "}

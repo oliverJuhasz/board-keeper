@@ -288,7 +288,7 @@ export function PlayEntryForm({
       <PageHeader title={title} description={description} />
       <FieldGroup>
         {onUnreachable && !online && (
-          <Alert>
+          <Alert data-testid="kept-on-device">
             <AlertDescription>{t("plays.record.offline")}</AlertDescription>
           </Alert>
         )}
@@ -316,7 +316,7 @@ export function PlayEntryForm({
         {/* The Expansions the Play was played with come first. Each can let more Players take
             part, bring options of the Player Setup, add rows to the pad, or ways to win. */}
         {pad.expansions.length > 0 && (
-          <FieldSet>
+          <FieldSet data-testid="expansions">
             <FieldLegend variant="label">{t("plays.record.expansions")}</FieldLegend>
             {pad.expansions.map((expansion) => (
               <CheckboxField
@@ -332,7 +332,7 @@ export function PlayEntryForm({
 
         {/* Then who played: whether the Play is a Solo Play decides which Variants and ways to
             win there are, and what the recording is called. */}
-        <FieldSet>
+        <FieldSet data-testid="players">
           <FieldLegend variant="label">{t("plays.record.players")}</FieldLegend>
           {rows.fields.length === 0 ? (
             <p className="text-sm text-muted-foreground">{t("plays.record.noPlayers")}</p>
@@ -459,7 +459,11 @@ export function PlayEntryForm({
                             })}
                           </div>
                         )}
-                        {scoreError && <FieldError className="text-right">{scoreError}</FieldError>}
+                        {scoreError && (
+                          <FieldError data-testid="field-error" className="text-right">
+                            {scoreError}
+                          </FieldError>
+                        )}
                         {pad.playerSetup.map((choice) => {
                           const chosenOption = play.players[index]?.setup[choice.key]
                           // An option that came with an Expansion that was taken off is said at once.
@@ -472,7 +476,7 @@ export function PlayEntryForm({
                           const expansion = chosenOption && choice.optionsOnlyWith[chosenOption]
                           return (
                             message && (
-                              <FieldError key={choice.key}>
+                              <FieldError data-testid="field-error" key={choice.key}>
                                 {t(message as "validation.needsExpansion", {
                                   choice: moduleText(`playerSetup.${choice.key}`),
                                   expansion: expansion
@@ -493,7 +497,7 @@ export function PlayEntryForm({
           {full ? (
             // With too many, as after taking an Expansion off, the message below says it instead.
             !tooMany && (
-              <FieldDescription>
+              <FieldDescription data-testid="players-full">
                 {moreWithExpansion
                   ? t("plays.record.playersFullWithoutExpansion", { max: most })
                   : t("plays.record.playersFull", { max: most })}
@@ -522,16 +526,18 @@ export function PlayEntryForm({
               ))}
               {/* For someone who has never played before: add them without leaving the form. */}
               {can("CREATE_PLAYERS") && (
-                <NativeSelectOption value={NEW_PLAYER}>
+                <NativeSelectOption value={NEW_PLAYER} data-testid="new-player-option">
                   {t("plays.record.newPlayer")}
                 </NativeSelectOption>
               )}
             </NativeSelect>
           ) : (
-            <FieldDescription>{t("plays.record.everyoneAdded")}</FieldDescription>
+            <FieldDescription data-testid="everyone-added">
+              {t("plays.record.everyoneAdded")}
+            </FieldDescription>
           )}
           {playersError && (
-            <FieldError>
+            <FieldError data-testid="field-error">
               {t(playersError as "validation.playersTooFew", {
                 min: fewestPlayers(module, play),
                 max: most,
@@ -611,7 +617,9 @@ export function PlayEntryForm({
             </>
           )}
           {errors.recordingMode?.message && (
-            <FieldError>{t(errors.recordingMode.message as "validation.required")}</FieldError>
+            <FieldError data-testid="field-error">
+              {t(errors.recordingMode.message as "validation.required")}
+            </FieldError>
           )}
         </div>
 
@@ -659,7 +667,11 @@ export function PlayEntryForm({
                 label: moduleText(`victoryType.${option.key}`),
               }))}
             />
-            {outright && <FieldDescription>{t("plays.record.outrightHint")}</FieldDescription>}
+            {outright && (
+              <FieldDescription data-testid="outright-hint">
+                {t("plays.record.outrightHint")}
+              </FieldDescription>
+            )}
           </div>
         )}
 
@@ -695,6 +707,7 @@ export function PlayEntryForm({
                           score in a Solo Play, is set apart a little. */}
                       <th
                         scope="row"
+                        data-testid="score-pad-category"
                         className={
                           category.countsTowardTotal
                             ? "px-3 py-1.5 text-left font-normal"
@@ -769,7 +782,11 @@ export function PlayEntryForm({
                           (result) => result.playerId === row.playerId,
                         )?.won
                         return (
-                          <td key={row.id} className="px-2 py-2 pr-5 text-right">
+                          <td
+                            key={row.id}
+                            className="px-2 py-2 pr-5 text-right"
+                            data-testid="solo-result"
+                          >
                             {won === undefined
                               ? "–"
                               : won
@@ -783,7 +800,9 @@ export function PlayEntryForm({
                 </tfoot>
               </table>
             </div>
-            {padProblems.length > 0 && <FieldError errors={padProblems.map(asError)} />}
+            {padProblems.length > 0 && (
+              <FieldError data-testid="field-error" errors={padProblems.map(asError)} />
+            )}
           </div>
         )}
 
@@ -808,9 +827,11 @@ export function PlayEntryForm({
               ]}
             />
             {/* How this Game decides a tie, in the module's own words. */}
-            <FieldDescription>{moduleText("tie")}</FieldDescription>
+            <FieldDescription data-testid="tie-explanation">{moduleText("tie")}</FieldDescription>
             {errors.tieWinner?.message && (
-              <FieldError>{t(errors.tieWinner.message as "validation.required")}</FieldError>
+              <FieldError data-testid="field-error">
+                {t(errors.tieWinner.message as "validation.required")}
+              </FieldError>
             )}
           </div>
         )}
@@ -829,7 +850,9 @@ export function PlayEntryForm({
                 ]}
               />
               {errors.groupOutcome?.message && (
-                <FieldError>{t(errors.groupOutcome.message as "validation.required")}</FieldError>
+                <FieldError data-testid="field-error">
+                  {t(errors.groupOutcome.message as "validation.required")}
+                </FieldError>
               )}
             </div>
             {points && !pad.cooperative && (
