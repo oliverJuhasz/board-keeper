@@ -17,11 +17,11 @@ export function RefusedPlays({ refused }: { refused: ImportRefusedPlay[] }) {
       : explainProblem(t, { code: play.reason, reason: play.reason }, texts)
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-1" data-testid="refused-plays">
       <p>{t("exportAndImport.import.refused", { count: refused.length })}</p>
       <ul className="list-disc space-y-1 pl-5">
         {refused.map((play) => (
-          <li key={play.playId}>
+          <li key={play.playId} data-testid="refused-play">
             {t("exportAndImport.import.refusedPlay", {
               day: formatDay(play.playedOn),
               game: play.game,

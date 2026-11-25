@@ -200,17 +200,25 @@ The tests in `e2e/` use Board Keeper as a person does: in Chromium, against the 
 
 `support/playForm.ts` has the steps of the form for a Play that many tests share, and `expectAccessible(page)` in `support/accessibility.ts` checks a page with axe, which looks for what makes it hard to use with a screen reader or a keyboard, or hard to read. Each journey checks its main pages, and fails on what axe calls serious or critical.
 
-**Finding elements.** Tests find what they work with by its `data-testid` ([ADR 0023](adr/0023-tests-find-elements-by-test-id.md)), never by its role, text, label or CSS: an ESLint rule refuses those. So an element a test touches needs a test id:
-
-- Name it in kebab-case, in the glossary's terms, for what it is rather than where it is: `score-pad`, `player-row`, `save-play`.
-- Repeated items share one id and are told apart by what is in them: `page.getByTestId("player-row").filter({ hasText: "Anna" })`. Where the item has no text of its own, such as a radio button, its id names it: Variants and Score Categories by their key (`variant-difficulty-normal`, `score-cats`), and the answers to a tie by the Player's name (`tie-winner-Anna`).
-- The building blocks in `frontend/src/components/` take a `testId`, or pass `data-testid` on to their input.
-
-A test then checks what a person sees, in English, where that is the point: a Player's Placing, a total.
+**Finding elements** is the same as in the frontend's tests: see the next section.
 
 **Waiting.** Every `expect` on a locator, such as `toHaveText`, retries until it holds or five seconds pass, so a test never sleeps. Where the page itself must be loaded again, as for statistics, which catch up a moment after a Play is recorded, wrap the steps in `expect(async () => { … }).toPass()`.
 
 **Chromium only.** The `desktop` and `phone` projects (a Pixel 7) both run Chromium. Passkeys use its built-in pretend authenticator, and a finger drag on the phone is sent through its DevTools protocol, the interface its developer tools use; both are Chromium features.
+
+### Finding elements in tests
+
+Both the frontend's tests and the end-to-end tests find what they work with by its `data-testid` ([ADR 0023](adr/0023-tests-find-elements-by-test-id.md)), never by its role, text, label or CSS. An ESLint rule in each refuses the queries that do, such as `getByRole` and `getByText`. So an element a test touches needs a test id:
+
+- Name it in kebab-case, in the glossary's terms, for what it is rather than where it is: `score-pad`, `player-row`, `save-play`. Every page's heading is `page-title`, and the line under it `page-description`; a form's message from the server is `problem`, and the message under a field `field-error`.
+- Repeated items share one id and are told apart by what is in them, such as the row of the Player Anna. Where the item has no text of its own, such as a radio button, its id names it: Variants, Expansions and Score Categories by their key (`variant-difficulty-normal`, `expansion-leaders`, `score-cats`), a Role's Permissions by theirs (`permission-CREATE_PLAYS`), and the answers to a tie by the Player's name (`tie-winner-Anna`).
+- The building blocks in `frontend/src/components/` take a `testId`, or pass `data-testid` on to their input. A field's hint is `<its test id>-hint`, and a radio button `<its question's test id>-<its value>`.
+
+A test then checks what a person sees, in English, where that is the point: a Player's Placing, a total. Where what a screen reader is told is the point, as for a button that shows only an icon, it checks that with `toHaveAccessibleName`.
+
+**In the frontend's tests**, `page` and `inside`, in `src/test/queries.ts`, stand in for Testing Library's `screen` and `within`. They add `getByTestIdWith` and its `find` and `query` variants, which pick one of the elements sharing an id by its text: `page.getByTestIdWith("player-row", "Anna")`. They are a custom query, made with Testing Library's `buildQueries`. `src/test/playForm.ts` finds the fields of the form for a Play: a Player's row, a field of the score pad by Player and Score Category (`scoreField("Anna", "cats")`), the foot of the pad, and an option of a drop-down by its value.
+
+**In the end-to-end tests**, Playwright's locators do the same with `getByTestId` and `filter`: `page.getByTestId("player-row").filter({ hasText: "Anna" })`.
 
 ### Exports and Imports
 

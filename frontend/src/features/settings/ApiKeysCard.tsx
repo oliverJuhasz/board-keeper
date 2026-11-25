@@ -61,14 +61,14 @@ export function ApiKeysCard() {
   }
 
   return (
-    <Card>
+    <Card data-testid="api-keys">
       <CardHeader>
         <CardTitle>{t("settings.apiKeys.title")}</CardTitle>
         <CardDescription>{t("settings.apiKeys.description")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {!allowed && (
-          <Alert>
+          <Alert data-testid="api-keys-not-allowed">
             <AlertDescription>{t("settings.apiKeys.notAllowed")}</AlertDescription>
           </Alert>
         )}
@@ -79,20 +79,29 @@ export function ApiKeysCard() {
         >
           {() =>
             apiKeys.data?.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t("settings.apiKeys.none")}</p>
+              <p className="text-sm text-muted-foreground" data-testid="no-api-keys">
+                {t("settings.apiKeys.none")}
+              </p>
             ) : (
               <ul className="divide-y">
                 {apiKeys.data?.map((apiKey) => (
-                  <li key={apiKey.id} className="flex items-center gap-3 py-2">
+                  <li
+                    key={apiKey.id}
+                    className="flex items-center gap-3 py-2"
+                    data-testid="api-key"
+                  >
                     <KeySquareIcon aria-hidden className="size-4 shrink-0 text-muted-foreground" />
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-medium">{apiKey.name}</p>
-                      <p className="text-sm text-muted-foreground">{describe(apiKey)}</p>
+                      <p className="text-sm text-muted-foreground" data-testid="api-key-details">
+                        {describe(apiKey)}
+                      </p>
                     </div>
                     <Button
                       variant="ghost"
                       size="icon"
                       aria-label={t("settings.apiKeys.delete", { name: apiKey.name })}
+                      data-testid="delete-api-key"
                       onClick={() => setDeleting(apiKey)}
                     >
                       <Trash2Icon />
@@ -104,7 +113,12 @@ export function ApiKeysCard() {
           }
         </QueryState>
         {allowed && (
-          <Button ref={createButton} variant="outline" onClick={() => setCreating(true)}>
+          <Button
+            ref={createButton}
+            variant="outline"
+            onClick={() => setCreating(true)}
+            data-testid="create-api-key"
+          >
             <PlusIcon />
             {t("settings.apiKeys.create")}
           </Button>
@@ -219,7 +233,7 @@ function CreateApiKeyDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent finalFocus={finalFocus}>
+      <DialogContent finalFocus={finalFocus} data-testid="create-api-key-dialog">
         {create.data ? (
           <CreatedApiKey secret={create.data.secret} />
         ) : (
@@ -245,6 +259,7 @@ function CreateApiKeyDialog({
                 autoComplete="off"
                 autoFocus
                 error={form.formState.errors.name}
+                data-testid="api-key-name"
                 {...form.register("name")}
               />
               {/* The choice isn't a plain input, so Controller connects it to the form. */}
@@ -254,6 +269,7 @@ function CreateApiKeyDialog({
                 render={({ field }) => (
                   <RadioField
                     legend={t("settings.apiKeys.createDialog.expiry")}
+                    testId="api-key-expiry"
                     value={field.value}
                     onChange={field.onChange}
                     options={expiries.map((expiry) => ({
@@ -269,6 +285,7 @@ function CreateApiKeyDialog({
                 type="password"
                 autoComplete="current-password"
                 error={form.formState.errors.password}
+                data-testid="api-key-password"
                 {...form.register("password")}
               />
               <DialogFooter>
@@ -281,11 +298,12 @@ function CreateApiKeyDialog({
                     variant="outline"
                     disabled={create.isPending}
                     onClick={() => void confirmWithAPasskey()}
+                    data-testid="confirm-with-passkey"
                   >
                     {t("settings.apiKeys.createDialog.withPasskey")}
                   </Button>
                 )}
-                <Button type="submit" disabled={create.isPending}>
+                <Button type="submit" disabled={create.isPending} data-testid="save-api-key">
                   {t("settings.apiKeys.createDialog.submit")}
                 </Button>
               </DialogFooter>
@@ -312,7 +330,9 @@ function CreatedApiKey({ secret }: { secret: string }) {
     <FieldGroup>
       <DialogHeader>
         <DialogTitle>{t("settings.apiKeys.createdDialog.title")}</DialogTitle>
-        <DialogDescription>{t("settings.apiKeys.createdDialog.description")}</DialogDescription>
+        <DialogDescription data-testid="api-key-shown-once">
+          {t("settings.apiKeys.createdDialog.description")}
+        </DialogDescription>
       </DialogHeader>
       <Field>
         <FieldLabel htmlFor={fieldId}>{t("settings.apiKeys.createdDialog.label")}</FieldLabel>
@@ -321,6 +341,7 @@ function CreatedApiKey({ secret }: { secret: string }) {
           readOnly
           value={secret}
           className="font-mono"
+          data-testid="api-key-secret"
           onFocus={(event) => event.target.select()}
         />
       </Field>
@@ -332,7 +353,7 @@ function CreatedApiKey({ secret }: { secret: string }) {
           {copied ? <CheckIcon /> : <CopyIcon />}
           {copied ? t("link.copied") : t("settings.apiKeys.createdDialog.copy")}
         </Button>
-        <DialogClose render={<Button />}>{t("link.done")}</DialogClose>
+        <DialogClose render={<Button data-testid="api-key-done" />}>{t("link.done")}</DialogClose>
       </DialogFooter>
     </FieldGroup>
   )

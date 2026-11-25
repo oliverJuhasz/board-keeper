@@ -60,7 +60,7 @@ export function RoleDialog({ role, onClose }: { role?: Role; onClose: () => void
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent>
+      <DialogContent data-testid="role-dialog">
         <form onSubmit={submit} noValidate>
           <FieldGroup>
             <DialogHeader>
@@ -77,6 +77,7 @@ export function RoleDialog({ role, onClose }: { role?: Role; onClose: () => void
               // The Member Role keeps its name, which the interface translates.
               disabled={role?.builtIn !== undefined}
               error={form.formState.errors.name}
+              data-testid="role-name"
               {...form.register("name")}
             />
             <FieldSet>
@@ -87,6 +88,7 @@ export function RoleDialog({ role, onClose }: { role?: Role; onClose: () => void
                   <CheckboxField
                     key={permission}
                     label={t(`permissions.${permission}.name`)}
+                    testId={`permission-${permission}`}
                     hint={t(`permissions.${permission}.hint`)}
                     checked={permissions.includes(permission)}
                     onChange={(checked) => toggle(permission, checked)}
@@ -98,7 +100,11 @@ export function RoleDialog({ role, onClose }: { role?: Role; onClose: () => void
               <DialogClose render={<Button type="button" variant="outline" />}>
                 {t("common.cancel")}
               </DialogClose>
-              <Button type="submit" disabled={create.isPending || update.isPending}>
+              <Button
+                type="submit"
+                disabled={create.isPending || update.isPending}
+                data-testid="save-role"
+              >
                 {role ? t("roles.dialog.submitEdit") : t("roles.dialog.submitAdd")}
               </Button>
             </DialogFooter>

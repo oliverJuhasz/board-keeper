@@ -69,9 +69,9 @@ export function ResultsTable({
   return (
     <section className="space-y-2">
       <h2 className="text-sm font-medium">{title}</h2>
-      <Table aria-label={title}>
+      <Table aria-label={title} data-testid="results-table">
         <TableHeader>
-          <TableRow>
+          <TableRow data-testid="stats-header">
             <TableHead className={cn(LABEL_COLUMN, "text-xs sm:text-sm")}>{labelHeading}</TableHead>
             <NumberHead>{t("stats.columns.wins")}</NumberHead>
             {scored && <NumberHead>{t("stats.columns.bestScore")}</NumberHead>}
@@ -82,7 +82,10 @@ export function ResultsTable({
         <TableBody>
           {rows.map((row) => (
             <TableRow key={row.key} data-testid="stats-row">
-              <TableCell className={cn(LABEL_COLUMN, "font-medium whitespace-normal")}>
+              <TableCell
+                className={cn(LABEL_COLUMN, "font-medium whitespace-normal")}
+                data-testid="stats-label"
+              >
                 {row.label}
               </TableCell>
               <TableCell className="text-right tabular-nums" data-testid="wins">
@@ -114,7 +117,7 @@ export function SoloTable({ labelHeading, rows }: { labelHeading: string; rows: 
   return (
     <section className="space-y-2">
       <h2 className="text-sm font-medium">{t("stats.solo")}</h2>
-      <Table aria-label={t("stats.solo")}>
+      <Table aria-label={t("stats.solo")} data-testid="solo-table">
         <TableHeader>
           <TableRow>
             <TableHead className={cn(LABEL_COLUMN, "text-xs sm:text-sm")}>{labelHeading}</TableHead>
@@ -126,20 +129,25 @@ export function SoloTable({ labelHeading, rows }: { labelHeading: string; rows: 
         </TableHeader>
         <TableBody>
           {rows.map((row) => (
-            <TableRow key={row.key}>
-              <TableCell className={cn(LABEL_COLUMN, "font-medium whitespace-normal")}>
+            <TableRow key={row.key} data-testid="stats-row">
+              <TableCell
+                className={cn(LABEL_COLUMN, "font-medium whitespace-normal")}
+                data-testid="stats-label"
+              >
                 {row.label}
               </TableCell>
-              <TableCell className="text-right tabular-nums">{row.plays}</TableCell>
+              <TableCell className="text-right tabular-nums" data-testid="plays">
+                {row.plays}
+              </TableCell>
               {againstOpponent && (
-                <TableCell className="text-right tabular-nums">
+                <TableCell className="text-right tabular-nums" data-testid="wins">
                   {row.playsAgainstOpponent > 0
                     ? t("stats.winsOf", { wins: row.wins, plays: row.playsAgainstOpponent })
                     : NONE}
                 </TableCell>
               )}
-              {scored && <NumberCell value={row.bestScore} />}
-              {scored && <NumberCell value={row.averageScore} />}
+              {scored && <NumberCell value={row.bestScore} testId="best-score" />}
+              {scored && <NumberCell value={row.averageScore} testId="average-score" />}
             </TableRow>
           ))}
         </TableBody>

@@ -62,7 +62,7 @@ export function RegisterPage() {
           <h1 className="font-heading text-xl font-semibold" data-testid="page-title">
             {t("register.title")}
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground" data-testid="page-description">
             {t("register.intro", { name: registration.data.playerName })}
           </p>
         </div>

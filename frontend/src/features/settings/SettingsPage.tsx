@@ -61,7 +61,7 @@ export function SettingsPage() {
             <FieldGroup>
               <FormProblem error={changePassword.error} />
               {changePassword.isSuccess && (
-                <Alert>
+                <Alert data-testid="password-changed">
                   <AlertDescription>{t("settings.password.changed")}</AlertDescription>
                 </Alert>
               )}
@@ -70,6 +70,7 @@ export function SettingsPage() {
                 type="password"
                 autoComplete="current-password"
                 error={form.formState.errors.currentPassword}
+                data-testid="current-password"
                 {...form.register("currentPassword")}
               />
               <TextField
@@ -78,9 +79,15 @@ export function SettingsPage() {
                 type="password"
                 autoComplete="new-password"
                 error={form.formState.errors.newPassword}
+                data-testid="new-password"
                 {...form.register("newPassword")}
               />
-              <Button type="submit" className="self-start" disabled={changePassword.isPending}>
+              <Button
+                type="submit"
+                className="self-start"
+                disabled={changePassword.isPending}
+                data-testid="change-password"
+              >
                 {t("settings.password.submit")}
               </Button>
             </FieldGroup>

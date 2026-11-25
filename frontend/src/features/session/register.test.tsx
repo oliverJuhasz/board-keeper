@@ -1,8 +1,8 @@
-import { screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { http, HttpResponse } from "msw"
 import { expect, test } from "vitest"
 import { bence, gamesAre, problem, signedInAs } from "@/test/api"
+import { page } from "@/test/queries"
 import { renderApp } from "@/test/renderApp"
 import { server } from "@/test/server"
 
@@ -30,12 +30,14 @@ test("an invite link lets the invited person create their account", async () => 
   )
   renderApp("/register/the-secret-token")
 
-  expect(await screen.findByText(/You've been invited as Bence/)).toBeInTheDocument()
-  await userEvent.type(screen.getByLabelText("Username"), "bence")
-  await userEvent.type(screen.getByLabelText("Password"), PASSWORD)
-  await userEvent.click(screen.getByRole("button", { name: "Create account" }))
+  expect(await page.findByTestId("page-description")).toHaveTextContent(
+    /You've been invited as Bence/,
+  )
+  await userEvent.type(page.getByTestId("username"), "bence")
+  await userEvent.type(page.getByTestId("password"), PASSWORD)
+  await userEvent.click(page.getByTestId("register"))
 
-  expect(await screen.findByText("No games yet.")).toBeInTheDocument()
+  expect(await page.findByTestId("no-games")).toBeInTheDocument()
   expect(sent).toEqual({
     token: "the-secret-token",
     body: { username: "bence", password: PASSWORD, language: "en" },
@@ -47,25 +49,28 @@ test("says so when the username is taken", async () => {
   server.use(http.post("*/api/registration/:token", () => problem(409, "accounts.usernameTaken")))
   renderApp("/register/the-secret-token")
 
-  await userEvent.type(await screen.findByLabelText("Username"), "anna")
-  await userEvent.type(screen.getByLabelText("Password"), PASSWORD)
-  await userEvent.click(screen.getByRole("button", { name: "Create account" }))
+  await userEvent.type(await page.findByTestId("username"), "anna")
+  await userEvent.type(page.getByTestId("password"), PASSWORD)
+  await userEvent.click(page.getByTestId("register"))
 
-  expect(await screen.findByText("This username is taken.")).toBeInTheDocument()
+  expect(await page.findByTestId("problem")).toHaveTextContent("This username is taken.")
 })
 
 test("checks the username and password before sending anything", async () => {
   inviteIsFor("Bence")
   renderApp("/register/the-secret-token")
 
-  await userEvent.type(await screen.findByLabelText("Username"), "b!")
-  await userEvent.type(screen.getByLabelText("Password"), "too short")
-  await userEvent.click(screen.getByRole("button", { name: "Create account" }))
+  await userEvent.type(await page.findByTestId("username"), "b!")
+  await userEvent.type(page.getByTestId("password"), "too short")
+  await userEvent.click(page.getByTestId("register"))
 
   expect(
-    await screen.findByText("Use 3 to 30 letters, digits, dots, hyphens or underscores."),
+    await page.findByTestIdWith(
+      "field-error",
+      "Use 3 to 30 letters, digits, dots, hyphens or underscores.",
+    ),
   ).toBeInTheDocument()
-  expect(screen.getByText("Use at least 16 characters.")).toBeInTheDocument()
+  expect(page.getByTestIdWith("field-error", "Use at least 16 characters.")).toBeInTheDocument()
 })
 
 test("explains when an invite link no longer works", async () => {
@@ -76,7 +81,9 @@ test("explains when an invite link no longer works", async () => {
 
   renderApp("/register/used-up-token")
 
-  expect(await screen.findByText("This invite link doesn't work")).toBeInTheDocument()
+  expect(
+    await page.findByTestIdWith("page-title", "This invite link doesn't work"),
+  ).toBeInTheDocument()
 })
 
 test("a reset link lets someone choose a new password and signs them in", async () => {
@@ -95,11 +102,11 @@ test("a reset link lets someone choose a new password and signs them in", async 
   )
   renderApp("/reset-password/the-reset-token")
 
-  expect(await screen.findByText("For the account bence.")).toBeInTheDocument()
-  await userEvent.type(screen.getByLabelText("New password"), PASSWORD)
-  await userEvent.click(screen.getByRole("button", { name: "Save password" }))
+  expect(await page.findByTestId("page-description")).toHaveTextContent("For the account bence.")
+  await userEvent.type(page.getByTestId("password"), PASSWORD)
+  await userEvent.click(page.getByTestId("save-password"))
 
-  expect(await screen.findByText("No games yet.")).toBeInTheDocument()
+  expect(await page.findByTestId("no-games")).toBeInTheDocument()
   expect(sent).toEqual({ token: "the-reset-token", body: { password: PASSWORD } })
 })
 
@@ -111,5 +118,7 @@ test("explains when a reset link no longer works", async () => {
 
   renderApp("/reset-password/used-up-token")
 
-  expect(await screen.findByText("This reset link doesn't work")).toBeInTheDocument()
+  expect(
+    await page.findByTestIdWith("page-title", "This reset link doesn't work"),
+  ).toBeInTheDocument()
 })

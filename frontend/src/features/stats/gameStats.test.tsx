@@ -1,4 +1,3 @@
-import { screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { http, HttpResponse } from "msw"
 import { expect, test } from "vitest"
@@ -20,6 +19,7 @@ import {
   wyrmspan,
 } from "@/test/api"
 import { calicoModule, duelModule, genericModule, wyrmspanModule } from "@/test/gameModules"
+import { inside, page } from "@/test/queries"
 import { renderApp } from "@/test/renderApp"
 import { server } from "@/test/server"
 
@@ -40,16 +40,25 @@ function noStats(gameId: string, gameModuleId: string): GameStats {
   }
 }
 
-/** The cells of each row of a table, as text, below its heading row. */
+/** The cells of a statistics table that the tests read, each with an id of its own. */
+const CELL = /^(stats-label|plays|wins|best-score|average-score|average-placing)$/
+
+/** The cells of each row of a statistics table, as text. */
 function rowsOf(table: HTMLElement) {
-  return within(table)
-    .getAllByRole("row")
-    .slice(1)
+  return inside(table)
+    .getAllByTestId("stats-row")
     .map((row) =>
-      within(row)
-        .getAllByRole("cell")
+      inside(row)
+        .getAllByTestId(CELL)
         .map((cell) => cell.textContent),
     )
+}
+
+/** The terms of a description list with their values, as "term: value". */
+function termsOf(list: HTMLElement) {
+  return Array.from(list.querySelectorAll("dt")).map(
+    (term) => `${term.textContent}: ${term.nextElementSibling?.textContent}`,
+  )
 }
 
 test("shows how each player did against the others", async () => {
@@ -75,22 +84,20 @@ test("shows how each player did against the others", async () => {
 
   renderApp(`/games/${azul.id}`)
 
-  expect(await screen.findByRole("heading", { name: "Azul" })).toBeInTheDocument()
-  expect(screen.getByText("Played 3 times · Last played 15 March 2026")).toBeInTheDocument()
-  const table = screen.getByRole("table", { name: "Players" })
+  expect(await page.findByTestIdWith("page-title", "Azul")).toBeInTheDocument()
+  expect(page.getByTestId("page-description")).toHaveTextContent(
+    "Played 3 times · Last played 15 March 2026",
+  )
+  const table = page.getByTestId("results-table")
   expect(rowsOf(table)).toEqual([
     ["Dora", "2 of 367%", "45", "42.5", "1.5"],
     // Anna's Placings were never recorded: the column shows a dash.
     ["Anna", "1 of 333%", "50", "40", "–"],
   ])
-  expect(screen.getByRole("link", { name: "All plays of Azul" })).toHaveAttribute(
-    "href",
-    `/plays?game=${azul.id}`,
-  )
-  expect(screen.getByRole("link", { name: "Record a play" })).toHaveAttribute(
-    "href",
-    `/plays/new?game=${azul.id}`,
-  )
+  expect(page.getByTestId("all-plays")).toHaveTextContent("All plays of Azul")
+  expect(page.getByTestId("all-plays")).toHaveAttribute("href", `/plays?game=${azul.id}`)
+  expect(page.getByTestId("record-play")).toHaveTextContent("Record a play")
+  expect(page.getByTestId("record-play")).toHaveAttribute("href", `/plays/new?game=${azul.id}`)
 })
 
 test("leaves out the score columns when only winners were recorded", async () => {
@@ -108,12 +115,8 @@ test("leaves out the score columns when only winners were recorded", async () =>
 
   renderApp(`/games/${azul.id}`)
 
-  const table = await screen.findByRole("table", { name: "Players" })
-  expect(
-    within(table)
-      .getAllByRole("columnheader")
-      .map((head) => head.textContent),
-  ).toEqual(["Player", "Wins"])
+  const table = inside(await page.findByTestId("results-table"))
+  expect(table.getByTestId("stats-header")).toHaveTextContent(/^PlayerWins$/)
 })
 
 test("shows the average of each row of the score pad, in the pad's order", async () => {
@@ -131,12 +134,12 @@ test("shows the average of each row of the score pad, in the pad's order", async
 
   renderApp(`/games/${calico.id}`)
 
-  const table = await screen.findByRole("table", { name: "Score pad averages" })
-  expect(
-    within(table)
-      .getAllByRole("row")
-      .map((row) => row.textContent),
-  ).toEqual(["Design goals24.3", "Cats21", "Buttons19.5"])
+  await page.findByTestId("pad-averages")
+  expect(page.getAllByTestId("pad-average").map((row) => row.textContent)).toEqual([
+    "Design goals24.3",
+    "Cats21",
+    "Buttons19.5",
+  ])
 })
 
 test("shows how the plays of a game won in several ways were won", async () => {
@@ -155,12 +158,12 @@ test("shows how the plays of a game won in several ways were won", async () => {
 
   renderApp(`/games/${duel.id}`)
 
-  const table = await screen.findByRole("table", { name: "How plays were won" })
-  expect(
-    within(table)
-      .getAllByRole("row")
-      .map((row) => row.textContent),
-  ).toEqual(["Won byPlays", "Military supremacy2", "Civilian victory (on points)1"])
+  await page.findByTestId("victory-types")
+  expect(page.getByTestId("victory-types-header")).toHaveTextContent("Won byPlays")
+  expect(page.getAllByTestId("victory-type-count").map((row) => row.textContent)).toEqual([
+    "Military supremacy2",
+    "Civilian victory (on points)1",
+  ])
 })
 
 test("a game won in one way only doesn't say how its plays were won", async () => {
@@ -174,8 +177,8 @@ test("a game won in one way only doesn't say how its plays were won", async () =
 
   renderApp(`/games/${calico.id}`)
 
-  await screen.findByRole("table", { name: "Players" })
-  expect(screen.queryByRole("table", { name: "How plays were won" })).not.toBeInTheDocument()
+  await page.findByTestId("results-table")
+  expect(page.queryByTestId("victory-types")).not.toBeInTheDocument()
 })
 
 test("shows solo plays in a section of their own", async () => {
@@ -200,9 +203,9 @@ test("shows solo plays in a section of their own", async () => {
 
   renderApp(`/games/${wyrmspan.id}`)
 
-  const table = await screen.findByRole("table", { name: "Solo plays" })
+  const table = await page.findByTestId("solo-table")
   expect(rowsOf(table)).toEqual([["Bence", "2", "1 of 2", "93", "88.5"]])
-  expect(screen.queryByRole("table", { name: "Players" })).not.toBeInTheDocument()
+  expect(page.queryByTestId("results-table")).not.toBeInTheDocument()
 })
 
 test("shows how the group did in cooperative plays", async () => {
@@ -217,8 +220,7 @@ test("shows how the group did in cooperative plays", async () => {
 
   renderApp(`/games/${pandemic.id}`)
 
-  expect(await screen.findByRole("heading", { name: "Played together" })).toBeInTheDocument()
-  expect(screen.getByText("Won").nextElementSibling).toHaveTextContent("1 of 2 (50%)")
+  expect(termsOf(await page.findByTestId("together"))).toEqual(["Won: 1 of 2 (50%)"])
 })
 
 test("says when a game has not been played yet", async () => {
@@ -228,10 +230,10 @@ test("says when a game has not been played yet", async () => {
 
   renderApp(`/games/${azul.id}`)
 
-  expect(await screen.findByText("Not played yet")).toBeInTheDocument()
-  expect(
-    screen.getByText("No plays of this game yet. Its statistics start with the first one."),
-  ).toBeInTheDocument()
+  expect(await page.findByTestIdWith("page-description", "Not played yet")).toBeInTheDocument()
+  expect(page.getByTestId("no-stats")).toHaveTextContent(
+    "No plays of this game yet. Its statistics start with the first one.",
+  )
 })
 
 test("says so when the game no longer exists", async () => {
@@ -242,7 +244,7 @@ test("says so when the game no longer exists", async () => {
   renderApp(`/games/${azul.id}`)
 
   expect(
-    await screen.findByRole("heading", { name: "This game no longer exists." }),
+    await page.findByTestIdWith("page-title", "This game no longer exists."),
   ).toBeInTheDocument()
 })
 
@@ -253,12 +255,14 @@ test("each game's menu on the start page leads to its statistics", async () => {
 
   renderApp("/")
 
-  await userEvent.click(await screen.findByRole("button", { name: "Actions for Calico" }))
+  await userEvent.click(
+    await inside(await page.findByTestIdWith("game-row", "Calico")).findByTestId("game-actions"),
+  )
   // Calico has a module of its own: nothing to edit or remove, but statistics all the same.
-  expect(screen.queryByRole("menuitem", { name: "Edit" })).not.toBeInTheDocument()
-  await userEvent.click(await screen.findByRole("menuitem", { name: "Statistics" }))
+  expect(page.queryByTestId("edit-game")).not.toBeInTheDocument()
+  await userEvent.click(await page.findByTestId("game-statistics"))
 
-  expect(await screen.findByText("Not played yet")).toBeInTheDocument()
+  expect(await page.findByTestIdWith("page-description", "Not played yet")).toBeInTheDocument()
 })
 
 test("the game's name on a play's page leads to its statistics", async () => {
@@ -269,7 +273,7 @@ test("the game's name on a play's page leads to its statistics", async () => {
 
   renderApp(`/plays/${azulPlay.id}`)
 
-  await userEvent.click(await screen.findByRole("link", { name: "Azul" }))
+  await userEvent.click(await page.findByTestId("game-link"))
 
-  expect(await screen.findByText("Not played yet")).toBeInTheDocument()
+  expect(await page.findByTestIdWith("page-description", "Not played yet")).toBeInTheDocument()
 })

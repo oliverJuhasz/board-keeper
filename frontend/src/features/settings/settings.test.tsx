@@ -1,8 +1,8 @@
-import { screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { http, HttpResponse } from "msw"
 import { beforeEach, expect, test } from "vitest"
 import { anna, gamesAre, problem, signedInAs } from "@/test/api"
+import { page } from "@/test/queries"
 import { renderApp } from "@/test/renderApp"
 import { server } from "@/test/server"
 
@@ -22,17 +22,21 @@ test("switches everything to the chosen language, and saves the choice on the ac
   )
   renderApp("/settings")
 
-  await userEvent.selectOptions(await screen.findByRole("combobox", { name: "Language" }), "Magyar")
+  const language = await page.findByTestId("language")
+  expect(language).toHaveAccessibleName("Language")
+  await userEvent.selectOptions(language, "Magyar")
 
-  expect(await screen.findByRole("heading", { name: "Beállítások" })).toBeInTheDocument()
-  expect(screen.getByRole("combobox", { name: "Nyelv" })).toHaveValue("hu")
+  expect(await page.findByTestIdWith("page-title", "Beállítások")).toBeInTheDocument()
+  expect(language).toHaveAccessibleName("Nyelv")
+  expect(language).toHaveValue("hu")
   expect(document.documentElement).toHaveAttribute("lang", "hu")
   expect(localStorage.getItem("boardkeeper.language")).toBe("hu")
   expect(saved).toEqual({ language: "hu" })
 
   // The rest of the app follows.
-  await userEvent.click(screen.getByRole("link", { name: "Játékok" }))
-  expect(await screen.findByText("Még nincsenek játékok.")).toBeInTheDocument()
+  expect(page.getByTestId("nav-games")).toHaveTextContent("Játékok")
+  await userEvent.click(page.getByTestId("nav-games"))
+  expect(await page.findByTestId("no-games")).toHaveTextContent("Még nincsenek játékok.")
 })
 
 test("changes the password and says what happened", async () => {
@@ -45,13 +49,15 @@ test("changes the password and says what happened", async () => {
   )
   renderApp("/settings")
 
-  await userEvent.type(await screen.findByLabelText("Current password"), PASSWORD)
-  await userEvent.type(screen.getByLabelText("New password"), NEW_PASSWORD)
-  await userEvent.click(screen.getByRole("button", { name: "Change password" }))
+  await userEvent.type(await page.findByTestId("current-password"), PASSWORD)
+  await userEvent.type(page.getByTestId("new-password"), NEW_PASSWORD)
+  await userEvent.click(page.getByTestId("change-password"))
 
-  expect(await screen.findByText(/Your password has been changed/)).toBeInTheDocument()
+  expect(await page.findByTestId("password-changed")).toHaveTextContent(
+    /Your password has been changed/,
+  )
   expect(sent).toEqual({ currentPassword: PASSWORD, newPassword: NEW_PASSWORD })
-  expect(screen.getByLabelText("Current password")).toHaveValue("")
+  expect(page.getByTestId("current-password")).toHaveValue("")
 })
 
 test("says so when the current password is wrong", async () => {
@@ -60,19 +66,21 @@ test("says so when the current password is wrong", async () => {
   )
   renderApp("/settings")
 
-  await userEvent.type(await screen.findByLabelText("Current password"), "not my password")
-  await userEvent.type(screen.getByLabelText("New password"), NEW_PASSWORD)
-  await userEvent.click(screen.getByRole("button", { name: "Change password" }))
+  await userEvent.type(await page.findByTestId("current-password"), "not my password")
+  await userEvent.type(page.getByTestId("new-password"), NEW_PASSWORD)
+  await userEvent.click(page.getByTestId("change-password"))
 
-  expect(await screen.findByText("The current password is wrong.")).toBeInTheDocument()
+  expect(await page.findByTestId("problem")).toHaveTextContent("The current password is wrong.")
 })
 
 test("refuses a new password shorter than 16 characters before sending anything", async () => {
   renderApp("/settings")
 
-  await userEvent.type(await screen.findByLabelText("Current password"), PASSWORD)
-  await userEvent.type(screen.getByLabelText("New password"), "fifteen chars..")
-  await userEvent.click(screen.getByRole("button", { name: "Change password" }))
+  await userEvent.type(await page.findByTestId("current-password"), PASSWORD)
+  await userEvent.type(page.getByTestId("new-password"), "fifteen chars..")
+  await userEvent.click(page.getByTestId("change-password"))
 
-  expect(await screen.findByText("Use at least 16 characters.")).toBeInTheDocument()
+  expect(
+    await page.findByTestIdWith("field-error", "Use at least 16 characters."),
+  ).toBeInTheDocument()
 })

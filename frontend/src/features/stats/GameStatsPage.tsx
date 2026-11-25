@@ -108,7 +108,9 @@ function GameStatsDetails({
     },
   })
   const playerLink = (playerId: string, name: string) => (
-    <QuietLink to={`/players/${playerId}`}>{name}</QuietLink>
+    <QuietLink to={`/players/${playerId}`} data-testid="stats-link">
+      {name}
+    </QuietLink>
   )
 
   return (
@@ -119,7 +121,9 @@ function GameStatsDetails({
         action={
           <div className="flex items-center gap-1">
             {can("CREATE_PLAYS") && (
-              <LinkButton to={`/plays/new?game=${game.id}`}>{t("stats.game.record")}</LinkButton>
+              <LinkButton to={`/plays/new?game=${game.id}`} data-testid="record-play">
+                {t("stats.game.record")}
+              </LinkButton>
             )}
             {/* For Admins only: running the Game Module over every Play of the Game again. */}
             {can("RECALCULATE_PLAYS") && (
@@ -139,7 +143,9 @@ function GameStatsDetails({
       {recalculate.isError && <FormProblem error={recalculate.error} />}
 
       {stats.plays === 0 ? (
-        <p className="text-muted-foreground">{t("stats.game.empty")}</p>
+        <p className="text-muted-foreground" data-testid="no-stats">
+          {t("stats.game.empty")}
+        </p>
       ) : (
         <>
           {stats.players.length > 0 && (
@@ -169,7 +175,7 @@ function GameStatsDetails({
             />
           )}
           <p>
-            <QuietLink to={`/plays?game=${game.id}`} className="text-sm">
+            <QuietLink to={`/plays?game=${game.id}`} className="text-sm" data-testid="all-plays">
               {t("stats.game.allPlays", { game: gameName(game) })}
             </QuietLink>
           </p>
@@ -193,16 +199,16 @@ function VictoryTypes({
   return (
     <section className="space-y-2">
       <h2 className="text-sm font-medium">{t("stats.game.victoryTypes")}</h2>
-      <Table aria-label={t("stats.game.victoryTypes")}>
+      <Table aria-label={t("stats.game.victoryTypes")} data-testid="victory-types">
         <TableHeader>
-          <TableRow>
+          <TableRow data-testid="victory-types-header">
             <TableHead>{t("stats.columns.victoryType")}</TableHead>
             <TableHead className="text-right">{t("stats.columns.plays")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {counts.map((count) => (
-            <TableRow key={count.key}>
+            <TableRow key={count.key} data-testid="victory-type-count">
               <TableHead scope="row" className="font-normal whitespace-normal">
                 {texts[`${module.key}.victoryType.${count.key}`]}
               </TableHead>
@@ -277,10 +283,10 @@ function PadAverages({
         <h2 className="text-sm font-medium">{t("stats.game.padAverages")}</h2>
         <p className="text-sm text-muted-foreground">{t("stats.game.padAveragesHint")}</p>
       </div>
-      <Table aria-label={t("stats.game.padAverages")}>
+      <Table aria-label={t("stats.game.padAverages")} data-testid="pad-averages">
         <TableBody>
           {rows.map((category) => (
-            <TableRow key={category.key}>
+            <TableRow key={category.key} data-testid="pad-average">
               <TableHead scope="row" className="font-normal whitespace-normal">
                 {texts[`${module.key}.category.${category.key}`]}
               </TableHead>
@@ -302,7 +308,10 @@ function Together({ group }: { group: NonNullable<GameStats["cooperative"]> }) {
     <section className="space-y-2">
       <h2 className="text-sm font-medium">{t("stats.together")}</h2>
       {/* A description list: each term with its value next to it. */}
-      <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1 text-muted-foreground">
+      <dl
+        className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1 text-muted-foreground"
+        data-testid="together"
+      >
         <dt>{t("stats.won")}</dt>
         <dd className="tabular-nums">{winsOf(group.wins, group.plays)}</dd>
         {group.bestScore !== undefined && (

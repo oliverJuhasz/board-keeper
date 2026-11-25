@@ -51,7 +51,11 @@ function PlayerStatsDetails({ stats, games }: { stats: PlayerSummary; games: Gam
   const playedDescription = usePlayedDescription("player")
   // A Game removed meanwhile has no name to show: its row is left out.
   const named = (gameId: string) => games.find((game) => game.id === gameId)
-  const gameLink = (game: Game) => <QuietLink to={`/games/${game.id}`}>{gameName(game)}</QuietLink>
+  const gameLink = (game: Game) => (
+    <QuietLink to={`/games/${game.id}`} data-testid="stats-link">
+      {gameName(game)}
+    </QuietLink>
+  )
   const rowsFor = <Row extends { gameId: string }>(rows: Row[]) =>
     rows.flatMap((row) => {
       const game = named(row.gameId)
@@ -66,12 +70,17 @@ function PlayerStatsDetails({ stats, games }: { stats: PlayerSummary; games: Gam
       />
 
       {stats.plays === 0 ? (
-        <p className="text-muted-foreground">{t("stats.player.empty", { name: stats.name })}</p>
+        <p className="text-muted-foreground" data-testid="no-stats">
+          {t("stats.player.empty", { name: stats.name })}
+        </p>
       ) : (
         <>
           {/* A description list: each term with its value next to it. Cooperative Plays and
               Solo Plays are counted apart from the Plays against others. */}
-          <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1 text-muted-foreground">
+          <dl
+            className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1 text-muted-foreground"
+            data-testid="player-summary"
+          >
             {stats.againstOthers && (
               <>
                 <dt>{t("stats.player.winsAgainstOthers")}</dt>
@@ -114,7 +123,11 @@ function PlayerStatsDetails({ stats, games }: { stats: PlayerSummary; games: Gam
             <SoloTable labelHeading={t("stats.columns.game")} rows={rowsFor(stats.solo)} />
           )}
           <p>
-            <QuietLink to={`/plays?player=${stats.playerId}`} className="text-sm">
+            <QuietLink
+              to={`/plays?player=${stats.playerId}`}
+              className="text-sm"
+              data-testid="all-plays"
+            >
               {t("stats.player.allPlays", { name: stats.name })}
             </QuietLink>
           </p>

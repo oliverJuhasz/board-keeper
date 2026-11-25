@@ -166,7 +166,9 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
       <PageHeader
         title={
           // The Game's name leads to its statistics.
-          <QuietLink to={`/games/${play.game.id}`}>{gameName(play.game)}</QuietLink>
+          <QuietLink to={`/games/${play.game.id}`} data-testid="game-link">
+            {gameName(play.game)}
+          </QuietLink>
         }
         description={[formatDay(play.playedOn), play.location].filter(Boolean).join(" · ")}
         action={

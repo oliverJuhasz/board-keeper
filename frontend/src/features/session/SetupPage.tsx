@@ -61,7 +61,9 @@ export function SetupPage() {
           <h1 className="font-heading text-xl font-semibold" data-testid="page-title">
             {t("setup.title")}
           </h1>
-          <p className="text-muted-foreground">{t("setup.intro")}</p>
+          <p className="text-muted-foreground" data-testid="page-description">
+            {t("setup.intro")}
+          </p>
         </div>
         <FormProblem error={setUp.error} />
         <TextField

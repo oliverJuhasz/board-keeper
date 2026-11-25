@@ -27,7 +27,9 @@ export function SelectField<Value extends string>({
 
   return (
     <Field>
-      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      <FieldLabel htmlFor={id} data-testid={testId && `${testId}-label`}>
+        {label}
+      </FieldLabel>
       <NativeSelect
         id={id}
         value={value}

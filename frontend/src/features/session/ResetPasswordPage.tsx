@@ -54,7 +54,7 @@ export function ResetPasswordPage() {
           <h1 className="font-heading text-xl font-semibold" data-testid="page-title">
             {t("resetPassword.title")}
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground" data-testid="page-description">
             {t("resetPassword.intro", { username: reset.data.username })}
           </p>
         </div>

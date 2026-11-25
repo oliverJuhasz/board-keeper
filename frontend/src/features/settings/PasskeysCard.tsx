@@ -50,7 +50,7 @@ export function PasskeysCard() {
   })
 
   return (
-    <Card>
+    <Card data-testid="passkeys">
       <CardHeader>
         <CardTitle>{t("settings.passkeys.title")}</CardTitle>
         <CardDescription>{t("settings.passkeys.description")}</CardDescription>
@@ -63,7 +63,9 @@ export function PasskeysCard() {
         >
           {() =>
             passkeys.data?.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t("settings.passkeys.none")}</p>
+              <p className="text-sm text-muted-foreground" data-testid="no-passkeys">
+                {t("settings.passkeys.none")}
+              </p>
             ) : (
               <ul className="divide-y">
                 {passkeys.data?.map((passkey) => (
@@ -75,7 +77,7 @@ export function PasskeysCard() {
                     <KeyRoundIcon aria-hidden className="size-4 shrink-0 text-muted-foreground" />
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-medium">{passkey.label}</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-muted-foreground" data-testid="passkey-details">
                         {[
                           passkey.created &&
                             t("settings.passkeys.added", { date: formatDate(passkey.created) }),
@@ -93,6 +95,7 @@ export function PasskeysCard() {
                       variant="ghost"
                       size="icon"
                       aria-label={t("settings.passkeys.remove", { label: passkey.label })}
+                      data-testid="remove-passkey"
                       onClick={() => setRemoving(passkey)}
                     >
                       <Trash2Icon />
@@ -186,7 +189,7 @@ function AddPasskeyDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent finalFocus={finalFocus}>
+      <DialogContent finalFocus={finalFocus} data-testid="add-passkey-dialog">
         <form
           onSubmit={(event) => void form.handleSubmit((values) => add.mutate(values.label))(event)}
           noValidate

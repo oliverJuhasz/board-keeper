@@ -101,7 +101,9 @@ export function PlayersPage() {
                 <TableRow key={player.id} data-testid="player-row">
                   <TableCell className="font-medium">
                     {/* The name leads to the Player's statistics. */}
-                    <QuietLink to={`/players/${player.id}`}>{player.name}</QuietLink>
+                    <QuietLink to={`/players/${player.id}`} data-testid="player-link">
+                      {player.name}
+                    </QuietLink>
                     {player.id === account.playerId && (
                       <Badge variant="outline" className="ml-2" data-testid="you">
                         {t("players.you")}

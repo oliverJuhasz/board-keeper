@@ -1,8 +1,9 @@
-import { screen, waitFor } from "@testing-library/react"
+import { waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { http, HttpResponse } from "msw"
 import { expect, test } from "vitest"
 import { anna, bence, gamesAre, problem, signedInAs, signedOut } from "@/test/api"
+import { page } from "@/test/queries"
 import { renderApp } from "@/test/renderApp"
 import { server } from "@/test/server"
 
@@ -13,7 +14,7 @@ test("sends a visitor who isn't signed in to the sign-in page", async () => {
 
   renderApp("/")
 
-  expect(await screen.findByRole("heading", { name: "Sign in" })).toBeInTheDocument()
+  expect(await page.findByTestIdWith("page-title", "Sign in")).toBeInTheDocument()
 })
 
 test("signs in and goes on to the page that was asked for", async () => {
@@ -30,11 +31,11 @@ test("signs in and goes on to the page that was asked for", async () => {
   )
   renderApp("/")
 
-  await userEvent.type(await screen.findByLabelText("Username"), "anna")
-  await userEvent.type(screen.getByLabelText("Password"), PASSWORD)
-  await userEvent.click(screen.getByRole("button", { name: "Sign in" }))
+  await userEvent.type(await page.findByTestId("username"), "anna")
+  await userEvent.type(page.getByTestId("password"), PASSWORD)
+  await userEvent.click(page.getByTestId("sign-in"))
 
-  expect(await screen.findByText("No games yet.")).toBeInTheDocument()
+  expect(await page.findByTestId("no-games")).toBeInTheDocument()
   expect(sent).toEqual({
     body: { username: "anna", password: PASSWORD, staySignedIn: true },
     csrfHeader: "token-from-the-server",
@@ -46,11 +47,11 @@ test("says so when the username or password is wrong", async () => {
   server.use(http.post("*/api/session", () => problem(401, "session.badCredentials")))
   renderApp("/sign-in")
 
-  await userEvent.type(await screen.findByLabelText("Username"), "anna")
-  await userEvent.type(screen.getByLabelText("Password"), "not my password")
-  await userEvent.click(screen.getByRole("button", { name: "Sign in" }))
+  await userEvent.type(await page.findByTestId("username"), "anna")
+  await userEvent.type(page.getByTestId("password"), "not my password")
+  await userEvent.click(page.getByTestId("sign-in"))
 
-  expect(await screen.findByText("Wrong username or password.")).toBeInTheDocument()
+  expect(await page.findByTestId("problem")).toHaveTextContent("Wrong username or password.")
 })
 
 test("asks for a username and password before sending anything", async () => {
@@ -58,9 +59,9 @@ test("asks for a username and password before sending anything", async () => {
   renderApp("/sign-in")
 
   // No answer is set up for POST /api/session, so sending the form would fail this test.
-  await userEvent.click(await screen.findByRole("button", { name: "Sign in" }))
+  await userEvent.click(await page.findByTestId("sign-in"))
 
-  expect(await screen.findAllByText("Fill this in.")).toHaveLength(2)
+  expect(await page.findAllByTestIdWith("field-error", "Fill this in.")).toHaveLength(2)
 })
 
 test("explains what to do when the installation has no accounts yet", async () => {
@@ -69,8 +70,10 @@ test("explains what to do when the installation has no accounts yet", async () =
 
   renderApp("/sign-in")
 
-  expect(await screen.findByText("Board Keeper isn't set up yet")).toBeInTheDocument()
-  expect(screen.queryByLabelText("Username")).not.toBeInTheDocument()
+  expect(
+    await page.findByTestIdWith("page-title", "Board Keeper isn't set up yet"),
+  ).toBeInTheDocument()
+  expect(page.queryByTestId("username")).not.toBeInTheDocument()
 })
 
 test("the setup link creates the first admin and signs in", async () => {
@@ -89,12 +92,12 @@ test("the setup link creates the first admin and signs in", async () => {
   )
   renderApp("/setup?token=from-the-log")
 
-  await userEvent.type(await screen.findByLabelText("Your name"), "Anna")
-  await userEvent.type(screen.getByLabelText("Username"), "anna")
-  await userEvent.type(screen.getByLabelText("Password"), PASSWORD)
-  await userEvent.click(screen.getByRole("button", { name: "Create account" }))
+  await userEvent.type(await page.findByTestId("player-name"), "Anna")
+  await userEvent.type(page.getByTestId("username"), "anna")
+  await userEvent.type(page.getByTestId("password"), PASSWORD)
+  await userEvent.click(page.getByTestId("set-up"))
 
-  expect(await screen.findByText("No games yet.")).toBeInTheDocument()
+  expect(await page.findByTestId("no-games")).toBeInTheDocument()
   expect(sent).toEqual({
     token: "from-the-log",
     playerName: "Anna",
@@ -111,12 +114,14 @@ test("the setup form refuses a password shorter than 16 characters", async () =>
   )
   renderApp("/setup?token=from-the-log")
 
-  await userEvent.type(await screen.findByLabelText("Your name"), "Anna")
-  await userEvent.type(screen.getByLabelText("Username"), "anna")
-  await userEvent.type(screen.getByLabelText("Password"), "fifteen chars..")
-  await userEvent.click(screen.getByRole("button", { name: "Create account" }))
+  await userEvent.type(await page.findByTestId("player-name"), "Anna")
+  await userEvent.type(page.getByTestId("username"), "anna")
+  await userEvent.type(page.getByTestId("password"), "fifteen chars..")
+  await userEvent.click(page.getByTestId("set-up"))
 
-  expect(await screen.findByText("Use at least 16 characters.")).toBeInTheDocument()
+  expect(
+    await page.findByTestIdWith("field-error", "Use at least 16 characters."),
+  ).toBeInTheDocument()
 })
 
 test("the setup page says so when the link has no token", async () => {
@@ -127,7 +132,7 @@ test("the setup page says so when the link has no token", async () => {
 
   renderApp("/setup")
 
-  expect(await screen.findByText("This link is incomplete")).toBeInTheDocument()
+  expect(await page.findByTestIdWith("page-title", "This link is incomplete")).toBeInTheDocument()
 })
 
 test("the setup page points to signing in once setup is done", async () => {
@@ -135,7 +140,9 @@ test("the setup page points to signing in once setup is done", async () => {
 
   renderApp("/setup?token=from-the-log")
 
-  expect(await screen.findByText("Board Keeper is already set up")).toBeInTheDocument()
+  expect(
+    await page.findByTestIdWith("page-title", "Board Keeper is already set up"),
+  ).toBeInTheDocument()
 })
 
 test("signs out from the account menu", async () => {
@@ -151,11 +158,11 @@ test("signs out from the account menu", async () => {
   )
   renderApp("/")
 
-  await userEvent.click(await screen.findByRole("button", { name: "Account" }))
-  expect(await screen.findByText("Signed in as anna")).toBeInTheDocument()
-  await userEvent.click(screen.getByRole("menuitem", { name: "Sign out" }))
+  await userEvent.click(await page.findByTestId("account-menu"))
+  expect(await page.findByTestId("signed-in-as")).toHaveTextContent("Signed in as anna")
+  await userEvent.click(page.getByTestId("sign-out"))
 
-  expect(await screen.findByRole("heading", { name: "Sign in" })).toBeInTheDocument()
+  expect(await page.findByTestIdWith("page-title", "Sign in")).toBeInTheDocument()
   expect(signedOutOnServer).toBe(true)
 })
 
@@ -163,7 +170,7 @@ test("goes to the sign-in page when the server says the session has ended", asyn
   signedInAs(anna)
   gamesAre([])
   renderApp("/")
-  await screen.findByText("No games yet.")
+  await page.findByTestId("no-games")
 
   // From now on the server no longer knows us, as after a session has run out.
   signedOut()
@@ -171,7 +178,7 @@ test("goes to the sign-in page when the server says the session has ended", asyn
   const { queryClient } = await import("@/api/queryClient")
   await queryClient.invalidateQueries({ queryKey: ["get", "/api/games"] })
 
-  await waitFor(() => expect(screen.getByRole("heading", { name: "Sign in" })).toBeInTheDocument())
+  await waitFor(() => expect(page.getByTestId("page-title")).toHaveTextContent("Sign in"))
 })
 
 test("the account menu leads an admin to settings, accounts and roles", async () => {
@@ -179,14 +186,11 @@ test("the account menu leads an admin to settings, accounts and roles", async ()
   gamesAre([])
   renderApp("/")
 
-  await userEvent.click(await screen.findByRole("button", { name: "Account" }))
+  await userEvent.click(await page.findByTestId("account-menu"))
 
-  expect(await screen.findByRole("menuitem", { name: "Settings" })).toHaveAttribute(
-    "href",
-    "/settings",
-  )
-  expect(screen.getByRole("menuitem", { name: "Accounts" })).toHaveAttribute("href", "/accounts")
-  expect(screen.getByRole("menuitem", { name: "Roles" })).toHaveAttribute("href", "/roles")
+  expect(await page.findByTestId("settings")).toHaveAttribute("href", "/settings")
+  expect(page.getByTestId("accounts")).toHaveAttribute("href", "/accounts")
+  expect(page.getByTestId("roles")).toHaveAttribute("href", "/roles")
 })
 
 test("the account menu shows a member only what a member can use", async () => {
@@ -194,11 +198,11 @@ test("the account menu shows a member only what a member can use", async () => {
   gamesAre([])
   renderApp("/")
 
-  await userEvent.click(await screen.findByRole("button", { name: "Account" }))
+  await userEvent.click(await page.findByTestId("account-menu"))
 
-  expect(await screen.findByRole("menuitem", { name: "Settings" })).toBeInTheDocument()
-  expect(screen.queryByRole("menuitem", { name: "Accounts" })).not.toBeInTheDocument()
-  expect(screen.queryByRole("menuitem", { name: "Roles" })).not.toBeInTheDocument()
+  expect(await page.findByTestId("settings")).toBeInTheDocument()
+  expect(page.queryByTestId("accounts")).not.toBeInTheDocument()
+  expect(page.queryByTestId("roles")).not.toBeInTheDocument()
 })
 
 test("the account menu leads to the page about Board Keeper", async () => {
@@ -206,8 +210,8 @@ test("the account menu leads to the page about Board Keeper", async () => {
   gamesAre([])
   renderApp("/")
 
-  await userEvent.click(await screen.findByRole("button", { name: "Account" }))
-  await userEvent.click(await screen.findByRole("menuitem", { name: "About Board Keeper" }))
+  await userEvent.click(await page.findByTestId("account-menu"))
+  await userEvent.click(await page.findByTestId("about"))
 
-  expect(await screen.findByRole("heading", { name: "About Board Keeper" })).toBeInTheDocument()
+  expect(await page.findByTestIdWith("page-title", "About Board Keeper")).toBeInTheDocument()
 })

@@ -48,7 +48,9 @@ export function ExportCard() {
     <Card>
       <CardHeader>
         <CardTitle>{t("exportAndImport.export.title")}</CardTitle>
-        <CardDescription>{t("exportAndImport.export.text")}</CardDescription>
+        <CardDescription data-testid="export-description">
+          {t("exportAndImport.export.text")}
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <FormProblem error={download.error} />

@@ -142,7 +142,7 @@ function ReviewForm({
 
       {review.refused.length > 0 && <RefusedPlays refused={review.refused} />}
 
-      <section className="space-y-3">
+      <section className="space-y-3" data-testid="who-is-who">
         <div className="space-y-1">
           <h2 className="font-heading font-medium">{t("exportAndImport.import.whoIsWho")}</h2>
           <p className="text-muted-foreground">{t("exportAndImport.import.whoIsWhoHint")}</p>
@@ -176,6 +176,7 @@ function ReviewForm({
                 {choices[index]?.choice === NEW && (
                   <TextField
                     label={t("exportAndImport.import.newPlayerName", { name: player.name })}
+                    data-testid="import-player-name"
                     error={form.formState.errors.players?.[index]?.newName}
                     {...form.register(`players.${index}.newName`)}
                   />
@@ -192,7 +193,7 @@ function ReviewForm({
         <Button type="submit" disabled={importFile.isPending} data-testid="confirm-import">
           {t("exportAndImport.import.confirm")}
         </Button>
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button type="button" variant="outline" onClick={onCancel} data-testid="cancel-import">
           {t("common.cancel")}
         </Button>
       </div>
