@@ -1,6 +1,6 @@
 # Board Keeper
 
-A self-hosted app for recording board game plays and scores, for personal use and friends. It runs on a home NAS.
+A self-hosted web app for recording board game Plays and scores. It runs as a container image, next to a PostgreSQL database, anywhere containers run.
 
 - Domain language: [`CONTEXT.md`](CONTEXT.md)
 - Architecture decisions: [`docs/adr/`](docs/adr/)
@@ -10,11 +10,9 @@ A self-hosted app for recording board game plays and scores, for personal use an
 
 ## Stack
 
-Board Keeper is a learning project first ([ADR 0001](docs/adr/0001-learning-project.md)), so some choices are heavier than the app strictly needs.
-
 **Backend:** Java 25, Spring Boot 4, Spring Modulith, Spring Security (password and passkeys), jOOQ, Flyway, PostgreSQL, built with Maven. The API is described with OpenAPI (springdoc).
 
-**Frontend:** a React single-page app with TypeScript and Vite, installable as a PWA (online only).
+**Frontend:** a React single-page app with TypeScript and Vite, installable as a PWA.
 
 | Purpose | Library |
 |---|---|
@@ -29,13 +27,11 @@ Board Keeper is a learning project first ([ADR 0001](docs/adr/0001-learning-proj
 | Tests | Vitest, React Testing Library, Mock Service Worker; Playwright end-to-end tests against the container image |
 | Lint and format | ESLint, Prettier |
 
-**Deployment:** GitHub Actions builds and tests every push and publishes the container image to GitHub Container Registry: every change on `main` as a snapshot, and every release, which is a git tag such as `1.2.3` ([ADR 0018](docs/adr/0018-releases-are-git-tags.md)). It runs as one app container (Spring Boot serves both the API and the built frontend) plus one PostgreSQL container. The repository provides the image, an example compose file and a [self-hosting guide](docs/self-hosting.md). Anything specific to one installation is out of scope: network access, reverse proxy, automatic updates and backup scheduling. On first start, with no accounts yet, the app writes a one-time link to its log for creating the first Admin. If the only Admin forgets their password, a command run on the container writes a Reset Link for them.
+**Deployment:** GitHub Actions builds and tests every push and publishes the container image to GitHub Container Registry: every change on `main` as a snapshot, and every release, which is a git tag such as `1.2.3` ([ADR 0018](docs/adr/0018-releases-are-git-tags.md)). It runs as one app container (Spring Boot serves both the API and the built frontend) plus one PostgreSQL container. The repository provides the image, an example compose file and a [self-hosting guide](docs/self-hosting.md). Network access, a reverse proxy, automatic updates and scheduled backups are left to each installation. On first start, with no accounts yet, the app writes a one-time link to its log for creating the first Admin. If the only Admin forgets their password, a command run on the container writes a Reset Link for them.
 
 **Building needs Docker**, because jOOQ code is generated from a throwaway PostgreSQL ([ADR 0007](docs/adr/0007-flyway-and-jooq-codegen-from-real-postgres.md)).
 
-## Status
-
-Milestones M0 to M6 are done, which are all the milestones planned for v1. Board Keeper builds, runs as a container image, and has:
+## Features
 
 - the interface in English, Dutch and Hungarian
 - Accounts with sign-in by password or passkey, created through a first-time Setup Link and through Invites
@@ -55,7 +51,7 @@ Milestones M0 to M6 are done, which are all the milestones planned for v1. Board
 - password changes and Reset Links
 - an About page with the version that is running, where its source code is, and the licence
 
-What might come after v1 is listed under Later in the [roadmap](docs/roadmap.md).
+Ideas for later versions are listed under Later in the [roadmap](docs/roadmap.md).
 
 ## Licence
 
@@ -63,7 +59,7 @@ Copyright (C) 2026 Oliver Juhasz
 
 Board Keeper is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. It is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See [`LICENSE`](LICENSE) for the full terms.
 
-In short: anyone may use, change and share Board Keeper, also for money. Whoever shares a copy, or runs a changed copy for others, must offer its source code under the same licence. The About page, opened from the account menu, makes that offer for the running version ([ADR 0016](docs/adr/0016-agpl-licence.md)).
+To run a modified version for others, point its About page at your source code, as [the self-hosting guide](docs/self-hosting.md#if-you-change-board-keepers-code) describes.
 
 The web app includes libraries under licences of their own, listed in `third-party-licenses.txt` beside it (`/third-party-licenses.txt` on a running installation). The backend's libraries keep their licence files inside their own jars.
 
