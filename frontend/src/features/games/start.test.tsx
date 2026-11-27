@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from "@testing-library/react"
+import { waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { http, HttpResponse } from "msw"
 import { expect, test } from "vitest"
@@ -21,6 +21,8 @@ import {
   signedInAs,
 } from "@/test/api"
 import { calicoModule } from "@/test/gameModules"
+import { findScoreField, padPlayers, queryScoreField, scoreField } from "@/test/playForm"
+import { page } from "@/test/queries"
 import { renderApp } from "@/test/renderApp"
 import { server } from "@/test/server"
 
@@ -84,10 +86,7 @@ const calicoPlay: Play = {
 }
 
 function gameRows() {
-  return screen
-    .getAllByRole("row")
-    .slice(1)
-    .map((row) => row.textContent)
+  return page.getAllByTestId("game-row").map((row) => row.textContent)
 }
 
 test("lists the games most recently played first, and says when", async () => {
@@ -96,7 +95,7 @@ test("lists the games most recently played first, and says when", async () => {
   lastPlayedAre({ [azul.id]: daysAgo(30), [calico.id]: daysAgo(1) })
   renderApp("/")
 
-  expect(await screen.findByRole("heading", { name: "Record a play" })).toBeInTheDocument()
+  expect(await page.findByTestIdWith("page-title", "Record a play")).toBeInTheDocument()
   await waitFor(() =>
     expect(gameRows()).toEqual([
       expect.stringMatching(/^CalicoLast played yesterday/),
@@ -112,12 +111,14 @@ test("a tap on a game opens the form for a play of it", async () => {
   playCanBeEntered()
   renderApp("/")
 
-  await userEvent.click(await screen.findByRole("link", { name: "Record a play of Calico" }))
+  await userEvent.click(await page.findByTestIdWith("record-play", "Calico"))
 
   // The start page has the same heading, and stays until the form's code has loaded: wait for
   // what only the form says.
-  expect(await screen.findByText("Who played Calico, and how it ended.")).toBeInTheDocument()
-  expect(screen.getByRole("heading", { name: "Record a play" })).toBeInTheDocument()
+  expect(
+    await page.findByTestIdWith("page-description", "Who played Calico, and how it ended."),
+  ).toBeInTheDocument()
+  expect(page.getByTestId("page-title")).toHaveTextContent("Record a play")
 })
 
 test("offers my recent plays to play again, each game and group of players once", async () => {
@@ -131,8 +132,8 @@ test("offers my recent plays to play again, each game and group of players once"
   const asked = recentPlaysAre([calicoPlay, earlierCalico, azulPlay, pandemicPlay])
   renderApp("/")
 
-  const section = await screen.findByRole("heading", { name: "Play again" })
-  const offers = within(section.parentElement as HTMLElement).getAllByRole("link")
+  await page.findByTestId("play-again")
+  const offers = page.getAllByTestId("play-again-offer")
   expect(offers.map((link) => link.getAttribute("aria-label"))).toEqual([
     "Play Calico again with Dora, Bence",
     "Play Azul again with Dora, Anna",
@@ -152,21 +153,17 @@ test("playing again fills in the same players and choices", async () => {
   playsCanBePreviewed()
   renderApp("/")
 
-  await userEvent.click(
-    await screen.findByRole("link", { name: "Play Calico again with Dora, Bence" }),
-  )
+  const offer = await page.findByTestIdWith("play-again-offer", "Calico")
+  expect(offer).toHaveAccessibleName("Play Calico again with Dora, Bence")
+  await userEvent.click(offer)
 
   // The same players in the same order, in the family variant, and only the scores to enter.
-  expect(await screen.findByLabelText("Cats of Dora")).toHaveValue(null)
-  expect(screen.getByLabelText("Cats of Bence")).toBeInTheDocument()
-  expect(screen.queryByLabelText("Design goals of Dora")).not.toBeInTheDocument()
-  expect(screen.getByRole("checkbox", { name: "Family variant" })).toBeChecked()
-  const pad = within(screen.getByRole("table", { name: "Score pad" }))
-  expect(pad.getAllByRole("columnheader").map((cell) => cell.textContent)).toEqual([
-    "Dora",
-    "Bence",
-  ])
-  expect(screen.getByLabelText("Date")).toHaveValue(todayIso())
+  expect(await findScoreField("Dora", "cats")).toHaveValue(null)
+  expect(scoreField("Bence", "cats")).toBeInTheDocument()
+  expect(queryScoreField("Dora", "designGoals")).not.toBeInTheDocument()
+  expect(page.getByTestId("variant-family")).toBeChecked()
+  expect(padPlayers()).toEqual(["Dora", "Bence"])
+  expect(page.getByTestId("played-on")).toHaveValue(todayIso())
 })
 
 test("a play of a game no longer in the catalogue is not offered", async () => {
@@ -175,8 +172,8 @@ test("a play of a game no longer in the catalogue is not offered", async () => {
   recentPlaysAre([calicoPlay, azulPlay])
   renderApp("/")
 
-  const section = await screen.findByRole("heading", { name: "Play again" })
-  expect(within(section.parentElement as HTMLElement).getAllByRole("link")).toHaveLength(1)
+  await page.findByTestId("play-again")
+  expect(page.getAllByTestId("play-again-offer")).toHaveLength(1)
 })
 
 test("a player who has been removed is left out when playing again", async () => {
@@ -188,8 +185,8 @@ test("a player who has been removed is left out when playing again", async () =>
   playsCanBePreviewed()
   renderApp(`/plays/new?game=${azul.id}&again=${azulPlay.id}`)
 
-  expect(await screen.findByLabelText("Score of Anna")).toBeInTheDocument()
-  expect(screen.queryByLabelText("Score of Dora")).not.toBeInTheDocument()
+  expect(await findScoreField("Anna")).toBeInTheDocument()
+  expect(queryScoreField("Dora")).not.toBeInTheDocument()
 })
 
 test("someone who may not record plays sees the catalogue only", async () => {
@@ -198,9 +195,9 @@ test("someone who may not record plays sees the catalogue only", async () => {
   const asked = recentPlaysAre([azulPlay])
   renderApp("/")
 
-  expect(await screen.findByRole("heading", { name: "Games" })).toBeInTheDocument()
-  await screen.findByRole("row", { name: /Azul/ })
-  expect(screen.queryByRole("heading", { name: "Play again" })).not.toBeInTheDocument()
-  expect(screen.queryByRole("link", { name: "Record a play of Azul" })).not.toBeInTheDocument()
+  expect(await page.findByTestIdWith("page-title", "Games")).toBeInTheDocument()
+  await page.findByTestIdWith("game-row", "Azul")
+  expect(page.queryByTestId("play-again")).not.toBeInTheDocument()
+  expect(page.queryByTestId("record-play")).not.toBeInTheDocument()
   expect(asked).toEqual([])
 })

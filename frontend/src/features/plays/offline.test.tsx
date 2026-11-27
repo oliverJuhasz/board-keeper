@@ -1,5 +1,5 @@
 import { onlineManager } from "@tanstack/react-query"
-import { screen, waitFor, within } from "@testing-library/react"
+import { waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { http, HttpResponse } from "msw"
 import { afterEach, beforeEach, expect, test } from "vitest"
@@ -20,6 +20,8 @@ import {
   signedInAs,
 } from "@/test/api"
 import { genericModule } from "@/test/gameModules"
+import { findScoreField, scoreField } from "@/test/playForm"
+import { inside, page } from "@/test/queries"
 import { renderApp } from "@/test/renderApp"
 import { server } from "@/test/server"
 import { keepWaiting, type WaitingPlay } from "./waitingPlays"
@@ -63,8 +65,7 @@ function playsCanBeRecorded() {
 
 /** The start page's list of Plays not sent yet. */
 async function waitingList() {
-  const heading = await screen.findByRole("heading", { name: "Not sent yet" })
-  return heading.closest("section") as HTMLElement
+  return inside(await page.findByTestId("waiting-plays"))
 }
 
 beforeEach(() => {
@@ -78,24 +79,24 @@ afterEach(() => onlineManager.setOnline(true))
 test("without a connection, a play is kept on the device and listed on the start page", async () => {
   playsCanBePreviewed()
   renderApp(`/plays/new?game=${azul.id}`)
-  await screen.findByLabelText("Score of Bence")
+  await findScoreField("Bence")
   onlineManager.setOnline(false)
 
-  expect(
-    await screen.findByText(
-      "You're offline. This play will be kept on this device and sent once there's a connection. Its totals and placings are worked out then.",
-    ),
-  ).toBeInTheDocument()
-  await userEvent.selectOptions(screen.getByLabelText("Add a player"), "Dora")
-  await userEvent.type(screen.getByLabelText("Score of Bence"), "48")
-  await userEvent.type(screen.getByLabelText("Score of Dora"), "61")
-  await userEvent.click(screen.getByRole("button", { name: "Record play" }))
+  expect(await page.findByTestId("kept-on-device")).toHaveTextContent(
+    "You're offline. This play will be kept on this device and sent once there's a connection. Its totals and placings are worked out then.",
+  )
+  await userEvent.selectOptions(page.getByTestId("players-to-add"), "Dora")
+  await userEvent.type(scoreField("Bence"), "48")
+  await userEvent.type(scoreField("Dora"), "61")
+  await userEvent.click(page.getByTestId("save-play"))
 
   const list = await waitingList()
-  expect(within(list).getByText(/^Azul ·/)).toBeInTheDocument()
-  expect(within(list).getByText("Bence, Dora")).toBeInTheDocument()
-  expect(within(list).getByText("Waiting for a connection")).toBeInTheDocument()
-  expect(screen.getAllByText(/You're offline\. Plays you record are kept/)).not.toHaveLength(0)
+  expect(list.getByTestId("waiting-play-game")).toHaveTextContent(/^Azul ·/)
+  expect(list.getByTestId("waiting-play-players")).toHaveTextContent("Bence, Dora")
+  expect(list.getByTestId("waiting-play-status")).toHaveTextContent("Waiting for a connection")
+  expect(page.getByTestId("offline")).toHaveTextContent(
+    /You're offline\. Plays you record are kept/,
+  )
   const kept = JSON.parse(localStorage.getItem("boardkeeper.waitingPlays") ?? "[]") as WaitingPlay[]
   expect(kept).toEqual([
     expect.objectContaining({
@@ -112,12 +113,14 @@ test("a play is kept, too, when the server doesn't answer although the device is
   )
   renderApp(`/plays/new?game=${azul.id}`)
 
-  await userEvent.selectOptions(await screen.findByLabelText("Add a player"), "Dora")
-  await userEvent.type(screen.getByLabelText("Score of Bence"), "48")
-  await userEvent.type(screen.getByLabelText("Score of Dora"), "61")
-  await userEvent.click(screen.getByRole("button", { name: "Record play" }))
+  await userEvent.selectOptions(await page.findByTestId("players-to-add"), "Dora")
+  await userEvent.type(scoreField("Bence"), "48")
+  await userEvent.type(scoreField("Dora"), "61")
+  await userEvent.click(page.getByTestId("save-play"))
 
-  expect(within(await waitingList()).getByText("Waiting for a connection")).toBeInTheDocument()
+  expect((await waitingList()).getByTestId("waiting-play-status")).toHaveTextContent(
+    "Waiting for a connection",
+  )
 })
 
 test("a waiting play is sent, under its id, once Board Keeper can be reached", async () => {
@@ -130,21 +133,21 @@ test("a waiting play is sent, under its id, once Board Keeper can be reached", a
   await waitFor(() =>
     expect(sent).toEqual([expect.objectContaining({ id: waitingPlay().play.id, gameId: azul.id })]),
   )
-  await waitFor(() =>
-    expect(screen.queryByRole("heading", { name: "Not sent yet" })).not.toBeInTheDocument(),
-  )
+  await waitFor(() => expect(page.queryByTestId("waiting-plays")).not.toBeInTheDocument())
   expect(localStorage.getItem("boardkeeper.waitingPlays")).toBe("[]")
 })
 
 test("a waiting play isn't sent while the device is offline", async () => {
   const sent = playsCanBeRecorded()
   renderApp("/")
-  await screen.findByRole("row", { name: /Azul/ })
+  await page.findByTestIdWith("game-row", "Azul")
   onlineManager.setOnline(false)
 
   keepWaiting(waitingPlay())
 
-  expect(within(await waitingList()).getByText("Waiting for a connection")).toBeInTheDocument()
+  expect((await waitingList()).getByTestId("waiting-play-status")).toHaveTextContent(
+    "Waiting for a connection",
+  )
   expect(sent).toEqual([])
 
   playsCanBePreviewed()
@@ -162,16 +165,14 @@ test("a tie only the recorder can decide waits for them, and is decided in the f
   renderApp("/")
 
   const list = await waitingList()
-  expect(
-    await within(list).findByText(
-      "Players are tied for first place, and the scores can't decide who won. Open it to choose.",
-    ),
-  ).toBeInTheDocument()
+  expect(await list.findByTestId("waiting-play-status")).toHaveTextContent(
+    "Players are tied for first place, and the scores can't decide who won. Open it to choose.",
+  )
   expect(sent).toEqual([])
 
-  await userEvent.click(within(list).getByRole("link", { name: "Open" }))
-  await userEvent.click(await screen.findByRole("radio", { name: "Dora" }))
-  await userEvent.click(screen.getByRole("button", { name: "Record play" }))
+  await userEvent.click(list.getByTestId("open-waiting-play"))
+  await userEvent.click(await page.findByTestId("tie-winner-Dora"))
+  await userEvent.click(page.getByTestId("save-play"))
 
   await waitFor(() => expect(sent).toHaveLength(1))
   expect(sent[0]).toMatchObject({
@@ -198,8 +199,8 @@ test("a play the server refuses waits for the recorder, with the reason", async 
   renderApp("/")
 
   const list = await waitingList()
-  expect(await within(list).findByRole("link", { name: "Open" })).toBeInTheDocument()
-  expect(within(list).queryByText("Waiting for a connection")).not.toBeInTheDocument()
+  expect(await list.findByTestId("open-waiting-play")).toBeInTheDocument()
+  expect(list.getByTestId("waiting-play-status")).not.toHaveTextContent("Waiting for a connection")
 })
 
 test("a play that waits because the server couldn't be reached is tried again later, not marked", async () => {
@@ -210,9 +211,9 @@ test("a play that waits because the server couldn't be reached is tried again la
 
   const list = await waitingList()
   await waitFor(() =>
-    expect(within(list).getByText("Waiting for a connection")).toBeInTheDocument(),
+    expect(list.getByTestId("waiting-play-status")).toHaveTextContent("Waiting for a connection"),
   )
-  expect(within(list).queryByRole("link", { name: "Open" })).not.toBeInTheDocument()
+  expect(list.queryByTestId("open-waiting-play")).not.toBeInTheDocument()
 })
 
 test("another account's waiting plays are neither shown nor sent", async () => {
@@ -220,25 +221,23 @@ test("another account's waiting plays are neither shown nor sent", async () => {
   const sent = playsCanBeRecorded()
   renderApp("/")
 
-  await screen.findByRole("row", { name: /Azul/ })
-  expect(screen.queryByRole("heading", { name: "Not sent yet" })).not.toBeInTheDocument()
+  await page.findByTestIdWith("game-row", "Azul")
+  expect(page.queryByTestId("waiting-plays")).not.toBeInTheDocument()
   expect(sent).toEqual([])
 })
 
 test("a waiting play can be thrown away after asking", async () => {
   renderApp("/")
-  await screen.findByRole("row", { name: /Azul/ })
+  await page.findByTestIdWith("game-row", "Azul")
   onlineManager.setOnline(false)
   keepWaiting(waitingPlay())
 
-  await userEvent.click(
-    within(await waitingList()).getByRole("button", { name: /^Remove the play of Azul on/ }),
-  )
-  const dialog = await screen.findByRole("alertdialog", { name: "Remove this play?" })
-  await userEvent.click(within(dialog).getByRole("button", { name: "Remove play" }))
+  const remove = (await waitingList()).getByTestId("remove-waiting-play")
+  expect(remove).toHaveAccessibleName(/^Remove the play of Azul on/)
+  await userEvent.click(remove)
+  expect(await page.findByTestId("confirm-dialog")).toHaveAccessibleName("Remove this play?")
+  await userEvent.click(page.getByTestId("confirm"))
 
-  await waitFor(() =>
-    expect(screen.queryByRole("heading", { name: "Not sent yet" })).not.toBeInTheDocument(),
-  )
+  await waitFor(() => expect(page.queryByTestId("waiting-plays")).not.toBeInTheDocument())
   expect(localStorage.getItem("boardkeeper.waitingPlays")).toBe("[]")
 })

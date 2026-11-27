@@ -37,7 +37,7 @@ export function RadioField<Value extends string>({
   return (
     <FieldSet data-testid={testId}>
       <FieldLegend variant="label">{legend}</FieldLegend>
-      {hint && <FieldDescription>{hint}</FieldDescription>}
+      {hint && <FieldDescription data-testid={testId && `${testId}-hint`}>{hint}</FieldDescription>}
       <RadioGroup value={value} onValueChange={(chosen) => onChange(chosen as Value)}>
         {options.map((option) => (
           <Field key={option.value} orientation="horizontal">

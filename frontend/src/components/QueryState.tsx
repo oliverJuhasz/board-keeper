@@ -30,7 +30,7 @@ export function QueryState({
   // Data the device kept, or loaded earlier, is still shown when loading it again failed.
   if (queries.some((query) => query.isError && query.data === undefined)) {
     return (
-      <Alert variant="destructive">
+      <Alert variant="destructive" data-testid="load-failed">
         <AlertTitle>{failed}</AlertTitle>
         <AlertDescription>{t("common.reloadToRetry")}</AlertDescription>
       </Alert>
@@ -38,7 +38,7 @@ export function QueryState({
   }
   if (queries.some((query) => query.isPending && query.fetchStatus === "paused")) {
     return (
-      <Alert>
+      <Alert data-testid="waiting-for-connection">
         <AlertTitle>{t("common.offline.title")}</AlertTitle>
         <AlertDescription>{t("common.offline.text")}</AlertDescription>
       </Alert>

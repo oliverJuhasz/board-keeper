@@ -1,9 +1,10 @@
-import { screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { http, HttpResponse } from "msw"
 import { beforeEach, expect, test } from "vitest"
 import type { Export, ImportResult, ImportReview } from "@/api/client"
 import { anna, annaPlayer, bence, doraPlayer, problem, signedInAs } from "@/test/api"
+import { optionOf } from "@/test/playForm"
+import { inside, page } from "@/test/queries"
 import { renderApp } from "@/test/renderApp"
 import { server } from "@/test/server"
 
@@ -84,53 +85,71 @@ beforeEach(() => {
 
 async function chooseFile(contents: string, label = "Export file") {
   renderApp("/export-and-import")
-  const input = await screen.findByLabelText(label)
+  const input = await page.findByTestId("import-file")
+  expect(input).toHaveAccessibleName(label)
   await userEvent.upload(input, new File([contents], "board-keeper-2026-03-01.json"))
+}
+
+/** The row of one of the file's Players in the review, found by their name in the file. */
+function fileRow(name: string) {
+  const row = page
+    .getAllByTestId("import-player")
+    .find(
+      (candidate) =>
+        inside(candidate).getByTestId("import-player-choice-label").textContent === name,
+    )
+  if (!row) {
+    throw new Error(`The review has no row for ${name}.`)
+  }
+  return inside(row)
+}
+
+/** Who one of the file's Players is here, as the review suggests it. */
+function choiceOf(name: string) {
+  return fileRow(name).getByTestId("import-player-choice")
 }
 
 test("reviews an export before anything is written: what it adds, and what it can't take", async () => {
   await chooseFile(JSON.stringify(file))
 
-  expect(await screen.findByText("3 plays to add")).toBeVisible()
-  expect(screen.getByText("1 play is here already and stays as it is")).toBeVisible()
-  expect(screen.getByText("2 new players")).toBeVisible()
-  expect(screen.getByText("1 new game: Catan")).toBeVisible()
-  expect(screen.getByText("2 plays can't be imported:")).toBeVisible()
-  expect(screen.getByText(/2 February 2026, Calico: .+/, { selector: "li" })).toBeInTheDocument()
-  expect(
-    screen.getByText(
-      "3 February 2026, Fancy Game: This Board Keeper can't score this game (fancy-game). Update Board Keeper first.",
-    ),
-  ).toBeVisible()
+  const summary = await page.findByTestId("import-summary")
+  expect(summary).toHaveTextContent("3 plays to add")
+  expect(summary).toHaveTextContent("1 play is here already and stays as it is")
+  expect(summary).toHaveTextContent("2 new players")
+  expect(summary).toHaveTextContent("1 new game: Catan")
+  expect(page.getByTestId("refused-plays")).toHaveTextContent("2 plays can't be imported:")
+  expect(page.getAllByTestId("refused-play").map((play) => play.textContent)).toEqual([
+    expect.stringMatching(/^2 February 2026, Calico: .+/),
+    "3 February 2026, Fancy Game: This Board Keeper can't score this game (fancy-game). Update Board Keeper first.",
+  ])
   expect(imported).toHaveLength(0)
 })
 
 test("suggests the player of the same name, and a new player for the others", async () => {
   await chooseFile(JSON.stringify(file))
 
-  expect(await screen.findByRole("combobox", { name: "Dora" })).toHaveValue(doraPlayer.id)
-  expect(screen.getByRole("combobox", { name: "Anna Kovács" })).toHaveValue("new")
-  expect(screen.getByRole("textbox", { name: "Anna Kovács's name here" })).toHaveValue(
-    "Anna Kovács",
-  )
-  expect(screen.getByRole("textbox", { name: "Zsófi's name here" })).toHaveValue("Zsófi")
+  await page.findByTestId("who-is-who")
+  expect(choiceOf("Dora")).toHaveValue(doraPlayer.id)
+  expect(choiceOf("Anna Kovács")).toHaveValue("new")
+  const annasName = fileRow("Anna Kovács").getByTestId("import-player-name")
+  expect(annasName).toHaveAccessibleName("Anna Kovács's name here")
+  expect(annasName).toHaveValue("Anna Kovács")
+  expect(fileRow("Zsófi").getByTestId("import-player-name")).toHaveValue("Zsófi")
   // Dora is taken by the file's Dora, so nobody else is offered her.
-  const anna = screen.getByRole("combobox", { name: "Anna Kovács" })
-  expect(within(anna).queryByRole("option", { name: "Dora" })).not.toBeInTheDocument()
-  expect(within(anna).getByRole("option", { name: "Anna" })).toBeInTheDocument()
+  expect(optionOf(choiceOf("Anna Kovács"), doraPlayer.id)).toBeUndefined()
+  expect(optionOf(choiceOf("Anna Kovács"), annaPlayer.id)).toHaveTextContent("Anna")
 })
 
 test("imports with who is who, and says what it did", async () => {
   await chooseFile(JSON.stringify(file))
-  await userEvent.selectOptions(
-    await screen.findByRole("combobox", { name: "Anna Kovács" }),
-    annaPlayer.id,
-  )
-  await userEvent.click(screen.getByRole("button", { name: "Import" }))
+  await page.findByTestId("who-is-who")
+  await userEvent.selectOptions(choiceOf("Anna Kovács"), annaPlayer.id)
+  await userEvent.click(page.getByTestId("confirm-import"))
 
-  expect(await screen.findByText("Imported 3 plays.")).toBeVisible()
-  expect(screen.getByText("Added 1 new player")).toBeVisible()
-  expect(screen.getByText("Added 1 new game")).toBeVisible()
+  const done = await page.findByTestId("import-done")
+  expect(done).toHaveTextContent("Imported 3 plays.")
+  expect(done).toHaveTextContent("Added 1 new player")
+  expect(done).toHaveTextContent("Added 1 new game")
   expect(imported).toEqual([
     {
       file,
@@ -142,65 +161,70 @@ test("imports with who is who, and says what it did", async () => {
     },
   ])
 
-  await userEvent.click(screen.getByRole("button", { name: "Import another export" }))
-  expect(await screen.findByLabelText("Export file")).toBeVisible()
+  await userEvent.click(page.getByTestId("import-another"))
+  expect(await page.findByTestId("import-file")).toBeVisible()
 })
 
 test("a new player needs a name nobody here has yet", async () => {
   await chooseFile(JSON.stringify(file))
-  const name = await screen.findByRole("textbox", { name: "Zsófi's name here" })
+  await page.findByTestId("who-is-who")
+  const name = fileRow("Zsófi").getByTestId("import-player-name")
   await userEvent.clear(name)
   await userEvent.type(name, "anna")
-  await userEvent.click(screen.getByRole("button", { name: "Import" }))
+  await userEvent.click(page.getByTestId("confirm-import"))
 
-  expect(await screen.findByText("There is already a player with this name.")).toBeVisible()
+  expect(
+    await page.findByTestIdWith("field-error", "There is already a player with this name."),
+  ).toBeVisible()
   expect(imported).toHaveLength(0)
 })
 
 test("cancelling goes back to choosing a file", async () => {
   await chooseFile(JSON.stringify(file))
-  await userEvent.click(await screen.findByRole("button", { name: "Cancel" }))
+  await userEvent.click(await page.findByTestId("cancel-import"))
 
-  expect(await screen.findByLabelText("Export file")).toBeVisible()
-  expect(screen.queryByText("Who is who")).not.toBeInTheDocument()
+  expect(await page.findByTestId("import-file")).toBeVisible()
+  expect(page.queryByTestId("who-is-who")).not.toBeInTheDocument()
 })
 
 test("says so when a file isn't an export", async () => {
   await chooseFile("Not JSON at all")
 
-  expect(await screen.findByText("This file isn't an export of Board Keeper.")).toBeVisible()
+  expect(await page.findByTestId("problem")).toHaveTextContent(
+    "This file isn't an export of Board Keeper.",
+  )
 })
 
 test("says so when the export comes from a newer Board Keeper", async () => {
   server.use(http.post("*/api/import/review", () => problem(422, "imports.formatTooNew")))
   await chooseFile(JSON.stringify({ ...file, format: 2 }))
 
-  expect(
-    await screen.findByText("This export was made by a newer Board Keeper. Update this one first."),
-  ).toBeVisible()
+  expect(await page.findByTestId("problem")).toHaveTextContent(
+    "This export was made by a newer Board Keeper. Update this one first.",
+  )
 })
 
 test("an Admin without the right to import sees only the export", async () => {
   signedInAs({ ...anna, permissions: anna.permissions.filter((p) => p !== "IMPORT") })
   renderApp("/export-and-import")
 
-  expect(await screen.findByRole("button", { name: "Download an export" })).toBeVisible()
-  expect(screen.queryByLabelText("Export file")).not.toBeInTheDocument()
+  expect(await page.findByTestId("download-export")).toBeVisible()
+  expect(page.queryByTestId("import-file")).not.toBeInTheDocument()
 })
 
 test("is not there for anyone else", async () => {
   signedInAs(bence)
   renderApp("/export-and-import")
 
-  expect(await screen.findByRole("heading", { name: "Page not found" })).toBeInTheDocument()
-  expect(screen.queryByLabelText("Export file")).not.toBeInTheDocument()
+  expect(await page.findByTestIdWith("page-title", "Page not found")).toBeInTheDocument()
+  expect(page.queryByTestId("import-file")).not.toBeInTheDocument()
 })
 
 test("is in Hungarian", async () => {
   signedInAs({ ...anna, language: "hu" })
   await chooseFile(JSON.stringify(file), "Exportfájl")
 
-  expect(await screen.findByText("3 hozzáadandó parti")).toBeVisible()
-  expect(screen.getByText("Ki kicsoda")).toBeVisible()
-  expect(screen.getByRole("button", { name: "Importálás" })).toBeVisible()
+  expect(await page.findByTestId("import-summary")).toHaveTextContent("3 hozzáadandó parti")
+  expect(page.getByTestId("who-is-who")).toHaveTextContent("Ki kicsoda")
+  expect(page.getByTestId("confirm-import")).toHaveTextContent("Importálás")
 })

@@ -89,6 +89,7 @@ export function PlaysPage() {
       <fieldset className="space-y-3 rounded-lg border p-3">
         <legend className="sr-only">{t("plays.history.filters")}</legend>
         <CheckboxField
+          testId="filter-mine"
           label={t("plays.history.mine")}
           hint={t("plays.history.mineHint")}
           checked={filters.mine}
@@ -100,6 +101,7 @@ export function PlaysPage() {
               <NativeSelect
                 id={id}
                 className="w-full"
+                data-testid="filter-game"
                 value={filters.game}
                 onChange={(event) => setFilter("game", event.target.value)}
               >
@@ -117,6 +119,7 @@ export function PlaysPage() {
               <NativeSelect
                 id={id}
                 className="w-full"
+                data-testid="filter-player"
                 value={filters.player}
                 onChange={(event) => setFilter("player", event.target.value)}
               >
@@ -134,6 +137,7 @@ export function PlaysPage() {
               <Input
                 id={id}
                 type="date"
+                data-testid="filter-from"
                 value={filters.from}
                 onChange={(event) => setFilter("from", event.target.value)}
               />
@@ -144,6 +148,7 @@ export function PlaysPage() {
               <Input
                 id={id}
                 type="date"
+                data-testid="filter-to"
                 value={filters.to}
                 onChange={(event) => setFilter("to", event.target.value)}
               />
@@ -155,6 +160,7 @@ export function PlaysPage() {
             variant="outline"
             size="sm"
             onClick={() => setSearchParams({}, { replace: true })}
+            data-testid="clear-filters"
           >
             {t("plays.history.clear")}
           </Button>
@@ -168,7 +174,7 @@ export function PlaysPage() {
       >
         {() =>
           plays.length === 0 ? (
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground" data-testid="no-plays">
               {filtered ? t("plays.history.noMatch") : t("plays.history.empty")}
             </p>
           ) : (
@@ -234,7 +240,12 @@ function PlaySummary({ play }: { play: Play }) {
       <div className="flex items-baseline justify-between gap-3">
         <span>
           <span className="font-medium">{gameName(play.game)}</span>
-          {victoryType && <span className="text-sm text-muted-foreground"> · {victoryType}</span>}
+          {victoryType && (
+            <span className="text-sm text-muted-foreground" data-testid="won-by">
+              {" "}
+              · {victoryType}
+            </span>
+          )}
         </span>
         <span className="shrink-0 text-sm text-muted-foreground">{formatDay(play.playedOn)}</span>
       </div>
@@ -262,7 +273,12 @@ function PlaySummary({ play }: { play: Play }) {
               }
             >
               {result.won && (
-                <TrophyIcon role="img" aria-label={t("plays.page.winner")} className="size-3.5" />
+                <TrophyIcon
+                  role="img"
+                  aria-label={t("plays.page.winner")}
+                  className="size-3.5"
+                  data-testid="winner"
+                />
               )}
               {result.player.name}
               {result.total !== undefined && <span>{result.total}</span>}

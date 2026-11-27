@@ -46,7 +46,7 @@ export function AccountRolesDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent>
+      <DialogContent data-testid="account-roles-dialog">
         <FieldGroup>
           <DialogHeader>
             <DialogTitle>
@@ -60,6 +60,7 @@ export function AccountRolesDialog({
               <CheckboxField
                 key={role.id}
                 label={roleName(t, role)}
+                testId={`account-role-${role.id}`}
                 checked={roleIds.includes(role.id)}
                 onChange={(checked) => toggle(role.id, checked)}
               />
@@ -72,6 +73,7 @@ export function AccountRolesDialog({
               onClick={() =>
                 save.mutate({ params: { path: { id: account.id } }, body: { roleIds } })
               }
+              data-testid="save-roles"
             >
               {t("accounts.rolesDialog.submit")}
             </Button>

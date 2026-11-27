@@ -20,6 +20,7 @@ export function RecordingChoices({
     <>
       <RadioField
         legend={t("recording.kind")}
+        testId="recording-kind"
         value={value.cooperative ? "cooperative" : "competitive"}
         onChange={(kind) => onChange({ ...value, cooperative: kind === "cooperative" })}
         options={[
@@ -37,6 +38,7 @@ export function RecordingChoices({
       />
       <RadioField
         legend={t("recording.recording")}
+        testId="recording-mode"
         value={value.recordingMode}
         onChange={(recordingMode) => onChange({ ...value, recordingMode })}
         options={[
@@ -55,6 +57,7 @@ export function RecordingChoices({
       {asksWhoWins(value) && (
         <RadioField
           legend={t("recording.winner")}
+          testId="recording-winner"
           value={value.lowestScoreWins ? "lowest" : "highest"}
           onChange={(winner) => onChange({ ...value, lowestScoreWins: winner === "lowest" })}
           options={[

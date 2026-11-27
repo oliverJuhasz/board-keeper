@@ -20,7 +20,9 @@ export function AboutPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-heading text-xl font-semibold">{t("about.title")}</h1>
+      <h1 className="font-heading text-xl font-semibold" data-testid="page-title">
+        {t("about.title")}
+      </h1>
 
       <QueryState queries={[about]} loading={t("about.loading")} failed={t("about.loadFailed")}>
         {() => about.data && <VersionCard about={about.data} />}
@@ -28,8 +30,12 @@ export function AboutPage() {
 
       {/* <figure> ties a quotation to who said it, also for a screen reader. */}
       <figure className="space-y-1 border-l-2 pl-4">
-        <blockquote className="text-base">{t("about.message")}</blockquote>
-        <figcaption className="text-muted-foreground">— {t("about.signature")}</figcaption>
+        <blockquote className="text-base" data-testid="about-message">
+          {t("about.message")}
+        </blockquote>
+        <figcaption className="text-muted-foreground" data-testid="about-signature">
+          — {t("about.signature")}
+        </figcaption>
       </figure>
 
       {about.data && <SourceCard about={about.data} />}
@@ -39,16 +45,16 @@ export function AboutPage() {
           <CardTitle>{t("about.licence.title")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <p>{t("about.licence.text")}</p>
+          <p data-testid="licence">{t("about.licence.text")}</p>
           <ul className="space-y-1">
             <li>
-              <ExternalLink href="https://www.gnu.org/licenses/agpl-3.0.html">
+              <ExternalLink href="https://www.gnu.org/licenses/agpl-3.0.html" testId="licence-text">
                 {t("about.licence.full")}
               </ExternalLink>
             </li>
             <li>
               {/* Written by the build, from the packages in it (vite-plugins/thirdPartyLicenses.ts). */}
-              <ExternalLink href="/third-party-licenses.txt">
+              <ExternalLink href="/third-party-licenses.txt" testId="library-licences">
                 {t("about.licence.thirdParty")}
               </ExternalLink>
             </li>
@@ -104,29 +110,30 @@ function VersionCard({ about }: { about: About }) {
     device !== undefined && about.commit !== undefined && device !== about.commit
 
   return (
-    <Card>
+    <Card data-testid="version">
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{details}</CardDescription>
+        <CardTitle data-testid="version-title">{title}</CardTitle>
+        <CardDescription data-testid="version-details">{details}</CardDescription>
       </CardHeader>
       {(about.releaseNotes || deviceIsBehind) && (
         <CardContent className="space-y-3">
           {about.releaseNotes && (
             <p>
-              <ExternalLink href={about.releaseNotes}>
+              <ExternalLink href={about.releaseNotes} testId="whats-new">
                 {t("about.version.whatsNew", { version: about.version })}
               </ExternalLink>
             </p>
           )}
           {deviceIsBehind && (
             <div className="flex flex-wrap items-center gap-3">
-              <p role="status" className="min-w-48 flex-1">
+              <p role="status" className="min-w-48 flex-1" data-testid="device-behind">
                 {t("about.version.device", { version: imageTag(device) })}
               </p>
               <Button
                 variant="outline"
                 size="sm"
                 disabled={reloading}
+                data-testid="reload-app"
                 onClick={() => {
                   setReloading(true)
                   void reloadIntoNewestVersion()
@@ -156,13 +163,15 @@ function SourceCard({ about }: { about: About }) {
           {about.repository && (
             <li>
               {/* The address itself is the text, so it is right wherever a copy keeps its code. */}
-              <ExternalLink href={about.repository}>
+              <ExternalLink href={about.repository} testId="repository">
                 {about.repository.replace(/^https?:\/\//, "")}
               </ExternalLink>
             </li>
           )}
           <li>
-            <ExternalLink href={about.sourceCode}>{t("about.source.thisVersion")}</ExternalLink>
+            <ExternalLink href={about.sourceCode} testId="source-of-this-version">
+              {t("about.source.thisVersion")}
+            </ExternalLink>
           </li>
         </ul>
       </CardContent>
@@ -175,10 +184,20 @@ function SourceCard({ about }: { about: About }) {
  * icon says so before the tap. `rel="noreferrer"` keeps the other site from learning Board
  * Keeper's address.
  */
-function ExternalLink({ href, children }: { href: string; children: ReactNode }) {
+function ExternalLink({
+  href,
+  testId,
+  children,
+}: {
+  href: string
+  /** The link's test id, for the tests (ADR 0023). */
+  testId?: string
+  children: ReactNode
+}) {
   return (
     <a
       href={href}
+      data-testid={testId}
       target="_blank"
       rel="noreferrer"
       className="inline-flex items-center gap-1 break-all underline decoration-muted-foreground/40 underline-offset-4 hover:decoration-foreground"

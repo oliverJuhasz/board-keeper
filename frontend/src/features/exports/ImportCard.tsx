@@ -106,7 +106,7 @@ export function ImportCard() {
               </FieldDescription>
             </Field>
             {review.error && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" data-testid="problem">
                 <AlertDescription>{reviewProblem(t, review.error)}</AlertDescription>
               </Alert>
             )}
@@ -140,7 +140,7 @@ function ImportDone({ result, onAgain }: { result: ImportResult; onAgain: () => 
         </AlertDescription>
       </Alert>
       {result.refused.length > 0 && <RefusedPlays refused={result.refused} />}
-      <Button variant="outline" onClick={onAgain}>
+      <Button variant="outline" onClick={onAgain} data-testid="import-another">
         {t("exportAndImport.import.another")}
       </Button>
     </>

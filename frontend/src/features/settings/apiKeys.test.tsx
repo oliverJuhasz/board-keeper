@@ -1,9 +1,10 @@
-import { screen, waitFor, within } from "@testing-library/react"
+import { waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { http, HttpResponse } from "msw"
 import { afterEach, beforeEach, expect, test, vi } from "vitest"
 import type { ApiKey } from "@/api/client"
 import { anna, bence, problem, signedInAs } from "@/test/api"
+import { inside, page } from "@/test/queries"
 import { renderApp } from "@/test/renderApp"
 import { server } from "@/test/server"
 
@@ -47,14 +48,9 @@ function apiKeysAre(apiKeys: ApiKey[]) {
   return state
 }
 
-/** The card, found by its title. A card's title is plain text, not a heading. */
+/** The card of API Keys on the settings page. */
 async function apiKeysCard() {
-  const title = await screen.findByText("API keys", { selector: "[data-slot=card-title]" })
-  const card = title.closest<HTMLElement>("[data-slot=card]")
-  if (!card) {
-    throw new Error("The API keys card is missing")
-  }
-  return card
+  return inside(await page.findByTestId("api-keys"))
 }
 
 beforeEach(() => signedInAs(anna))
@@ -69,9 +65,11 @@ test("lists the API keys with when they were made, last used, and stop working",
   renderApp("/settings")
 
   const card = await apiKeysCard()
-  expect(await within(card).findByText("Backup script")).toBeInTheDocument()
-  expect(within(card).getByText(/last used .* · never expires/)).toBeInTheDocument()
-  expect(within(card).getByText(/not used yet · expired /)).toBeInTheDocument()
+  expect(await card.findByTestIdWith("api-key", "Backup script")).toBeInTheDocument()
+  expect(
+    card.getByTestIdWith("api-key-details", /last used .* · never expires/),
+  ).toBeInTheDocument()
+  expect(card.getByTestIdWith("api-key-details", /not used yet · expired /)).toBeInTheDocument()
 })
 
 test("creates an API key, confirmed with the password, and shows it once", async () => {
@@ -79,36 +77,36 @@ test("creates an API key, confirmed with the password, and shows it once", async
   renderApp("/settings")
 
   const card = await apiKeysCard()
-  expect(await within(card).findByText("You have no API keys yet.")).toBeInTheDocument()
-  await userEvent.click(within(card).getByRole("button", { name: "Create an API key" }))
-  const dialog = await screen.findByRole("dialog")
-  await userEvent.type(within(dialog).getByLabelText("Name"), "Claude")
-  await userEvent.click(within(dialog).getByRole("radio", { name: "Never" }))
-  await userEvent.type(within(dialog).getByLabelText("Your password"), PASSWORD)
-  await userEvent.click(within(dialog).getByRole("button", { name: "Create API key" }))
+  expect(
+    await card.findByTestIdWith("no-api-keys", "You have no API keys yet."),
+  ).toBeInTheDocument()
+  await userEvent.click(page.getByTestId("create-api-key"))
+  const dialog = inside(await page.findByTestId("create-api-key-dialog"))
+  await userEvent.type(dialog.getByTestId("api-key-name"), "Claude")
+  await userEvent.click(dialog.getByTestId("api-key-expiry-NEVER"))
+  await userEvent.type(dialog.getByTestId("api-key-password"), PASSWORD)
+  await userEvent.click(dialog.getByTestId("save-api-key"))
 
-  expect(await within(dialog).findByLabelText("API key")).toHaveValue(SECRET)
-  expect(within(dialog).getByText(/won't be shown again/)).toBeInTheDocument()
+  expect(await dialog.findByTestId("api-key-secret")).toHaveValue(SECRET)
+  expect(dialog.getByTestId("api-key-shown-once")).toHaveTextContent(/won't be shown again/)
   expect(state.sent).toEqual([{ name: "Claude", expiry: "NEVER", password: PASSWORD }])
 
-  await userEvent.click(within(dialog).getByRole("button", { name: "Done" }))
-  await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument())
-  expect(await within(card).findByText("Claude")).toBeInTheDocument()
-  expect(screen.queryByText(SECRET)).not.toBeInTheDocument()
+  await userEvent.click(dialog.getByTestId("api-key-done"))
+  await waitFor(() => expect(page.queryByTestId("create-api-key-dialog")).not.toBeInTheDocument())
+  expect(await page.findByTestIdWith("api-key", "Claude")).toBeInTheDocument()
+  expect(page.queryByTestId("api-key-secret")).not.toBeInTheDocument()
   // The keyboard carries on from the button, not from the top of the page.
-  await waitFor(() =>
-    expect(within(card).getByRole("button", { name: "Create an API key" })).toHaveFocus(),
-  )
+  await waitFor(() => expect(page.getByTestId("create-api-key")).toHaveFocus())
 })
 
 test("cancelling the dialog for a new API key gives focus back to its button", async () => {
   apiKeysAre([])
   renderApp("/settings")
 
-  const create = within(await apiKeysCard()).getByRole("button", { name: "Create an API key" })
+  const create = await page.findByTestId("create-api-key")
   create.focus()
   await userEvent.keyboard("{Enter}")
-  await screen.findByRole("dialog")
+  await page.findByTestId("create-api-key-dialog")
   await userEvent.keyboard("{Escape}")
 
   await waitFor(() => expect(create).toHaveFocus())
@@ -118,16 +116,14 @@ test("expires in 90 days unless another expiry is chosen", async () => {
   const state = apiKeysAre([])
   renderApp("/settings")
 
-  await userEvent.click(
-    within(await apiKeysCard()).getByRole("button", { name: "Create an API key" }),
-  )
-  const dialog = await screen.findByRole("dialog")
-  expect(within(dialog).getByRole("radio", { name: "In 90 days" })).toBeChecked()
-  await userEvent.type(within(dialog).getByLabelText("Name"), "Script")
-  await userEvent.type(within(dialog).getByLabelText("Your password"), PASSWORD)
-  await userEvent.click(within(dialog).getByRole("button", { name: "Create API key" }))
+  await userEvent.click(await page.findByTestId("create-api-key"))
+  const dialog = inside(await page.findByTestId("create-api-key-dialog"))
+  expect(dialog.getByTestId("api-key-expiry-NINETY_DAYS")).toBeChecked()
+  await userEvent.type(dialog.getByTestId("api-key-name"), "Script")
+  await userEvent.type(dialog.getByTestId("api-key-password"), PASSWORD)
+  await userEvent.click(dialog.getByTestId("save-api-key"))
 
-  await within(dialog).findByLabelText("API key")
+  await dialog.findByTestId("api-key-secret")
   expect(state.sent).toEqual([{ name: "Script", expiry: "NINETY_DAYS", password: PASSWORD }])
 })
 
@@ -135,13 +131,11 @@ test("needs a name and the password before sending anything", async () => {
   const state = apiKeysAre([])
   renderApp("/settings")
 
-  await userEvent.click(
-    within(await apiKeysCard()).getByRole("button", { name: "Create an API key" }),
-  )
-  const dialog = await screen.findByRole("dialog")
-  await userEvent.click(within(dialog).getByRole("button", { name: "Create API key" }))
+  await userEvent.click(await page.findByTestId("create-api-key"))
+  const dialog = inside(await page.findByTestId("create-api-key-dialog"))
+  await userEvent.click(dialog.getByTestId("save-api-key"))
 
-  expect(await within(dialog).findAllByText("Fill this in.")).toHaveLength(2)
+  expect(await dialog.findAllByTestIdWith("field-error", "Fill this in.")).toHaveLength(2)
   expect(state.sent).toEqual([])
 })
 
@@ -152,15 +146,15 @@ test("says so when the password is wrong", async () => {
   )
   renderApp("/settings")
 
-  await userEvent.click(
-    within(await apiKeysCard()).getByRole("button", { name: "Create an API key" }),
-  )
-  const dialog = await screen.findByRole("dialog")
-  await userEvent.type(within(dialog).getByLabelText("Name"), "Script")
-  await userEvent.type(within(dialog).getByLabelText("Your password"), "not my password")
-  await userEvent.click(within(dialog).getByRole("button", { name: "Create API key" }))
+  await userEvent.click(await page.findByTestId("create-api-key"))
+  const dialog = inside(await page.findByTestId("create-api-key-dialog"))
+  await userEvent.type(dialog.getByTestId("api-key-name"), "Script")
+  await userEvent.type(dialog.getByTestId("api-key-password"), "not my password")
+  await userEvent.click(dialog.getByTestId("save-api-key"))
 
-  expect(await within(dialog).findByText("The current password is wrong.")).toBeInTheDocument()
+  expect(
+    await dialog.findByTestIdWith("problem", "The current password is wrong."),
+  ).toBeInTheDocument()
 })
 
 test("confirms with a passkey instead of the password", async () => {
@@ -186,16 +180,12 @@ test("confirms with a passkey instead of the password", async () => {
   const state = apiKeysAre([])
   renderApp("/settings")
 
-  await userEvent.click(
-    within(await apiKeysCard()).getByRole("button", { name: "Create an API key" }),
-  )
-  const dialog = await screen.findByRole("dialog")
-  await userEvent.type(within(dialog).getByLabelText("Name"), "Agent")
-  await userEvent.click(
-    await within(dialog).findByRole("button", { name: "Confirm with a passkey instead" }),
-  )
+  await userEvent.click(await page.findByTestId("create-api-key"))
+  const dialog = inside(await page.findByTestId("create-api-key-dialog"))
+  await userEvent.type(dialog.getByTestId("api-key-name"), "Agent")
+  await userEvent.click(await dialog.findByTestId("confirm-with-passkey"))
 
-  expect(await within(dialog).findByLabelText("API key")).toHaveValue(SECRET)
+  expect(await dialog.findByTestId("api-key-secret")).toHaveValue(SECRET)
   expect(phone.get).toHaveBeenCalledWith(expect.objectContaining({ publicKey: options }))
   expect(state.sent).toEqual([{ name: "Agent", expiry: "NINETY_DAYS", passkey: assertion }])
 })
@@ -205,12 +195,15 @@ test("deletes an API key after asking", async () => {
   renderApp("/settings")
 
   const card = await apiKeysCard()
-  await userEvent.click(await within(card).findByRole("button", { name: "Delete Backup script" }))
-  const dialog = await screen.findByRole("alertdialog")
-  expect(within(dialog).getByText(/stop working at once/)).toBeInTheDocument()
-  await userEvent.click(within(dialog).getByRole("button", { name: "Delete API key" }))
+  const remove = await card.findByTestId("delete-api-key")
+  expect(remove).toHaveAccessibleName("Delete Backup script")
+  await userEvent.click(remove)
+  expect(await page.findByTestId("confirm-dialog")).toHaveTextContent(/stop working at once/)
+  await userEvent.click(page.getByTestId("confirm"))
 
-  expect(await within(card).findByText("You have no API keys yet.")).toBeInTheDocument()
+  expect(
+    await card.findByTestIdWith("no-api-keys", "You have no API keys yet."),
+  ).toBeInTheDocument()
   expect(state.apiKeys).toEqual([])
 })
 
@@ -219,12 +212,10 @@ test("isn't shown to an account that may not use API keys and has none", async (
   apiKeysAre([])
   renderApp("/settings")
 
-  expect(
-    await screen.findByText("Change password", { selector: "[data-slot=card-title]" }),
-  ).toBeInTheDocument()
+  expect(await page.findByTestId("current-password")).toBeInTheDocument()
   // Give the list a moment to arrive.
   await new Promise((resolve) => setTimeout(resolve, 50))
-  expect(screen.queryByText("API keys")).not.toBeInTheDocument()
+  expect(page.queryByTestId("api-keys")).not.toBeInTheDocument()
 })
 
 test("without the permission, shows why the API keys don't work, and lets them be deleted", async () => {
@@ -233,7 +224,7 @@ test("without the permission, shows why the API keys don't work, and lets them b
   renderApp("/settings")
 
   const card = await apiKeysCard()
-  expect(within(card).getByText(/may no longer use API keys/)).toBeInTheDocument()
-  expect(within(card).getByRole("button", { name: "Delete Backup script" })).toBeInTheDocument()
-  expect(within(card).queryByRole("button", { name: "Create an API key" })).not.toBeInTheDocument()
+  expect(card.getByTestId("api-keys-not-allowed")).toHaveTextContent(/may no longer use API keys/)
+  expect(card.getByTestId("delete-api-key")).toBeInTheDocument()
+  expect(page.queryByTestId("create-api-key")).not.toBeInTheDocument()
 })

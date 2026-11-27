@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from "@testing-library/react"
+import { waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { http, HttpResponse } from "msw"
 import { expect, test } from "vitest"
@@ -13,6 +13,7 @@ import {
   problem,
   signedInAs,
 } from "@/test/api"
+import { inside, page } from "@/test/queries"
 import { renderApp } from "@/test/renderApp"
 import { server } from "@/test/server"
 
@@ -20,11 +21,13 @@ const everyone = [annaPlayer, bencePlayer, doraPlayer]
 const withAccounts = [annaPlayer.id, bencePlayer.id]
 
 function rowOf(name: string) {
-  return screen.getByRole("row", { name: new RegExp(name) })
+  return inside(page.getByTestIdWith("player-row", name))
 }
 
 async function openActionsFor(name: string) {
-  await userEvent.click(await screen.findByRole("button", { name: `Actions for ${name}` }))
+  await userEvent.click(
+    await inside(await page.findByTestIdWith("player-row", name)).findByTestId("player-actions"),
+  )
 }
 
 test("lists the players, and shows who has an account and who you are", async () => {
@@ -33,11 +36,11 @@ test("lists the players, and shows who has an account and who you are", async ()
 
   renderApp("/players")
 
-  await screen.findByRole("row", { name: /Dora/ })
-  expect(within(rowOf("Anna")).getByText("You")).toBeInTheDocument()
-  expect(within(rowOf("Anna")).getByText("Has an account")).toBeInTheDocument()
-  expect(within(rowOf("Bence")).getByText("Has an account")).toBeInTheDocument()
-  expect(within(rowOf("Dora")).queryByText("Has an account")).not.toBeInTheDocument()
+  await page.findByTestIdWith("player-row", "Dora")
+  expect(rowOf("Anna").getByTestId("you")).toHaveTextContent("You")
+  expect(rowOf("Anna").getByTestId("has-account")).toHaveTextContent("Has an account")
+  expect(rowOf("Bence").getByTestId("has-account")).toBeInTheDocument()
+  expect(rowOf("Dora").queryByTestId("has-account")).not.toBeInTheDocument()
 })
 
 test("a member can add players but sees no other actions", async () => {
@@ -46,9 +49,9 @@ test("a member can add players but sees no other actions", async () => {
 
   renderApp("/players")
 
-  await screen.findByRole("row", { name: /Dora/ })
-  expect(screen.getByRole("button", { name: "Add player" })).toBeInTheDocument()
-  expect(screen.queryByRole("button", { name: /Actions for/ })).not.toBeInTheDocument()
+  await page.findByTestIdWith("player-row", "Dora")
+  expect(page.getByTestId("add-player")).toBeInTheDocument()
+  expect(page.queryByTestId("player-actions")).not.toBeInTheDocument()
 })
 
 test("adds a player", async () => {
@@ -64,16 +67,14 @@ test("adds a player", async () => {
   )
   renderApp("/players")
 
-  await userEvent.click(await screen.findByRole("button", { name: "Add player" }))
-  await userEvent.type(screen.getByLabelText("Name"), "Zsofi")
-  await userEvent.click(
-    within(screen.getByRole("dialog")).getByRole("button", { name: "Add player" }),
-  )
+  await userEvent.click(await page.findByTestId("add-player"))
+  await userEvent.type(page.getByTestId("player-name"), "Zsofi")
+  await userEvent.click(page.getByTestId("save-player"))
 
-  expect(await screen.findByRole("row", { name: /Zsofi/ })).toBeInTheDocument()
-  expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+  expect(await page.findByTestIdWith("player-row", "Zsofi")).toBeInTheDocument()
+  expect(page.queryByTestId("player-name-dialog")).not.toBeInTheDocument()
   // The keyboard carries on from the button, not from the top of the page.
-  await waitFor(() => expect(screen.getByRole("button", { name: "Add player" })).toHaveFocus())
+  await waitFor(() => expect(page.getByTestId("add-player")).toHaveFocus())
 })
 
 test("cancelling the dialog for a new player gives focus back to its button", async () => {
@@ -81,10 +82,10 @@ test("cancelling the dialog for a new player gives focus back to its button", as
   playersAre(everyone, withAccounts)
   renderApp("/players")
 
-  const add = await screen.findByRole("button", { name: "Add player" })
+  const add = await page.findByTestId("add-player")
   add.focus()
   await userEvent.keyboard("{Enter}")
-  await screen.findByRole("dialog", { name: "Add a player" })
+  expect(await page.findByTestId("player-name-dialog")).toHaveAccessibleName("Add a player")
   await userEvent.keyboard("{Escape}")
 
   await waitFor(() => expect(add).toHaveFocus())
@@ -96,14 +97,14 @@ test("says so when a new player's name is taken, and keeps the dialog open", asy
   server.use(http.post("*/api/players", () => problem(409, "players.nameTaken")))
   renderApp("/players")
 
-  await userEvent.click(await screen.findByRole("button", { name: "Add player" }))
-  await userEvent.type(screen.getByLabelText("Name"), "dora")
-  await userEvent.click(
-    within(screen.getByRole("dialog")).getByRole("button", { name: "Add player" }),
-  )
+  await userEvent.click(await page.findByTestId("add-player"))
+  await userEvent.type(page.getByTestId("player-name"), "dora")
+  await userEvent.click(page.getByTestId("save-player"))
 
-  expect(await screen.findByText("There is already a player with this name.")).toBeInTheDocument()
-  expect(screen.getByRole("dialog")).toBeInTheDocument()
+  expect(await page.findByTestId("problem")).toHaveTextContent(
+    "There is already a player with this name.",
+  )
+  expect(page.getByTestId("player-name-dialog")).toBeInTheDocument()
 })
 
 test("renames a player", async () => {
@@ -121,14 +122,14 @@ test("renames a player", async () => {
   renderApp("/players")
 
   await openActionsFor("Dora")
-  await userEvent.click(await screen.findByRole("menuitem", { name: "Rename" }))
-  const nameField = await screen.findByLabelText("Name")
+  await userEvent.click(await page.findByTestId("rename-player"))
+  const nameField = await page.findByTestId("player-name")
   expect(nameField).toHaveValue("Dora")
   await userEvent.clear(nameField)
   await userEvent.type(nameField, "Dóra")
-  await userEvent.click(screen.getByRole("button", { name: "Rename" }))
+  await userEvent.click(page.getByTestId("save-player"))
 
-  expect(await screen.findByRole("row", { name: /Dóra/ })).toBeInTheDocument()
+  expect(await page.findByTestIdWith("player-row", "Dóra")).toBeInTheDocument()
 })
 
 test("removes a player only after asking", async () => {
@@ -143,12 +144,12 @@ test("removes a player only after asking", async () => {
   renderApp("/players")
 
   await openActionsFor("Dora")
-  await userEvent.click(await screen.findByRole("menuitem", { name: "Remove" }))
-  expect(await screen.findByRole("alertdialog", { name: "Remove Dora?" })).toBeInTheDocument()
+  await userEvent.click(await page.findByTestId("remove-player"))
+  expect(await page.findByTestId("confirm-dialog")).toHaveAccessibleName("Remove Dora?")
   expect(state.players).toHaveLength(3)
-  await userEvent.click(screen.getByRole("button", { name: "Remove player" }))
+  await userEvent.click(page.getByTestId("confirm"))
 
-  await expect.poll(() => screen.queryByRole("row", { name: /Dora/ })).not.toBeInTheDocument()
+  await expect.poll(() => page.queryByTestIdWith("player-row", "Dora")).not.toBeInTheDocument()
 })
 
 test("a player with an account can be renamed, but not invited or removed", async () => {
@@ -158,9 +159,9 @@ test("a player with an account can be renamed, but not invited or removed", asyn
 
   await openActionsFor("Bence")
 
-  expect(await screen.findByRole("menuitem", { name: "Rename" })).toBeInTheDocument()
-  expect(screen.queryByRole("menuitem", { name: "Invite" })).not.toBeInTheDocument()
-  expect(screen.queryByRole("menuitem", { name: "Remove" })).not.toBeInTheDocument()
+  expect(await page.findByTestId("rename-player")).toBeInTheDocument()
+  expect(page.queryByTestId("invite")).not.toBeInTheDocument()
+  expect(page.queryByTestId("remove-player")).not.toBeInTheDocument()
 })
 
 test("invites a player and shows the link to send", async () => {
@@ -184,27 +185,29 @@ test("invites a player and shows the link to send", async () => {
   const user = userEvent.setup()
   renderApp("/players")
 
-  await user.click(await screen.findByRole("button", { name: "Actions for Dora" }))
-  await user.click(await screen.findByRole("menuitem", { name: "Invite" }))
+  await user.click(
+    await inside(await page.findByTestIdWith("player-row", "Dora")).findByTestId("player-actions"),
+  )
+  await user.click(await page.findByTestId("invite"))
   // An Admin may choose the Role; Member is the suggestion.
-  const role = await screen.findByLabelText("Role")
+  const role = await page.findByTestId("invite-role")
   await expect
     .poll(() => (role as HTMLSelectElement).selectedOptions[0]?.textContent)
     .toBe("Member")
   await user.selectOptions(role, "Admin")
-  await user.click(screen.getByRole("button", { name: "Create invite link" }))
+  await user.click(page.getByTestId("create-link"))
 
   const link = `${window.location.origin}/register/the-secret-token`
-  expect(await screen.findByLabelText("Invite link")).toHaveValue(link)
-  expect(screen.getByText(/valid until 17 November 2026/)).toBeInTheDocument()
+  expect(await page.findByTestId("link")).toHaveValue(link)
+  expect(page.getByTestId("link-description")).toHaveTextContent(/valid until 17 November 2026/)
   expect(sent).toEqual({ playerId: doraPlayer.id, roleId: adminRole.id })
 
-  await user.click(screen.getByRole("button", { name: "Copy link" }))
+  await user.click(page.getByTestId("copy-link"))
   expect(await navigator.clipboard.readText()).toBe(link)
-  expect(screen.getByRole("button", { name: "Copied" })).toBeInTheDocument()
+  expect(page.getByTestId("copy-link")).toHaveTextContent("Copied")
 
-  await user.click(screen.getByRole("button", { name: "Done" }))
-  expect(await within(rowOf("Dora")).findByText("Invited")).toBeInTheDocument()
+  await user.click(page.getByTestId("link-done"))
+  expect(await rowOf("Dora").findByTestId("invited")).toHaveTextContent("Invited")
 })
 
 test("cancels an invite", async () => {
@@ -225,14 +228,14 @@ test("cancels an invite", async () => {
   )
   renderApp("/players")
   expect(
-    await within(await screen.findByRole("row", { name: /Dora/ })).findByText("Invited"),
-  ).toBeInTheDocument()
+    await inside(await page.findByTestIdWith("player-row", "Dora")).findByTestId("invited"),
+  ).toHaveTextContent("Invited")
 
   await openActionsFor("Dora")
-  expect(await screen.findByRole("menuitem", { name: "Invite again" })).toBeInTheDocument()
-  await userEvent.click(screen.getByRole("menuitem", { name: "Cancel invite" }))
+  expect(await page.findByTestId("invite")).toHaveTextContent("Invite again")
+  await userEvent.click(page.getByTestId("cancel-invite"))
 
-  await expect.poll(() => within(rowOf("Dora")).queryByText("Invited")).not.toBeInTheDocument()
+  await expect.poll(() => rowOf("Dora").queryByTestId("invited")).not.toBeInTheDocument()
 })
 
 test("creates a password reset link for a player with an account", async () => {
@@ -248,12 +251,12 @@ test("creates a password reset link for a player with an account", async () => {
   renderApp("/players")
 
   await openActionsFor("Bence")
-  await userEvent.click(await screen.findByRole("menuitem", { name: "Create password reset link" }))
-  await userEvent.click(await screen.findByRole("button", { name: "Create reset link" }))
+  await userEvent.click(await page.findByTestId("create-reset-link"))
+  await userEvent.click(await page.findByTestId("create-link"))
 
-  expect(await screen.findByLabelText("Reset link")).toHaveValue(
+  expect(await page.findByTestId("link")).toHaveValue(
     `${window.location.origin}/reset-password/the-reset-token`,
   )
-  expect(screen.getByText(/valid until 11 November 2026/)).toBeInTheDocument()
+  expect(page.getByTestId("link-description")).toHaveTextContent(/valid until 11 November 2026/)
   expect(sent).toEqual({ playerId: bencePlayer.id })
 })

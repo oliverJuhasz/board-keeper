@@ -58,7 +58,9 @@ export function AccountMenu() {
             <div className="text-foreground" data-testid="signed-in-player">
               {account.playerName}
             </div>
-            <div>{t("account.signedInAs", { username: account.username })}</div>
+            <div data-testid="signed-in-as">
+              {t("account.signedInAs", { username: account.username })}
+            </div>
           </DropdownMenuLabel>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
@@ -67,12 +69,14 @@ export function AccountMenu() {
           {t("account.settings")}
         </DropdownMenuItem>
         {can("MANAGE_ACCOUNTS") && (
-          <DropdownMenuItem render={<Link to="/accounts" />}>
+          <DropdownMenuItem render={<Link to="/accounts" />} data-testid="accounts">
             {t("account.accounts")}
           </DropdownMenuItem>
         )}
         {can("MANAGE_ROLES") && (
-          <DropdownMenuItem render={<Link to="/roles" />}>{t("account.roles")}</DropdownMenuItem>
+          <DropdownMenuItem render={<Link to="/roles" />} data-testid="roles">
+            {t("account.roles")}
+          </DropdownMenuItem>
         )}
         {(can("EXPORT") || can("IMPORT")) && (
           <DropdownMenuItem
@@ -84,7 +88,9 @@ export function AccountMenu() {
         )}
         {/* The version that is running and where its source code is: Board Keeper's licence, the
             AGPL, asks that everyone using it can get its source (ADR 0016). */}
-        <DropdownMenuItem render={<Link to="/about" />}>{t("account.about")}</DropdownMenuItem>
+        <DropdownMenuItem render={<Link to="/about" />} data-testid="about">
+          {t("account.about")}
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => signOut.mutate({})} data-testid="sign-out">
           {t("account.signOut")}

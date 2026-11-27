@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from "@testing-library/react"
+import { waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { http, HttpResponse } from "msw"
 import { expect, test } from "vitest"
@@ -22,6 +22,8 @@ import {
   problem,
   signedInAs,
 } from "@/test/api"
+import { findScoreField, playerRow, queryScoreField, scoreField } from "@/test/playForm"
+import { inside, page } from "@/test/queries"
 import { renderApp } from "@/test/renderApp"
 import { server } from "@/test/server"
 
@@ -39,11 +41,11 @@ function playsCanBeRecorded(recorded: Play = azulPlay) {
 }
 
 async function addPlayer(name: string) {
-  await userEvent.selectOptions(await screen.findByLabelText("Add a player"), name)
+  await userEvent.selectOptions(await page.findByTestId("players-to-add"), name)
 }
 
 async function submit() {
-  await userEvent.click(screen.getByRole("button", { name: "Record play" }))
+  await userEvent.click(page.getByTestId("save-play"))
 }
 
 test("a game's row leads to recording a play of it", async () => {
@@ -52,13 +54,15 @@ test("a game's row leads to recording a play of it", async () => {
   playCanBeEntered()
   renderApp("/")
 
-  await userEvent.click(await screen.findByRole("link", { name: "Record a play of Azul" }))
+  await userEvent.click(await page.findByTestIdWith("record-play", "Azul"))
 
   // The start page has the same heading, and stays until the form's code has loaded: wait for
   // what only the form says.
-  expect(await screen.findByText("Who played Azul, and how it ended.")).toBeInTheDocument()
-  expect(screen.getByRole("heading", { name: "Record a play" })).toBeInTheDocument()
-  expect(screen.getByText("Points, highest wins")).toBeInTheDocument()
+  expect(
+    await page.findByTestIdWith("page-description", "Who played Azul, and how it ended."),
+  ).toBeInTheDocument()
+  expect(page.getByTestIdWith("page-title", "Record a play")).toBeInTheDocument()
+  expect(page.getByTestId("recorded-as")).toHaveTextContent("Points, highest wins")
 })
 
 test("someone who may not record plays is not offered to", async () => {
@@ -66,8 +70,8 @@ test("someone who may not record plays is not offered to", async () => {
   gamesAre([azul])
   renderApp("/")
 
-  await screen.findByRole("row", { name: /Azul/ })
-  expect(screen.queryByRole("link", { name: "Record a play of Azul" })).not.toBeInTheDocument()
+  await page.findByTestIdWith("game-row", "Azul")
+  expect(page.queryByTestIdWith("record-play", "Azul")).not.toBeInTheDocument()
 })
 
 test("records a competitive play in points and then shows it", async () => {
@@ -79,16 +83,16 @@ test("records a competitive play in points and then shows it", async () => {
   renderApp(`/plays/new?game=${azul.id}`)
 
   // Whoever records is put in as the first player.
-  expect(await screen.findByLabelText("Score of Bence")).toBeInTheDocument()
+  expect(await findScoreField("Bence")).toBeInTheDocument()
   await addPlayer("Dora")
-  await userEvent.type(screen.getByLabelText("Score of Bence"), "48")
-  await userEvent.type(screen.getByLabelText("Score of Dora"), "61")
-  await userEvent.type(screen.getByLabelText("Location"), " At Dora's ")
-  await userEvent.type(screen.getByLabelText("Notes"), "Dora's first play.")
+  await userEvent.type(scoreField("Bence"), "48")
+  await userEvent.type(scoreField("Dora"), "61")
+  await userEvent.type(page.getByTestId("location"), " At Dora's ")
+  await userEvent.type(page.getByTestId("notes"), "Dora's first play.")
   await submit()
 
   // The page of the recorded play, as the server answered it.
-  expect(await screen.findByRole("heading", { name: "Azul" })).toBeInTheDocument()
+  expect(await page.findByTestIdWith("page-title", "Azul")).toBeInTheDocument()
   expect(sent).toEqual([
     {
       id: aNewPlayId,
@@ -114,14 +118,14 @@ test("a player can be taken out again, and is then on offer again", async () => 
 
   await addPlayer("Anna")
   const offered = () =>
-    within(screen.getByLabelText("Add a player"))
-      .getAllByRole("option")
-      .map((option) => option.textContent)
+    Array.from((page.getByTestId("players-to-add") as HTMLSelectElement).options).map(
+      (option) => option.textContent,
+    )
   expect(offered()).toEqual(["Choose a player…", "Dora", "Add a new player…"])
 
-  await userEvent.click(screen.getByRole("button", { name: "Remove Anna" }))
+  await userEvent.click(playerRow("Anna").getByTestId("remove-player"))
 
-  expect(screen.queryByLabelText("Score of Anna")).not.toBeInTheDocument()
+  expect(queryScoreField("Anna")).not.toBeInTheDocument()
   expect(offered()).toEqual(["Choose a player…", "Anna", "Dora", "Add a new player…"])
 })
 
@@ -136,21 +140,21 @@ test("someone who has never played can be added without leaving the form", async
   renderApp(`/plays/new?game=${azul.id}`)
 
   await addPlayer("Add a new player…")
-  const dialog = await screen.findByRole("dialog", { name: "Add a player" })
-  await userEvent.type(within(dialog).getByLabelText("Name"), "Eszter")
-  await userEvent.click(within(dialog).getByRole("button", { name: "Add player" }))
+  expect(await page.findByTestId("player-name-dialog")).toHaveAccessibleName("Add a player")
+  await userEvent.type(page.getByTestId("player-name"), "Eszter")
+  await userEvent.click(page.getByTestId("save-player"))
 
   // She is in the play at once, and adding her did not submit the play's own form.
-  expect(await screen.findByLabelText("Score of Eszter")).toBeInTheDocument()
-  expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
-  expect(screen.queryByText("Enter a score.")).not.toBeInTheDocument()
+  expect(await findScoreField("Eszter")).toBeInTheDocument()
+  expect(page.queryByTestId("player-name-dialog")).not.toBeInTheDocument()
+  expect(page.queryByTestIdWith("field-error", "Enter a score.")).not.toBeInTheDocument()
   expect(sent).toEqual([])
 
-  await userEvent.type(screen.getByLabelText("Score of Bence"), "48")
-  await userEvent.type(screen.getByLabelText("Score of Eszter"), "61")
+  await userEvent.type(scoreField("Bence"), "48")
+  await userEvent.type(scoreField("Eszter"), "61")
   await submit()
 
-  await screen.findByRole("heading", { name: "Azul" })
+  await page.findByTestIdWith("page-title", "Azul")
   expect(sent[0].players).toEqual([
     { playerId: bencePlayer.id, scores: { total: 48 }, winner: false, setup: {} },
     { playerId: eszter.id, scores: { total: 61 }, winner: false, setup: {} },
@@ -166,19 +170,19 @@ test("after adding a player, the list is ready for the next one", async () => {
   renderApp(`/plays/new?game=${azul.id}`)
 
   await addPlayer("Anna")
-  expect(screen.getByLabelText("Score of Anna")).toBeInTheDocument()
-  expect(screen.getByLabelText("Add a player")).toHaveFocus()
+  expect(scoreField("Anna")).toBeInTheDocument()
+  expect(page.getByTestId("players-to-add")).toHaveFocus()
 
   // Also once the dialog for someone new has closed, whether or not they were added.
   await addPlayer("Add a new player…")
-  await screen.findByRole("dialog", { name: "Add a player" })
+  await page.findByTestId("player-name-dialog")
   await userEvent.keyboard("{Escape}")
-  await waitFor(() => expect(screen.getByLabelText("Add a player")).toHaveFocus())
+  await waitFor(() => expect(page.getByTestId("players-to-add")).toHaveFocus())
   await addPlayer("Add a new player…")
-  const dialog = await screen.findByRole("dialog", { name: "Add a player" })
-  await userEvent.type(within(dialog).getByLabelText("Name"), "Eszter{Enter}")
-  expect(await screen.findByLabelText("Score of Eszter")).toBeInTheDocument()
-  await waitFor(() => expect(screen.getByLabelText("Add a player")).toHaveFocus())
+  await page.findByTestId("player-name-dialog")
+  await userEvent.type(page.getByTestId("player-name"), "Eszter{Enter}")
+  expect(await findScoreField("Eszter")).toBeInTheDocument()
+  await waitFor(() => expect(page.getByTestId("players-to-add")).toHaveFocus())
 })
 
 test("once nobody is left to add, focus moves on to the last one's score", async () => {
@@ -188,9 +192,9 @@ test("once nobody is left to add, focus moves on to the last one's score", async
   renderApp(`/plays/new?game=${azul.id}`)
 
   await addPlayer("Anna")
-  expect(screen.getByLabelText("Add a player")).toHaveFocus()
+  expect(page.getByTestId("players-to-add")).toHaveFocus()
   await addPlayer("Dora")
-  expect(screen.getByLabelText("Score of Dora")).toHaveFocus()
+  expect(scoreField("Dora")).toHaveFocus()
 })
 
 test("someone who may not create players is not offered to add one", async () => {
@@ -199,13 +203,15 @@ test("someone who may not create players is not offered to add one", async () =>
   playCanBeEntered()
   renderApp(`/plays/new?game=${azul.id}`)
 
-  const list = await screen.findByLabelText("Add a player")
-  expect(within(list).queryByRole("option", { name: "Add a new player…" })).not.toBeInTheDocument()
+  const list = await page.findByTestId("players-to-add")
+  expect(inside(list).queryByTestId("new-player-option")).not.toBeInTheDocument()
   // With everyone in the play, there is nothing left to offer.
   await addPlayer("Anna")
   await addPlayer("Dora")
-  expect(screen.queryByLabelText("Add a player")).not.toBeInTheDocument()
-  expect(screen.getByText("Every player is in this play already.")).toBeInTheDocument()
+  expect(page.queryByTestId("players-to-add")).not.toBeInTheDocument()
+  expect(
+    page.getByTestIdWith("everyone-added", "Every player is in this play already."),
+  ).toBeInTheDocument()
 })
 
 test("asks who won a tie for first place, and takes no answer for granted", async () => {
@@ -218,31 +224,33 @@ test("asks who won a tie for first place, and takes no answer for granted", asyn
 
   await addPlayer("Anna")
   await addPlayer("Dora")
-  await userEvent.type(await screen.findByLabelText("Score of Bence"), "70")
-  await userEvent.type(screen.getByLabelText("Score of Anna"), "70")
-  expect(screen.queryByText("Tie for first place")).not.toBeInTheDocument()
-  await userEvent.type(screen.getByLabelText("Score of Dora"), "12")
+  await userEvent.type(await findScoreField("Bence"), "70")
+  await userEvent.type(scoreField("Anna"), "70")
+  expect(page.queryByTestIdWith("tie-winner", "Tie for first place")).not.toBeInTheDocument()
+  await userEvent.type(scoreField("Dora"), "12")
 
   // The server found the tie. The question comes with the game module's own explanation.
-  expect(await screen.findByText("Tie for first place")).toBeInTheDocument()
-  expect(screen.getByText("Pick who won the tie, or leave the win shared.")).toBeInTheDocument()
+  expect(await page.findByTestIdWith("tie-winner", "Tie for first place")).toBeInTheDocument()
+  expect(
+    page.getByTestIdWith("tie-explanation", "Pick who won the tie, or leave the win shared."),
+  ).toBeInTheDocument()
   // Only the two who are tied can be given the win.
-  expect(screen.queryByRole("radio", { name: "Dora" })).not.toBeInTheDocument()
-  expect(screen.getByRole("radio", { name: "Shared win" })).not.toBeChecked()
+  expect(page.queryByTestId("tie-winner-Dora")).not.toBeInTheDocument()
+  expect(page.getByTestId("tie-winner-shared")).not.toBeChecked()
 
   await submit()
   expect(
-    await screen.findByText("Say who won the tie, or that the win is shared."),
+    await page.findByTestIdWith("field-error", "Say who won the tie, or that the win is shared."),
   ).toBeInTheDocument()
   expect(sent).toEqual([])
 
-  await userEvent.click(screen.getByRole("radio", { name: "Anna" }))
+  await userEvent.click(page.getByTestId("tie-winner-Anna"))
   expect(
-    screen.queryByText("Say who won the tie, or that the win is shared."),
+    page.queryByTestIdWith("field-error", "Say who won the tie, or that the win is shared."),
   ).not.toBeInTheDocument()
   await submit()
 
-  await screen.findByRole("heading", { name: "Azul" })
+  await page.findByTestIdWith("page-title", "Azul")
   expect(sent[0].players.map((player) => player.winner)).toEqual([false, true, false])
 })
 
@@ -255,12 +263,12 @@ test("a shared win is an answer to a tie, and marks nobody", async () => {
   renderApp(`/plays/new?game=${azul.id}`)
 
   await addPlayer("Anna")
-  await userEvent.type(await screen.findByLabelText("Score of Bence"), "70")
-  await userEvent.type(screen.getByLabelText("Score of Anna"), "70")
-  await userEvent.click(await screen.findByRole("radio", { name: "Shared win" }))
+  await userEvent.type(await findScoreField("Bence"), "70")
+  await userEvent.type(scoreField("Anna"), "70")
+  await userEvent.click(await page.findByTestId("tie-winner-shared"))
   await submit()
 
-  await screen.findByRole("heading", { name: "Azul" })
+  await page.findByTestIdWith("page-title", "Azul")
   expect(sent[0].players.map((player) => player.winner)).toEqual([false, false])
 })
 
@@ -273,14 +281,14 @@ test("asks about a tie even when the play is submitted before the form could", a
   renderApp(`/plays/new?game=${azul.id}`)
 
   await addPlayer("Anna")
-  await userEvent.type(await screen.findByLabelText("Score of Bence"), "70")
+  await userEvent.type(await findScoreField("Bence"), "70")
   // Typed and submitted in one go, before the form has asked the server about the scores.
-  await userEvent.type(screen.getByLabelText("Score of Anna"), "70{Enter}")
+  await userEvent.type(scoreField("Anna"), "70{Enter}")
 
   expect(
-    await screen.findByText("Say who won the tie, or that the win is shared."),
+    await page.findByTestIdWith("field-error", "Say who won the tie, or that the win is shared."),
   ).toBeInTheDocument()
-  expect(await screen.findByText("Tie for first place")).toBeInTheDocument()
+  expect(await page.findByTestIdWith("tie-winner", "Tie for first place")).toBeInTheDocument()
   expect(sent).toEqual([])
 })
 
@@ -292,19 +300,23 @@ test("checks the players and their scores before sending anything", async () => 
   const sent = playsCanBeRecorded()
   renderApp(`/plays/new?game=${azul.id}`)
 
-  await screen.findByLabelText("Score of Bence")
+  await findScoreField("Bence")
   await submit()
-  expect(await screen.findByText("This game needs at least 2 players.")).toBeInTheDocument()
+  expect(
+    await page.findByTestIdWith("field-error", "This game needs at least 2 players."),
+  ).toBeInTheDocument()
 
   await addPlayer("Anna")
-  await userEvent.type(screen.getByLabelText("Score of Anna"), "74")
+  await userEvent.type(scoreField("Anna"), "74")
   await submit()
-  expect(await screen.findByText("Enter a score.")).toBeInTheDocument()
-  expect(screen.queryByText("This game needs at least 2 players.")).not.toBeInTheDocument()
+  expect(await page.findByTestIdWith("field-error", "Enter a score.")).toBeInTheDocument()
+  expect(
+    page.queryByTestIdWith("field-error", "This game needs at least 2 players."),
+  ).not.toBeInTheDocument()
 
   // The message goes away as soon as its cause is fixed.
-  await userEvent.type(screen.getByLabelText("Score of Bence"), "-3")
-  expect(screen.queryByText("Enter a score.")).not.toBeInTheDocument()
+  await userEvent.type(scoreField("Bence"), "-3")
+  expect(page.queryByTestIdWith("field-error", "Enter a score.")).not.toBeInTheDocument()
   expect(sent).toEqual([])
 })
 
@@ -316,14 +328,16 @@ test("records only the winner for a game that is recorded that way", async () =>
   renderApp(`/plays/new?game=${azul.id}`)
 
   await addPlayer("Anna")
-  expect(screen.queryByLabelText("Score of Anna")).not.toBeInTheDocument()
+  expect(queryScoreField("Anna")).not.toBeInTheDocument()
   await submit()
-  expect(await screen.findByText("Tick at least one winner.")).toBeInTheDocument()
+  expect(
+    await page.findByTestIdWith("field-error", "Tick at least one winner."),
+  ).toBeInTheDocument()
 
-  await userEvent.click(screen.getByRole("checkbox", { name: "Anna won" }))
+  await userEvent.click(playerRow("Anna").getByTestId("won"))
   await submit()
 
-  await screen.findByRole("heading", { name: "Azul" })
+  await page.findByTestIdWith("page-title", "Azul")
   expect(sent).toEqual([
     {
       id: aNewPlayId,
@@ -348,15 +362,17 @@ test("records a cooperative play as won or lost by the group", async () => {
 
   // Nothing is entered for the players one by one.
   await addPlayer("Bence")
-  expect(screen.queryByLabelText("Score of Bence")).not.toBeInTheDocument()
-  expect(screen.queryByRole("checkbox", { name: "Bence won" })).not.toBeInTheDocument()
+  expect(queryScoreField("Bence")).not.toBeInTheDocument()
+  expect(page.queryByTestId("won")).not.toBeInTheDocument()
   await submit()
-  expect(await screen.findByText("Say whether the group won or lost.")).toBeInTheDocument()
+  expect(
+    await page.findByTestIdWith("field-error", "Say whether the group won or lost."),
+  ).toBeInTheDocument()
 
-  await userEvent.click(screen.getByRole("radio", { name: "The group won" }))
+  await userEvent.click(page.getByTestId("group-outcome-won"))
   await submit()
 
-  await screen.findByRole("heading", { name: "Pandemic" })
+  await page.findByTestIdWith("page-title", "Pandemic")
   expect(sent).toEqual([
     {
       id: aNewPlayId,
@@ -380,15 +396,15 @@ test("how a play is recorded can be changed for that one play", async () => {
   const sent = playsCanBeRecorded(pandemicPlay)
   renderApp(`/plays/new?game=${azul.id}`)
 
-  await userEvent.click(await screen.findByRole("button", { name: "Change" }))
-  await userEvent.click(screen.getByRole("radio", { name: "Cooperative" }))
+  await userEvent.click(await page.findByTestId("change-recording"))
+  await userEvent.click(page.getByTestId("recording-kind-cooperative"))
 
-  expect(screen.getByText("Cooperative, with a score")).toBeInTheDocument()
-  await userEvent.click(screen.getByRole("radio", { name: "The group lost" }))
-  await userEvent.type(screen.getByLabelText("Score"), "17")
+  expect(page.getByTestId("recorded-as")).toHaveTextContent("Cooperative, with a score")
+  await userEvent.click(page.getByTestId("group-outcome-lost"))
+  await userEvent.type(page.getByTestId("group-score"), "17")
   await submit()
 
-  await screen.findByRole("heading", { name: "Pandemic" })
+  await page.findByTestIdWith("page-title", "Pandemic")
   expect(sent[0]).toMatchObject({
     recordingMode: "POINTS",
     setup: { cooperative: "true", lowestScoreWins: "false" },
@@ -413,11 +429,13 @@ test("shows the game module's own reason when it refuses a play", async () => {
   renderApp(`/plays/new?game=${azul.id}`)
 
   await addPlayer("Anna")
-  await userEvent.type(await screen.findByLabelText("Score of Bence"), "1")
-  await userEvent.type(screen.getByLabelText("Score of Anna"), "2")
+  await userEvent.type(await findScoreField("Bence"), "1")
+  await userEvent.type(scoreField("Anna"), "2")
   await submit()
 
-  expect(await screen.findByText("Enter a score for every player.")).toBeInTheDocument()
+  expect(
+    await page.findByTestIdWith("problem", "Enter a score for every player."),
+  ).toBeInTheDocument()
 })
 
 test("says why the server refused a play", async () => {
@@ -429,12 +447,15 @@ test("says why the server refused a play", async () => {
   renderApp(`/plays/new?game=${azul.id}`)
 
   await addPlayer("Anna")
-  await userEvent.type(await screen.findByLabelText("Score of Bence"), "1")
-  await userEvent.type(screen.getByLabelText("Score of Anna"), "2")
+  await userEvent.type(await findScoreField("Bence"), "1")
+  await userEvent.type(scoreField("Anna"), "2")
   await submit()
 
   expect(
-    await screen.findByText("These results don't fit together. Check them and try again."),
+    await page.findByTestIdWith(
+      "problem",
+      "These results don't fit together. Check them and try again.",
+    ),
   ).toBeInTheDocument()
 })
 
@@ -444,8 +465,8 @@ test("without a known game in the address, points to the Games page", async () =
   playCanBeEntered()
   renderApp("/plays/new")
 
-  expect(await screen.findByRole("heading", { name: "Which game?" })).toBeInTheDocument()
-  expect(screen.getByRole("link", { name: "Go to Games" })).toHaveAttribute("href", "/")
+  expect(await page.findByTestIdWith("page-title", "Which game?")).toBeInTheDocument()
+  expect(page.getByTestId("go-to-games")).toHaveAttribute("href", "/")
 })
 
 test("shows a competitive play with the best placing first", async () => {
@@ -453,19 +474,18 @@ test("shows a competitive play with the best placing first", async () => {
   playIs(azulPlay)
   renderApp(`/plays/${azulPlay.id}`)
 
-  expect(await screen.findByRole("heading", { name: "Azul" })).toBeInTheDocument()
-  expect(screen.getByText("14 March 2026 · At Dora's")).toBeInTheDocument()
-  const rows = within(screen.getByRole("table", { name: "Results" })).getAllByRole("row")
-  expect(rows.map((row) => row.textContent)).toEqual([
-    "PlacingPlayerScore",
+  expect(await page.findByTestIdWith("page-title", "Azul")).toBeInTheDocument()
+  expect(page.getByTestId("page-description")).toHaveTextContent("14 March 2026 · At Dora's")
+  expect(page.getByTestId("results-header")).toHaveTextContent("PlacingPlayerScore")
+  expect(page.getAllByTestId("result-row").map((row) => row.textContent)).toEqual([
     "1AnnaWinner74",
     "2Dora61",
   ])
-  expect(screen.getByText("Dora's first play.")).toBeInTheDocument()
-  expect(
-    screen.getByText(/Points, highest wins\. Recorded by Bence on 14 March 2026/),
-  ).toBeInTheDocument()
-  expect(screen.getByRole("link", { name: "Record another play" })).toHaveAttribute(
+  expect(page.getByTestId("notes")).toHaveTextContent("Dora's first play.")
+  expect(page.getByTestId("recorded-by")).toHaveTextContent(
+    /Points, highest wins\. Recorded by Bence on 14 March 2026/,
+  )
+  expect(page.getByTestId("record-another")).toHaveAttribute(
     "href",
     `/plays/new?game=${azul.id}&another=${azulPlay.id}`,
   )
@@ -479,24 +499,25 @@ test("another play after one starts with the same players, day and place", async
   const sent = playsCanBeRecorded()
   renderApp(`/plays/${azulPlay.id}`)
 
-  await userEvent.click(await screen.findByRole("link", { name: "Record another play" }))
+  await userEvent.click(await page.findByTestId("record-another"))
 
   // The same players in the same order, with only their scores to enter. Bence recorded the
   // play without playing in it, so he isn't put in.
-  expect(await screen.findByLabelText("Score of Dora")).toHaveValue(null)
-  expect(
-    screen.getAllByLabelText(/^Score of/).map((input) => input.getAttribute("aria-label")),
-  ).toEqual(["Score of Dora", "Score of Anna"])
-  expect(screen.getByLabelText("Date")).toHaveValue("2026-03-14")
-  expect(screen.getByLabelText("Location")).toHaveValue("At Dora's")
+  expect(await findScoreField("Dora")).toHaveValue(null)
+  expect(page.getAllByTestId("score").map((input) => input.getAttribute("aria-label"))).toEqual([
+    "Score of Dora",
+    "Score of Anna",
+  ])
+  expect(page.getByTestId("played-on")).toHaveValue("2026-03-14")
+  expect(page.getByTestId("location")).toHaveValue("At Dora's")
   // Notes belong to the one play.
-  expect(screen.getByLabelText("Notes")).toHaveValue("")
+  expect(page.getByTestId("notes")).toHaveValue("")
 
-  await userEvent.type(screen.getByLabelText("Score of Dora"), "70")
-  await userEvent.type(screen.getByLabelText("Score of Anna"), "52")
+  await userEvent.type(scoreField("Dora"), "70")
+  await userEvent.type(scoreField("Anna"), "52")
   await submit()
 
-  await screen.findByRole("heading", { name: "Azul" })
+  await page.findByTestIdWith("page-title", "Azul")
   expect(sent).toEqual([
     {
       id: aNewPlayId,
@@ -527,8 +548,11 @@ test("shows only who won when that is all that was recorded", async () => {
   playIs(play)
   renderApp(`/plays/${play.id}`)
 
-  const rows = within(await screen.findByRole("table", { name: "Results" })).getAllByRole("row")
-  expect(rows.map((row) => row.textContent)).toEqual(["Player", "DoraWinner", "Anna"])
+  expect(await page.findByTestId("results-header")).toHaveTextContent(/^Player$/)
+  expect(page.getAllByTestId("result-row").map((row) => row.textContent)).toEqual([
+    "DoraWinner",
+    "Anna",
+  ])
 })
 
 test("shows a cooperative play as won or lost together", async () => {
@@ -536,11 +560,10 @@ test("shows a cooperative play as won or lost together", async () => {
   playIs(pandemicPlay)
   renderApp(`/plays/${pandemicPlay.id}`)
 
-  expect(await screen.findByText("Lost together")).toBeInTheDocument()
-  expect(screen.getByText("Score: 17")).toBeInTheDocument()
-  expect(screen.getByText("Anna")).toBeInTheDocument()
-  expect(screen.getByText("Bence")).toBeInTheDocument()
-  expect(screen.queryByRole("table")).not.toBeInTheDocument()
+  expect(await page.findByTestId("group-outcome")).toHaveTextContent("Lost together")
+  expect(page.getByTestId("group-total")).toHaveTextContent("Score: 17")
+  expect(page.getAllByTestId("result-row").map((row) => row.textContent)).toEqual(["Anna", "Bence"])
+  expect(page.queryByTestId("results")).not.toBeInTheDocument()
 })
 
 test("says so when a play doesn't exist", async () => {
@@ -549,6 +572,6 @@ test("says so when a play doesn't exist", async () => {
   renderApp("/plays/0193a000-0000-7000-8000-00000000dead")
 
   expect(
-    await screen.findByRole("heading", { name: "This play no longer exists." }),
+    await page.findByTestIdWith("page-title", "This play no longer exists."),
   ).toBeInTheDocument()
 })

@@ -68,7 +68,7 @@ export function PlayerNameDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent finalFocus={finalFocus}>
+      <DialogContent finalFocus={finalFocus} data-testid="player-name-dialog">
         {/* The dialog can be opened from inside another form. React passes events up through
             the components, not the page, so without stopPropagation submitting this form would
             submit that one too. */}

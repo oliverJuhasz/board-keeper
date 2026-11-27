@@ -1,4 +1,3 @@
-import { screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { http, HttpResponse } from "msw"
 import { expect, test } from "vitest"
@@ -19,6 +18,7 @@ import {
   wyrmspan,
 } from "@/test/api"
 import { genericModule } from "@/test/gameModules"
+import { inside, page } from "@/test/queries"
 import { renderApp } from "@/test/renderApp"
 import { server } from "@/test/server"
 
@@ -31,14 +31,16 @@ function noStats(playerId: string, name: string): PlayerSummary {
   return { playerId, name, plays: 0, soloPlays: 0, games: [], solo: [] }
 }
 
-/** The cells of each row of a table, as text, below its heading row. */
+/** The cells of a statistics table that the tests read, each with an id of its own. */
+const CELL = /^(stats-label|plays|wins|best-score|average-score|average-placing)$/
+
+/** The cells of each row of a statistics table, as text. */
 function rowsOf(table: HTMLElement) {
-  return within(table)
-    .getAllByRole("row")
-    .slice(1)
+  return inside(table)
+    .getAllByTestId("stats-row")
     .map((row) =>
-      within(row)
-        .getAllByRole("cell")
+      inside(row)
+        .getAllByTestId(CELL)
         .map((cell) => cell.textContent),
     )
 }
@@ -86,27 +88,24 @@ test("shows how a player did, game by game", async () => {
 
   renderApp(`/players/${doraPlayer.id}`)
 
-  expect(await screen.findByRole("heading", { name: "Dora" })).toBeInTheDocument()
-  expect(screen.getByText("Played 7 times · Last played 15 March 2026")).toBeInTheDocument()
-  const summary = screen.getByText("Wins against others").closest("dl")
-  expect(summary && termsOf(summary)).toEqual([
+  expect(await page.findByTestIdWith("page-title", "Dora")).toBeInTheDocument()
+  expect(page.getByTestId("page-description")).toHaveTextContent(
+    "Played 7 times · Last played 15 March 2026",
+  )
+  expect(termsOf(page.getByTestId("player-summary"))).toEqual([
     "Wins against others: 3 of 4 (75%)",
     "Average placing: 1.3",
     "Wins together: 1 of 2 (50%)",
     "Solo plays: 1",
   ])
-  expect(rowsOf(screen.getByRole("table", { name: "Games" }))).toEqual([
+  expect(rowsOf(page.getByTestId("results-table"))).toEqual([
     ["Azul", "2 of 367%", "70", "61", "1.3"],
     ["Pandemic", "1 of 250%", "–", "–", "–"],
     ["Calico", "1 of 1100%", "72", "72", "1"],
   ])
-  expect(rowsOf(screen.getByRole("table", { name: "Solo plays" }))).toEqual([
-    ["Wyrmspan", "1", "1 of 1", "93", "93"],
-  ])
-  expect(screen.getByRole("link", { name: "All plays of Dora" })).toHaveAttribute(
-    "href",
-    `/plays?player=${doraPlayer.id}`,
-  )
+  expect(rowsOf(page.getByTestId("solo-table"))).toEqual([["Wyrmspan", "1", "1 of 1", "93", "93"]])
+  expect(page.getByTestId("all-plays")).toHaveTextContent("All plays of Dora")
+  expect(page.getByTestId("all-plays")).toHaveAttribute("href", `/plays?player=${doraPlayer.id}`)
 })
 
 test("each game's name leads to its statistics", async () => {
@@ -132,12 +131,12 @@ test("each game's name leads to its statistics", async () => {
   server.use(http.get(`*/api/stats/games/${azul.id}`, () => HttpResponse.json(azulStats)))
 
   renderApp(`/players/${doraPlayer.id}`)
-  await userEvent.click(await screen.findByRole("link", { name: "Azul" }))
+  await userEvent.click(await page.findByTestIdWith("stats-link", "Azul"))
 
   // And on the game's page, the player's name leads back.
-  expect(await screen.findByRole("heading", { name: "Azul" })).toBeInTheDocument()
-  await userEvent.click(screen.getByRole("link", { name: "Dora" }))
-  expect(await screen.findByRole("heading", { name: "Dora" })).toBeInTheDocument()
+  expect(await page.findByTestIdWith("page-title", "Azul")).toBeInTheDocument()
+  await userEvent.click(page.getByTestIdWith("stats-link", "Dora"))
+  expect(await page.findByTestIdWith("page-title", "Dora")).toBeInTheDocument()
 })
 
 test("says when a player hasn't played yet", async () => {
@@ -147,10 +146,10 @@ test("says when a player hasn't played yet", async () => {
 
   renderApp(`/players/${bencePlayer.id}`)
 
-  expect(await screen.findByText("Hasn't played yet")).toBeInTheDocument()
-  expect(
-    screen.getByText("No plays with Bence yet. Their statistics start with the first one."),
-  ).toBeInTheDocument()
+  expect(await page.findByTestIdWith("page-description", "Hasn't played yet")).toBeInTheDocument()
+  expect(page.getByTestId("no-stats")).toHaveTextContent(
+    "No plays with Bence yet. Their statistics start with the first one.",
+  )
 })
 
 test("says so when the player no longer exists", async () => {
@@ -161,7 +160,7 @@ test("says so when the player no longer exists", async () => {
   renderApp(`/players/${doraPlayer.id}`)
 
   expect(
-    await screen.findByRole("heading", { name: "This player no longer exists." }),
+    await page.findByTestIdWith("page-title", "This player no longer exists."),
   ).toBeInTheDocument()
 })
 
@@ -172,7 +171,7 @@ test("each name on the players page leads to the player's statistics", async () 
   statsAre(noStats(doraPlayer.id, "Dora"))
 
   renderApp("/players")
-  await userEvent.click(await screen.findByRole("link", { name: "Dora" }))
+  await userEvent.click(await page.findByTestIdWith("player-link", "Dora"))
 
-  expect(await screen.findByRole("heading", { name: "Dora" })).toBeInTheDocument()
+  expect(await page.findByTestIdWith("page-title", "Dora")).toBeInTheDocument()
 })

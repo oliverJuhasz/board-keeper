@@ -4,7 +4,9 @@ import type { ReactNode } from "react"
 export function PageMessage({ title, children }: { title: string; children?: ReactNode }) {
   return (
     <div className="space-y-2">
-      <h1 className="font-heading text-xl font-semibold">{title}</h1>
+      <h1 className="font-heading text-xl font-semibold" data-testid="page-title">
+        {title}
+      </h1>
       <div className="space-y-3 text-muted-foreground">{children}</div>
     </div>
   )

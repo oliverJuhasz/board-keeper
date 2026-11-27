@@ -32,7 +32,9 @@ export function CheckboxField({
       />
       <FieldContent>
         <FieldLabel htmlFor={id}>{label}</FieldLabel>
-        {hint && <FieldDescription>{hint}</FieldDescription>}
+        {hint && (
+          <FieldDescription data-testid={testId && `${testId}-hint`}>{hint}</FieldDescription>
+        )}
       </FieldContent>
     </Field>
   )

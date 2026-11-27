@@ -31,14 +31,20 @@ export function UpdateNotice() {
   return (
     <div
       role="status"
+      data-testid="update-notice"
       className="fixed inset-x-4 bottom-4 z-50 mx-auto flex max-w-md items-center gap-3 rounded-lg border bg-background p-3 shadow-lg"
     >
       <p className="flex-1 text-sm">{t("app.update.available")}</p>
-      <Button variant="ghost" size="sm" onClick={() => setNewVersion(false)}>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => setNewVersion(false)}
+        data-testid="update-later"
+      >
         {t("app.update.later")}
       </Button>
       {/* Hands over to the new service worker, which then reloads the page. */}
-      <Button size="sm" onClick={() => void updateServiceWorker(true)}>
+      <Button size="sm" onClick={() => void updateServiceWorker(true)} data-testid="update-reload">
         {t("app.update.reload")}
       </Button>
     </div>

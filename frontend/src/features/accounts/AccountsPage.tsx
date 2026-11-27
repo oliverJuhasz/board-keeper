@@ -66,22 +66,22 @@ export function AccountsPage() {
             </TableHeader>
             <TableBody>
               {accounts.data?.map((account) => (
-                <TableRow key={account.id}>
+                <TableRow key={account.id} data-testid="account-row">
                   <TableCell className="font-medium">
                     {account.username}
                     {account.id === me.id && (
-                      <Badge variant="outline" className="ml-2">
+                      <Badge variant="outline" className="ml-2" data-testid="you">
                         {t("accounts.you")}
                       </Badge>
                     )}
                     {account.disabled && (
-                      <Badge variant="destructive" className="ml-2">
+                      <Badge variant="destructive" className="ml-2" data-testid="disabled">
                         {t("accounts.disabled")}
                       </Badge>
                     )}
                   </TableCell>
-                  <TableCell>{playerName(account.playerId)}</TableCell>
-                  <TableCell>
+                  <TableCell data-testid="player">{playerName(account.playerId)}</TableCell>
+                  <TableCell data-testid="roles">
                     <div className="flex flex-wrap gap-1">
                       {rolesOf(account).map((role) => (
                         <Badge key={role.id} variant="secondary">
@@ -94,8 +94,14 @@ export function AccountsPage() {
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    <ActionsMenu label={t("accounts.actions", { username: account.username })}>
-                      <DropdownMenuItem onClick={() => setDialog({ kind: "roles", account })}>
+                    <ActionsMenu
+                      label={t("accounts.actions", { username: account.username })}
+                      testId="account-actions"
+                    >
+                      <DropdownMenuItem
+                        onClick={() => setDialog({ kind: "roles", account })}
+                        data-testid="change-roles"
+                      >
                         {t("accounts.changeRoles")}
                       </DropdownMenuItem>
                       {/* Nobody can disable their own Account. */}
@@ -108,6 +114,7 @@ export function AccountsPage() {
                                 body: { disabled: false },
                               })
                             }
+                            data-testid="enable-account"
                           >
                             {t("accounts.enable")}
                           </DropdownMenuItem>
@@ -115,6 +122,7 @@ export function AccountsPage() {
                           <DropdownMenuItem
                             variant="destructive"
                             onClick={() => setDialog({ kind: "disable", account })}
+                            data-testid="disable-account"
                           >
                             {t("accounts.disable")}
                           </DropdownMenuItem>

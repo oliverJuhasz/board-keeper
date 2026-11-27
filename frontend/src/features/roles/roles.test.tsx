@@ -1,20 +1,22 @@
-import { screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { http, HttpResponse } from "msw"
 import { expect, test } from "vitest"
 import type { Role } from "@/api/client"
 import { accountsAre, adminRole, anna, memberRole, scorekeeperRole, signedInAs } from "@/test/api"
+import { inside, page } from "@/test/queries"
 import { renderApp } from "@/test/renderApp"
 import { server } from "@/test/server"
 
 const allRoles = [adminRole, memberRole, scorekeeperRole]
 
 function rowOf(name: string) {
-  return screen.getByRole("row", { name: new RegExp(name) })
+  return inside(page.getByTestIdWith("role-row", name))
 }
 
 async function openActionsFor(name: string) {
-  await userEvent.click(await screen.findByRole("button", { name: `Actions for ${name}` }))
+  await userEvent.click(
+    await inside(await page.findByTestIdWith("role-row", name)).findByTestId("role-actions"),
+  )
 }
 
 test("lists the roles and what each may do", async () => {
@@ -23,27 +25,27 @@ test("lists the roles and what each may do", async () => {
 
   renderApp("/roles")
 
-  await screen.findByRole("row", { name: /Scorekeeper/ })
-  expect(within(rowOf("Admin")).getByText("Every permission")).toBeInTheDocument()
-  expect(
-    within(rowOf("Member")).getByText(
-      "Create players, Create games, Edit games, Create plays, Change plays they recorded, Change plays they took part in",
-    ),
-  ).toBeInTheDocument()
-  expect(within(rowOf("Scorekeeper")).getByText("Rename players, Create plays")).toBeInTheDocument()
+  await page.findByTestIdWith("role-row", "Scorekeeper")
+  expect(rowOf("Admin").getByTestId("role-permissions")).toHaveTextContent("Every permission")
+  expect(rowOf("Member").getByTestId("role-permissions")).toHaveTextContent(
+    "Create players, Create games, Edit games, Create plays, Change plays they recorded, Change plays they took part in",
+  )
+  expect(rowOf("Scorekeeper").getByTestId("role-permissions")).toHaveTextContent(
+    "Rename players, Create plays",
+  )
 })
 
 test("the admin role can't be changed, and the member role can't be deleted", async () => {
   signedInAs(anna)
   accountsAre([], allRoles)
   renderApp("/roles")
-  await screen.findByRole("row", { name: /Scorekeeper/ })
+  await page.findByTestIdWith("role-row", "Scorekeeper")
 
-  expect(screen.queryByRole("button", { name: "Actions for Admin" })).not.toBeInTheDocument()
+  expect(rowOf("Admin").queryByTestId("role-actions")).not.toBeInTheDocument()
 
   await openActionsFor("Member")
-  expect(await screen.findByRole("menuitem", { name: "Edit" })).toBeInTheDocument()
-  expect(screen.queryByRole("menuitem", { name: "Delete" })).not.toBeInTheDocument()
+  expect(await page.findByTestId("edit-role")).toBeInTheDocument()
+  expect(page.queryByTestId("delete-role")).not.toBeInTheDocument()
 })
 
 test("adds a role with the ticked permissions", async () => {
@@ -61,14 +63,14 @@ test("adds a role with the ticked permissions", async () => {
   )
   renderApp("/roles")
 
-  await userEvent.click(await screen.findByRole("button", { name: "Add role" }))
-  const dialog = await screen.findByRole("dialog", { name: "Add a role" })
-  await userEvent.type(within(dialog).getByLabelText("Name"), "Organiser")
-  await userEvent.click(within(dialog).getByRole("checkbox", { name: "Remove players" }))
-  await userEvent.click(within(dialog).getByRole("checkbox", { name: "Create players" }))
-  await userEvent.click(within(dialog).getByRole("button", { name: "Add role" }))
+  await userEvent.click(await page.findByTestId("add-role"))
+  expect(await page.findByTestId("role-dialog")).toHaveAccessibleName("Add a role")
+  await userEvent.type(page.getByTestId("role-name"), "Organiser")
+  await userEvent.click(page.getByTestId("permission-REMOVE_PLAYERS"))
+  await userEvent.click(page.getByTestId("permission-CREATE_PLAYERS"))
+  await userEvent.click(page.getByTestId("save-role"))
 
-  expect(await screen.findByRole("row", { name: /Organiser/ })).toBeInTheDocument()
+  expect(await page.findByTestIdWith("role-row", "Organiser")).toBeInTheDocument()
   expect(sent).toEqual({ name: "Organiser", permissions: ["REMOVE_PLAYERS", "CREATE_PLAYERS"] })
 })
 
@@ -85,12 +87,12 @@ test("edits the member role's permissions, but not its name", async () => {
   renderApp("/roles")
 
   await openActionsFor("Member")
-  await userEvent.click(await screen.findByRole("menuitem", { name: "Edit" }))
-  const dialog = await screen.findByRole("dialog", { name: "Edit Member" })
-  expect(within(dialog).getByLabelText("Name")).toBeDisabled()
-  expect(within(dialog).getByRole("checkbox", { name: "Create players" })).toBeChecked()
-  await userEvent.click(within(dialog).getByRole("checkbox", { name: "Create players" }))
-  await userEvent.click(within(dialog).getByRole("button", { name: "Save role" }))
+  await userEvent.click(await page.findByTestId("edit-role"))
+  expect(await page.findByTestId("role-dialog")).toHaveAccessibleName("Edit Member")
+  expect(page.getByTestId("role-name")).toBeDisabled()
+  expect(page.getByTestId("permission-CREATE_PLAYERS")).toBeChecked()
+  await userEvent.click(page.getByTestId("permission-CREATE_PLAYERS"))
+  await userEvent.click(page.getByTestId("save-role"))
 
   await expect
     .poll(() => sent)
@@ -114,19 +116,17 @@ test("offers only the permissions a role can hold", async () => {
   accountsAre([], allRoles)
   renderApp("/roles")
 
-  await userEvent.click(await screen.findByRole("button", { name: "Add role" }))
+  await userEvent.click(await page.findByTestId("add-role"))
 
   // Managing roles, accounts and invites is for admins only.
-  const dialog = await screen.findByRole("dialog")
-  expect(within(dialog).getAllByRole("checkbox")).toHaveLength(11)
-  expect(within(dialog).getByRole("checkbox", { name: "Change any play" })).toBeInTheDocument()
-  expect(within(dialog).getByRole("checkbox", { name: "Use API keys" })).toBeInTheDocument()
-  expect(within(dialog).getByRole("checkbox", { name: "Create players" })).toBeInTheDocument()
-  expect(within(dialog).queryByRole("checkbox", { name: "Manage roles" })).not.toBeInTheDocument()
-  expect(
-    within(dialog).queryByRole("checkbox", { name: "Manage accounts" }),
-  ).not.toBeInTheDocument()
-  expect(within(dialog).queryByRole("checkbox", { name: "Manage invites" })).not.toBeInTheDocument()
+  await page.findByTestId("role-dialog")
+  expect(page.getAllByTestId(/^permission-[A-Z_]+$/)).toHaveLength(11)
+  expect(page.getByTestId("permission-CHANGE_ANY_PLAY")).toBeInTheDocument()
+  expect(page.getByTestId("permission-USE_API_KEYS")).toBeInTheDocument()
+  expect(page.getByTestId("permission-CREATE_PLAYERS")).toBeInTheDocument()
+  expect(page.queryByTestId("permission-MANAGE_ROLES")).not.toBeInTheDocument()
+  expect(page.queryByTestId("permission-MANAGE_ACCOUNTS")).not.toBeInTheDocument()
+  expect(page.queryByTestId("permission-MANAGE_INVITES")).not.toBeInTheDocument()
 })
 
 test("deletes a role only after asking", async () => {
@@ -141,14 +141,10 @@ test("deletes a role only after asking", async () => {
   renderApp("/roles")
 
   await openActionsFor("Scorekeeper")
-  await userEvent.click(await screen.findByRole("menuitem", { name: "Delete" }))
-  expect(
-    await screen.findByRole("alertdialog", { name: "Delete Scorekeeper?" }),
-  ).toBeInTheDocument()
+  await userEvent.click(await page.findByTestId("delete-role"))
+  expect(await page.findByTestId("confirm-dialog")).toHaveAccessibleName("Delete Scorekeeper?")
   expect(state.roles).toHaveLength(3)
-  await userEvent.click(screen.getByRole("button", { name: "Delete role" }))
+  await userEvent.click(page.getByTestId("confirm"))
 
-  await expect
-    .poll(() => screen.queryByRole("row", { name: /Scorekeeper/ }))
-    .not.toBeInTheDocument()
+  await expect.poll(() => page.queryByTestIdWith("role-row", "Scorekeeper")).not.toBeInTheDocument()
 })

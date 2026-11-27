@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from "@testing-library/react"
+import { waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { http, HttpResponse } from "msw"
 import { expect, test } from "vitest"
@@ -19,12 +19,14 @@ import {
   problem,
   signedInAs,
 } from "@/test/api"
+import { scoreField } from "@/test/playForm"
+import { inside, page } from "@/test/queries"
 import { renderApp } from "@/test/renderApp"
 import { server } from "@/test/server"
 
-/** The lines of the history: one list item with a link for each play. */
+/** The lines of the history: a link to each play. */
 function summaries() {
-  return screen.getAllByRole("listitem").filter((item) => within(item).queryByRole("link"))
+  return page.queryAllByTestId("play-summary")
 }
 
 test("the navigation leads to the plays, newest first, with who won", async () => {
@@ -32,9 +34,9 @@ test("the navigation leads to the plays, newest first, with who won", async () =
   historyIs([pandemicPlay, azulPlay])
   renderApp("/")
 
-  await userEvent.click(await screen.findByRole("link", { name: "Plays" }))
+  await userEvent.click(await page.findByTestId("nav-plays"))
 
-  expect(await screen.findByRole("heading", { name: "Plays" })).toBeInTheDocument()
+  expect(await page.findByTestIdWith("page-title", "Plays")).toBeInTheDocument()
   const [pandemic, azulLine] = await waitFor(() => {
     const lines = summaries()
     expect(lines).toHaveLength(2)
@@ -43,22 +45,22 @@ test("the navigation leads to the plays, newest first, with who won", async () =
   expect(pandemic).toHaveTextContent("Pandemic15 March 2026Lost together (17): Anna, Bence")
   // The winner comes first and is marked, whatever the order they were entered in.
   expect(azulLine).toHaveTextContent("Azul14 March 2026Anna74Dora61")
-  expect(within(azulLine).getByRole("img", { name: "Winner" })).toBeInTheDocument()
-  expect(within(azulLine).getByRole("link")).toHaveAttribute("href", `/plays/${azulPlay.id}`)
+  expect(inside(azulLine).getByTestId("winner")).toHaveAccessibleName("Winner")
+  expect(azulLine).toHaveAttribute("href", `/plays/${azulPlay.id}`)
 })
 
 test("says so when nothing has been recorded yet, or the plays can't be loaded", async () => {
   signedInAs(bence)
   historyIs([])
   const { unmount } = renderApp("/plays")
-  expect(await screen.findByText(/No plays yet\./)).toBeInTheDocument()
+  expect(await page.findByTestId("no-plays")).toHaveTextContent(/No plays yet\./)
   unmount()
 
   server.use(http.get("*/api/plays", () => problem(500, "unexpected")))
   const { queryClient } = await import("@/api/queryClient")
   queryClient.clear()
   renderApp("/plays")
-  expect(await screen.findByText("Couldn't load the plays")).toBeInTheDocument()
+  expect(await page.findByTestId("load-failed")).toHaveTextContent("Couldn't load the plays")
 })
 
 test("narrows the plays by game, player and dates, and remembers that in the address", async () => {
@@ -68,10 +70,10 @@ test("narrows the plays by game, player and dates, and remembers that in the add
 
   await waitFor(() => expect(summaries()).toHaveLength(1))
   expect(asked[0].get("gameId")).toBeNull()
-  await userEvent.selectOptions(screen.getByLabelText("Game"), "Azul")
-  await userEvent.selectOptions(screen.getByLabelText("Player"), "Dora")
-  await userEvent.type(screen.getByLabelText("From"), "2026-03-01")
-  await userEvent.type(screen.getByLabelText("Until"), "2026-03-31")
+  await userEvent.selectOptions(page.getByTestId("filter-game"), "Azul")
+  await userEvent.selectOptions(page.getByTestId("filter-player"), "Dora")
+  await userEvent.type(page.getByTestId("filter-from"), "2026-03-01")
+  await userEvent.type(page.getByTestId("filter-to"), "2026-03-31")
 
   await waitFor(() => {
     const last = asked.at(-1)
@@ -81,10 +83,10 @@ test("narrows the plays by game, player and dates, and remembers that in the add
     expect(last?.get("to")).toBe("2026-03-31")
   })
 
-  await userEvent.click(screen.getByRole("button", { name: "Clear filters" }))
+  await userEvent.click(page.getByTestId("clear-filters"))
   await waitFor(() => expect(asked.at(-1)?.get("gameId")).toBeNull())
-  expect(screen.getByLabelText("Game")).toHaveValue("")
-  expect(screen.queryByRole("button", { name: "Clear filters" })).not.toBeInTheDocument()
+  expect(page.getByTestId("filter-game")).toHaveValue("")
+  expect(page.queryByTestId("clear-filters")).not.toBeInTheDocument()
 })
 
 test('"My plays" asks for the plays the signed-in player took part in', async () => {
@@ -92,11 +94,11 @@ test('"My plays" asks for the plays the signed-in player took part in', async ()
   const asked = historyIs([azulPlay])
   renderApp("/plays")
 
-  await userEvent.click(await screen.findByRole("checkbox", { name: "My plays" }))
+  await userEvent.click(await page.findByTestId("filter-mine"))
   await waitFor(() => expect(asked.at(-1)?.getAll("playerId")).toEqual([bencePlayer.id]))
 
   // Together with another player: the plays both took part in.
-  await userEvent.selectOptions(screen.getByLabelText("Player"), "Anna")
+  await userEvent.selectOptions(page.getByTestId("filter-player"), "Anna")
   await waitFor(() =>
     expect(asked.at(-1)?.getAll("playerId")).toEqual([bencePlayer.id, annaPlayer.id]),
   )
@@ -107,11 +109,11 @@ test("starts from the filters in the address, and says when nothing matches them
   const asked = historyIs([])
   renderApp(`/plays?game=${azul.id}&mine=1`)
 
-  expect(await screen.findByText("No plays match these filters.")).toBeInTheDocument()
+  expect(await page.findByTestId("no-plays")).toHaveTextContent("No plays match these filters.")
   expect(asked[0].get("gameId")).toBe(azul.id)
   expect(asked[0].getAll("playerId")).toEqual([bencePlayer.id])
-  expect(screen.getByRole("checkbox", { name: "My plays" })).toBeChecked()
-  await waitFor(() => expect(screen.getByLabelText("Game")).toHaveValue(azul.id))
+  expect(page.getByTestId("filter-mine")).toBeChecked()
+  await waitFor(() => expect(page.getByTestId("filter-game")).toHaveValue(azul.id))
 })
 
 test('"Show more" adds the next page of plays below the first', async () => {
@@ -119,12 +121,12 @@ test('"Show more" adds the next page of plays below the first', async () => {
   const asked = historyIs([azulPlay], [pandemicPlay])
   renderApp("/plays")
 
-  await userEvent.click(await screen.findByRole("button", { name: "Show more" }))
+  await userEvent.click(await page.findByTestId("show-more"))
 
   await waitFor(() => expect(summaries()).toHaveLength(2))
   expect(asked.map((query) => query.get("after"))).toEqual(["", "page-2"])
   // That was the last page.
-  expect(screen.queryByRole("button", { name: "Show more" })).not.toBeInTheDocument()
+  expect(page.queryByTestId("show-more")).not.toBeInTheDocument()
 })
 
 test("a play can be edited by someone who may change it", async () => {
@@ -150,25 +152,27 @@ test("a play can be edited by someone who may change it", async () => {
   )
   renderApp(`/plays/${azulPlay.id}`)
 
-  await userEvent.click(await screen.findByRole("button", { name: "Actions for this play" }))
-  await userEvent.click(await screen.findByRole("menuitem", { name: "Edit" }))
+  await userEvent.click(await page.findByTestId("play-actions"))
+  await userEvent.click(await page.findByTestId("edit-play"))
 
   // The form starts with what was recorded.
-  expect(await screen.findByRole("heading", { name: "Edit a play" })).toBeInTheDocument()
-  expect(screen.getByLabelText("Date")).toHaveValue("2026-03-14")
-  expect(screen.getByLabelText("Location")).toHaveValue("At Dora's")
-  expect(screen.getByLabelText("Notes")).toHaveValue("Dora's first play.")
-  expect(screen.getByLabelText("Score of Dora")).toHaveValue(61)
-  expect(screen.getByLabelText("Score of Anna")).toHaveValue(74)
+  expect(await page.findByTestIdWith("page-title", "Edit a play")).toBeInTheDocument()
+  expect(page.getByTestId("played-on")).toHaveValue("2026-03-14")
+  expect(page.getByTestId("location")).toHaveValue("At Dora's")
+  expect(page.getByTestId("notes")).toHaveValue("Dora's first play.")
+  expect(scoreField("Dora")).toHaveValue(61)
+  expect(scoreField("Anna")).toHaveValue(74)
 
-  await userEvent.clear(screen.getByLabelText("Score of Dora"))
-  await userEvent.type(screen.getByLabelText("Score of Dora"), "80")
-  await userEvent.clear(screen.getByLabelText("Location"))
-  await userEvent.type(screen.getByLabelText("Location"), "At Anna's")
-  await userEvent.click(screen.getByRole("button", { name: "Save play" }))
+  await userEvent.clear(scoreField("Dora"))
+  await userEvent.type(scoreField("Dora"), "80")
+  await userEvent.clear(page.getByTestId("location"))
+  await userEvent.type(page.getByTestId("location"), "At Anna's")
+  await userEvent.click(page.getByTestId("save-play"))
 
   // Back on the play's page, with what the server answered.
-  expect(await screen.findByText("14 March 2026 · At Anna's")).toBeInTheDocument()
+  expect(
+    await page.findByTestIdWith("page-description", "14 March 2026 · At Anna's"),
+  ).toBeInTheDocument()
   expect(sent).toEqual([
     {
       gameId: azul.id,
@@ -198,14 +202,14 @@ test("a play can be deleted after an 'are you sure?'", async () => {
   )
   renderApp(`/plays/${azulPlay.id}`)
 
-  await userEvent.click(await screen.findByRole("button", { name: "Actions for this play" }))
-  await userEvent.click(await screen.findByRole("menuitem", { name: "Delete" }))
-  const dialog = await screen.findByRole("alertdialog", { name: "Delete this play?" })
+  await userEvent.click(await page.findByTestId("play-actions"))
+  await userEvent.click(await page.findByTestId("delete-play"))
+  expect(await page.findByTestId("confirm-dialog")).toHaveAccessibleName("Delete this play?")
   expect(deleted).toBe(false)
-  await userEvent.click(within(dialog).getByRole("button", { name: "Delete play" }))
+  await userEvent.click(page.getByTestId("confirm"))
 
   // Back at the history, which no longer has it.
-  expect(await screen.findByRole("heading", { name: "Plays" })).toBeInTheDocument()
+  expect(await page.findByTestIdWith("page-title", "Plays")).toBeInTheDocument()
   expect(deleted).toBe(true)
 })
 
@@ -216,16 +220,13 @@ test("someone who may not change a play is offered neither, and can't open its e
   playCanBeEntered()
   const { unmount } = renderApp(`/plays/${play.id}`)
 
-  await screen.findByRole("heading", { name: "Azul" })
-  expect(screen.queryByRole("button", { name: "Actions for this play" })).not.toBeInTheDocument()
+  await page.findByTestIdWith("page-title", "Azul")
+  expect(page.queryByTestId("play-actions")).not.toBeInTheDocument()
   unmount()
 
   renderApp(`/plays/${play.id}/edit`)
   expect(
-    await screen.findByRole("heading", { name: "You can't change this play" }),
+    await page.findByTestIdWith("page-title", "You can't change this play"),
   ).toBeInTheDocument()
-  expect(screen.getByRole("link", { name: "Back to the play" })).toHaveAttribute(
-    "href",
-    `/plays/${play.id}`,
-  )
+  expect(page.getByTestId("back-to-play")).toHaveAttribute("href", `/plays/${play.id}`)
 })

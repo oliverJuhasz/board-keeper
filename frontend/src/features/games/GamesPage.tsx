@@ -100,7 +100,9 @@ export function GamesPage() {
       >
         {() =>
           games.data?.length === 0 ? (
-            <p className="text-muted-foreground">{t("games.empty")}</p>
+            <p className="text-muted-foreground" data-testid="no-games">
+              {t("games.empty")}
+            </p>
           ) : (
             <div className="space-y-6">
               {records && <PlayAgain games={games.data ?? []} />}
@@ -139,7 +141,10 @@ export function GamesPage() {
                             : t("games.neverPlayed")}
                         </span>
                       </TableCell>
-                      <TableCell className="hidden text-muted-foreground sm:table-cell">
+                      <TableCell
+                        className="hidden text-muted-foreground sm:table-cell"
+                        data-testid="recorded-as"
+                      >
                         {/* A Game with a module of its own has no recording choices to show. */}
                         {game.hasOwnModule ? t("games.ownScorePad") : recordedAs(game)}
                       </TableCell>
@@ -158,7 +163,10 @@ export function GamesPage() {
                             {/* A Game with a module of its own is named by the module and stays
                                 while the module does: there is nothing to edit or remove. */}
                             {!game.hasOwnModule && can("EDIT_GAMES") && (
-                              <DropdownMenuItem onClick={() => setDialog({ kind: "edit", game })}>
+                              <DropdownMenuItem
+                                onClick={() => setDialog({ kind: "edit", game })}
+                                data-testid="edit-game"
+                              >
                                 {t("games.edit")}
                               </DropdownMenuItem>
                             )}
@@ -166,6 +174,7 @@ export function GamesPage() {
                               <DropdownMenuItem
                                 variant="destructive"
                                 onClick={() => setDialog({ kind: "remove", game })}
+                                data-testid="remove-game"
                               >
                                 {t("games.remove")}
                               </DropdownMenuItem>

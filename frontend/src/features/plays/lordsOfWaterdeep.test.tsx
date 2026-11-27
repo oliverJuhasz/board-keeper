@@ -1,4 +1,3 @@
-import { screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { http, HttpResponse } from "msw"
 import { expect, test } from "vitest"
@@ -14,6 +13,8 @@ import {
   playsCanBePreviewed,
   signedInAs,
 } from "@/test/api"
+import { optionOf, playerRow } from "@/test/playForm"
+import { page } from "@/test/queries"
 import { renderApp } from "@/test/renderApp"
 import { server } from "@/test/server"
 
@@ -36,56 +37,51 @@ async function startRecording() {
   playsCanBePreviewed()
   server.use(http.get("*/api/players", () => HttpResponse.json(sixPlayers)))
   renderApp(`/plays/new?game=${lordsOfWaterdeep.id}`)
-  await screen.findByLabelText("Add a player")
+  await page.findByTestId("players-to-add")
 }
 
 test("a sixth player can be added once a half of Scoundrels of Skullport is ticked", async () => {
   await startRecording()
   for (const name of ["Anna", "Dora", "Eszter", "Feri"]) {
-    await userEvent.selectOptions(screen.getByLabelText("Add a player"), name)
+    await userEvent.selectOptions(page.getByTestId("players-to-add"), name)
   }
 
   // Five is the most without an Expansion that allows more.
-  expect(screen.queryByLabelText("Add a player")).not.toBeInTheDocument()
-  expect(
-    screen.getByText(
-      "This game is for at most 5 players, unless it's played with an Expansion that allows more.",
-    ),
-  ).toBeInTheDocument()
-  await userEvent.click(
-    screen.getByRole("checkbox", { name: "Scoundrels of Skullport: Undermountain" }),
+  expect(page.queryByTestId("players-to-add")).not.toBeInTheDocument()
+  expect(page.getByTestId("players-full")).toHaveTextContent(
+    "This game is for at most 5 players, unless it's played with an Expansion that allows more.",
   )
-  await userEvent.selectOptions(screen.getByLabelText("Add a player"), "Gabi")
-  expect(screen.getByText("This game is for at most 6 players.")).toBeInTheDocument()
+  await userEvent.click(page.getByTestId("expansion-undermountain"))
+  await userEvent.selectOptions(page.getByTestId("players-to-add"), "Gabi")
+  expect(page.getByTestId("players-full")).toHaveTextContent("This game is for at most 6 players.")
 
   // Taking the Expansion off again says at once that there are too many.
-  await userEvent.click(
-    screen.getByRole("checkbox", { name: "Scoundrels of Skullport: Undermountain" }),
-  )
+  await userEvent.click(page.getByTestId("expansion-undermountain"))
   expect(
-    screen.getByText(
+    page.getByTestIdWith(
+      "field-error",
       "This game is for at most 5 players, unless it's played with an Expansion that allows more.",
     ),
   ).toBeInTheDocument()
   // Nobody is taken off: the recorder decides who.
-  expect(screen.getByRole("button", { name: "Remove Gabi" })).toBeInTheDocument()
+  expect(playerRow("Gabi").getByTestId("remove-player")).toBeInTheDocument()
 })
 
 test("each half brings its own lords, and skullport a row for corruption", async () => {
   await startRecording()
-  await userEvent.selectOptions(screen.getByLabelText("Add a player"), "Anna")
+  await userEvent.selectOptions(page.getByTestId("players-to-add"), "Anna")
 
-  const lord = screen.getByLabelText("Lord of Waterdeep of Bence")
-  expect(within(lord).queryByRole("option", { name: "Trobriand" })).not.toBeInTheDocument()
-  expect(within(lord).queryByRole("option", { name: "The Xanathar" })).not.toBeInTheDocument()
+  const lord = playerRow("Bence").getByTestId("player-setup-lord")
+  expect(optionOf(lord, "trobriand")).toBeUndefined()
+  expect(optionOf(lord, "theXanathar")).toBeUndefined()
   expect(
-    screen.queryByText("Corruption (tokens × the farthest empty space)"),
+    page.queryByTestIdWith("score-pad-category", "Corruption (tokens × the farthest empty space)"),
   ).not.toBeInTheDocument()
 
-  await userEvent.click(
-    screen.getByRole("checkbox", { name: "Scoundrels of Skullport: Skullport" }),
-  )
-  expect(within(lord).getByRole("option", { name: "The Xanathar" })).toBeInTheDocument()
-  expect(within(lord).queryByRole("option", { name: "Trobriand" })).not.toBeInTheDocument()
-  expect(screen.getByText("Corruption (tokens × the farthest empty space)")).toBeInTheDocument()
+  await userEvent.click(page.getByTestId("expansion-skullport"))
+  expect(optionOf(lord, "theXanathar")).toHaveTextContent("The Xanathar")
+  expect(optionOf(lord, "trobriand")).toBeUndefined()
+  expect(
+    page.getByTestIdWith("score-pad-category", "Corruption (tokens × the farthest empty space)"),
+  ).toBeInTheDocument()
 })

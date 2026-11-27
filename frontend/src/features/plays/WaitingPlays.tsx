@@ -36,7 +36,7 @@ export function WaitingPlays() {
   const nameOfPlayer = (id: string) => players.data?.find((player) => player.id === id)?.name
 
   return (
-    <section className="space-y-2">
+    <section className="space-y-2" data-testid="waiting-plays">
       <div className="space-y-1">
         <h2 className="text-sm font-medium">{t("plays.waiting.title")}</h2>
         <p className="text-sm text-muted-foreground">{t("plays.waiting.description")}</p>
@@ -45,10 +45,13 @@ export function WaitingPlays() {
         {waiting.map((item) => (
           <li key={item.play.id} className="flex items-center gap-3 p-3" data-testid="waiting-play">
             <div className="min-w-0 flex-1">
-              <p className="font-medium">
+              <p className="font-medium" data-testid="waiting-play-game">
                 {nameOfGame(item.play.gameId)} · {formatDay(item.play.playedOn)}
               </p>
-              <p className="truncate text-sm text-muted-foreground">
+              <p
+                className="truncate text-sm text-muted-foreground"
+                data-testid="waiting-play-players"
+              >
                 {item.play.players
                   .map((player) => nameOfPlayer(player.playerId))
                   .filter(Boolean)
@@ -58,6 +61,7 @@ export function WaitingPlays() {
                 className={
                   item.problem ? "text-sm text-destructive" : "text-sm text-muted-foreground"
                 }
+                data-testid="waiting-play-status"
               >
                 {item.problem
                   ? explainProblem(t, item.problem, moduleTexts)
@@ -68,6 +72,7 @@ export function WaitingPlays() {
               <LinkButton
                 size="sm"
                 to={`/plays/new?game=${item.play.gameId}&waiting=${item.play.id}`}
+                data-testid="open-waiting-play"
               >
                 {t("plays.waiting.open")}
               </LinkButton>
@@ -75,6 +80,7 @@ export function WaitingPlays() {
             <Button
               variant="ghost"
               size="icon"
+              data-testid="remove-waiting-play"
               aria-label={t("plays.waiting.remove", {
                 game: nameOfGame(item.play.gameId),
                 date: formatDay(item.play.playedOn),

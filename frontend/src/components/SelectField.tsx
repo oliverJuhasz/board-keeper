@@ -27,7 +27,9 @@ export function SelectField<Value extends string>({
 
   return (
     <Field>
-      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      <FieldLabel htmlFor={id} data-testid={testId && `${testId}-label`}>
+        {label}
+      </FieldLabel>
       <NativeSelect
         id={id}
         value={value}
@@ -41,7 +43,11 @@ export function SelectField<Value extends string>({
           </NativeSelectOption>
         ))}
       </NativeSelect>
-      {hint && <FieldDescription id={`${id}-hint`}>{hint}</FieldDescription>}
+      {hint && (
+        <FieldDescription id={`${id}-hint`} data-testid={testId && `${testId}-hint`}>
+          {hint}
+        </FieldDescription>
+      )}
     </Field>
   )
 }

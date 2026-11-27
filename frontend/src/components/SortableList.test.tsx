@@ -1,7 +1,8 @@
-import { act, render, screen, waitFor } from "@testing-library/react"
+import { act, render, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { expect, test, vi } from "vitest"
 import i18n from "@/i18n"
+import { inside, page } from "@/test/queries"
 import { sortableListsCanBeUsed } from "@/test/sortable"
 import { SortableItem, SortableList } from "./SortableList"
 
@@ -9,7 +10,7 @@ function List({ names, onMove = () => {} }: { names: string[]; onMove?: () => vo
   return (
     <SortableList onMove={onMove}>
       {names.map((name, index) => (
-        <SortableItem key={name} id={name} index={index} label={name}>
+        <SortableItem key={name} id={name} index={index} label={name} testId="item">
           {(handle) => (
             <>
               {handle}
@@ -22,6 +23,11 @@ function List({ names, onMove = () => {} }: { names: string[]; onMove?: () => vo
   )
 }
 
+/** The handle of the item with this name. */
+function handleOf(name: string) {
+  return inside(page.getByTestIdWith("item", name)).getByTestId("move-handle")
+}
+
 /** What screen readers are told about every handle: how to move an item from the keyboard. */
 function instructions() {
   return document.querySelector('[id^="dnd-kit-description"]')
@@ -32,7 +38,7 @@ test("says where the item went", async () => {
   const onMove = vi.fn()
   render(<List names={["Anna", "Bence", "Dora"]} onMove={onMove} />)
 
-  screen.getByRole("button", { name: "Move Anna" }).focus()
+  handleOf("Anna").focus()
   await userEvent.keyboard(" ")
   await userEvent.keyboard("{ArrowDown}")
   await userEvent.keyboard("{ArrowDown}")
@@ -49,10 +55,8 @@ test("tells screen readers how to move an item, in the current language", async 
 
   await act(() => i18n.changeLanguage("nl"))
 
-  expect(screen.getByRole("button", { name: "Anna verplaatsen" })).toHaveAttribute(
-    "aria-roledescription",
-    "versleepbaar",
-  )
+  expect(handleOf("Anna")).toHaveAccessibleName("Anna verplaatsen")
+  expect(handleOf("Anna")).toHaveAttribute("aria-roledescription", "versleepbaar")
   await waitFor(() =>
     expect(instructions()).toHaveTextContent(/^Druk op de spatiebalk om te verplaatsen\./),
   )

@@ -1,8 +1,9 @@
-import { screen, waitFor, within } from "@testing-library/react"
+import { waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { delay, http, HttpResponse } from "msw"
 import { afterEach, beforeEach, expect, test, vi } from "vitest"
 import { anna, gamesAre, problem } from "@/test/api"
+import { inside, page } from "@/test/queries"
 import { renderApp } from "@/test/renderApp"
 import { server } from "@/test/server"
 
@@ -84,10 +85,10 @@ test("signs in with a passkey", async () => {
   const sent = passkeySignInWorks()
   renderApp("/sign-in")
 
-  await userEvent.click(await screen.findByRole("checkbox", { name: "Stay signed in" }))
-  await userEvent.click(screen.getByRole("button", { name: "Sign in with a passkey" }))
+  await userEvent.click(await page.findByTestId("stay-signed-in"))
+  await userEvent.click(page.getByTestId("sign-in-with-passkey"))
 
-  expect(await screen.findByText("No games yet.")).toBeInTheDocument()
+  expect(await page.findByTestId("no-games")).toBeInTheDocument()
   expect(phone.get).toHaveBeenCalledWith(
     expect.objectContaining({ publicKey: signInOptions, mediation: "optional" }),
   )
@@ -101,7 +102,7 @@ test("offers passkeys among the username field's suggestions, where the browser 
   renderApp("/sign-in")
 
   // The phone answers as soon as it is asked, as if the person picked the suggestion.
-  expect(await screen.findByText("No games yet.")).toBeInTheDocument()
+  expect(await page.findByTestId("no-games")).toBeInTheDocument()
   expect(phone.get).toHaveBeenCalledWith(expect.objectContaining({ mediation: "conditional" }))
   expect(sent).toEqual([{ credential: assertion, staySignedIn: true }])
 })
@@ -113,7 +114,7 @@ test("the username field invites passkey suggestions", async () => {
 
   // The field is there before the answer to "who is signed in" says passkeys are offered.
   await waitFor(() =>
-    expect(screen.getByLabelText("Username")).toHaveAttribute("autocomplete", "username webauthn"),
+    expect(page.getByTestId("username")).toHaveAttribute("autocomplete", "username webauthn"),
   )
 })
 
@@ -142,11 +143,11 @@ test("a sign-in with the password first stops the passkey suggestions", async ()
   renderApp("/sign-in")
 
   await waitFor(() => expect(optionsRequests).toHaveLength(1))
-  await userEvent.type(screen.getByLabelText("Username"), "anna")
-  await userEvent.type(screen.getByLabelText("Password"), "correct horse battery staple")
-  await userEvent.click(screen.getByRole("button", { name: /^Sign in$/ }))
+  await userEvent.type(page.getByTestId("username"), "anna")
+  await userEvent.type(page.getByTestId("password"), "correct horse battery staple")
+  await userEvent.click(page.getByTestId("sign-in"))
 
-  expect(await screen.findByText("No games yet.")).toBeInTheDocument()
+  expect(await page.findByTestId("no-games")).toBeInTheDocument()
   expect(sentPassword).toBe(true)
   expect(phone.get).not.toHaveBeenCalled()
 })
@@ -159,8 +160,8 @@ test("says nothing when the browser can't offer passkeys among the suggestions",
   renderApp("/sign-in")
 
   await waitFor(() => expect(phone.get).toHaveBeenCalled())
-  expect(screen.queryByRole("alert")).not.toBeInTheDocument()
-  expect(screen.getByRole("button", { name: "Sign in with a passkey" })).toBeEnabled()
+  expect(page.queryByTestId("problem")).not.toBeInTheDocument()
+  expect(page.getByTestId("sign-in-with-passkey")).toBeEnabled()
 })
 
 test("says nothing when the person cancels on their phone", async () => {
@@ -169,11 +170,11 @@ test("says nothing when the person cancels on their phone", async () => {
   signedOutWithPasskeys()
   renderApp("/sign-in")
 
-  await userEvent.click(await screen.findByRole("button", { name: "Sign in with a passkey" }))
+  await userEvent.click(await page.findByTestId("sign-in-with-passkey"))
 
   await waitFor(() => expect(phone.get).toHaveBeenCalled())
-  expect(screen.getByRole("button", { name: "Sign in with a passkey" })).toBeEnabled()
-  expect(screen.queryByRole("alert")).not.toBeInTheDocument()
+  expect(page.getByTestId("sign-in-with-passkey")).toBeEnabled()
+  expect(page.queryByTestId("problem")).not.toBeInTheDocument()
 })
 
 test("says so when the server doesn't accept the passkey", async () => {
@@ -182,13 +183,11 @@ test("says so when the server doesn't accept the passkey", async () => {
   server.use(http.post("*/api/session/passkey", () => problem(401, "session.passkeyNotAccepted")))
   renderApp("/sign-in")
 
-  await userEvent.click(await screen.findByRole("button", { name: "Sign in with a passkey" }))
+  await userEvent.click(await page.findByTestId("sign-in-with-passkey"))
 
-  expect(
-    await screen.findByText(
-      "This passkey wasn't accepted. Try again, or sign in with your password.",
-    ),
-  ).toBeInTheDocument()
+  expect(await page.findByTestId("problem")).toHaveTextContent(
+    "This passkey wasn't accepted. Try again, or sign in with your password.",
+  )
 })
 
 test("still offers passkeys after signing out", async () => {
@@ -197,10 +196,10 @@ test("still offers passkeys after signing out", async () => {
   server.use(http.delete("*/api/session", () => new HttpResponse(null, { status: 204 })))
   renderApp("/")
 
-  await userEvent.click(await screen.findByRole("button", { name: "Account" }))
-  await userEvent.click(await screen.findByRole("menuitem", { name: "Sign out" }))
+  await userEvent.click(await page.findByTestId("account-menu"))
+  await userEvent.click(await page.findByTestId("sign-out"))
 
-  expect(await screen.findByRole("button", { name: "Sign in with a passkey" })).toBeInTheDocument()
+  expect(await page.findByTestId("sign-in-with-passkey")).toBeInTheDocument()
 })
 
 test("offers no passkeys when the installation has none", async () => {
@@ -211,16 +210,16 @@ test("offers no passkeys when the installation has none", async () => {
   )
   renderApp("/sign-in")
 
-  expect(await screen.findByLabelText("Username")).toHaveAttribute("autocomplete", "username")
-  expect(screen.queryByRole("button", { name: "Sign in with a passkey" })).not.toBeInTheDocument()
+  expect(await page.findByTestId("username")).toHaveAttribute("autocomplete", "username")
+  expect(page.queryByTestId("sign-in-with-passkey")).not.toBeInTheDocument()
 })
 
 test("offers no passkeys in a browser without them", async () => {
   signedOutWithPasskeys()
   renderApp("/sign-in")
 
-  await screen.findByLabelText("Username")
-  expect(screen.queryByRole("button", { name: "Sign in with a passkey" })).not.toBeInTheDocument()
+  await page.findByTestId("username")
+  expect(page.queryByTestId("sign-in-with-passkey")).not.toBeInTheDocument()
 })
 
 test("settings list the passkeys, and add one with a name", async () => {
@@ -241,23 +240,22 @@ test("settings list the passkeys, and add one with a name", async () => {
   )
   renderApp("/settings")
 
-  const card = (await screen.findByText("Passkeys")).closest("[data-slot=card]") as HTMLElement
-  expect(await within(card).findByText("Old laptop")).toBeInTheDocument()
-  expect(within(card).getByText("Added 1 March 2026 · not used yet")).toBeInTheDocument()
+  const laptop = inside(await page.findByTestIdWith("passkey", "Old laptop"))
+  expect(laptop.getByTestId("passkey-details")).toHaveTextContent(
+    "Added 1 March 2026 · not used yet",
+  )
 
-  await userEvent.click(within(card).getByRole("button", { name: "Add a passkey" }))
-  const dialog = await screen.findByRole("dialog", { name: "Add a passkey" })
-  await userEvent.type(within(dialog).getByLabelText("Name"), "My phone")
-  await userEvent.click(within(dialog).getByRole("button", { name: "Add passkey" }))
+  await userEvent.click(page.getByTestId("add-passkey"))
+  expect(await page.findByTestId("add-passkey-dialog")).toHaveAccessibleName("Add a passkey")
+  await userEvent.type(page.getByTestId("passkey-label"), "My phone")
+  await userEvent.click(page.getByTestId("save-passkey"))
 
-  expect(await within(card).findByText("My phone")).toBeInTheDocument()
+  expect(await page.findByTestIdWith("passkey", "My phone")).toBeInTheDocument()
   expect(phone.create).toHaveBeenCalledWith({ publicKey: creationOptions })
   expect(sent).toEqual([{ label: "My phone", credential: attestation }])
-  expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+  expect(page.queryByTestId("add-passkey-dialog")).not.toBeInTheDocument()
   // The keyboard carries on from the button, not from the top of the page.
-  await waitFor(() =>
-    expect(within(card).getByRole("button", { name: "Add a passkey" })).toHaveFocus(),
-  )
+  await waitFor(() => expect(page.getByTestId("add-passkey")).toHaveFocus())
 })
 
 test("cancelling the dialog for a new passkey gives focus back to its button", async () => {
@@ -265,10 +263,10 @@ test("cancelling the dialog for a new passkey gives focus back to its button", a
   signedInWithPasskeys([])
   renderApp("/settings")
 
-  const add = await screen.findByRole("button", { name: "Add a passkey" })
+  const add = await page.findByTestId("add-passkey")
   add.focus()
   await userEvent.keyboard("{Enter}")
-  await screen.findByRole("dialog", { name: "Add a passkey" })
+  await page.findByTestId("add-passkey-dialog")
   await userEvent.keyboard("{Escape}")
 
   await waitFor(() => expect(add).toHaveFocus())
@@ -279,11 +277,11 @@ test("a passkey needs a name before the phone is asked", async () => {
   signedInWithPasskeys([])
   renderApp("/settings")
 
-  await userEvent.click(await screen.findByRole("button", { name: "Add a passkey" }))
-  const dialog = await screen.findByRole("dialog", { name: "Add a passkey" })
-  await userEvent.click(within(dialog).getByRole("button", { name: "Add passkey" }))
+  await userEvent.click(await page.findByTestId("add-passkey"))
+  await page.findByTestId("add-passkey-dialog")
+  await userEvent.click(page.getByTestId("save-passkey"))
 
-  expect(await within(dialog).findByText("Fill this in.")).toBeInTheDocument()
+  expect(await page.findByTestIdWith("field-error", "Fill this in.")).toBeInTheDocument()
   expect(phone.create).not.toHaveBeenCalled()
 })
 
@@ -307,16 +305,19 @@ test("removes a passkey after asking", async () => {
   )
   renderApp("/settings")
 
-  expect(
-    await screen.findByText("Added 1 March 2026 · last used 10 March 2026"),
-  ).toBeInTheDocument()
-  await userEvent.click(screen.getByRole("button", { name: "Remove Old laptop" }))
-  const dialog = await screen.findByRole("alertdialog", {
-    name: 'Remove the passkey "Old laptop"?',
-  })
-  await userEvent.click(within(dialog).getByRole("button", { name: "Remove passkey" }))
+  const laptop = inside(await page.findByTestIdWith("passkey", "Old laptop"))
+  expect(laptop.getByTestId("passkey-details")).toHaveTextContent(
+    "Added 1 March 2026 · last used 10 March 2026",
+  )
+  const remove = laptop.getByTestId("remove-passkey")
+  expect(remove).toHaveAccessibleName("Remove Old laptop")
+  await userEvent.click(remove)
+  expect(await page.findByTestId("confirm-dialog")).toHaveAccessibleName(
+    'Remove the passkey "Old laptop"?',
+  )
+  await userEvent.click(page.getByTestId("confirm"))
 
-  expect(await screen.findByText("You have no passkeys yet.")).toBeInTheDocument()
+  expect(await page.findByTestId("no-passkeys")).toHaveTextContent("You have no passkeys yet.")
   expect(removed).toBe("b2xk")
 })
 
@@ -324,6 +325,6 @@ test("settings show no passkeys when the installation offers none", async () => 
   server.use(http.get("*/api/session", () => HttpResponse.json({ account: anna, passkeys: false })))
   renderApp("/settings")
 
-  expect(await screen.findByLabelText("Current password")).toBeInTheDocument()
-  expect(screen.queryByText("Passkeys")).not.toBeInTheDocument()
+  expect(await page.findByTestId("current-password")).toBeInTheDocument()
+  expect(page.queryByTestId("passkeys")).not.toBeInTheDocument()
 })

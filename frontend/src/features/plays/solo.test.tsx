@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from "@testing-library/react"
+import { waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { http, HttpResponse } from "msw"
 import { expect, test } from "vitest"
@@ -15,6 +15,8 @@ import {
   wyrmspan,
 } from "@/test/api"
 import { calicoModule, gameModuleTexts, genericModule, wyrmspanModule } from "@/test/gameModules"
+import { findScoreField, padFoot, playerRow, queryScoreField, scoreField } from "@/test/playForm"
+import { page } from "@/test/queries"
 import { renderApp } from "@/test/renderApp"
 import { server } from "@/test/server"
 
@@ -83,17 +85,9 @@ function automaCanBePreviewed() {
 }
 
 async function fillWyrmspan(name: string, dragonGuild: string, printed: string, eggs: string) {
-  await userEvent.type(await screen.findByLabelText(`Dragon Guild of ${name}`), dragonGuild)
-  await userEvent.type(screen.getByLabelText(`Printed on dragons of ${name}`), printed)
-  await userEvent.type(screen.getByLabelText(`Eggs of ${name}`), eggs)
-}
-
-function padRow(name: string) {
-  const pad = screen.getByRole("table", { name: "Score pad" })
-  const row = within(pad).getByRole("row", { name: new RegExp(`^${name}`) })
-  return within(row)
-    .getAllByRole("cell")
-    .map((cell) => cell.textContent)
+  await userEvent.type(await findScoreField(name, "dragonGuild"), dragonGuild)
+  await userEvent.type(scoreField(name, "printedDragons"), printed)
+  await userEvent.type(scoreField(name, "eggs"), eggs)
 }
 
 test("a solo play for score only has a total, but no placing and no winner", async () => {
@@ -120,19 +114,19 @@ test("a solo play for score only has a total, but no placing and no winner", asy
   renderApp(`/plays/new?game=${calico.id}`)
 
   // Only the recorder is in the play.
-  await userEvent.type(await screen.findByLabelText("Design goals of Bence"), "28")
-  await userEvent.type(screen.getByLabelText("Cats of Bence"), "23")
-  await userEvent.type(screen.getByLabelText("Buttons of Bence"), "21")
+  await userEvent.type(await findScoreField("Bence", "designGoals"), "28")
+  await userEvent.type(scoreField("Bence", "cats"), "23")
+  await userEvent.type(scoreField("Bence", "buttons"), "21")
 
-  await waitFor(() => expect(padRow("Total")).toEqual(["72"]))
-  expect(screen.queryByRole("row", { name: /^Placing/ })).not.toBeInTheDocument()
-  expect(screen.queryByRole("row", { name: /^Result/ })).not.toBeInTheDocument()
-  await userEvent.click(screen.getByRole("button", { name: "Record play" }))
+  await waitFor(() => expect(padFoot("total")).toEqual(["72"]))
+  expect(padFoot("placing")).toEqual([])
+  expect(padFoot("solo-result")).toEqual([])
+  await userEvent.click(page.getByTestId("save-play"))
 
   // Its page has neither a Placing nor a badge.
-  await screen.findByRole("heading", { name: "Calico" })
-  const results = within(screen.getByRole("table", { name: "Results" })).getAllByRole("row")
-  expect(results.map((row) => row.textContent)).toEqual(["PlayerTotal", "Bence72"])
+  await page.findByTestIdWith("page-title", "Calico")
+  expect(page.getByTestId("results-header")).toHaveTextContent(/^PlayerTotal$/)
+  expect(page.getAllByTestId("result-row").map((row) => row.textContent)).toEqual(["Bence72"])
   expect(sent[0]).toMatchObject({
     setup: { family: "false" },
     players: [
@@ -151,13 +145,16 @@ test("a solo play for score only can't be recorded with only the winner", async 
   playCanBeEntered()
   renderApp(`/plays/new?game=${calico.id}`)
 
-  await userEvent.click(await screen.findByRole("button", { name: "Change" }))
-  await userEvent.click(screen.getByRole("radio", { name: "Winner only" }))
-  expect(screen.queryByRole("checkbox", { name: "Bence won" })).not.toBeInTheDocument()
-  await userEvent.click(screen.getByRole("button", { name: "Record play" }))
+  await userEvent.click(await page.findByTestId("change-recording"))
+  await userEvent.click(page.getByTestId("recording-mode-WINNER_ONLY"))
+  expect(page.queryByTestId("won")).not.toBeInTheDocument()
+  await userEvent.click(page.getByTestId("save-play"))
 
   expect(
-    await screen.findByText("A solo play of this game is recorded with its scores. Choose Points."),
+    await page.findByTestIdWith(
+      "field-error",
+      "A solo play of this game is recorded with its scores. Choose Points.",
+    ),
   ).toBeInTheDocument()
 })
 
@@ -170,20 +167,20 @@ test("a solo play against the Automa records its level and its score, and is won
   renderApp(`/plays/new?game=${wyrmspan.id}`)
 
   // The Automa's level and Ravel Mode belong to a Solo Play.
-  await userEvent.click(await screen.findByRole("radio", { name: "Level 2" }))
-  await userEvent.click(screen.getByRole("checkbox", { name: "Ravel Mode" }))
+  await userEvent.click(await page.findByTestId("variant-automaLevel-2"))
+  await userEvent.click(page.getByTestId("variant-ravelMode"))
   await fillWyrmspan("Bence", "12", "40", "9")
-  await userEvent.type(screen.getByLabelText("The Automa's score of Bence"), "61")
+  await userEvent.type(scoreField("Bence", "automa"), "61")
 
   // A tie with the Automa is won.
-  await waitFor(() => expect(padRow("Total")).toEqual(["61"]))
-  expect(padRow("Result")).toEqual(["Won"])
-  await userEvent.clear(screen.getByLabelText("The Automa's score of Bence"))
-  await userEvent.type(screen.getByLabelText("The Automa's score of Bence"), "70")
-  await waitFor(() => expect(padRow("Result")).toEqual(["Lost"]))
+  await waitFor(() => expect(padFoot("total")).toEqual(["61"]))
+  expect(padFoot("solo-result")).toEqual(["Won"])
+  await userEvent.clear(scoreField("Bence", "automa"))
+  await userEvent.type(scoreField("Bence", "automa"), "70")
+  await waitFor(() => expect(padFoot("solo-result")).toEqual(["Lost"]))
 
-  await userEvent.click(screen.getByRole("button", { name: "Record play" }))
-  await screen.findByRole("heading", { name: "Wyrmspan" })
+  await userEvent.click(page.getByTestId("save-play"))
+  await page.findByTestIdWith("page-title", "Wyrmspan")
   expect(sent[0]).toMatchObject({
     setup: { automaLevel: "2", ravelMode: "true" },
     players: [
@@ -221,19 +218,17 @@ test("a Variant with many options is picked from a drop-down", async () => {
   const sent = playsCanBeRecorded(soloPlay({}))
   renderApp(`/plays/new?game=${wyrmspan.id}`)
 
-  const level = await screen.findByRole("combobox", { name: "Automa level" })
-  expect(screen.queryByRole("radio", { name: "Level 1" })).not.toBeInTheDocument()
+  const level = await page.findByTestId("variant-automaLevel")
+  expect(page.queryByTestId("variant-automaLevel-1")).not.toBeInTheDocument()
   expect(
-    within(level)
-      .getAllByRole("option")
-      .map((option) => option.textContent),
+    Array.from((level as HTMLSelectElement).options).map((option) => option.textContent),
   ).toEqual(levels.map((value) => `Level ${value}`))
   await userEvent.selectOptions(level, "Level 5")
   await fillWyrmspan("Bence", "12", "40", "9")
-  await userEvent.type(screen.getByLabelText("The Automa's score of Bence"), "61")
-  await userEvent.click(screen.getByRole("button", { name: "Record play" }))
+  await userEvent.type(scoreField("Bence", "automa"), "61")
+  await userEvent.click(page.getByTestId("save-play"))
 
-  await screen.findByRole("heading", { name: "Wyrmspan" })
+  await page.findByTestIdWith("page-title", "Wyrmspan")
   expect(sent[0]).toMatchObject({ setup: { automaLevel: "5" } })
 })
 
@@ -246,20 +241,20 @@ test("the Automa is not part of a play with more players", async () => {
   renderApp(`/plays/new?game=${wyrmspan.id}`)
 
   // The Players come first, so adding one takes away choices further down the form, not above.
-  const levelOne = await screen.findByRole("radio", { name: "Level 1" })
-  expect(screen.getByLabelText("Add a player").compareDocumentPosition(levelOne)).toBe(
+  const levelOne = await page.findByTestId("variant-automaLevel-1")
+  expect(page.getByTestId("players-to-add").compareDocumentPosition(levelOne)).toBe(
     Node.DOCUMENT_POSITION_FOLLOWING,
   )
-  await userEvent.selectOptions(screen.getByLabelText("Add a player"), "Anna")
+  await userEvent.selectOptions(page.getByTestId("players-to-add"), "Anna")
 
-  expect(screen.queryByRole("radio", { name: "Level 1" })).not.toBeInTheDocument()
-  expect(screen.queryByRole("checkbox", { name: "Ravel Mode" })).not.toBeInTheDocument()
-  expect(screen.queryByLabelText("The Automa's score of Bence")).not.toBeInTheDocument()
+  expect(page.queryByTestId("variant-automaLevel-1")).not.toBeInTheDocument()
+  expect(page.queryByTestId("variant-ravelMode")).not.toBeInTheDocument()
+  expect(queryScoreField("Bence", "automa")).not.toBeInTheDocument()
   await fillWyrmspan("Bence", "12", "40", "9")
   await fillWyrmspan("Anna", "5", "30", "2")
-  await userEvent.click(screen.getByRole("button", { name: "Record play" }))
+  await userEvent.click(page.getByTestId("save-play"))
 
-  await screen.findByRole("heading", { name: "Wyrmspan" })
+  await page.findByTestIdWith("page-title", "Wyrmspan")
   expect(sent[0].setup).toEqual({})
   expect(sent[0].players.map((player) => Object.keys(player.scores ?? {}))).toEqual([
     ["dragonGuild", "printedDragons", "eggs"],
@@ -274,13 +269,15 @@ test("a solo play against the Automa can be recorded as won or lost only", async
   const sent = playsCanBeRecorded(soloPlay({}))
   renderApp(`/plays/new?game=${wyrmspan.id}`)
 
-  await userEvent.click(await screen.findByRole("button", { name: "Change" }))
-  await userEvent.click(screen.getByRole("radio", { name: "Won or lost only" }))
+  await userEvent.click(await page.findByTestId("change-recording"))
+  // Against an opponent, a Solo Play is won or lost.
+  expect(page.getByTestId("recording-mode")).toHaveTextContent("Won or lost only")
+  await userEvent.click(page.getByTestId("recording-mode-WINNER_ONLY"))
   // Lost: "won" stays unticked, and that is a complete answer.
-  expect(screen.getByRole("checkbox", { name: "Bence won" })).not.toBeChecked()
-  await userEvent.click(screen.getByRole("button", { name: "Record play" }))
+  expect(playerRow("Bence").getByTestId("won")).not.toBeChecked()
+  await userEvent.click(page.getByTestId("save-play"))
 
-  await screen.findByRole("heading", { name: "Wyrmspan" })
+  await page.findByTestIdWith("page-title", "Wyrmspan")
   expect(sent[0]).toMatchObject({
     recordingMode: "WINNER_ONLY",
     setup: { automaLevel: "1", ravelMode: "false" },
@@ -293,10 +290,12 @@ test("a solo play's page says whether it was won, and against which level", asyn
   playIs(soloPlay({}))
   renderApp(`/plays/${soloPlay({}).id}`)
 
-  const results = within(await screen.findByRole("table", { name: "Results" })).getAllByRole("row")
-  expect(results.map((row) => row.textContent)).toEqual(["PlayerTotal", "BenceWon61"])
-  expect(screen.getByText(/^Points, Automa level: Level 2, Ravel Mode\./)).toBeInTheDocument()
-  expect(screen.getByRole("rowheader", { name: "The Automa's score" })).toBeInTheDocument()
+  expect(await page.findByTestId("results-header")).toHaveTextContent(/^PlayerTotal$/)
+  expect(page.getAllByTestId("result-row").map((row) => row.textContent)).toEqual(["BenceWon61"])
+  expect(page.getByTestId("recorded-by")).toHaveTextContent(
+    /^Points, Automa level: Level 2, Ravel Mode\./,
+  )
+  expect(page.getByTestIdWith("pad-row", "The Automa's score")).toBeInTheDocument()
 })
 
 test("a play of more players doesn't name the Automa's level", async () => {
@@ -323,5 +322,5 @@ test("a play of more players doesn't name the Automa's level", async () => {
   playIs(play)
   renderApp(`/plays/${play.id}`)
 
-  expect(await screen.findByText(/^Points\. Recorded by/)).toBeInTheDocument()
+  expect(await page.findByTestId("recorded-by")).toHaveTextContent(/^Points\. Recorded by/)
 })

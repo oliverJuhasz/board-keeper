@@ -166,7 +166,9 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
       <PageHeader
         title={
           // The Game's name leads to its statistics.
-          <QuietLink to={`/games/${play.game.id}`}>{gameName(play.game)}</QuietLink>
+          <QuietLink to={`/games/${play.game.id}`} data-testid="game-link">
+            {gameName(play.game)}
+          </QuietLink>
         }
         description={[formatDay(play.playedOn), play.location].filter(Boolean).join(" · ")}
         action={
@@ -192,6 +194,7 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => recalculate.mutate({ params: { path: { id: play.id } } })}
+                  data-testid="recalculate-play"
                 >
                   {t("plays.page.recalculate")}
                 </DropdownMenuItem>
@@ -209,7 +212,7 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
       />
 
       {recalculate.isSuccess && (
-        <Alert>
+        <Alert data-testid="recalculated">
           <AlertDescription>
             {recalculate.data.changed
               ? t("plays.page.recalculated.changed")
@@ -218,7 +221,7 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
         </Alert>
       )}
       {recalculate.isError && (
-        <Alert variant="destructive">
+        <Alert variant="destructive" data-testid="recalculation-refused">
           <AlertDescription>
             {t("plays.page.recalculated.refused", {
               reason: explainProblem(t, recalculate.error, texts),
@@ -242,7 +245,10 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
           {/* The group's rows, from which a cooperative module worked out the score. A row
               may be named differently after a win and after a loss. */}
           {module?.scorePad.cooperative && Object.keys(play.group.scores).length > 0 && (
-            <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1 text-muted-foreground">
+            <dl
+              className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1 text-muted-foreground"
+              data-testid="group-rows"
+            >
               {module.scorePad.categories
                 .filter((category) => play.group?.scores[category.key] !== undefined)
                 .map((category) => (
@@ -270,11 +276,13 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
       ) : (
         <>
           {victoryType && (
-            <p className="font-medium">{t("plays.page.victoryType", { how: victoryType })}</p>
+            <p className="font-medium" data-testid="won-by">
+              {t("plays.page.victoryType", { how: victoryType })}
+            </p>
           )}
-          <Table aria-label={t("plays.page.results")}>
+          <Table aria-label={t("plays.page.results")} data-testid="results">
             <TableHeader>
-              <TableRow>
+              <TableRow data-testid="results-header">
                 {points && !solo && (
                   <TableHead className="w-20">{t("plays.page.placing")}</TableHead>
                 )}
@@ -332,9 +340,9 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
           {categories.length > 0 && (
             <section className="space-y-2">
               <h2 className="text-sm font-medium">{t("plays.page.pad")}</h2>
-              <Table aria-label={t("plays.page.pad")}>
+              <Table aria-label={t("plays.page.pad")} data-testid="play-pad">
                 <TableHeader>
-                  <TableRow>
+                  <TableRow data-testid="pad-players">
                     <TableHead />
                     {ranked.map((result) => (
                       <TableHead
@@ -348,7 +356,7 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
                 </TableHeader>
                 <TableBody>
                   {categories.map((category) => (
-                    <TableRow key={category.key}>
+                    <TableRow key={category.key} data-testid="pad-row">
                       {/* A long name, such as "Nature's Spirit card", may wrap on a phone. */}
                       <TableHead
                         scope="row"
@@ -370,7 +378,7 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
                       ))}
                     </TableRow>
                   ))}
-                  <TableRow className="font-medium">
+                  <TableRow className="font-medium" data-testid="pad-total">
                     <TableHead scope="row">{t("plays.page.total")}</TableHead>
                     {ranked.map((result) => (
                       <TableCell key={result.player.id} className="text-right tabular-nums">
@@ -395,7 +403,7 @@ function PlayDetails({ play, module }: { play: Play; module?: GameModule }) {
         </section>
       )}
 
-      <p className="text-sm text-muted-foreground">
+      <p className="text-sm text-muted-foreground" data-testid="recorded-by">
         {howRecorded}
         {". "}
         {t("plays.page.recordedBy", {

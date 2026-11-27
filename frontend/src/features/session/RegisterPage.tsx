@@ -59,8 +59,10 @@ export function RegisterPage() {
     >
       <FieldGroup>
         <div className="space-y-1">
-          <h1 className="font-heading text-xl font-semibold">{t("register.title")}</h1>
-          <p className="text-muted-foreground">
+          <h1 className="font-heading text-xl font-semibold" data-testid="page-title">
+            {t("register.title")}
+          </h1>
+          <p className="text-muted-foreground" data-testid="page-description">
             {t("register.intro", { name: registration.data.playerName })}
           </p>
         </div>

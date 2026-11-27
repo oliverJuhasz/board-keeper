@@ -68,7 +68,9 @@ export function SignInPage() {
       noValidate
     >
       <FieldGroup>
-        <h1 className="font-heading text-xl font-semibold">{t("signIn.title")}</h1>
+        <h1 className="font-heading text-xl font-semibold" data-testid="page-title">
+          {t("signIn.title")}
+        </h1>
         <FormProblem error={signIn.error ?? passkey.error} />
         <TextField
           label={t("signIn.username")}

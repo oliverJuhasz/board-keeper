@@ -6,7 +6,9 @@ export function NotFoundPage() {
 
   return (
     <div className="space-y-2">
-      <h1 className="font-heading text-xl font-semibold">{t("notFound.title")}</h1>
+      <h1 className="font-heading text-xl font-semibold" data-testid="page-title">
+        {t("notFound.title")}
+      </h1>
       <p className="text-muted-foreground">
         {t("notFound.text")}{" "}
         <Link to="/" className="text-foreground underline underline-offset-4">

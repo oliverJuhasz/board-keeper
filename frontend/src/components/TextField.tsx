@@ -33,7 +33,9 @@ export function TextField({ label, hint, error, type, ...input }: TextFieldProps
       />
       {hint && <FieldDescription id={`${id}-hint`}>{hint}</FieldDescription>}
       {error?.message && (
-        <FieldError id={`${id}-error`}>{t(error.message as "validation.required")}</FieldError>
+        <FieldError id={`${id}-error`} data-testid="field-error">
+          {t(error.message as "validation.required")}
+        </FieldError>
       )}
     </Field>
   )

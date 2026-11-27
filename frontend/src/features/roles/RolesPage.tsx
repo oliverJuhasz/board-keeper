@@ -58,7 +58,7 @@ export function RolesPage() {
         title={t("roles.title")}
         description={t("roles.description")}
         action={
-          <Button onClick={() => setDialog({ kind: "add" })}>
+          <Button onClick={() => setDialog({ kind: "add" })} data-testid="add-role">
             <PlusIcon />
             {t("roles.add")}
           </Button>
@@ -77,22 +77,32 @@ export function RolesPage() {
             </TableHeader>
             <TableBody>
               {roles.data?.map((role) => (
-                <TableRow key={role.id}>
+                <TableRow key={role.id} data-testid="role-row">
                   <TableCell className="font-medium">{roleName(t, role)}</TableCell>
-                  <TableCell className="whitespace-normal text-muted-foreground">
+                  <TableCell
+                    className="whitespace-normal text-muted-foreground"
+                    data-testid="role-permissions"
+                  >
                     {permissionsOf(role)}
                   </TableCell>
                   <TableCell className="text-right">
                     {/* The Admin Role can't be changed at all. */}
                     {role.builtIn !== "ADMIN" && (
-                      <ActionsMenu label={t("roles.actions", { name: roleName(t, role) })}>
-                        <DropdownMenuItem onClick={() => setDialog({ kind: "edit", role })}>
+                      <ActionsMenu
+                        label={t("roles.actions", { name: roleName(t, role) })}
+                        testId="role-actions"
+                      >
+                        <DropdownMenuItem
+                          onClick={() => setDialog({ kind: "edit", role })}
+                          data-testid="edit-role"
+                        >
                           {t("roles.edit")}
                         </DropdownMenuItem>
                         {!role.builtIn && (
                           <DropdownMenuItem
                             variant="destructive"
                             onClick={() => setDialog({ kind: "delete", role })}
+                            data-testid="delete-role"
                           >
                             {t("roles.delete")}
                           </DropdownMenuItem>

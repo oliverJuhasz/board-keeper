@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from "@testing-library/react"
+import { waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { http, HttpResponse } from "msw"
 import { expect, test } from "vitest"
@@ -16,6 +16,8 @@ import {
   signedInAs,
 } from "@/test/api"
 import { sevenWondersModule } from "@/test/gameModules"
+import { optionOf, playerRow, scoreField } from "@/test/playForm"
+import { page } from "@/test/queries"
 import { renderApp } from "@/test/renderApp"
 import { server } from "@/test/server"
 
@@ -82,28 +84,28 @@ test("each player's wonder and side are chosen in their row, each wonder once", 
   playIs(wondersPlay())
   renderApp(`/plays/new?game=${sevenWonders.id}`)
 
-  await userEvent.selectOptions(await screen.findByLabelText("Add a player"), "Anna")
-  await userEvent.selectOptions(screen.getByLabelText("Add a player"), "Dora")
-  await userEvent.selectOptions(screen.getByLabelText("Wonder board of Bence"), "Babylon")
-  await userEvent.selectOptions(screen.getByLabelText("Side of Bence"), "Night")
-  await userEvent.selectOptions(screen.getByLabelText("Wonder board of Anna"), "Giza")
+  await userEvent.selectOptions(await page.findByTestId("players-to-add"), "Anna")
+  await userEvent.selectOptions(page.getByTestId("players-to-add"), "Dora")
+  await userEvent.selectOptions(playerRow("Bence").getByTestId("player-setup-wonder"), "Babylon")
+  await userEvent.selectOptions(playerRow("Bence").getByTestId("player-setup-side"), "Night")
+  await userEvent.selectOptions(playerRow("Anna").getByTestId("player-setup-wonder"), "Giza")
 
   // Babylon is Bence's, so nobody else can have it.
-  const doraWonder = screen.getByLabelText("Wonder board of Dora")
-  expect(within(doraWonder).getByRole("option", { name: "Babylon" })).toBeDisabled()
-  expect(within(doraWonder).getByRole("option", { name: "Rhodes" })).toBeEnabled()
+  const doraWonder = playerRow("Dora").getByTestId("player-setup-wonder")
+  expect(optionOf(doraWonder, "babylon")).toBeDisabled()
+  expect(optionOf(doraWonder, "rhodes")).toBeEnabled()
 
   for (const [name, wonder, military] of [
     ["Bence", "10", "9"],
     ["Anna", "7", "-2"],
     ["Dora", "3", "0"],
   ]) {
-    await userEvent.type(screen.getByLabelText(`Wonder of ${name}`), wonder)
-    await userEvent.type(screen.getByLabelText(`Military of ${name}`), military)
+    await userEvent.type(scoreField(name, "wonder"), wonder)
+    await userEvent.type(scoreField(name, "military"), military)
   }
-  await userEvent.click(screen.getByRole("button", { name: "Record play" }))
+  await userEvent.click(page.getByTestId("save-play"))
 
-  await screen.findByRole("heading", { name: "7 Wonders" })
+  await page.findByTestIdWith("page-title", "7 Wonders")
   // Only the choices that were made are sent.
   expect(sent[0].players.map((player) => player.setup)).toEqual([
     { wonder: "babylon", side: "night" },
@@ -117,9 +119,8 @@ test("a play's page shows each player's wonder and side", async () => {
   playIs(wondersPlay())
   renderApp(`/plays/${wondersPlay().id}`)
 
-  const results = await screen.findByRole("table", { name: "Results" })
-  expect(within(results).getByText("Babylon · Night")).toBeInTheDocument()
-  expect(within(results).getByText("Giza")).toBeInTheDocument()
+  expect(await page.findByTestIdWith("player-setup", "Babylon · Night")).toBeInTheDocument()
+  expect(page.getByTestIdWith("player-setup", "Giza")).toBeInTheDocument()
 })
 
 test("editing a play keeps each player's choices", async () => {
@@ -129,10 +130,12 @@ test("editing a play keeps each player's choices", async () => {
   playIs(wondersPlay())
   renderApp(`/plays/${wondersPlay().id}/edit`)
 
-  await waitFor(() => expect(screen.getByLabelText("Wonder board of Bence")).toHaveValue("babylon"))
-  expect(screen.getByLabelText("Side of Bence")).toHaveValue("night")
-  expect(screen.getByLabelText("Wonder board of Anna")).toHaveValue("giza")
-  expect(screen.getByLabelText("Wonder board of Dora")).toHaveValue("")
+  await waitFor(() =>
+    expect(playerRow("Bence").getByTestId("player-setup-wonder")).toHaveValue("babylon"),
+  )
+  expect(playerRow("Bence").getByTestId("player-setup-side")).toHaveValue("night")
+  expect(playerRow("Anna").getByTestId("player-setup-wonder")).toHaveValue("giza")
+  expect(playerRow("Dora").getByTestId("player-setup-wonder")).toHaveValue("")
 })
 
 test("a wonder that comes with an expansion is offered once the expansion is ticked", async () => {
@@ -143,24 +146,25 @@ test("a wonder that comes with an expansion is offered once the expansion is tic
   renderApp(`/plays/new?game=${sevenWonders.id}`)
 
   // The Expansions come before the Players: they decide what can be chosen for each Player.
-  const expansions = await screen.findByRole("group", { name: "Expansions" })
-  const players = screen.getByRole("group", { name: "Players" })
+  const expansions = await page.findByTestId("expansions")
+  const players = page.getByTestId("players")
   expect(expansions.compareDocumentPosition(players)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
 
-  const wonder = screen.getByLabelText("Wonder board of Bence")
-  expect(within(wonder).queryByRole("option", { name: "Petra" })).not.toBeInTheDocument()
-  await userEvent.click(screen.getByRole("checkbox", { name: "Cities" }))
+  const wonder = playerRow("Bence").getByTestId("player-setup-wonder")
+  expect(optionOf(wonder, "petra")).toBeUndefined()
+  await userEvent.click(page.getByTestId("expansion-cities"))
   await userEvent.selectOptions(wonder, "Petra")
 
   // Taking Cities off again keeps Petra, and says at once why it can't stay.
-  await userEvent.click(screen.getByRole("checkbox", { name: "Cities" }))
+  await userEvent.click(page.getByTestId("expansion-cities"))
   expect(wonder).toHaveValue("petra")
   expect(
-    screen.getByText(
+    page.getByTestIdWith(
+      "field-error",
       "This Wonder board comes with Cities. Tick it under Expansions, or choose another.",
     ),
   ).toBeInTheDocument()
   await userEvent.selectOptions(wonder, "Giza")
-  expect(screen.queryByText(/comes with Cities/)).not.toBeInTheDocument()
-  expect(within(wonder).queryByRole("option", { name: "Petra" })).not.toBeInTheDocument()
+  expect(page.queryByTestIdWith("field-error", /comes with Cities/)).not.toBeInTheDocument()
+  expect(optionOf(wonder, "petra")).toBeUndefined()
 })
