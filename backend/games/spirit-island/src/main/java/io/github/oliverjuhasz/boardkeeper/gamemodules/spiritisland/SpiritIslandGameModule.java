@@ -28,7 +28,7 @@ import java.util.UUID;
  *       winning, +2 per Invader Card remaining in the deck". After a defeat: "Score 2x
  *       Difficulty, +1 per Invader Card not in the deck". Either way: "+1 per X living Dahan and
  *       -1 per X Blight on the Island, where X is the number of players in the game". The rulebook
- *       doesn't say how to round; only complete groups of X count, as agreed with the author.
+ *       doesn't say how to round, so Board Keeper counts only complete groups of X.
  *   <li>The Invader cards are entered as the rule counts them: those left in the deck after a
  *       victory, and those no longer in it after a defeat.
  * </ul>

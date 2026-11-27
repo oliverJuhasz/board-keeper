@@ -1,6 +1,6 @@
 # Board Keeper
 
-Board Keeper records the board games a group of friends play and how each one ended, so they can look back at their history and statistics.
+Board Keeper records the board games a group of people play and how each one ended, so they can look back at their history and statistics.
 
 ## Language
 

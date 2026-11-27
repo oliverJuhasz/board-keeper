@@ -25,10 +25,10 @@ import java.util.UUID;
  *   <li>It is played at one of four difficulty levels: Novice, Normal, Difficult and Heroic. The
  *       rulebook suggests Normal for the first games, so it is the default.
  *   <li>The box has a pad of score sheets, so a Play starts in points. Only a victory is scored,
- *       as agreed with the author: "5 points for a victory in Novice mode", 10 in Normal, 15 in
- *       Difficult and 20 in Heroic, "+ 1 point per Life token in your possession", "+ 2 points
- *       per Call to Arms token in your possession", "- 3 points per dead Hero" and "- 4 points per
- *       Bastion tile in the Grasp of Evil". A defeat has no rows and no score.
+ *       as Board Keeper reads the rulebook: "5 points for a victory in Novice mode", 10 in
+ *       Normal, 15 in Difficult and 20 in Heroic, "+ 1 point per Life token in your possession",
+ *       "+ 2 points per Call to Arms token in your possession", "- 3 points per dead Hero" and
+ *       "- 4 points per Bastion tile in the Grasp of Evil". A defeat has no rows and no score.
  *   <li>The game is lost when "a third Bastion tile falls under the Grasp of Evil", so after a
  *       victory there are at most two. It is also lost when "all of the heroes are taken out",
  *       and a dead Hero never comes back, so at least one Hero is alive after a victory: there

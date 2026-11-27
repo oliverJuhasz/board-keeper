@@ -40,7 +40,7 @@ Changing Plays without a connection, teams, unfinished plays, game nights, impor
 - Rulebooks for each Game, readable in Board Keeper. Parked during M6 until it is clear how they are best uploaded. They are copyrighted and may only be used privately, so they will be uploaded to each installation, never shipped in the repository or the container image.
 - Head-to-head records, streaks and charts.
 - Signing in through an outside provider.
-- Limits on the number of sign-in attempts. Left out while the app sits on a private network.
+- Limits on the number of sign-in attempts.
 - Before publishing the repository: ARM images.
 - Versioning the API, before Board Keeper is published. Until then the API changes along with the frontend, so a script that uses it may need changing after an update.
 - Moving to Maven 4 once it is released. Its new pom format no longer needs each module to repeat its parent's version.

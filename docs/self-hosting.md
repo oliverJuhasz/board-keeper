@@ -40,6 +40,7 @@ Board Keeper expects a reverse proxy in front of it to handle https: the proxy h
 - Send the `X-Forwarded-Proto` header (and preferably `X-Forwarded-Host` and `X-Forwarded-For`), so Board Keeper knows the visitor came in over https. Most proxies do this by default.
 - Pass the `Authorization` header through, for programs that use an API Key. Most proxies do this by default.
 - Allow requests as large as an Export, to import one. A few thousand Plays make a file of a few megabytes; nginx, for one, allows 1 MB unless `client_max_body_size` says otherwise.
+- Limit sign-in attempts if Board Keeper can be reached from the internet. Board Keeper doesn't limit them yet; passwords are checked at `POST /api/session`.
 - Nothing else is needed: no WebSockets, no sticky sessions.
 
 Set `BOARDKEEPER_URL` to the address the proxy answers at, exactly as people type it, and start Board Keeper again with `docker compose up -d`.
@@ -82,7 +83,7 @@ To make a backup while Board Keeper runs:
 docker compose exec -T db pg_dump --username boardkeeper --format custom boardkeeper > board-keeper.dump
 ```
 
-Keep the file somewhere other than the machine Board Keeper runs on. How often to make one, and where to keep them, is up to you; a backup made by a scheduled job (cron, or your NAS's task scheduler) is the one you'll have when you need it.
+Keep the file somewhere other than the machine Board Keeper runs on. How often to make one, and where to keep them, is up to you; a backup made by a scheduled job, such as one run by cron, is the one you'll have when you need it.
 
 To restore a backup, stop the application, load the backup into the database, and start the application again:
 
@@ -104,7 +105,7 @@ An Admin can also save an Export, from **Export and import** in the account menu
 
 ## Moving Plays to another installation
 
-The Plays of one Board Keeper can be brought into another, such as when two circles of friends join up:
+The Plays of one Board Keeper can be brought into another, such as when two groups of players join up:
 
 1. In the first, an Admin opens **Export and import** from the account menu and downloads an Export.
 2. Make a backup of the other one: an Import can't be undone.
@@ -139,7 +140,7 @@ docker compose logs --tail 100 app
 
 ## If you change Board Keeper's code
 
-Board Keeper is under the GNU Affero General Public License. Running it unchanged asks nothing of you. If you change its code and let others use your copy, the licence asks you to offer them your changed source. The About page, opened from the account menu, links to Board Keeper's own repository; point its links at yours with these environment variables of the `app` container:
+Board Keeper is licensed under the GNU Affero General Public License, version 3 or later. If you modify it and let others use your modified version over a network, the licence requires you to offer them its source code (section 13). The About page, opened from the account menu, links to Board Keeper's own repository; point its links at yours with these environment variables of the `app` container:
 
 | Variable | What it is |
 |---|---|
